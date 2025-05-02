@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Mensalidades - Sistema de Vôlei</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.header {
+    background-color: #4285f4;
+    color: white;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.header h2 {
+    font-size: 1.2rem;
+    margin: 0;
+    text-align: center;
+}
+
+.container {
+    max-width: 100%;
+    margin: 10px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logout-btn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.logout-btn:hover {
+    background-color: #b71c1c;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+input, select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+    font-size: 0.9rem;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.action-btns button {
+    padding: 4px 8px;
+    margin-right: 4px;
+}
+
+.edit-btn {
+    background-color: #2196F3;
+}
+
+.edit-btn:hover {
+    background-color: #0b7dda;
+}
+
+.delete-btn {
+    background-color: #f44336;
+}
+
+.delete-btn:hover {
+    background-color: #da190b;
+}
+
+.section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.section-title {
+    color: #4285f4;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.message {
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 4px;
+    display: none;
+    font-size: 0.9rem;
+}
+
+.success {
+    background-color: #dff0d8;
+    color: #3c763d;
+}
+
+.error {
+    background-color: #f2dede;
+    color: #a94442;
+}
+
+.player-info {
+    background-color: #e6f7ff;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.player-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #4285f4;
+}
+
+.player-details {
+    flex: 1;
+    text-align: center;
+}
+
+.player-details h3 {
+    margin-top: 0;
+    color: #4285f4;
+    font-size: 1.5rem;
+}
+
+.player-details p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+}
+
+.search-results {
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: none;
+    position: absolute;
+    width: calc(100% - 20px);
+    background: white;
+    z-index: 100;
+}
+
+.search-item {
+    padding: 6px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.search-item:hover {
+    background-color: #f5f5f5;
+}
+
+.search-item-photo {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+}
+
+.status-pago {
+    color: #388e3c;
+    font-weight: bold;
+}
+
+.status-inadimplente {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+}
+
+/* Media Queries */
+@media (min-width: 768px) {
+    .header {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 20px;
+    }
+
+    .header h2 {
+        font-size: 1.5rem;
+        text-align: left;
+    }
+
+    .container {
+        max-width: 95%;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .button-container {
+        flex-wrap: nowrap;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+
+    table {
+        font-size: 1rem;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+    }
+
+    .player-info {
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+    }
+
+    .player-photo {
+        width: 80px; /*80*/
+        height: 80px;
+        margin-right: 20px;
+    }
+
+    .player-details {
+        text-align: left;
+    }
+
+    .player-details h3 {
+        font-size: 1.2rem;
+    }
+
+    input, select {
+        padding: 8px;
+        font-size: 1rem;
+    }
+
+    label {
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .container {
+        max-width: 1200px;
+    }
+
+    .button-container {
+        gap: 20px;
+    }
+
+    .header h2 {
+        font-size: 1.8rem;
+    }
+
+    .player-photo {
+        width: 100px;
+        height: 100px; /* 100*/
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Sistema de Gestão e Transparência Volei-BNH</h2>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'">Cadastro</button>
+            <button onclick="window.location.href='mensalidade.html'">Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'">Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'">Integrantes</button>            
+            <button id="logoutBtn" class="logout-btn">Sair</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="userEmail"></div>
+        
+        <div class="section">
+            <h2 class="section-title">Pesquisar Integrante</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <div class="form-group" style="position: relative;">
+                <label for="searchName">Nome do Integrante:</label>
+                <input type="text" id="searchName" placeholder="Digite o nome para pesquisar" autocomplete="off">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </div>
+        
+        <div id="playerSection" class="section" style="display: none;">
+            <h2 class="section-title">Dados do Integrante</h2>
+            
+            <div class="player-info">
+                <img id="playerPhoto" class="player-photo" src="" alt="Foto do jogador" style="display: none;">
+                <div class="player-details">
+                    <h3 id="playerName"></h3>
+                    <p><strong>Posição:</strong> <span id="playerPosition"></span></p>
+                    <p><strong>Categoria:</strong> <span id="playerCategory"></span></p>
+                    <p><strong>Contato:</strong> <span id="playerContact"></span></p>
+                </div>
+            </div>
+            
+            <h3 class="section-title">Registrar Pagamento</h3>
+            
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="paymentMonth">Mês/Ano:</label>
+                    <input type="month" id="paymentMonth" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentValue">Valor (R$):</label>
+                    <input type="number" id="paymentValue" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentDate">Data do Pagamento:</label>
+                    <input type="date" id="paymentDate" required>
+                </div>
+                
+                <input type="hidden" id="playerId">
+                <input type="hidden" id="editingPaymentId">
+                
+                <button type="submit" id="savePaymentBtn">Registrar Pagamento</button>
+                <button type="button" id="cancelEditBtn" style="display: none; background-color: #f44336;">Cancelar Edição</button>
+            </form>
+        </div>
+        
+        <div id="paymentsSection" class="section" style="display: none;">
+            <h2 class="section-title">Histórico de Pagamentos</h2>
+            
+            <div id="paymentsList">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mês/Ano</th>
+                            <th>Valor</th>
+                            <th>Data do Pagamento</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <!-- Os dados serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // DOM elements
+        const searchNameInput = document.getElementById('searchName');
+        const searchResultsDiv = document.getElementById('searchResults');
+        const playerSection = document.getElementById('playerSection');
+        const playerPhoto = document.getElementById('playerPhoto');
+        const playerNameSpan = document.getElementById('playerName');
+        const playerPositionSpan = document.getElementById('playerPosition');
+        const playerCategorySpan = document.getElementById('playerCategory');
+        const playerContactSpan = document.getElementById('playerContact');
+        const paymentForm = document.getElementById('paymentForm');
+        const paymentMonthInput = document.getElementById('paymentMonth');
+        const paymentValueInput = document.getElementById('paymentValue');
+        const paymentDateInput = document.getElementById('paymentDate');
+        const playerIdInput = document.getElementById('playerId');
+        const editingPaymentIdInput = document.getElementById('editingPaymentId');
+        const paymentsSection = document.getElementById('paymentsSection');
+        const paymentsTableBody = document.getElementById('paymentsTableBody');
+        const messageDiv = document.getElementById('message');
+        const savePaymentBtn = document.getElementById('savePaymentBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+        // Set current date as default for payment date
+        paymentDateInput.valueAsDate = new Date();
+
+        // Check auth state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // User is not logged in, redirect to login page
+                window.location.href = 'index.html';
+            } else {
+                // User is logged in, show email
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+            }
+        });
+
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+        // Search player by name (as you type)
+        searchNameInput.addEventListener('input', async () => {
+            const searchTerm = searchNameInput.value.trim().toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                searchResultsDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                searchResultsDiv.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const players = snapshot.val();
+                    let hasResults = false;
+                    
+                    Object.keys(players).forEach((key) => {
+                        const player = players[key];
+                        if (player.name.toLowerCase().includes(searchTerm)) {
+                            hasResults = true;
+                            const playerItem = document.createElement('div');
+                            playerItem.className = 'search-item';
+                            playerItem.innerHTML = `
+                                ${player.imageUrl ? `<img src="${player.imageUrl}" class="search-item-photo" alt="${player.name}">` : '<div class="search-item-photo" style="background:#eee;"></div>'}
+                                <span>${player.name}</span>
+                            `;
+                            playerItem.addEventListener('click', () => {
+                                selectPlayer(key, player);
+                                searchResultsDiv.style.display = 'none';
+                                searchNameInput.value = player.name;
+                            });
+                            searchResultsDiv.appendChild(playerItem);
+                        }
+                    });
+                    
+                    searchResultsDiv.style.display = hasResults ? 'block' : 'none';
+                } else {
+                    searchResultsDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error searching players: ", error);
+                showMessage("Erro ao pesquisar integrantes: " + error.message, "error");
+            }
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchNameInput) {
+                searchResultsDiv.style.display = 'none';
+            }
+        });
+
+        function selectPlayer(playerId, playerData) {
+            // Set player info
+            playerNameSpan.textContent = playerData.name;
+            playerPositionSpan.textContent = playerData.position;
+            playerCategorySpan.textContent = playerData.category;
+            playerContactSpan.textContent = playerData.contact;
+            playerIdInput.value = playerId;
+            
+            // Set player photo
+            if (playerData.imageUrl) {
+                playerPhoto.src = playerData.imageUrl;
+                playerPhoto.style.display = 'block';
+            } else {
+                playerPhoto.style.display = 'none';
+            }
+            
+            // Show sections
+            playerSection.style.display = 'block';
+            paymentsSection.style.display = 'block';
+            
+            // Reset form and load payments
+            resetForm();
+            loadPayments(playerId);
+        }
+
+        // Form submit
+        paymentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const paymentData = {
+                month: paymentMonthInput.value,
+                value: parseFloat(paymentValueInput.value),
+                date: paymentValueInput.value > 0 ? paymentDateInput.value : null,
+                playerId: playerIdInput.value,
+                playerName: playerNameSpan.textContent,
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (editingPaymentIdInput.value) {
+                    // Atualizar pagamento existente
+                    await update(ref(database, `payments/${editingPaymentIdInput.value}`), paymentData);
+                    showMessage("Pagamento atualizado com sucesso!", "success");
+                } else {
+                    // Criar novo pagamento
+                    const newPaymentRef = push(ref(database, 'payments'));
+                    await set(newPaymentRef, paymentData);
+                    showMessage("Pagamento registrado com sucesso!", "success");
+                }
+                
+                resetForm();
+                paymentDateInput.valueAsDate = new Date();
+                loadPayments(playerIdInput.value);
+            } catch (error) {
+                console.error("Error saving payment: ", error);
+                showMessage("Erro ao registrar pagamento: " + error.message, "error");
+            }
+        });
+
+        // Cancel edit button
+        cancelEditBtn.addEventListener('click', resetForm);
+
+        // Reset form to default state
+        function resetForm() {
+            paymentForm.reset();
+            editingPaymentIdInput.value = '';
+            savePaymentBtn.textContent = 'Registrar Pagamento';
+            cancelEditBtn.style.display = 'none';
+            paymentDateInput.valueAsDate = new Date();
+        }
+
+        // Load payments for player
+        function loadPayments(playerId) {
+            const paymentsRef = ref(database, 'payments');
+            
+            onValue(paymentsRef, (snapshot) => {
+                paymentsTableBody.innerHTML = '';
+                const payments = snapshot.val();
+                let playerPayments = [];
+                
+                if (payments) {
+                    Object.keys(payments).forEach((key) => {
+                        if (payments[key].playerId === playerId) {
+                            playerPayments.push({
+                                id: key,
+                                ...payments[key]
+                            });
+                        }
+                    });
+                    
+                    // Sort by month (newest first)
+                    playerPayments.sort((a, b) => b.month.localeCompare(a.month));
+                    
+                    playerPayments.forEach((payment) => {
+                        const isInadimplente = payment.value === 0 || payment.value === '0';
+                        
+                        const row = `
+                            <tr>
+                                <td>${formatMonthYear(payment.month)}</td>
+                                <td>${isInadimplente ? 'Não pago' : 'R$ ' + parseFloat(payment.value).toFixed(2)}</td>
+                                <td>${payment.date ? formatDate(payment.date) : '-'}</td>
+                                <td class="${isInadimplente ? 'status-inadimplente' : 'status-pago'}">
+                                    ${isInadimplente ? 'Inadimplente' : 'Pago'}
+                                </td>
+                                <td class="action-btns">
+                                    <button class="edit-btn" data-id="${payment.id}">Editar</button>
+                                    <button class="delete-btn" data-id="${payment.id}">Excluir</button>
+                                </td>
+                            </tr>
+                        `;
+                        paymentsTableBody.innerHTML += row;
+                    });
+                    
+                    // Add event listeners to delete buttons
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', () => deletePayment(btn.getAttribute('data-id')));
+                    });
+                    
+                    // Add event listeners to edit buttons
+                    document.querySelectorAll('.edit-btn').forEach(btn => {
+                        btn.addEventListener('click', () => editPayment(btn.getAttribute('data-id')));
+                    });
+                }
+            }, (error) => {
+                console.error("Error loading payments: ", error);
+                showMessage("Erro ao carregar pagamentos: " + error.message, "error");
+            });
+        }
+
+        // Edit payment
+        async function editPayment(paymentId) {
+            try {
+                const paymentRef = ref(database, `payments/${paymentId}`);
+                const snapshot = await get(paymentRef);
+                
+                if (snapshot.exists()) {
+                    const paymentData = snapshot.val();
+                    
+                    // Preenche o formulário com os dados do pagamento
+                    paymentMonthInput.value = paymentData.month;
+                    paymentValueInput.value = paymentData.value;
+                    paymentDateInput.value = paymentData.date || '';
+                    editingPaymentIdInput.value = paymentId;
+                    
+                    // Altera o texto do botão para indicar que está editando
+                    savePaymentBtn.textContent = 'Atualizar Pagamento';
+                    cancelEditBtn.style.display = 'inline-block';
+                    
+                    // Rola a página até o formulário
+                    paymentForm.scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (error) {
+                console.error("Error loading payment for edit: ", error);
+                showMessage("Erro ao carregar pagamento para edição: " + error.message, "error");
+            }
+        }
+
+        // Delete payment
+        async function deletePayment(paymentId) {
+            if (confirm("Tem certeza que deseja excluir este pagamento?")) {
+                try {
+                    await remove(ref(database, `payments/${paymentId}`));
+                    showMessage("Pagamento excluído com sucesso!", "success");
+                    
+                    // Se estava editando o pagamento excluído, reseta o formulário
+                    if (editingPaymentIdInput.value === paymentId) {
+                        resetForm();
+                    }
+                } catch (error) {
+                    console.error("Error deleting payment: ", error);
+                    showMessage("Erro ao excluir pagamento: " + error.message, "error");
+                }
+            }
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+    if (!dateString) return '-';
+    
+    // Adiciona o timezone offset para compensar a conversão
+    const date = new Date(dateString);
+    const offset = date.getTimezoneOffset() * 60000; // offset em milissegundos
+    const adjustedDate = new Date(date.getTime() + offset);
+    
+    return adjustedDate.toLocaleDateString('pt-BR');
+}
+
+        function formatMonthYear(monthYear) {
+            const [year, month] = monthYear.split('-');
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return `${monthNames[parseInt(month) - 1]} ${year}`;
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
