@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Vôlei</title>
+    <style>body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+    }
+    
+    .header {
+        background-color: #4285f4;
+        color: white;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .header h2 {
+        font-size: 1.2rem;
+        margin: 0;
+        text-align: center;
+    }
+    
+    .container {
+        max-width: 100%;
+        margin: 10px;
+        padding: 15px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .logout-btn {
+        background-color: #d32f2f;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .logout-btn:hover {
+        background-color: #b71c1c;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    input, select {
+        width: 100%;
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 0.9rem;
+    }
+    
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 8px;
+        font-size: 0.9rem;
+        width: auto;
+    }
+    
+    button:hover {
+        background-color: #45a049;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        border: 1px solid #ddd;
+        padding: 6px;
+        text-align: left;
+    }
+    
+    th {
+        background-color: #f2f2f2;
+    }
+    
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    .action-btns button {
+        padding: 4px 8px;
+        margin-right: 4px;
+    }
+    
+    .edit-btn {
+        background-color: #2196F3;
+    }
+    
+    .edit-btn:hover {
+        background-color: #0b7dda;
+    }
+    
+    .delete-btn {
+        background-color: #f44336;
+    }
+    
+    .delete-btn:hover {
+        background-color: #da190b;
+    }
+    
+    .section {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .section-title {
+        color: #4285f4;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+    }
+    
+    .message {
+        padding: 8px;
+        margin: 8px 0;
+        border-radius: 4px;
+        display: none;
+        font-size: 0.9rem;
+    }
+    
+    .success {
+        background-color: #dff0d8;
+        color: #3c763d;
+    }
+    
+    .error {
+        background-color: #f2dede;
+        color: #a94442;
+    }
+    
+    .category-fixo {
+        background-color: #e6f7ff;
+    }
+    
+    .category-visitante {
+        background-color: #fff7e6;
+    }
+    
+    .player-image {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .image-preview {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 8px 0;
+        display: none;
+        border: 2px solid #ddd;
+    }
+    
+    .upload-btn {
+        background-color: #4285f4;
+        margin-top: 4px;
+    }
+    
+    .upload-btn:hover {
+        background-color: #3367d6;
+    }
+    
+    .button-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    /* Media Queries */
+    @media (min-width: 768px) {
+        .header {
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 20px;
+        }
+    
+        .header h2 {
+            font-size: 1.5rem;
+            text-align: left;
+        }
+    
+        .container {
+            max-width: 95%;
+            margin: 20px auto;
+            padding: 20px;
+        }
+    
+        .button-container {
+            flex-wrap: nowrap;
+            gap: 15px;
+            padding: 15px;
+        }
+    
+        button {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+    
+        table {
+            font-size: 1rem;
+        }
+    
+        th, td {
+            padding: 10px;
+        }
+    
+        .section-title {
+            font-size: 1.3rem;
+        }
+    
+        .player-image {
+            width: 50px;
+            height: 50px;
+        }
+    
+        .image-preview {
+            width: 80px;
+            height: 80px;
+            margin: 10px 0;
+        }
+    
+        input, select {
+            padding: 8px;
+            font-size: 1rem;
+        }
+    
+        label {
+            font-size: 1rem;
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .container {
+            max-width: 1200px;
+        }
+    
+        .button-container {
+            gap: 20px;
+        }
+    
+        .header h2 {
+            font-size: 1.8rem;
+        }
+    
+        .section-title {
+            font-size: 1.5rem;
+        }
+    
+        .player-image {
+            width: 60px;
+            height: 60px;
+        }
+    
+        .image-preview {
+            width: 100px;
+            height: 100px;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="header">              
+        <h2>Sistema de Gestão e Transparência Volei-BNH</h2>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'">Cadastro</button>
+            <button onclick="window.location.href='mensalidade.html'">Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'">Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'">Integrantes</button>            
+            <button id="logoutBtn" class="logout-btn">Sair</button>
+        </div>            
+      
+        
+    </div>
+   
+    
+    <div class="container">
+        <div id="userEmail"></div>
+        
+        <div class="section">
+            <h2 class="section-title">Cadastrar Novo Integrante</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <form id="playerForm">
+                <div class="form-group">
+                    <label for="name">Nome:</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageUrl">URL da Imagem do Jogador:</label>
+                    <input type="url" id="imageUrl" placeholder="https://exemplo.com/foto.jpg">
+                    <button type="button" id="previewBtn" class="upload-btn">Visualizar Imagem</button>
+                    <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
+                </div>
+                
+                <div class="form-group">
+                    <label for="position">Posição:</label>
+                    <select id="position" required>
+                        <option value="">Selecione uma posição</option>
+                        <option value="Levantador">Levantador</option>
+                        <option value="Ponteiro">Ponteiro</option>
+                        <option value="Oposto">Oposto</option>
+                        <option value="Central">Central</option>
+                        <option value="Líbero">Líbero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact">Contato:</label>
+                    <input type="text" id="contact" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Categoria:</label>
+                    <select id="category" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="FIXO">FIXO</option>
+                        <option value="VISITANTE">VISITANTE</option>
+                    </select>
+                </div>
+                
+                <input type="hidden" id="playerId">
+                
+                <button type="submit" id="saveBtn">Salvar</button>
+                <button type="button" id="clearBtn">Limpar</button>
+            </form>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">Lista de Integrantes Cadastrados</h2>
+            
+            <div id="playersList">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nome</th>
+                            <th>Posição</th>
+                            <th>Contato</th>
+                            <th>Categoria</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <!-- Os dados serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // DOM elements
+        const playerForm = document.getElementById('playerForm');
+        const nameInput = document.getElementById('name');
+        const imageUrlInput = document.getElementById('imageUrl');
+        const positionInput = document.getElementById('position');
+        const contactInput = document.getElementById('contact');
+        const categoryInput = document.getElementById('category');
+        const playerIdInput = document.getElementById('playerId');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const playersTableBody = document.getElementById('playersTableBody');
+        const messageDiv = document.getElementById('message');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewBtn = document.getElementById('previewBtn');
+
+        // Preview image button
+        previewBtn.addEventListener('click', () => {
+            const url = imageUrlInput.value;
+            if (url) {
+                imagePreview.src = url;
+                imagePreview.style.display = 'block';
+            } else {
+                alert('Por favor, insira uma URL válida');
+            }
+        });
+
+        // Check auth state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // User is not logged in, redirect to login page
+                window.location.href = 'index.html';
+            } else {
+                // User is logged in, show email
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                // Load players data
+                loadPlayers();
+            }
+        });
+
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+        // Form submit
+        playerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const playerData = {
+                name: nameInput.value,
+                imageUrl: imageUrlInput.value || null,
+                position: positionInput.value,
+                contact: contactInput.value,
+                category: categoryInput.value,
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (playerIdInput.value) {
+                    // Update existing player
+                    const updates = {};
+                    updates['players/' + playerIdInput.value] = playerData;
+                    await update(ref(database), updates);
+                    showMessage("Integrante atualizado com sucesso!", "success");
+                } else {
+                    // Add new player
+                    const newPlayerRef = push(ref(database, 'players'));
+                    await set(newPlayerRef, playerData);
+                    showMessage("Integrante cadastrado com sucesso!", "success");
+                }
+                
+                // Clear form
+                clearForm();
+            } catch (error) {
+                console.error("Error saving player: ", error);
+                showMessage("Erro ao salvar integrante: " + error.message, "error");
+            }
+        });
+
+        // Clear form
+        clearBtn.addEventListener('click', clearForm);
+
+        function clearForm() {
+            playerForm.reset();
+            playerIdInput.value = '';
+            saveBtn.textContent = 'Salvar';
+            imagePreview.style.display = 'none';
+        }
+
+        // Load players from Realtime Database
+        function loadPlayers() {
+            const playersRef = ref(database, 'players');
+            
+            onValue(playersRef, (snapshot) => {
+                playersTableBody.innerHTML = '';
+                const players = snapshot.val();
+                
+                if (players) {
+                    Object.keys(players).forEach((key) => {
+                        const player = players[key];
+                        const rowClass = player.category === 'FIXO' ? 'category-fixo' : 'category-visitante';
+                        const row = `
+                            <tr class="${rowClass}">
+                                <td>
+                                    ${player.imageUrl ? 
+                                        `<img src="${player.imageUrl}" class="player-image" alt="${player.name}">` : 
+                                        'Sem foto'}
+                                </td>
+                                <td>${player.name}</td>
+                                <td>${player.position}</td>
+                                <td>${player.contact}</td>
+                                <td>${player.category}</td>
+                                <td class="action-btns">
+                                    <button class="edit-btn" data-id="${key}">Editar</button>
+                                    <button class="delete-btn" data-id="${key}">Excluir</button>
+                                </td>
+                            </tr>
+                        `;
+                        playersTableBody.innerHTML += row;
+                    });
+                    
+                    // Add event listeners to edit and delete buttons
+                    document.querySelectorAll('.edit-btn').forEach(btn => {
+                        btn.addEventListener('click', () => editPlayer(btn.getAttribute('data-id')));
+                    });
+                    
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', () => deletePlayer(btn.getAttribute('data-id')));
+                    });
+                }
+            }, (error) => {
+                console.error("Error loading players: ", error);
+                showMessage("Erro ao carregar integrantes: " + error.message, "error");
+            });
+        }
+
+        // Edit player
+        async function editPlayer(id) {
+            try {
+                const playerRef = ref(database, `players/${id}`);
+                const snapshot = await get(playerRef);
+                
+                if (snapshot.exists()) {
+                    const player = snapshot.val();
+                    nameInput.value = player.name;
+                    imageUrlInput.value = player.imageUrl || '';
+                    positionInput.value = player.position;
+                    contactInput.value = player.contact;
+                    categoryInput.value = player.category;
+                    playerIdInput.value = id;
+                    saveBtn.textContent = 'Atualizar';
+                    
+                    if (player.imageUrl) {
+                        imagePreview.src = player.imageUrl;
+                        imagePreview.style.display = 'block';
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error("Error editing player: ", error);
+                showMessage("Erro ao editar integrante: " + error.message, "error");
+            }
+        }
+
+        // Delete player
+        async function deletePlayer(id) {
+            if (confirm("Tem certeza que deseja excluir este integrante?")) {
+                try {
+                    await remove(ref(database, `players/${id}`));
+                    showMessage("Integrante excluído com sucesso!", "success");
+                } catch (error) {
+                    console.error("Error deleting player: ", error);
+                    showMessage("Erro ao excluir integrante: " + error.message, "error");
+                }
+            }
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
