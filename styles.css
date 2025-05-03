@@ -31,17 +31,17 @@
     }
 
 #clearBtn {
-    width: 50px; /* Define a largura */
+    width: 120px; /* Define a largura */
     height: 30px; /* Define a altura */
 }
 
 #deleteBtn {
-    width: 50px; /* Define a largura */
+    width: 120px; /* Define a largura */
     height: 30px; /* Define a altura */
 }
 
 #saveBtn {
-    width: 50px; /* Define a largura */
+    width: 120px; /* Define a largura */
     height: 30px; /* Define a altura */
 }
 
