@@ -31,8 +31,8 @@
     }
 
 #clearBtn {
-    width: 320px; /* Define a largura */
-    height: 50px; /* Define a altura */
+    width: 100px; /* Define a largura */
+    height: auto; /* Define a altura */
 }
 
     
