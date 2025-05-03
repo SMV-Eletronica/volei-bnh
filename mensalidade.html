@@ -47,6 +47,16 @@
     font-size: 0.9rem;
 }
 
+        .ttt {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
 .logout-btn:hover {
     background-color: #b71c1c;
 }
@@ -655,7 +665,7 @@ tr:nth-child(even) {
                                     ${isInadimplente ? 'Inadimplente' : 'Pago'}
                                 </td>
                                 <td class="action-btns">
-                                    <button class="edit-btn" data-id="${payment.id}">Editar</button>
+                                    <button id="ttt" class="edit-btn" data-id="${payment.id}">Editar</button>
                                     <button class="delete-btn" data-id="${payment.id}">Excluir</button>
                                 </td>
                             </tr>
