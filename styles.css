@@ -31,17 +31,17 @@
     }
 
 #clearBtn {
-    width: 220px; /* Define a largura */
+    width: 90px; /* Define a largura */
     height: 30px; /* Define a altura */
 }
 
 #deleteBtn {
-    width: 120px; /* Define a largura */
+    width: 90px; /* Define a largura */
     height: 30px; /* Define a altura */
 }
 
 #saveBtn {
-    width: 120px; /* Define a largura */
+    width: 90px; /* Define a largura */
     height: 30px; /* Define a altura */
 }
 
@@ -711,17 +711,17 @@ button:hover {
 
      #clearBtn {
     width: 100px; /* Define a largura */
-    height: 25px; /* Define a altura */
+    height: 40px; /* Define a altura */
 }
 
 #deleteBtn {
     width: 100px; /* Define a largura */
-    height: 25px; /* Define a altura */
+    height: 40px; /* Define a altura */
 }
 
 #saveBtn {
     width: 100px; /* Define a largura */
-    height: 25px; /* Define a altura */
+    height: 40px; /* Define a altura */
 }
     
         .header h2 {
