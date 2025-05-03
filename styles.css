@@ -106,6 +106,57 @@
     margin-bottom: 20px;
 }
 
+.info-item {
+    text-align: left;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.info-label {
+    font-weight: bold;
+    color: #666;
+    font-size: 14px;
+}
+
+.info-value {
+    margin-top: 5px;
+}
+
+.payment-status {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.status-title {
+    font-size: 18px;
+    color: #4285f4;
+    margin-bottom: 15px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.status-month {
+    font-weight: bold;
+}
+
+.status-value.paid {
+    color: #388e3c;
+    font-weight: bold;
+}
+
+.status-value.unpaid {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
 
     
      .form-group {
