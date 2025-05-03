@@ -653,17 +653,17 @@ button:hover {
         }
 
      #clearBtn {
-    width: 50px; /* Define a largura */
+    width: 150px; /* Define a largura */
     height: 10px; /* Define a altura */
 }
 
 #deleteBtn {
-    width: 50px; /* Define a largura */
+    width: 150px; /* Define a largura */
     height: 10px; /* Define a altura */
 }
 
 #saveBtn {
-    width: 50px; /* Define a largura */
+    width: 150px; /* Define a largura */
     height: 10px; /* Define a altura */
 }
     
