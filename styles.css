@@ -244,6 +244,19 @@ button:hover {
         color: #a94442;
     }
 
+ .btn-submit {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+
 
 .player-info {
     background-color: #e6f7ff;
