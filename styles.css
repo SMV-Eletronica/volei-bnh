@@ -44,9 +44,29 @@
         background-color: #b71c1c;
     }
     
-    .form-group {
-        margin-bottom: 12px;
-    }
+     .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+        .form-group textarea {
+            height: 70px;
+            resize: vertical;
+        }
     
     label {
         display: block;
