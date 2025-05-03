@@ -252,35 +252,39 @@ button:hover {
 /* Dispositivos móveis (até 768px) */
 @media screen and (max-width: 768px) {
     .header {
-        flex-direction: column; /* Cabeçalho em coluna */
-        align-items: flex-start;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 20px;
+    }
+
+    .header h2 {
+        font-size: 1.5rem;
+        text-align: left;
+    }
+
+        .container {
+        max-width: 95%;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+     .button-container {
+        flex-wrap: nowrap;
+        gap: 15px;
         padding: 15px;
+    }       
+
+    button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
     }
 
-    .header h1 {
-        font-size: 18px; /* Reduz tamanho da fonte do título */
-    }
-
-    .logout-btn {
+      .logout-btn {
         margin-top: 10px;
         padding: 6px 12px;
         font-size: 12px;
     }
 
-    .container {
-        margin: 10px;
-        padding: 15px; /* Reduz padding do container */
-    }
-
-    .button-container {
-        gap: 10px; /* Reduz espaçamento entre botões */
-    }
-
-    button {
-        width: 100px; /* Reduz tamanho dos botões */
-        padding: 8px 10px;
-        font-size: 12px;
-    }
 
     .profile-info {
         grid-template-columns: 1fr; /* Grid em uma coluna */
