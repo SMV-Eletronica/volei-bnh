@@ -32,17 +32,17 @@
 
 #clearBtn {
     width: 50px; /* Define a largura */
-    height: 10px; /* Define a altura */
+    height: 30px; /* Define a altura */
 }
 
 #deleteBtn {
     width: 50px; /* Define a largura */
-    height: 10px; /* Define a altura */
+    height: 30px; /* Define a altura */
 }
 
 #saveBtn {
     width: 50px; /* Define a largura */
-    height: 10px; /* Define a altura */
+    height: 30px; /* Define a altura */
 }
 
     
@@ -651,6 +651,21 @@ button:hover {
             padding: 10px 15px;
             font-size: 0.9rem;
         }
+
+     #clearBtn {
+    width: 50px; /* Define a largura */
+    height: 10px; /* Define a altura */
+}
+
+#deleteBtn {
+    width: 50px; /* Define a largura */
+    height: 10px; /* Define a altura */
+}
+
+#saveBtn {
+    width: 50px; /* Define a largura */
+    height: 10px; /* Define a altura */
+}
     
         table {
             font-size: 1rem;
@@ -693,6 +708,21 @@ button:hover {
         .button-container {
             gap: 20px;
         }
+
+     #clearBtn {
+    width: 50px; /* Define a largura */
+    height: 10px; /* Define a altura */
+}
+
+#deleteBtn {
+    width: 50px; /* Define a largura */
+    height: 10px; /* Define a altura */
+}
+
+#saveBtn {
+    width: 50px; /* Define a largura */
+    height: 10px; /* Define a altura */
+}
     
         .header h2 {
             font-size: 1.8rem;
