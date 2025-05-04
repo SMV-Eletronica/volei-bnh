@@ -84,7 +84,6 @@
                                 <th>Receitas (R$)</th>
                                 <th>Despesas (R$)</th>
                                 <th>Saldo (R$)</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="financialData">
@@ -581,7 +580,6 @@
                 
                 const balance = data.income - data.expenses;
                 const balanceClass = balance >= 0 ? 'status-pago' : 'status-inadimplente';
-                const statusText = data.lateCount > 0 ? `${data.lateCount} inadimplente(s)` : 'Todos em dia';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -589,7 +587,6 @@
                     <td>R$ ${data.income.toFixed(2)}</td>
                     <td>R$ ${data.expenses.toFixed(2)}</td>
                     <td class="${balanceClass}">R$ ${balance.toFixed(2)}</td>
-                    <td>${statusText}</td>
                 `;
                 financialData.appendChild(row);
             });
