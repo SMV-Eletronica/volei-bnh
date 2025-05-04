@@ -290,7 +290,7 @@
         function resetForm() {
             paymentForm.reset();
             editingPaymentIdInput.value = '';
-            savePaymentBtn.textContent = 'Registrar Pagamento';
+            savePaymentBtn.textContent = 'Registrar';
             cancelEditBtn.style.display = 'none';
             deletePaymentBtn.style.display = 'none';
             paymentDateInput.valueAsDate = new Date();
@@ -360,7 +360,7 @@
                     editingPaymentIdInput.value = paymentId;
                     
                     // Altera o texto do botão para indicar que está editando
-                    savePaymentBtn.textContent = 'Atualizar Pagamento';
+                    savePaymentBtn.textContent = 'Atualizar';
                     cancelEditBtn.style.display = 'inline-block';
                     deletePaymentBtn.style.display = 'inline-block';
                     
