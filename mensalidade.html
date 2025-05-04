@@ -70,6 +70,7 @@
                 
                 <button type="submit" id="savePaymentBtn">Registrar Pagamento</button>
                 <button type="button" id="cancelEditBtn" style="display: none; background-color: #f44336;">Cancelar Edição</button>
+                <button type="button" id="deletePaymentBtn" style="display: none; background-color: #ff5722;">Excluir Pagamento</button>
             </form>
         </div>
         
@@ -84,7 +85,6 @@
                             <th>Valor</th>
                             <th>Data do Pagamento</th>
                             <th>Status</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="paymentsTableBody">
@@ -138,6 +138,7 @@
         const messageDiv = document.getElementById('message');
         const savePaymentBtn = document.getElementById('savePaymentBtn');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const deletePaymentBtn = document.getElementById('deletePaymentBtn');
 
         // Set current date as default for payment date
         paymentDateInput.valueAsDate = new Date();
@@ -277,6 +278,13 @@
 
         // Cancel edit button
         cancelEditBtn.addEventListener('click', resetForm);
+        
+        // Delete payment button
+        deletePaymentBtn.addEventListener('click', () => {
+            if (editingPaymentIdInput.value) {
+                deletePayment(editingPaymentIdInput.value);
+            }
+        });
 
         // Reset form to default state
         function resetForm() {
@@ -284,6 +292,7 @@
             editingPaymentIdInput.value = '';
             savePaymentBtn.textContent = 'Registrar Pagamento';
             cancelEditBtn.style.display = 'none';
+            deletePaymentBtn.style.display = 'none';
             paymentDateInput.valueAsDate = new Date();
         }
 
@@ -312,31 +321,21 @@
                     playerPayments.forEach((payment) => {
                         const isInadimplente = payment.value === 0 || payment.value === '0';
                         
-                        const row = `
-                            <tr>
-                                <td>${formatMonthYear(payment.month)}</td>
-                                <td>${isInadimplente ? 'Não pago' : 'R$ ' + parseFloat(payment.value).toFixed(2)}</td>
-                                <td>${payment.date ? formatDate(payment.date) : '-'}</td>
-                                <td class="${isInadimplente ? 'status-inadimplente' : 'status-pago'}">
-                                    ${isInadimplente ? 'Inadimplente' : 'Pago'}
-                                </td>
-                                <td class="action-btns">
-                                    <button class="edit-btn" data-id="${payment.id}">Editar</button>
-                                    <button class="delete-btn" data-id="${payment.id}">Excluir</button>
-                                </td>
-                            </tr>
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-id', payment.id);
+                        row.innerHTML = `
+                            <td>${formatMonthYear(payment.month)}</td>
+                            <td>${isInadimplente ? 'Não pago' : 'R$ ' + parseFloat(payment.value).toFixed(2)}</td>
+                            <td>${payment.date ? formatDate(payment.date) : '-'}</td>
+                            <td class="${isInadimplente ? 'status-inadimplente' : 'status-pago'}">
+                                ${isInadimplente ? 'Inadimplente' : 'Pago'}
+                            </td>
                         `;
-                        paymentsTableBody.innerHTML += row;
-                    });
-                    
-                    // Add event listeners to delete buttons
-                    document.querySelectorAll('.delete-btn').forEach(btn => {
-                        btn.addEventListener('click', () => deletePayment(btn.getAttribute('data-id')));
-                    });
-                    
-                    // Add event listeners to edit buttons
-                    document.querySelectorAll('.edit-btn').forEach(btn => {
-                        btn.addEventListener('click', () => editPayment(btn.getAttribute('data-id')));
+                        
+                        // Add click event to edit payment when clicking the row
+                        row.addEventListener('click', () => editPayment(payment.id));
+                        
+                        paymentsTableBody.appendChild(row);
                     });
                 }
             }, (error) => {
@@ -363,6 +362,7 @@
                     // Altera o texto do botão para indicar que está editando
                     savePaymentBtn.textContent = 'Atualizar Pagamento';
                     cancelEditBtn.style.display = 'inline-block';
+                    deletePaymentBtn.style.display = 'inline-block';
                     
                     // Rola a página até o formulário
                     paymentForm.scrollIntoView({ behavior: 'smooth' });
@@ -393,15 +393,15 @@
 
         // Helper functions
         function formatDate(dateString) {
-    if (!dateString) return '-';
-    
-    // Adiciona o timezone offset para compensar a conversão
-    const date = new Date(dateString);
-    const offset = date.getTimezoneOffset() * 60000; // offset em milissegundos
-    const adjustedDate = new Date(date.getTime() + offset);
-    
-    return adjustedDate.toLocaleDateString('pt-BR');
-}
+            if (!dateString) return '-';
+            
+            // Adiciona o timezone offset para compensar a conversão
+            const date = new Date(dateString);
+            const offset = date.getTimezoneOffset() * 60000; // offset em milissegundos
+            const adjustedDate = new Date(date.getTime() + offset);
+            
+            return adjustedDate.toLocaleDateString('pt-BR');
+        }
 
         function formatMonthYear(monthYear) {
             const [year, month] = monthYear.split('-');
