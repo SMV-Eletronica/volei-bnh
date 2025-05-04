@@ -750,6 +750,21 @@ button:hover {
     width: 100px; /* Define a largura */
     height: 40px; /* Define a altura */
 }
+
+     #savePaymentBtn {
+    width: 100px; /* Define a largura */
+    height: 40px; /* Define a altura */
+}
+
+#cancelEditBtn {
+    width: 100px; /* Define a largura */
+    height: 40px; /* Define a altura */
+}
+
+#deletePaymentBtn {
+    width: 100px; /* Define a largura */
+    height: 40px; /* Define a altura */
+}
     
         .header h2 {
             font-size: 1.8rem;
