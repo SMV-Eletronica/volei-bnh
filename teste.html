@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de Vôlei</title>
+    <title>Controle de Mensalidades - Sistema de Vôlei</title>
     <link rel="stylesheet" href="styles.css">
-   
+  
 </head>
 <body>
-    <div class="header">              
+    <div class="header">
         <h2>Vôlei-BNH Gestão & Transparência</h2>
         <div class="button-container">
             <button onclick="window.location.href='dashboard.html'">Cadastro</button>
@@ -16,82 +16,78 @@
             <button onclick="window.location.href='financeiro8.html'">Financeiro</button>
             <button onclick="window.location.href='integrantes.html'">Integrantes</button>            
             <button id="logoutBtn" class="logout-btn">Sair</button>
-        </div>            
-      
-        
+        </div>
     </div>
-   
     
     <div class="container">
         <div id="userEmail"></div>
         
         <div class="section">
-            <h2 class="section-title">Cadastrar Novo Integrante</h2>
+            <h2 class="section-title">Lançamento e Controle de Contribuições</h2>
             
             <div id="message" class="message"></div>
             
-            <form id="playerForm">
+            <div class="form-group" style="position: relative;">
+                <label for="searchName">Nome do Integrante:</label>
+                <input type="text" id="searchName" placeholder="Digite o nome para pesquisar" autocomplete="off">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </div>
+        
+        <div id="playerSection" class="section" style="display: none;">
+            <h2 class="section-title">Dados do Integrante</h2>
+            
+            <div class="player-info">
+                <img id="playerPhoto" class="player-photo" src="" alt="Foto do jogador" style="display: none;">
+                <div class="player-details">
+                    <h3 id="playerName"></h3>
+                    <p><strong>Posição:</strong> <span id="playerPosition"></span></p>
+                    <p><strong>Categoria:</strong> <span id="playerCategory"></span></p>
+                    <p><strong>Contato:</strong> <span id="playerContact"></span></p>
+                </div>
+            </div>
+            
+            <h3 class="section-title">Registrar Contribuição</h3>
+            
+            <form id="paymentForm">
                 <div class="form-group">
-                    <label for="name">Nome:</label>
-                    <input type="text" id="name" required>
+                    <label for="paymentMonth">Mês/Ano:</label>
+                    <input type="month" id="paymentMonth" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="imageUrl">URL da Imagem do Jogador:</label>
-                    <input type="url" id="imageUrl" placeholder="https://exemplo.com/foto.jpg">
-                    <button type="button" id="previewBtn" class="upload-btn">Visualizar Imagem</button>
-                    <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
+                    <label for="paymentValue">Valor (R$):</label>
+                    <input type="number" id="paymentValue" step="0.01" min="0" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="position">Posição:</label>
-                    <select id="position" required>
-                        <option value="">Selecione uma posição</option>
-                        <option value="Levantador">Levantador</option>
-                        <option value="Ponteiro">Ponteiro</option>
-                        <option value="Oposto">Oposto</option>
-                        <option value="Central">Central</option>
-                        <option value="Líbero">Líbero</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="contact">Contato:</label>
-                    <input type="text" id="contact" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="category">Categoria:</label>
-                    <select id="category" required>
-                        <option value="">Selecione uma categoria</option>                        
-                        <option value="MENSALISTA">MENSALISTA</option>
-                        <option value="VISITANTE">VISITANTE</option>
-                    </select>
+                    <label for="paymentDate">Data do Pagamento:</label>
+                    <input type="date" id="paymentDate" required>
                 </div>
                 
                 <input type="hidden" id="playerId">
+                <input type="hidden" id="editingPaymentId">
                 
-                <button type="submit" id="saveBtn">Salvar</button>
-                <button type="button" id="deleteBtn" style="display:none;">Excluir</button>
-                <button type="button" id="clearBtn">Limpar</button>
+                <button type="submit" id="savePaymentBtn">Registrar Pagamento</button>
+                <button type="button" id="cancelEditBtn" style="display: none; background-color: #f44336;">Cancelar Edição</button>
+                <button type="button" id="deletePaymentBtn" style="display: none; background-color: #ff5722;">Excluir Pagamento</button>
             </form>
         </div>
         
-        <div class="section">
-            <h2 class="section-title">Lista de Integrantes Cadastrados</h2>
+        <div id="paymentsSection" class="section" style="display: none;">
+            <h2 class="section-title">Histórico de Contribuições</h2>
             
-            <div id="playersList">
+            <div id="paymentsList">
                 <table>
                     <thead>
                         <tr>
-                            <th>Foto</th>
-                            <th>Nome</th>
-                            <th>Posição</th>
-                            <th>Contato</th>
-                            <th>Categoria</th>
+                            <th>Mês/Ano</th>
+                            <th>Valor</th>
+                            <th>Data do Pagamento</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="playersTableBody">
+                    <tbody id="paymentsTableBody">
                         <!-- Os dados serão inseridos aqui via JavaScript -->
                     </tbody>
                 </table>
@@ -103,7 +99,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -111,7 +107,7 @@
             authDomain: "volei-25301.firebaseapp.com",
             databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
             projectId: "volei-25301",
-            storageBucket: "volei-25301.appspot.com",
+            storageBucket: "volei-25301.firebasestorage.app",
             messagingSenderId: "1007197261034",
             appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
             measurementId: "G-CYMLX0SJJQ"
@@ -123,31 +119,29 @@
         const database = getDatabase(app);
 
         // DOM elements
-        const playerForm = document.getElementById('playerForm');
-        const nameInput = document.getElementById('name');
-        const imageUrlInput = document.getElementById('imageUrl');
-        const positionInput = document.getElementById('position');
-        const contactInput = document.getElementById('contact');
-        const categoryInput = document.getElementById('category');
+        const searchNameInput = document.getElementById('searchName');
+        const searchResultsDiv = document.getElementById('searchResults');
+        const playerSection = document.getElementById('playerSection');
+        const playerPhoto = document.getElementById('playerPhoto');
+        const playerNameSpan = document.getElementById('playerName');
+        const playerPositionSpan = document.getElementById('playerPosition');
+        const playerCategorySpan = document.getElementById('playerCategory');
+        const playerContactSpan = document.getElementById('playerContact');
+        const paymentForm = document.getElementById('paymentForm');
+        const paymentMonthInput = document.getElementById('paymentMonth');
+        const paymentValueInput = document.getElementById('paymentValue');
+        const paymentDateInput = document.getElementById('paymentDate');
         const playerIdInput = document.getElementById('playerId');
-        const saveBtn = document.getElementById('saveBtn');
-        const deleteBtn = document.getElementById('deleteBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const playersTableBody = document.getElementById('playersTableBody');
+        const editingPaymentIdInput = document.getElementById('editingPaymentId');
+        const paymentsSection = document.getElementById('paymentsSection');
+        const paymentsTableBody = document.getElementById('paymentsTableBody');
         const messageDiv = document.getElementById('message');
-        const imagePreview = document.getElementById('imagePreview');
-        const previewBtn = document.getElementById('previewBtn');
+        const savePaymentBtn = document.getElementById('savePaymentBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const deletePaymentBtn = document.getElementById('deletePaymentBtn');
 
-        // Preview image button
-        previewBtn.addEventListener('click', () => {
-            const url = imageUrlInput.value;
-            if (url) {
-                imagePreview.src = url;
-                imagePreview.style.display = 'block';
-            } else {
-                alert('Por favor, insira uma URL válida');
-            }
-        });
+        // Set current date as default for payment date
+        paymentDateInput.valueAsDate = new Date();
 
         // Check auth state
         onAuthStateChanged(auth, (user) => {
@@ -157,8 +151,6 @@
             } else {
                 // User is logged in, show email
                 document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
-                // Load players data
-                loadPlayers();
             }
         });
 
@@ -171,142 +163,251 @@
             });
         });
 
+        // Search player by name (as you type)
+        searchNameInput.addEventListener('input', async () => {
+            const searchTerm = searchNameInput.value.trim().toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                searchResultsDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                searchResultsDiv.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const players = snapshot.val();
+                    let hasResults = false;
+                    
+                    Object.keys(players).forEach((key) => {
+                        const player = players[key];
+                        if (player.name.toLowerCase().includes(searchTerm)) {
+                            hasResults = true;
+                            const playerItem = document.createElement('div');
+                            playerItem.className = 'search-item';
+                            playerItem.innerHTML = `
+                                ${player.imageUrl ? `<img src="${player.imageUrl}" class="search-item-photo" alt="${player.name}">` : '<div class="search-item-photo" style="background:#eee;"></div>'}
+                                <span>${player.name}</span>
+                            `;
+                            playerItem.addEventListener('click', () => {
+                                selectPlayer(key, player);
+                                searchResultsDiv.style.display = 'none';
+                                searchNameInput.value = player.name;
+                            });
+                            searchResultsDiv.appendChild(playerItem);
+                        }
+                    });
+                    
+                    searchResultsDiv.style.display = hasResults ? 'block' : 'none';
+                } else {
+                    searchResultsDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error searching players: ", error);
+                showMessage("Erro ao pesquisar integrantes: " + error.message, "error");
+            }
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchNameInput) {
+                searchResultsDiv.style.display = 'none';
+            }
+        });
+
+        function selectPlayer(playerId, playerData) {
+            // Set player info
+            playerNameSpan.textContent = playerData.name;
+            playerPositionSpan.textContent = playerData.position;
+            playerCategorySpan.textContent = playerData.category;
+            playerContactSpan.textContent = playerData.contact;
+            playerIdInput.value = playerId;
+            
+            // Set player photo
+            if (playerData.imageUrl) {
+                playerPhoto.src = playerData.imageUrl;
+                playerPhoto.style.display = 'block';
+            } else {
+                playerPhoto.style.display = 'none';
+            }
+            
+            // Show sections
+            playerSection.style.display = 'block';
+            paymentsSection.style.display = 'block';
+            
+            // Reset form and load payments
+            resetForm();
+            loadPayments(playerId);
+        }
+
         // Form submit
-        playerForm.addEventListener('submit', async (e) => {
+        paymentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const playerData = {
-                name: nameInput.value,
-                imageUrl: imageUrlInput.value || null,
-                position: positionInput.value,
-                contact: contactInput.value,
-                category: categoryInput.value,
+            const paymentData = {
+                month: paymentMonthInput.value,
+                value: parseFloat(paymentValueInput.value),
+                date: paymentValueInput.value > 0 ? paymentDateInput.value : null,
+                playerId: playerIdInput.value,
+                playerName: playerNameSpan.textContent,
                 createdAt: new Date().toISOString()
             };
             
             try {
-                if (playerIdInput.value) {
-                    // Update existing player
-                    const updates = {};
-                    updates['players/' + playerIdInput.value] = playerData;
-                    await update(ref(database), updates);
-                    showMessage("Integrante atualizado com sucesso!", "success");
+                if (editingPaymentIdInput.value) {
+                    // Atualizar pagamento existente
+                    await update(ref(database, `payments/${editingPaymentIdInput.value}`), paymentData);
+                    showMessage("Pagamento atualizado com sucesso!", "success");
                 } else {
-                    // Add new player
-                    const newPlayerRef = push(ref(database, 'players'));
-                    await set(newPlayerRef, playerData);
-                    showMessage("Integrante cadastrado com sucesso!", "success");
+                    // Criar novo pagamento
+                    const newPaymentRef = push(ref(database, 'payments'));
+                    await set(newPaymentRef, paymentData);
+                    showMessage("Pagamento registrado com sucesso!", "success");
                 }
                 
-                // Clear form
-                clearForm();
+                resetForm();
+                paymentDateInput.valueAsDate = new Date();
+                loadPayments(playerIdInput.value);
             } catch (error) {
-                console.error("Error saving player: ", error);
-                showMessage("Erro ao salvar integrante: " + error.message, "error");
+                console.error("Error saving payment: ", error);
+                showMessage("Erro ao registrar pagamento: " + error.message, "error");
             }
         });
 
-        // Delete button click
-        deleteBtn.addEventListener('click', () => {
-            if (playerIdInput.value) {
-                deletePlayer(playerIdInput.value);
+        // Cancel edit button
+        cancelEditBtn.addEventListener('click', resetForm);
+        
+        // Delete payment button
+        deletePaymentBtn.addEventListener('click', () => {
+            if (editingPaymentIdInput.value) {
+                deletePayment(editingPaymentIdInput.value);
             }
         });
 
-        // Clear form
-        clearBtn.addEventListener('click', clearForm);
-
-        function clearForm() {
-            playerForm.reset();
-            playerIdInput.value = '';
-            saveBtn.textContent = 'Salvar';
-            deleteBtn.style.display = 'none';
-            imagePreview.style.display = 'none';
+        // Reset form to default state
+        function resetForm() {
+            paymentForm.reset();
+            editingPaymentIdInput.value = '';
+            savePaymentBtn.textContent = 'Registrar Pagamento';
+            cancelEditBtn.style.display = 'none';
+            deletePaymentBtn.style.display = 'none';
+            paymentDateInput.valueAsDate = new Date();
         }
 
-        // Load players from Realtime Database
-        function loadPlayers() {
-            const playersRef = ref(database, 'players');
+        // Load payments for player
+        function loadPayments(playerId) {
+            const paymentsRef = ref(database, 'payments');
             
-            onValue(playersRef, (snapshot) => {
-                playersTableBody.innerHTML = '';
-                const players = snapshot.val();
+            onValue(paymentsRef, (snapshot) => {
+                paymentsTableBody.innerHTML = '';
+                const payments = snapshot.val();
+                let playerPayments = [];
                 
-                if (players) {
-                    Object.keys(players).forEach((key) => {
-                        const player = players[key];
-                        const rowClass = player.category === 'FIXO' ? 'category-fixo' : 'category-visitante';
-                        const row = `
-                            <tr class="${rowClass}">
-                                <td>
-                                    ${player.imageUrl ? 
-                                        `<img src="${player.imageUrl}" class="player-image" alt="${player.name}" data-id="${key}" style="cursor:pointer;">` : 
-                                        `<span data-id="${key}" style="cursor:pointer;">Sem foto</span>`}
-                                </td>
-                                <td>${player.name}</td>
-                                <td>${player.position}</td>
-                                <td>${player.contact}</td>
-                                <td>${player.category}</td>
-                            </tr>
-                        `;
-                        playersTableBody.innerHTML += row;
+                if (payments) {
+                    Object.keys(payments).forEach((key) => {
+                        if (payments[key].playerId === playerId) {
+                            playerPayments.push({
+                                id: key,
+                                ...payments[key]
+                            });
+                        }
                     });
                     
-                    // Add event listeners to player images for editing
-                    document.querySelectorAll('.player-image, [data-id]').forEach(element => {
-                        element.addEventListener('click', (e) => {
-                            editPlayer(e.target.getAttribute('data-id'));
-                        });
+                    // Sort by month (newest first)
+                    playerPayments.sort((a, b) => b.month.localeCompare(a.month));
+                    
+                    playerPayments.forEach((payment) => {
+                        const isInadimplente = payment.value === 0 || payment.value === '0';
+                        
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-id', payment.id);
+                        row.innerHTML = `
+                            <td>${formatMonthYear(payment.month)}</td>
+                            <td>${isInadimplente ? 'Não pago' : 'R$ ' + parseFloat(payment.value).toFixed(2)}</td>
+                            <td>${payment.date ? formatDate(payment.date) : '-'}</td>
+                            <td class="${isInadimplente ? 'status-inadimplente' : 'status-pago'}">
+                                ${isInadimplente ? 'Inadimplente' : 'Pago'}
+                            </td>
+                        `;
+                        
+                        // Add click event to edit payment when clicking the row
+                        row.addEventListener('click', () => editPayment(payment.id));
+                        
+                        paymentsTableBody.appendChild(row);
                     });
                 }
             }, (error) => {
-                console.error("Error loading players: ", error);
-                showMessage("Erro ao carregar integrantes: " + error.message, "error");
+                console.error("Error loading payments: ", error);
+                showMessage("Erro ao carregar pagamentos: " + error.message, "error");
             });
         }
 
-        // Edit player
-        async function editPlayer(id) {
+        // Edit payment
+        async function editPayment(paymentId) {
             try {
-                const playerRef = ref(database, `players/${id}`);
-                const snapshot = await get(playerRef);
+                const paymentRef = ref(database, `payments/${paymentId}`);
+                const snapshot = await get(paymentRef);
                 
                 if (snapshot.exists()) {
-                    const player = snapshot.val();
-                    nameInput.value = player.name;
-                    imageUrlInput.value = player.imageUrl || '';
-                    positionInput.value = player.position;
-                    contactInput.value = player.contact;
-                    categoryInput.value = player.category;
-                    playerIdInput.value = id;
-                    saveBtn.textContent = 'Atualizar';
-                    deleteBtn.style.display = 'inline-block';
+                    const paymentData = snapshot.val();
                     
-                    if (player.imageUrl) {
-                        imagePreview.src = player.imageUrl;
-                        imagePreview.style.display = 'block';
-                    } else {
-                        imagePreview.style.display = 'none';
-                    }
+                    // Preenche o formulário com os dados do pagamento
+                    paymentMonthInput.value = paymentData.month;
+                    paymentValueInput.value = paymentData.value;
+                    paymentDateInput.value = paymentData.date || '';
+                    editingPaymentIdInput.value = paymentId;
+                    
+                    // Altera o texto do botão para indicar que está editando
+                    savePaymentBtn.textContent = 'Atualizar Pagamento';
+                    cancelEditBtn.style.display = 'inline-block';
+                    deletePaymentBtn.style.display = 'inline-block';
+                    
+                    // Rola a página até o formulário
+                    paymentForm.scrollIntoView({ behavior: 'smooth' });
                 }
             } catch (error) {
-                console.error("Error editing player: ", error);
-                showMessage("Erro ao editar integrante: " + error.message, "error");
+                console.error("Error loading payment for edit: ", error);
+                showMessage("Erro ao carregar pagamento para edição: " + error.message, "error");
             }
         }
 
-        // Delete player
-        async function deletePlayer(id) {
-            if (confirm("Tem certeza que deseja excluir este integrante?")) {
+        // Delete payment
+        async function deletePayment(paymentId) {
+            if (confirm("Tem certeza que deseja excluir este pagamento?")) {
                 try {
-                    await remove(ref(database, `players/${id}`));
-                    showMessage("Integrante excluído com sucesso!", "success");
-                    clearForm();
+                    await remove(ref(database, `payments/${paymentId}`));
+                    showMessage("Pagamento excluído com sucesso!", "success");
+                    
+                    // Se estava editando o pagamento excluído, reseta o formulário
+                    if (editingPaymentIdInput.value === paymentId) {
+                        resetForm();
+                    }
                 } catch (error) {
-                    console.error("Error deleting player: ", error);
-                    showMessage("Erro ao excluir integrante: " + error.message, "error");
+                    console.error("Error deleting payment: ", error);
+                    showMessage("Erro ao excluir pagamento: " + error.message, "error");
                 }
             }
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            // Adiciona o timezone offset para compensar a conversão
+            const date = new Date(dateString);
+            const offset = date.getTimezoneOffset() * 60000; // offset em milissegundos
+            const adjustedDate = new Date(date.getTime() + offset);
+            
+            return adjustedDate.toLocaleDateString('pt-BR');
+        }
+
+        function formatMonthYear(monthYear) {
+            const [year, month] = monthYear.split('-');
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return `${monthNames[parseInt(month) - 1]} ${year}`;
         }
 
         // Show message
