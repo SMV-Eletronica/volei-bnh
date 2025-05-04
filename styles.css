@@ -45,6 +45,25 @@
     height: 30px; /* Define a altura */
 }
 
+#savePaymentBtn {
+    width: 90px; /* Define a largura */
+    height: 30px; /* Define a altura */
+}
+
+#cancelEditBtn {
+    width: 90px; /* Define a largura */
+    height: 30px; /* Define a altura */
+}
+
+#deletePaymentBtn {
+    width: 90px; /* Define a largura */
+    height: 30px; /* Define a altura */
+}
+
+
+
+
+
     
     .logout-btn {
         background-color: #d32f2f;
