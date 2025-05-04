@@ -72,6 +72,7 @@
                 <input type="hidden" id="playerId">
                 
                 <button type="submit" id="saveBtn">Salvar</button>
+                <button type="button" id="deleteBtn" style="display:none;">Excluir</button>
                 <button type="button" id="clearBtn">Limpar</button>
             </form>
         </div>
@@ -88,7 +89,6 @@
                             <th>Posição</th>
                             <th>Contato</th>
                             <th>Categoria</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="playersTableBody">
@@ -111,7 +111,7 @@
             authDomain: "volei-25301.firebaseapp.com",
             databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
             projectId: "volei-25301",
-            storageBucket: "volei-25301.firebasestorage.app",
+            storageBucket: "volei-25301.appspot.com",
             messagingSenderId: "1007197261034",
             appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
             measurementId: "G-CYMLX0SJJQ"
@@ -131,6 +131,7 @@
         const categoryInput = document.getElementById('category');
         const playerIdInput = document.getElementById('playerId');
         const saveBtn = document.getElementById('saveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
         const clearBtn = document.getElementById('clearBtn');
         const playersTableBody = document.getElementById('playersTableBody');
         const messageDiv = document.getElementById('message');
@@ -205,6 +206,13 @@
             }
         });
 
+        // Delete button click
+        deleteBtn.addEventListener('click', () => {
+            if (playerIdInput.value) {
+                deletePlayer(playerIdInput.value);
+            }
+        });
+
         // Clear form
         clearBtn.addEventListener('click', clearForm);
 
@@ -212,6 +220,7 @@
             playerForm.reset();
             playerIdInput.value = '';
             saveBtn.textContent = 'Salvar';
+            deleteBtn.style.display = 'none';
             imagePreview.style.display = 'none';
         }
 
@@ -231,29 +240,23 @@
                             <tr class="${rowClass}">
                                 <td>
                                     ${player.imageUrl ? 
-                                        `<img src="${player.imageUrl}" class="player-image" alt="${player.name}">` : 
-                                        'Sem foto'}
+                                        `<img src="${player.imageUrl}" class="player-image" alt="${player.name}" data-id="${key}" style="cursor:pointer;">` : 
+                                        `<span data-id="${key}" style="cursor:pointer;">Sem foto</span>`}
                                 </td>
                                 <td>${player.name}</td>
                                 <td>${player.position}</td>
                                 <td>${player.contact}</td>
                                 <td>${player.category}</td>
-                                <td class="action-btns">
-                                    <button class="edit-btn" data-id="${key}">Editar</button>
-                                    <button class="delete-btn" data-id="${key}">Excluir</button>
-                                </td>
                             </tr>
                         `;
                         playersTableBody.innerHTML += row;
                     });
                     
-                    // Add event listeners to edit and delete buttons
-                    document.querySelectorAll('.edit-btn').forEach(btn => {
-                        btn.addEventListener('click', () => editPlayer(btn.getAttribute('data-id')));
-                    });
-                    
-                    document.querySelectorAll('.delete-btn').forEach(btn => {
-                        btn.addEventListener('click', () => deletePlayer(btn.getAttribute('data-id')));
+                    // Add event listeners to player images for editing
+                    document.querySelectorAll('.player-image, [data-id]').forEach(element => {
+                        element.addEventListener('click', (e) => {
+                            editPlayer(e.target.getAttribute('data-id'));
+                        });
                     });
                 }
             }, (error) => {
@@ -277,6 +280,7 @@
                     categoryInput.value = player.category;
                     playerIdInput.value = id;
                     saveBtn.textContent = 'Atualizar';
+                    deleteBtn.style.display = 'inline-block';
                     
                     if (player.imageUrl) {
                         imagePreview.src = player.imageUrl;
@@ -297,6 +301,7 @@
                 try {
                     await remove(ref(database, `players/${id}`));
                     showMessage("Integrante excluído com sucesso!", "success");
+                    clearForm();
                 } catch (error) {
                     console.error("Error deleting player: ", error);
                     showMessage("Erro ao excluir integrante: " + error.message, "error");
