@@ -9,6 +9,9 @@
             --white: #ffffff;
             --gray: #95a5a6;
         }
+.icon-volleyball {
+    color: #3498db; /* Altere para a cor desejada */
+}
 
         * {
             margin: 0;
