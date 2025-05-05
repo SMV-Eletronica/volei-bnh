@@ -66,18 +66,18 @@ body {
 }
 
 #savePaymentBtn {
-    width: 120px; /* Define a largura */
-    height: 30px; /* Define a altura */
+    width: 100px; /* Define a largura */
+    height: 40px; /* Define a altura */
 }
 
 #cancelEditBtn {
-    width: 120px; /* Define a largura */
-    height: 30px; /* Define a altura */
+    width: 100px; /* Define a largura */
+    height: 40px; /* Define a altura */
 }
 
 #deletePaymentBtn {
-    width: 120px; /* Define a largura */
-    height: 30px; /* Define a altura */
+    width: 100px; /* Define a largura */
+    height: 40px; /* Define a altura */
 }
 
 
