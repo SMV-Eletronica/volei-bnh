@@ -50,8 +50,9 @@ body {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 #userEmail {
-    background-color: lightgray; /* Cinza claro */
+    color: lightgray; /* Cinza claro */
 }
+
 
 #clearBtn {
     width: 90px; /* Define a largura */
