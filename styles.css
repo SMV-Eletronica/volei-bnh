@@ -66,17 +66,17 @@ body {
 }
 
 #savePaymentBtn {
-    width: 100px; /* Define a largura */
+    width: 110px; /* Define a largura */
     height: 40px; /* Define a altura */
 }
 
 #cancelEditBtn {
-    width: 100px; /* Define a largura */
+    width: 110px; /* Define a largura */
     height: 40px; /* Define a altura */
 }
 
 #deletePaymentBtn {
-    width: 100px; /* Define a largura */
+    width: 110px; /* Define a largura */
     height: 40px; /* Define a altura */
 }
 
