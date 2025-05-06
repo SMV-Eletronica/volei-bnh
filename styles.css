@@ -734,10 +734,7 @@ button:hover {
         }
     }
 
-#userEmail {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+#userEmail {   
     color: lightgray; /* Ajuste a cor conforme necessário */
     text-align:center;
     padding: 5px;
