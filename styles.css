@@ -739,6 +739,6 @@ button:hover {
     bottom: 0;
     width: 100%;
     color: lightgray; /* Ajuste a cor conforme necessário */
-    text-align: center;
+    text-align: right;
     padding: 5px;
 }
