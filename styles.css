@@ -736,7 +736,7 @@ button:hover {
     position: fixed;
     bottom: 0;
     width: 100%;
-    background-color: lightgray; /* Ajuste a cor conforme necessário */
+    color: lightgray; /* Ajuste a cor conforme necessário */
     text-align: center;
-    padding: 10px;
+    padding: 5px;
 }
