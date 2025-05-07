@@ -546,10 +546,7 @@
                                 <div class="info-label">Contato</div>
                                 <div id="playerContact" class="info-value">-</div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Data de Nascimento</div>
-                                <div id="playerBirthdate" class="info-value">-</div>
-                            </div>
+                            
                         </div>
                         
                         <div class="payment-status">
@@ -605,7 +602,7 @@
         const profileName = document.getElementById('profileName');
         const playerPosition = document.getElementById('playerPosition');
         const playerCategory = document.getElementById('playerCategory');
-        const playerBirthdate = document.getElementById('playerBirthdate');
+        
         const playerContact = document.getElementById('playerContact');
         const paymentsList = document.getElementById('paymentsList');
         const prevPlayerBtn = document.getElementById('prevPlayer');
@@ -947,7 +944,7 @@
             profileName.textContent = player.name || "-";
             playerPosition.textContent = player.position || "-";
             playerCategory.textContent = player.category || "-";
-            playerBirthdate.textContent = player.birthdate ? formatDate(player.birthdate) : "-";
+            
             playerContact.textContent = player.contact || "-";
             
             if (player.imageUrl) {
