@@ -8,7 +8,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="styles.css">
     <style>
         /* Estilos adicionais para o sistema de confirmação */
         .game-container {
@@ -249,12 +248,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, get, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-       // Substitua a importação do flatpickr por:
-import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr";
-import { pt } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
-
-// E na inicialização do flatpickr:
-
+        import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr";
+        import { pt } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
@@ -273,7 +268,7 @@ import { pt } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
 
         // Emails com permissões especiais
         const ADMIN_EMAILS = [
-            "mvvasques@msn.com",
+            "admin1@voleibnh.com",
             "admin2@voleibnh.com",
             "admin3@voleibnh.com"
         ];
@@ -309,16 +304,18 @@ import { pt } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
         let allPlayers = [];
         let isAdmin = false;
 
-       flatpickr(gameDateInput, {
-    locale: pt,  // Agora usando 'pt' em vez de 'Portuguese'
-    minDate: "today",
-    dateFormat: "d/m/Y",
-    disable: [
-        function(date) {
-            return (date.getDay() === 0); // Desabilitar domingos
-        }
-    ]
-});
+        // Inicializar datepicker
+        flatpickr(gameDateInput, {
+            locale: pt,
+            minDate: "today",
+            dateFormat: "d/m/Y",
+            disable: [
+                function(date) {
+                    // Desabilitar domingos
+                    return (date.getDay() === 0);
+                }
+            ]
+        });
 
         // Verificar estado de autenticação
         onAuthStateChanged(auth, async (user) => {
