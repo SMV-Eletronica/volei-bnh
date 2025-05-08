@@ -133,7 +133,7 @@
         const logoutBtn = document.getElementById('logoutBtn');
 
         // Emails de exceção
-        const exceptionEmails = ['mvvasques@msn.com', 'admin2@example.com', 'admin3@example.com'];
+        const exceptionEmails = ['admin1@example.com', 'admin2@example.com', 'admin3@example.com'];
 
         // Variáveis globais
         let currentUserEmail = '';
@@ -184,7 +184,8 @@
             players.forEach(player => {
                 const option = document.createElement('option');
                 option.value = player.id;
-                option.textContent = `${player.name} (${player.email})`;
+                // Exibir apenas o nome, já que o email pode estar undefined
+                option.textContent = player.name;
                 playerSelect.appendChild(option);
             });
         }
@@ -237,8 +238,11 @@
                 return;
             }
 
+            // Usar o email do usuário autenticado para validação
+            const playerEmail = player.email || currentUserEmail; // Fallback para o email autenticado
+
             // Verificar se é o mesmo email ou email de exceção
-            if (player.email !== currentUserEmail && !exceptionEmails.includes(currentUserEmail)) {
+            if (playerEmail !== currentUserEmail && !exceptionEmails.includes(currentUserEmail)) {
                 showMessage('Você não tem permissão para confirmar terceiros', 'error');
                 return;
             }
@@ -257,7 +261,7 @@
                 await push(attendancesRef, {
                     playerId,
                     name: player.name,
-                    email: player.email,
+                    email: playerEmail,
                     category: player.category,
                     isGuest: false,
                     isWaiting,
