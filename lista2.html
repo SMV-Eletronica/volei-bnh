@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Jogos - Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilos adicionais para o sistema de confirmação */
+        .game-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .game-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .lists-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .list-box {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: white;
+        }
+        
+        .list-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .player-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .player-item.mensal {
+            background-color: #e3f2fd;
+            border-left: 4px solid #3498db;
+        }
+        
+        .player-item.diaria {
+            background-color: #e8f5e9;
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .player-item.convidado {
+            background-color: #fff3e0;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .player-item.pending {
+            background-color: #ffebee;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .player-status {
+            font-size: 12px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .status-pending {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .status-ok {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .waiting-list {
+            margin-top: 30px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .guest-controls {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .fee-notice {
+            font-size: 12px;
+            color: #e67e22;
+            margin-top: 5px;
+        }
+        
+        .admin-badge {
+            background-color: #9b59b6;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i>
+        Vôlei-BNH Gestão</h2></center>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i>&nbspCadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i>&nbspContribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i>&nbspFinanceiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i>&nbspIntegrantes</button>
+            <button onclick="window.location.href='confirmacao_jogos.html'" class="active"><i class="fas fa-calendar-check"></i>&nbspConfirmação Jogos</button>
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="userEmail"></div>
+        
+        <div id="gameCreationSection" class="game-container">
+            <h2><i class="fas fa-calendar-plus"></i> Criar Novo Jogo</h2>
+            <div class="game-form">
+                <div class="form-group">
+                    <label for="gameDate">Data do Jogo:</label>
+                    <input type="text" id="gameDate" class="form-control" placeholder="Selecione a data" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxPlayers">Número Máximo de Participantes (0-25):</label>
+                    <input type="number" id="maxPlayers" class="form-control" min="0" max="25" value="12">
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxGuests">Número Máximo de Visitantes (0-10):</label>
+                    <input type="number" id="maxGuests" class="form-control" min="0" max="10" value="2">
+                </div>
+                
+                <button id="createGameBtn" class="btn btn-success">Criar Jogo</button>
+            </div>
+        </div>
+        
+        <div id="gameConfirmationSection" class="game-container hidden">
+            <h2><i class="fas fa-volleyball-ball"></i> Confirmação para: <span id="currentGameDate"></span></h2>
+            <p>Vagas: <span id="playersCount">0</span>/<span id="maxPlayersDisplay">0</span> participantes | 
+               <span id="guestsCount">0</span>/<span id="maxGuestsDisplay">0</span> visitantes</p>
+            
+            <div class="lists-container">
+                <div class="list-box">
+                    <h3 class="list-title">Lista de Confirmados</h3>
+                    <div id="confirmedPlayersList"></div>
+                </div>
+                
+                <div class="list-box waiting-list">
+                    <h3 class="list-title">Fila de Espera</h3>
+                    <div id="waitingPlayersList"></div>
+                </div>
+            </div>
+            
+            <div id="playerConfirmationSection" class="mt-4">
+                <h3>Sua Confirmação</h3>
+                <div id="playerStatusMessage"></div>
+                <div id="confirmationControls"></div>
+                <div id="guestControls" class="guest-controls hidden">
+                    <h4>Convidar Visitante</h4>
+                    <div class="form-group">
+                        <label for="guestName">Nome do Visitante:</label>
+                        <input type="text" id="guestName" class="form-control" placeholder="Nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="guestContact">Contato:</label>
+                        <input type="text" id="guestContact" class="form-control" placeholder="Telefone ou email">
+                    </div>
+                    <button id="addGuestBtn" class="btn">Adicionar Visitante</button>
+                    <p class="fee-notice">Taxa de R$ 5,00 por visitante será adicionada à sua conta.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, get, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr";
+        import { Portuguese } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.appspot.com",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Emails com permissões especiais
+        const ADMIN_EMAILS = [
+            "admin1@voleibnh.com",
+            "admin2@voleibnh.com",
+            "admin3@voleibnh.com"
+        ];
+
+        // Elementos DOM
+        const userEmailDisplay = document.getElementById('userEmail');
+        const gameCreationSection = document.getElementById('gameCreationSection');
+        const gameConfirmationSection = document.getElementById('gameConfirmationSection');
+        const gameDateInput = document.getElementById('gameDate');
+        const maxPlayersInput = document.getElementById('maxPlayers');
+        const maxGuestsInput = document.getElementById('maxGuests');
+        const createGameBtn = document.getElementById('createGameBtn');
+        const currentGameDateDisplay = document.getElementById('currentGameDate');
+        const playersCountDisplay = document.getElementById('playersCount');
+        const maxPlayersDisplay = document.getElementById('maxPlayersDisplay');
+        const guestsCountDisplay = document.getElementById('guestsCount');
+        const maxGuestsDisplay = document.getElementById('maxGuestsDisplay');
+        const confirmedPlayersList = document.getElementById('confirmedPlayersList');
+        const waitingPlayersList = document.getElementById('waitingPlayersList');
+        const playerStatusMessage = document.getElementById('playerStatusMessage');
+        const confirmationControls = document.getElementById('confirmationControls');
+        const guestControls = document.getElementById('guestControls');
+        const guestNameInput = document.getElementById('guestName');
+        const guestContactInput = document.getElementById('guestContact');
+        const addGuestBtn = document.getElementById('addGuestBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Variáveis globais
+        let currentUser = null;
+        let currentUserData = null;
+        let currentGame = null;
+        let currentGameKey = null;
+        let allPlayers = [];
+        let isAdmin = false;
+
+        // Inicializar datepicker
+        flatpickr(gameDateInput, {
+            locale: Portuguese,
+            minDate: "today",
+            dateFormat: "d/m/Y",
+            disable: [
+                function(date) {
+                    // Desabilitar domingos
+                    return (date.getDay() === 0);
+                }
+            ]
+        });
+
+        // Verificar estado de autenticação
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                currentUser = user;
+                userEmailDisplay.textContent = `Logado como: ${user.email}`;
+                isAdmin = ADMIN_EMAILS.includes(user.email);
+                
+                // Carregar dados do usuário
+                await loadUserData(user.uid);
+                
+                // Carregar todos os jogadores
+                await loadAllPlayers();
+                
+                // Verificar se já existe um jogo criado
+                checkExistingGame();
+            }
+        });
+
+        // Carregar dados do usuário atual
+        async function loadUserData(userId) {
+            try {
+                const userRef = ref(database, `players/${userId}`);
+                const snapshot = await get(userRef);
+                
+                if (snapshot.exists()) {
+                    currentUserData = {
+                        id: userId,
+                        ...snapshot.val()
+                    };
+                }
+            } catch (error) {
+                console.error("Error loading user data:", error);
+            }
+        }
+
+        // Carregar todos os jogadores
+        async function loadAllPlayers() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                
+                if (snapshot.exists()) {
+                    allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({ id, ...player }));
+                }
+            } catch (error) {
+                console.error("Error loading players:", error);
+            }
+        }
+
+        // Verificar se já existe um jogo criado
+        function checkExistingGame() {
+            const gamesRef = ref(database, 'games');
+            
+            onValue(gamesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const games = snapshot.val();
+                    const gameEntries = Object.entries(games);
+                    
+                    // Encontrar o jogo mais recente (podemos ter apenas um jogo ativo por vez)
+                    if (gameEntries.length > 0) {
+                        const [gameKey, gameData] = gameEntries[0];
+                        currentGameKey = gameKey;
+                        currentGame = gameData;
+                        
+                        // Esconder seção de criação e mostrar confirmação
+                        gameCreationSection.classList.add('hidden');
+                        gameConfirmationSection.classList.remove('hidden');
+                        
+                        // Atualizar interface com dados do jogo
+                        updateGameUI();
+                        
+                        // Carregar lista de confirmados
+                        loadConfirmedPlayers();
+                    } else {
+                        // Não há jogos agendados, mostrar seção de criação
+                        gameCreationSection.classList.remove('hidden');
+                        gameConfirmationSection.classList.add('hidden');
+                    }
+                } else {
+                    // Não há jogos agendados, mostrar seção de criação
+                    gameCreationSection.classList.remove('hidden');
+                    gameConfirmationSection.classList.add('hidden');
+                }
+            });
+        }
+
+        // Criar novo jogo
+        createGameBtn.addEventListener('click', async () => {
+            const gameDate = gameDateInput.value;
+            const maxPlayers = parseInt(maxPlayersInput.value);
+            const maxGuests = parseInt(maxGuestsInput.value);
+            
+            if (!gameDate) {
+                alert("Por favor, selecione uma data para o jogo.");
+                return;
+            }
+            
+            if (isNaN(maxPlayers) || maxPlayers < 0 || maxPlayers > 25) {
+                alert("Por favor, insira um número válido de participantes (0-25).");
+                return;
+            }
+            
+            if (isNaN(maxGuests) || maxGuests < 0 || maxGuests > 10) {
+                alert("Por favor, insira um número válido de visitantes (0-10).");
+                return;
+            }
+            
+            try {
+                const gamesRef = ref(database, 'games');
+                const newGameRef = push(gamesRef);
+                
+                const gameData = {
+                    date: gameDate,
+                    maxPlayers,
+                    maxGuests,
+                    createdBy: currentUser.email,
+                    createdAt: new Date().toISOString(),
+                    confirmedPlayers: {},
+                    waitingList: {}
+                };
+                
+                await set(newGameRef, gameData);
+                
+                alert("Jogo criado com sucesso!");
+                
+            } catch (error) {
+                console.error("Error creating game:", error);
+                alert("Erro ao criar o jogo. Por favor, tente novamente.");
+            }
+        });
+
+        // Atualizar interface com dados do jogo
+        function updateGameUI() {
+            if (!currentGame) return;
+            
+            currentGameDateDisplay.textContent = currentGame.date;
+            maxPlayersDisplay.textContent = currentGame.maxPlayers;
+            maxGuestsDisplay.textContent = currentGame.maxGuests;
+            
+            // Atualizar contagem de participantes
+            updatePlayersCount();
+            
+            // Atualizar controles do usuário
+            updateUserControls();
+        }
+
+        // Atualizar contagem de participantes
+        function updatePlayersCount() {
+            if (!currentGame) return;
+            
+            const confirmedPlayers = currentGame.confirmedPlayers ? Object.values(currentGame.confirmedPlayers) : [];
+            const confirmedRegulars = confirmedPlayers.filter(p => p.type !== 'guest').length;
+            const confirmedGuests = confirmedPlayers.filter(p => p.type === 'guest').length;
+            
+            playersCountDisplay.textContent = confirmedRegulars;
+            guestsCountDisplay.textContent = confirmedGuests;
+        }
+
+        // Carregar lista de confirmados
+        function loadConfirmedPlayers() {
+            if (!currentGame) return;
+            
+            confirmedPlayersList.innerHTML = '';
+            waitingPlayersList.innerHTML = '';
+            
+            const confirmedPlayers = currentGame.confirmedPlayers ? Object.values(currentGame.confirmedPlayers) : [];
+            const waitingPlayers = currentGame.waitingList ? Object.values(currentGame.waitingList) : [];
+            
+            // Ordenar por categoria (Mensal > Diária > Convidado)
+            confirmedPlayers.sort((a, b) => {
+                const priority = { 'mensal': 3, 'diaria': 2, 'guest': 1 };
+                return priority[b.category] - priority[a.category];
+            });
+            
+            waitingPlayers.sort((a, b) => {
+                const priority = { 'mensal': 3, 'diaria': 2, 'guest': 1 };
+                return priority[b.category] - priority[a.category];
+            });
+            
+            // Adicionar confirmados
+            confirmedPlayers.forEach(player => {
+                addPlayerToUI(player, confirmedPlayersList, true);
+            });
+            
+            // Adicionar fila de espera
+            waitingPlayers.forEach(player => {
+                addPlayerToUI(player, waitingPlayersList, false);
+            });
+        }
+
+        // Adicionar jogador à interface
+        function addPlayerToUI(player, container, isConfirmed) {
+            const playerItem = document.createElement('div');
+            playerItem.className = `player-item ${player.category || 'diaria'} ${player.pending ? 'pending' : ''}`;
+            
+            let playerName = player.name;
+            if (player.type === 'guest' && player.invitedBy) {
+                const inviter = allPlayers.find(p => p.id === player.invitedBy);
+                if (inviter) {
+                    playerName += ` (convidado por ${inviter.name})`;
+                }
+            }
+            
+            playerItem.innerHTML = `
+                <div>
+                    <strong>${playerName}</strong>
+                    <div class="player-status ${player.pending ? 'status-pending' : 'status-ok'}">
+                        ${player.pending ? 'Pendência' : 'OK'}
+                    </div>
+                    ${player.category === 'mensal' ? '<span class="admin-badge">Mensal</span>' : ''}
+                    ${player.category === 'diaria' ? '<span class="admin-badge">Diária</span>' : ''}
+                    ${player.type === 'guest' ? '<span class="admin-badge">Convidado</span>' : ''}
+                </div>
+            `;
+            
+            // Adicionar botão de remoção para admins ou para o próprio jogador
+            if (isAdmin || (currentUser && player.id === currentUser.uid)) {
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-danger';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.title = 'Remover';
+                removeBtn.addEventListener('click', () => removePlayer(player, isConfirmed));
+                
+                const btnContainer = document.createElement('div');
+                btnContainer.appendChild(removeBtn);
+                playerItem.appendChild(btnContainer);
+            }
+            
+            container.appendChild(playerItem);
+        }
+
+        // Atualizar controles do usuário
+        function updateUserControls() {
+            if (!currentUser || !currentUserData || !currentGame) return;
+            
+            playerStatusMessage.innerHTML = '';
+            confirmationControls.innerHTML = '';
+            
+            const confirmedPlayers = currentGame.confirmedPlayers ? Object.values(currentGame.confirmedPlayers) : [];
+            const waitingPlayers = currentGame.waitingList ? Object.values(currentGame.waitingList) : [];
+            
+            // Verificar se usuário já está confirmado
+            const isConfirmed = confirmedPlayers.some(p => p.id === currentUser.uid);
+            const isOnWaitingList = waitingPlayers.some(p => p.id === currentUser.uid);
+            
+            // Verificar pendências
+            const hasPending = currentUserData.pending || false;
+            
+            if (isConfirmed) {
+                playerStatusMessage.innerHTML = `
+                    <div class="player-status status-ok">Você está confirmado para este jogo!</div>
+                    <p>Sua categoria: <strong>${currentUserData.category || 'Diária'}</strong></p>
+                `;
+                
+                const leaveBtn = document.createElement('button');
+                leaveBtn.className = 'btn btn-danger';
+                leaveBtn.textContent = 'Desistir do Jogo';
+                leaveBtn.addEventListener('click', () => leaveGame());
+                confirmationControls.appendChild(leaveBtn);
+                
+                // Mostrar controles de convidado se não tiver pendências
+                if (!hasPending) {
+                    // Verificar quantos convidados já foram adicionados por este usuário
+                    const userGuests = confirmedPlayers.filter(p => 
+                        p.type === 'guest' && p.invitedBy === currentUser.uid
+                    ).length;
+                    
+                    const remainingGuests = currentGame.maxGuests - userGuests;
+                    
+                    if (remainingGuests > 0) {
+                        guestControls.classList.remove('hidden');
+                        guestControls.querySelector('h4').textContent = 
+                            `Convidar Visitante (${remainingGuests} vaga(s) restante(s))`;
+                    } else {
+                        guestControls.classList.add('hidden');
+                    }
+                } else {
+                    guestControls.classList.add('hidden');
+                }
+            } else if (isOnWaitingList) {
+                playerStatusMessage.innerHTML = `
+                    <div class="player-status status-pending">Você está na fila de espera</div>
+                    <p>Sua posição na fila: <strong>#${waitingPlayers.findIndex(p => p.id === currentUser.uid) + 1}</strong></p>
+                    <p>Sua categoria: <strong>${currentUserData.category || 'Diária'}</strong></p>
+                `;
+                
+                const leaveBtn = document.createElement('button');
+                leaveBtn.className = 'btn btn-danger';
+                leaveBtn.textContent = 'Sair da Fila';
+                leaveBtn.addEventListener('click', () => leaveGame());
+                confirmationControls.appendChild(leaveBtn);
+                
+                guestControls.classList.add('hidden');
+            } else {
+                // Usuário não está nem confirmado nem na fila de espera
+                if (hasPending) {
+                    playerStatusMessage.innerHTML = `
+                        <div class="player-status status-pending">Você possui pendências financeiras</div>
+                        <p>Regularize sua situação para participar dos jogos.</p>
+                    `;
+                } else {
+                    playerStatusMessage.innerHTML = `
+                        <p>Você ainda não confirmou presença neste jogo.</p>
+                        <p>Sua categoria: <strong>${currentUserData.category || 'Diária'}</strong></p>
+                    `;
+                    
+                    const confirmBtn = document.createElement('button');
+                    confirmBtn.className = 'btn btn-success';
+                    confirmBtn.textContent = 'Confirmar Presença';
+                    confirmBtn.addEventListener('click', () => confirmPresence());
+                    confirmationControls.appendChild(confirmBtn);
+                }
+                
+                guestControls.classList.add('hidden');
+            }
+        }
+
+        // Confirmar presença no jogo
+        async function confirmPresence() {
+            if (!currentUser || !currentUserData || !currentGame || !currentGameKey) return;
+            
+            try {
+                const gamesRef = ref(database, `games/${currentGameKey}`);
+                const confirmedPlayers = currentGame.confirmedPlayers ? {...currentGame.confirmedPlayers} : {};
+                const waitingList = currentGame.waitingList ? {...currentGame.waitingList} : {};
+                
+                const playerData = {
+                    id: currentUser.uid,
+                    name: currentUserData.name,
+                    email: currentUser.email,
+                    category: currentUserData.category || 'diaria',
+                    type: 'regular',
+                    pending: currentUserData.pending || false,
+                    confirmedAt: new Date().toISOString()
+                };
+                
+                // Verificar se há vagas
+                const regularPlayers = Object.values(confirmedPlayers).filter(p => p.type !== 'guest').length;
+                const hasSpace = regularPlayers < currentGame.maxPlayers;
+                
+                if (hasSpace) {
+                    // Adicionar à lista de confirmados
+                    confirmedPlayers[currentUser.uid] = playerData;
+                    
+                    // Remover da fila de espera se estiver lá
+                    if (waitingList[currentUser.uid]) {
+                        delete waitingList[currentUser.uid];
+                    }
+                } else {
+                    // Adicionar à fila de espera
+                    waitingList[currentUser.uid] = playerData;
+                }
+                
+                // Atualizar no banco de dados
+                await update(gamesRef, {
+                    confirmedPlayers,
+                    waitingList
+                });
+                
+                alert(hasSpace ? "Presença confirmada com sucesso!" : "Vagas esgotadas! Você foi adicionado à fila de espera.");
+                
+            } catch (error) {
+                console.error("Error confirming presence:", error);
+                alert("Erro ao confirmar presença. Por favor, tente novamente.");
+            }
+        }
+
+        // Adicionar convidado
+        addGuestBtn.addEventListener('click', async () => {
+            if (!currentUser || !currentUserData || !currentGame || !currentGameKey) return;
+            
+            const guestName = guestNameInput.value.trim();
+            const guestContact = guestContactInput.value.trim();
+            
+            if (!guestName) {
+                alert("Por favor, informe o nome do visitante.");
+                return;
+            }
+            
+            if (!guestContact) {
+                alert("Por favor, informe um contato para o visitante.");
+                return;
+            }
+            
+            try {
+                const gamesRef = ref(database, `games/${currentGameKey}`);
+                const confirmedPlayers = currentGame.confirmedPlayers ? {...currentGame.confirmedPlayers} : {};
+                
+                // Verificar se ainda há vagas para convidados
+                const guestPlayers = Object.values(confirmedPlayers).filter(p => p.type === 'guest').length;
+                
+                if (guestPlayers >= currentGame.maxGuests) {
+                    alert("Limite de visitantes atingido!");
+                    return;
+                }
+                
+                // Verificar quantos convidados este usuário já adicionou
+                const userGuests = Object.values(confirmedPlayers).filter(p => 
+                    p.type === 'guest' && p.invitedBy === currentUser.uid
+                ).length;
+                
+                const remainingGuests = currentGame.maxGuests - userGuests;
+                
+                if (remainingGuests <= 0) {
+                    alert("Você já atingiu seu limite de convidados para este jogo.");
+                    return;
+                }
+                
+                // Criar ID único para o convidado
+                const guestId = `guest_${Date.now()}`;
+                
+                const guestData = {
+                    id: guestId,
+                    name: guestName,
+                    contact: guestContact,
+                    type: 'guest',
+                    category: 'guest',
+                    invitedBy: currentUser.uid,
+                    invitedByName: currentUserData.name,
+                    confirmedAt: new Date().toISOString()
+                };
+                
+                // Adicionar convidado
+                confirmedPlayers[guestId] = guestData;
+                
+                // Adicionar taxa de R$ 5,00 para o usuário que convidou
+                const feesRef = ref(database, `fees`);
+                const newFeeRef = push(feesRef);
+                
+                await set(newFeeRef, {
+                    playerId: currentUser.uid,
+                    playerName: currentUserData.name,
+                    playerEmail: currentUser.email,
+                    amount: 5,
+                    description: `Taxa por convidado (${guestName}) para o jogo de ${currentGame.date}`,
+                    gameId: currentGameKey,
+                    gameDate: currentGame.date,
+                    createdAt: new Date().toISOString(),
+                    paid: false
+                });
+                
+                // Atualizar jogo no banco de dados
+                await update(gamesRef, {
+                    confirmedPlayers
+                });
+                
+                alert("Convidado adicionado com sucesso! Taxa de R$ 5,00 adicionada à sua conta.");
+                
+                // Limpar campos
+                guestNameInput.value = '';
+                guestContactInput.value = '';
+                
+            } catch (error) {
+                console.error("Error adding guest:", error);
+                alert("Erro ao adicionar convidado. Por favor, tente novamente.");
+            }
+        });
+
+        // Remover jogador do jogo
+        async function removePlayer(player, isConfirmed) {
+            if (!currentGameKey || (!isAdmin && player.id !== currentUser.uid)) {
+                alert("Você não tem permissão para remover este participante.");
+                return;
+            }
+            
+            if (!confirm(`Tem certeza que deseja remover ${player.name} do jogo?`)) {
+                return;
+            }
+            
+            try {
+                const gamesRef = ref(database, `games/${currentGameKey}`);
+                
+                if (isConfirmed) {
+                    // Remover da lista de confirmados
+                    const confirmedPlayers = {...currentGame.confirmedPlayers};
+                    delete confirmedPlayers[player.id];
+                    
+                    await update(gamesRef, {
+                        confirmedPlayers
+                    });
+                    
+                    // Se era um convidado, remover a taxa associada (se não foi paga)
+                    if (player.type === 'guest') {
+                        const feesRef = ref(database, 'fees');
+                        const snapshot = await get(feesRef);
+                        
+                        if (snapshot.exists()) {
+                            const fees = snapshot.val();
+                            const feeEntries = Object.entries(fees);
+                            
+                            for (const [feeId, fee] of feeEntries) {
+                                if (fee.gameId === currentGameKey && 
+                                    fee.playerId === player.invitedBy && 
+                                    fee.description.includes(player.name) && 
+                                    !fee.paid) {
+                                    
+                                    await remove(ref(database, `fees/${feeId}`));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Remover da fila de espera
+                    const waitingList = {...currentGame.waitingList};
+                    delete waitingList[player.id];
+                    
+                    await update(gamesRef, {
+                        waitingList
+                    });
+                }
+                
+                alert(`${player.name} foi removido com sucesso.`);
+                
+            } catch (error) {
+                console.error("Error removing player:", error);
+                alert("Erro ao remover participante. Por favor, tente novamente.");
+            }
+        }
+
+        // Sair do jogo/fila
+        async function leaveGame() {
+            if (!currentUser || !currentGameKey) return;
+            
+            try {
+                const gamesRef = ref(database, `games/${currentGameKey}`);
+                const confirmedPlayers = currentGame.confirmedPlayers ? {...currentGame.confirmedPlayers} : {};
+                const waitingList = currentGame.waitingList ? {...currentGame.waitingList} : {};
+                
+                // Verificar se está na lista de confirmados
+                if (confirmedPlayers[currentUser.uid]) {
+                    delete confirmedPlayers[currentUser.uid];
+                    
+                    // Remover todos os convidados deste usuário
+                    Object.keys(confirmedPlayers).forEach(key => {
+                        if (confirmedPlayers[key].invitedBy === currentUser.uid) {
+                            delete confirmedPlayers[key];
+                        }
+                    });
+                    
+                    // Atualizar no banco de dados
+                    await update(gamesRef, {
+                        confirmedPlayers
+                    });
+                    
+                    alert("Você saiu do jogo com sucesso.");
+                } 
+                // Verificar se está na fila de espera
+                else if (waitingList[currentUser.uid]) {
+                    delete waitingList[currentUser.uid];
+                    
+                    // Atualizar no banco de dados
+                    await update(gamesRef, {
+                        waitingList
+                    });
+                    
+                    alert("Você saiu da fila de espera.");
+                }
+                
+            } catch (error) {
+                console.error("Error leaving game:", error);
+                alert("Erro ao sair do jogo. Por favor, tente novamente.");
+            }
+        }
+
+        // Botão de logout
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+    </script>
+</body>
+</html>
