@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         /* Estilos adicionais para o sistema de confirmação */
         .game-container {
@@ -165,6 +164,13 @@
             font-size: 12px;
             margin-left: 5px;
         }
+        
+        .current-date {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -186,12 +192,8 @@
         
         <div id="gameCreationSection" class="game-container">
             <h2><i class="fas fa-calendar-plus"></i> Criar Novo Jogo</h2>
+            <div class="current-date" id="currentDateDisplay"></div>
             <div class="game-form">
-                <div class="form-group">
-                    <label for="gameDate">Data do Jogo:</label>
-                    <input type="text" id="gameDate" class="form-control" placeholder="Selecione a data" readonly>
-                </div>
-                
                 <div class="form-group">
                     <label for="maxPlayers">Número Máximo de Participantes (0-25):</label>
                     <input type="number" id="maxPlayers" class="form-control" min="0" max="25" value="12">
@@ -248,8 +250,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, get, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-        import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr";
-        import { pt } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
@@ -275,9 +275,9 @@
 
         // Elementos DOM
         const userEmailDisplay = document.getElementById('userEmail');
+        const currentDateDisplay = document.getElementById('currentDateDisplay');
         const gameCreationSection = document.getElementById('gameCreationSection');
         const gameConfirmationSection = document.getElementById('gameConfirmationSection');
-        const gameDateInput = document.getElementById('gameDate');
         const maxPlayersInput = document.getElementById('maxPlayers');
         const maxGuestsInput = document.getElementById('maxGuests');
         const createGameBtn = document.getElementById('createGameBtn');
@@ -304,18 +304,19 @@
         let allPlayers = [];
         let isAdmin = false;
 
-        // Inicializar datepicker
-        flatpickr(gameDateInput, {
-            locale: pt,
-            minDate: "today",
-            dateFormat: "d/m/Y",
-            disable: [
-                function(date) {
-                    // Desabilitar domingos
-                    return (date.getDay() === 0);
-                }
-            ]
-        });
+        // Função para formatar a data atual
+        function getCurrentDateFormatted() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // Exibir data atual
+        function displayCurrentDate() {
+            currentDateDisplay.textContent = `Data do jogo: ${getCurrentDateFormatted()}`;
+        }
 
         // Verificar estado de autenticação
         onAuthStateChanged(auth, async (user) => {
@@ -325,6 +326,9 @@
                 currentUser = user;
                 userEmailDisplay.textContent = `Logado como: ${user.email}`;
                 isAdmin = ADMIN_EMAILS.includes(user.email);
+                
+                // Mostrar data atual
+                displayCurrentDate();
                 
                 // Carregar dados do usuário
                 await loadUserData(user.uid);
@@ -383,15 +387,23 @@
                         currentGameKey = gameKey;
                         currentGame = gameData;
                         
-                        // Esconder seção de criação e mostrar confirmação
-                        gameCreationSection.classList.add('hidden');
-                        gameConfirmationSection.classList.remove('hidden');
-                        
-                        // Atualizar interface com dados do jogo
-                        updateGameUI();
-                        
-                        // Carregar lista de confirmados
-                        loadConfirmedPlayers();
+                        // Verificar se o jogo é de hoje
+                        const today = getCurrentDateFormatted();
+                        if (gameData.date === today) {
+                            // Esconder seção de criação e mostrar confirmação
+                            gameCreationSection.classList.add('hidden');
+                            gameConfirmationSection.classList.remove('hidden');
+                            
+                            // Atualizar interface com dados do jogo
+                            updateGameUI();
+                            
+                            // Carregar lista de confirmados
+                            loadConfirmedPlayers();
+                        } else {
+                            // Jogo não é de hoje, mostrar seção de criação
+                            gameCreationSection.classList.remove('hidden');
+                            gameConfirmationSection.classList.add('hidden');
+                        }
                     } else {
                         // Não há jogos agendados, mostrar seção de criação
                         gameCreationSection.classList.remove('hidden');
@@ -407,14 +419,9 @@
 
         // Criar novo jogo
         createGameBtn.addEventListener('click', async () => {
-            const gameDate = gameDateInput.value;
             const maxPlayers = parseInt(maxPlayersInput.value);
             const maxGuests = parseInt(maxGuestsInput.value);
-            
-            if (!gameDate) {
-                alert("Por favor, selecione uma data para o jogo.");
-                return;
-            }
+            const gameDate = getCurrentDateFormatted();
             
             if (isNaN(maxPlayers) || maxPlayers < 0 || maxPlayers > 25) {
                 alert("Por favor, insira um número válido de participantes (0-25).");
@@ -427,7 +434,21 @@
             }
             
             try {
+                // Primeiro verificar se já existe um jogo para hoje
                 const gamesRef = ref(database, 'games');
+                const snapshot = await get(gamesRef);
+                
+                if (snapshot.exists()) {
+                    const games = snapshot.val();
+                    const hasGameToday = Object.values(games).some(game => game.date === gameDate);
+                    
+                    if (hasGameToday) {
+                        alert("Já existe um jogo criado para hoje.");
+                        return;
+                    }
+                }
+                
+                // Criar novo jogo
                 const newGameRef = push(gamesRef);
                 
                 const gameData = {
