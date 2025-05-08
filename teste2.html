@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Jogo - Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .status-pending { color: red; }
+        .status-clean { color: blue; }
+        .status-waiting { color: orange; }
+        .admin-actions { background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .game-settings { background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .category-header { background-color: #343a40; color: white; padding: 8px; margin-top: 15px; }
+        .guest-form { margin-top: 10px; padding: 10px; background-color: #f1f1f1; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i>
+        Vôlei-BNH Gestão</h2></center>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i>&nbspCadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i>&nbspContribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i>&nbspFinanceiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i>&nbspIntegrantes</button>            
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="userEmail"></div>
+        <div id="message" class="message"></div>
+        
+        <!-- Configuração do jogo (só aparece se não houver jogo agendado) -->
+        <div id="gameSetup" class="game-settings" style="display: none;">
+            <h3><i class="fas fa-cog"></i> Configurar Novo Jogo</h3>
+            <div class="form-group">
+                <label for="gameDate">Data do Jogo:</label>
+                <input type="date" id="gameDate" required>
+            </div>
+            <div class="form-group">
+                <label for="maxPlayers">Máximo de Participantes (0-25):</label>
+                <input type="number" id="maxPlayers" min="0" max="25" value="12" required>
+            </div>
+            <div class="form-group">
+                <label for="maxVisitors">Máximo de Visitantes (0-10):</label>
+                <input type="number" id="maxVisitors" min="0" max="10" value="2" required>
+            </div>
+            <button id="createGameBtn" class="btn-primary"><i class="fas fa-calendar-plus"></i> Criar Evento</button>
+        </div>
+
+        <!-- Informações do jogo atual -->
+        <div id="gameInfo" style="display: none;">
+            <h3><i class="fas fa-calendar-alt"></i> Jogo Agendado</h3>
+            <p><strong>Data:</strong> <span id="displayGameDate"></span></p>
+            <p><strong>Participantes:</strong> <span id="currentPlayersCount">0</span>/<span id="displayMaxPlayers">0</span></p>
+            <p><strong>Visitantes:</strong> <span id="currentVisitorsCount">0</span>/<span id="displayMaxVisitors">0</span></p>
+            <div id="adminControls" class="admin-actions" style="display: none;">
+                <button id="cancelGameBtn" class="btn-danger"><i class="fas fa-calendar-times"></i> Cancelar Evento</button>
+                <button id="confirmGuestPaymentsBtn" class="btn-secondary"><i class="fas fa-check-circle"></i> Confirmar Pagamentos</button>
+            </div>
+        </div>
+
+        <!-- Lista de presença -->
+        <div id="attendanceSection">
+            <h3><i class="fas fa-clipboard-list"></i> Lista de Presença</h3>
+            
+            <div id="mensalPlayers" class="player-category">
+                <div class="category-header">MENSAL</div>
+                <div id="mensalList" class="player-list"></div>
+            </div>
+            
+            <div id="diariaPlayers" class="player-category">
+                <div class="category-header">DIARIA</div>
+                <div id="diariaList" class="player-list"></div>
+            </div>
+            
+            <div id="convidadoPlayers" class="player-category">
+                <div class="category-header">CONVIDADO</div>
+                <div id="convidadoList" class="player-list"></div>
+            </div>
+            
+            <!-- Formulário para adicionar convidado (só aparece para usuários sem pendência) -->
+            <div id="guestForm" class="guest-form" style="display: none;">
+                <h4><i class="fas fa-user-plus"></i> Adicionar Convidado</h4>
+                <div class="form-group">
+                    <label for="guestName">Nome do Convidado:</label>
+                    <input type="text" id="guestName" required>
+                </div>
+                <button id="addGuestBtn" class="btn-secondary"><i class="fas fa-plus"></i> Adicionar Convidado (Taxa: R$ 5,00)</button>
+                <p><small>Você será responsável pelo pagamento da taxa de convidado.</small></p>
+            </div>
+        </div>
+
+        <!-- Lista de espera -->
+        <div id="waitingListSection" style="margin-top: 30px;">
+            <h3><i class="fas fa-clock"></i> Lista de Espera</h3>
+            <div id="waitingList" class="player-list"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.appspot.com",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Emails de administradores com permissões especiais
+        const ADMIN_EMAILS = [
+            "admin1@voleibnh.com",
+            "admin2@voleibnh.com",
+            "admin3@voleibnh.com"
+        ];
+
+        // Elementos DOM
+        const userEmailEl = document.getElementById('userEmail');
+        const messageEl = document.getElementById('message');
+        const gameSetupEl = document.getElementById('gameSetup');
+        const gameInfoEl = document.getElementById('gameInfo');
+        const displayGameDateEl = document.getElementById('displayGameDate');
+        const currentPlayersCountEl = document.getElementById('currentPlayersCount');
+        const displayMaxPlayersEl = document.getElementById('displayMaxPlayers');
+        const currentVisitorsCountEl = document.getElementById('currentVisitorsCount');
+        const displayMaxVisitorsEl = document.getElementById('displayMaxVisitors');
+        const adminControlsEl = document.getElementById('adminControls');
+        const createGameBtn = document.getElementById('createGameBtn');
+        const cancelGameBtn = document.getElementById('cancelGameBtn');
+        const confirmGuestPaymentsBtn = document.getElementById('confirmGuestPaymentsBtn');
+        const mensalListEl = document.getElementById('mensalList');
+        const diariaListEl = document.getElementById('diariaList');
+        const convidadoListEl = document.getElementById('convidadoList');
+        const waitingListEl = document.getElementById('waitingList');
+        const guestFormEl = document.getElementById('guestForm');
+        const guestNameInput = document.getElementById('guestName');
+        const addGuestBtn = document.getElementById('addGuestBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Variáveis globais
+        let currentUser = null;
+        let currentGame = null;
+        let players = [];
+        let payments = [];
+        let isAdmin = false;
+
+        // Verificar estado de autenticação
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                currentUser = user;
+                userEmailEl.textContent = `Logado como: ${user.email}`;
+                isAdmin = ADMIN_EMAILS.includes(user.email);
+                
+                // Carregar dados
+                await loadPlayers();
+                await loadPayments();
+                loadCurrentGame();
+            }
+        });
+
+        // Carregar jogadores do banco de dados
+        async function loadPlayers() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                
+                if (snapshot.exists()) {
+                    players = Object.entries(snapshot.val()).map(([id, player]) => ({ id, ...player }));
+                } else {
+                    players = [];
+                }
+            } catch (error) {
+                console.error("Error loading players: ", error);
+                showMessage("Erro ao carregar integrantes", "error");
+            }
+        }
+
+        // Carregar pagamentos do banco de dados
+        async function loadPayments() {
+            try {
+                const paymentsRef = ref(database, 'payments');
+                const snapshot = await get(paymentsRef);
+                payments = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            } catch (error) {
+                console.error("Error loading payments: ", error);
+            }
+        }
+
+        // Carregar jogo atual
+        function loadCurrentGame() {
+            const gameRef = ref(database, 'currentGame');
+            
+            onValue(gameRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    currentGame = snapshot.val();
+                    renderGameInfo();
+                    renderAttendanceLists();
+                } else {
+                    currentGame = null;
+                    gameSetupEl.style.display = isAdmin ? 'block' : 'none';
+                    gameInfoEl.style.display = 'none';
+                    document.getElementById('attendanceSection').style.display = 'none';
+                    document.getElementById('waitingListSection').style.display = 'none';
+                }
+            });
+        }
+
+        // Renderizar informações do jogo
+        function renderGameInfo() {
+            if (!currentGame) return;
+            
+            const gameDate = new Date(currentGame.date);
+            displayGameDateEl.textContent = gameDate.toLocaleDateString('pt-BR');
+            displayMaxPlayersEl.textContent = currentGame.maxPlayers;
+            displayMaxVisitorsEl.textContent = currentGame.maxVisitors;
+            
+            // Contar participantes confirmados
+            const confirmedPlayers = currentGame.attendance.filter(p => p.status === 'confirmed').length;
+            const confirmedVisitors = currentGame.attendance.filter(p => p.status === 'guest').length;
+            
+            currentPlayersCountEl.textContent = confirmedPlayers;
+            currentVisitorsCountEl.textContent = confirmedVisitors;
+            
+            // Mostrar/ocultar seções
+            gameSetupEl.style.display = 'none';
+            gameInfoEl.style.display = 'block';
+            document.getElementById('attendanceSection').style.display = 'block';
+            document.getElementById('waitingListSection').style.display = 'block';
+            
+            // Mostrar controles administrativos se for admin
+            adminControlsEl.style.display = isAdmin ? 'block' : 'none';
+            
+            // Mostrar formulário de convidado se o usuário não tiver pendências
+            const hasPending = checkUserPendingStatus(currentUser.email);
+            guestFormEl.style.display = !hasPending ? 'block' : 'none';
+        }
+
+        // Renderizar listas de presença e espera
+        function renderAttendanceLists() {
+            if (!currentGame) return;
+            
+            // Limpar listas
+            mensalListEl.innerHTML = '';
+            diariaListEl.innerHTML = '';
+            convidadoListEl.innerHTML = '';
+            waitingListEl.innerHTML = '';
+            
+            // Separar participantes por status e categoria
+            const confirmedPlayers = currentGame.attendance.filter(p => p.status === 'confirmed');
+            const waitingPlayers = currentGame.attendance.filter(p => p.status === 'waiting');
+            const guests = currentGame.attendance.filter(p => p.status === 'guest');
+            
+            // Separar por categoria
+            const mensalPlayers = confirmedPlayers.filter(p => p.category === 'MENSAL');
+            const diariaPlayers = confirmedPlayers.filter(p => p.category === 'DIARIA');
+            
+            // Renderizar lista MENSAL
+            mensalPlayers.forEach(player => {
+                const playerEl = createPlayerCard(player, true);
+                mensalListEl.appendChild(playerEl);
+            });
+            
+            // Renderizar lista DIARIA
+            diariaPlayers.forEach(player => {
+                const playerEl = createPlayerCard(player, true);
+                diariaListEl.appendChild(playerEl);
+            });
+            
+            // Renderizar lista CONVIDADO
+            guests.forEach(guest => {
+                const guestEl = createPlayerCard(guest, false);
+                convidadoListEl.appendChild(guestEl);
+            });
+            
+            // Renderizar lista de espera
+            waitingPlayers.forEach(player => {
+                const playerEl = createPlayerCard(player, false);
+                waitingListEl.appendChild(playerEl);
+            });
+        }
+
+        // Criar cartão de jogador/convidado
+        function createPlayerCard(player, isConfirmed) {
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            
+            // Verificar se é convidado
+            const isGuest = player.status === 'guest';
+            
+            // Verificar pendências (só para jogadores registrados)
+            let pendingStatus = '';
+            if (!isGuest && player.email) {
+                const hasPending = checkPlayerPendingStatus(player.email);
+                pendingStatus = hasPending ? 
+                    '<span class="status-pending"><i class="fas fa-exclamation-circle"></i> Pendente</span>' : 
+                    '<span class="status-clean"><i class="fas fa-check-circle"></i> Em dia</span>';
+            }
+            
+            // Botões de ação
+            let actionButtons = '';
+            if (isAdmin) {
+                // Administradores podem remover qualquer um
+                actionButtons = `<button class="btn-sm btn-danger remove-btn" data-id="${player.id}"><i class="fas fa-user-minus"></i> Remover</button>`;
+                
+                // Para convidados não pagos, mostrar botão de confirmar pagamento
+                if (isGuest && !player.paid) {
+                    actionButtons += `<button class="btn-sm btn-success confirm-payment-btn" data-id="${player.id}"><i class="fas fa-check"></i> Confirmar Pagamento</button>`;
+                }
+            } else if (player.email === currentUser.email) {
+                // Usuário pode se remover
+                actionButtons = `<button class="btn-sm btn-danger remove-btn" data-id="${player.id}"><i class="fas fa-user-minus"></i> Remover</button>`;
+            } else if (isGuest && player.invitedBy === currentUser.email) {
+                // Usuário pode remover seu próprio convidado
+                actionButtons = `<button class="btn-sm btn-danger remove-btn" data-id="${player.id}"><i class="fas fa-user-minus"></i> Remover</button>`;
+            }
+            
+            // Montar conteúdo do cartão
+            card.innerHTML = `
+                <div class="player-info">
+                    <strong>${player.name}</strong>
+                    ${isGuest ? `<small>Convidado por: ${player.invitedBy || 'Admin'}</small>` : ''}
+                    ${pendingStatus}
+                </div>
+                <div class="player-actions">
+                    ${actionButtons}
+                </div>
+            `;
+            
+            // Adicionar eventos aos botões
+            const removeBtn = card.querySelector('.remove-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => removeFromAttendance(removeBtn.dataset.id));
+            }
+            
+            const confirmPaymentBtn = card.querySelector('.confirm-payment-btn');
+            if (confirmPaymentBtn) {
+                confirmPaymentBtn.addEventListener('click', () => confirmGuestPayment(confirmPaymentBtn.dataset.id));
+            }
+            
+            return card;
+        }
+
+        // Verificar se jogador tem pendências
+        function checkPlayerPendingStatus(email) {
+            if (!email) return false;
+            
+            const playerPayments = payments.filter(p => p.playerEmail === email);
+            return playerPayments.some(p => p.value === 0 || p.value === '0');
+        }
+
+        // Verificar se usuário atual tem pendências
+        function checkUserPendingStatus(email) {
+            return checkPlayerPendingStatus(email);
+        }
+
+        // Criar novo evento de jogo
+        createGameBtn.addEventListener('click', async () => {
+            const gameDate = document.getElementById('gameDate').value;
+            const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
+            const maxVisitors = parseInt(document.getElementById('maxVisitors').value);
+            
+            if (!gameDate) {
+                showMessage("Por favor, selecione uma data para o jogo", "error");
+                return;
+            }
+            
+            try {
+                const gameData = {
+                    date: gameDate,
+                    maxPlayers,
+                    maxVisitors,
+                    attendance: [],
+                    createdAt: new Date().toISOString()
+                };
+                
+                await set(ref(database, 'currentGame'), gameData);
+                showMessage("Evento criado com sucesso!", "success");
+            } catch (error) {
+                console.error("Error creating game: ", error);
+                showMessage("Erro ao criar evento", "error");
+            }
+        });
+
+        // Cancelar evento
+        cancelGameBtn.addEventListener('click', async () => {
+            if (confirm("Tem certeza que deseja cancelar este evento?")) {
+                try {
+                    await remove(ref(database, 'currentGame'));
+                    showMessage("Evento cancelado com sucesso!", "success");
+                } catch (error) {
+                    console.error("Error canceling game: ", error);
+                    showMessage("Erro ao cancelar evento", "error");
+                }
+            }
+        });
+
+        // Adicionar convidado
+        addGuestBtn.addEventListener('click', async () => {
+            const guestName = guestNameInput.value.trim();
+            
+            if (!guestName) {
+                showMessage("Por favor, informe o nome do convidado", "error");
+                return;
+            }
+            
+            // Verificar se ainda há vagas para convidados
+            const currentGuests = currentGame.attendance.filter(p => p.status === 'guest').length;
+            if (currentGuests >= currentGame.maxVisitors) {
+                showMessage("Limite de convidados atingido", "error");
+                return;
+            }
+            
+            try {
+                const guestData = {
+                    id: `guest_${Date.now()}`,
+                    name: guestName,
+                    status: 'guest',
+                    invitedBy: currentUser.email,
+                    paid: false, // Pagamento precisa ser confirmado por admin
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Adicionar convidado à lista de presença
+                const updatedAttendance = [...currentGame.attendance, guestData];
+                await update(ref(database, 'currentGame/attendance'), updatedAttendance);
+                
+                guestNameInput.value = '';
+                showMessage("Convidado adicionado com sucesso! Aguarde confirmação do pagamento.", "success");
+            } catch (error) {
+                console.error("Error adding guest: ", error);
+                showMessage("Erro ao adicionar convidado", "error");
+            }
+        });
+
+        // Confirmar pagamento de convidado
+        async function confirmGuestPayment(guestId) {
+            try {
+                const guestIndex = currentGame.attendance.findIndex(p => p.id === guestId);
+                if (guestIndex === -1) return;
+                
+                const updatedAttendance = [...currentGame.attendance];
+                updatedAttendance[guestIndex] = {
+                    ...updatedAttendance[guestIndex],
+                    paid: true
+                };
+                
+                await update(ref(database, 'currentGame/attendance'), updatedAttendance);
+                showMessage("Pagamento do convidado confirmado!", "success");
+            } catch (error) {
+                console.error("Error confirming guest payment: ", error);
+                showMessage("Erro ao confirmar pagamento", "error");
+            }
+        }
+
+        // Remover da lista de presença
+        async function removeFromAttendance(playerId) {
+            if (!confirm("Tem certeza que deseja remover este participante?")) return;
+            
+            try {
+                const updatedAttendance = currentGame.attendance.filter(p => p.id !== playerId);
+                await update(ref(database, 'currentGame/attendance'), updatedAttendance);
+                showMessage("Participante removido com sucesso", "success");
+            } catch (error) {
+                console.error("Error removing player: ", error);
+                showMessage("Erro ao remover participante", "error");
+            }
+        }
+
+        // Mostrar mensagem
+        function showMessage(message, type) {
+            messageEl.textContent = message;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+    </script>
+</body>
+</html>
