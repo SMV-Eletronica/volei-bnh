@@ -249,8 +249,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, get, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-        import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr";
-        import { Portuguese } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
+       // Substitua a importação do flatpickr por:
+import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr";
+import { pt } from "https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js";
+
+// E na inicialização do flatpickr:
+
         
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
@@ -305,18 +309,16 @@
         let allPlayers = [];
         let isAdmin = false;
 
-        // Inicializar datepicker
-        flatpickr(gameDateInput, {
-            locale: Portuguese,
-            minDate: "today",
-            dateFormat: "d/m/Y",
-            disable: [
-                function(date) {
-                    // Desabilitar domingos
-                    return (date.getDay() === 0);
-                }
-            ]
-        });
+       flatpickr(gameDateInput, {
+    locale: pt,  // Agora usando 'pt' em vez de 'Portuguese'
+    minDate: "today",
+    dateFormat: "d/m/Y",
+    disable: [
+        function(date) {
+            return (date.getDay() === 0); // Desabilitar domingos
+        }
+    ]
+});
 
         // Verificar estado de autenticação
         onAuthStateChanged(auth, async (user) => {
