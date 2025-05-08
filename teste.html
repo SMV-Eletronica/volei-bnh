@@ -1,786 +1,365 @@
- body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f5f5f5;
-    }
-    
-    .header {
-        background-color: #4285f4;
-        color: white;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .header h2 {
-        font-size: 1.2rem;
-        margin: 0;
-        text-align: center;
-    }
-    
-    .container {
-        max-width: 100%;
-        margin: 10px;
-        padding: 15px;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro-Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=1.0">
 
-#clearBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
-}
-
-#deleteBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
-}
-
-#saveBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
-}
-
-#savePaymentBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
-}
-
-#cancelEditBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
-}
-
-#deletePaymentBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
-}
-
-
-
-
-
-    
-    .logout-btn {
-        background-color: #d32f2f;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-    
-    .logout-btn:hover {
-        background-color: #b71c1c;
-    }
-
-
-  #paymentsTableBody tr {
-            cursor: pointer;
-        }
-        #paymentsTableBody tr:hover {
-            background-color: #f5f5f5; /* opcional: muda cor ao passar o mouse */
-        }
-
-
-.profile-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.profile-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-.nav-arrow {
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 20px;
-}
-
-.nav-arrow:hover {
-    background-color: #3367d6;
-}
-
-.profile-photo {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 5px solid #4285f4;
-}
-
-.profile-details {
-    width: 100%;
-    margin-top: 20px;
-}
-
-.profile-name {
-    font-size: 24px;
-    color: #4285f4;
-    margin-bottom: 10px;
-}
-
-.profile-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.info-item {
-    text-align: left;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-}
-
-.info-label {
-    font-weight: bold;
-    color: #666;
-    font-size: 14px;
-}
-
-.info-value {
-    margin-top: 5px;
-}
-
-.payment-status {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-}
-
-.status-title {
-    font-size: 18px;
-    color: #4285f4;
-    margin-bottom: 15px;
-}
-
-.status-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.status-month {
-    font-weight: bold;
-}
-
-.status-value.paid {
-    color: #388e3c;
-    font-weight: bold;
-}
-
-.status-value.unpaid {
-    color: #d32f2f;
-    font-weight: bold;
-}
-
-
-    
-     .form-group {
-            margin-bottom: 10px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 3px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        .form-group input, 
-        .form-group select, 
-        .form-group textarea {
+    <style>
+        /* Adicionando estilo para máscara de telefone */
+        input[type="tel"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 0.9rem;
         }
-        .form-group textarea {
-            height: 70px;
-            resize: vertical;
-        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i>
+        Vôlei-BNH Gestão</h2></center>
+        <div class="button-container">
+            
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i>&nbspCadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i>&nbspContribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i>&nbspFinanceiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i>&nbspIntegrantes</button>            
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+        </div>  
+        
+    </div>
+   
     
-    label {
-        display: block;
-        margin-bottom: 4px;
-        font-weight: bold;
-        font-size: 0.9rem;
-    }
-    
-    input, select {
-        width: 100%;
-        padding: 6px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-sizing: border-box;
-        font-size: 0.9rem;
-    }
-    
-    button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 8px;
-    font-size: 0.9rem;
-    width: 120px;
-}
+  
+         <div class="container">
+             <div id="userEmail"></div>
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-user-edit"></i> Cadastrar Novo Integrante</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <form id="playerForm">
+                <div class="form-group">
+                    <label for="name">Nome:</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageUrl">URL da Imagem do Jogador:</label>
+                    <input type="url" id="imageUrl" placeholder="https://exemplo.com/foto.jpg">
+                    <button type="button" id="previewBtn" class="upload-btn"><i class="fas fa-eye"></i>&nbspVisualizar</button>
+                    <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
+                </div>
+                
+                <div class="form-group">
+                    <label for="position">Posição:</label>
+                    <select id="position" required>
+                        <option value="">Selecione uma posição</option>
+                        <option value="Levantador">Levantador</option>
+                        <option value="Ponteiro">Ponteiro</option>
+                        <option value="Oposto">Oposto</option>
+                        <option value="Central">Central</option>
+                        <option value="Líbero">Líbero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact">Telefone (com DDD):</label>
+                    <input type="tel" id="contact" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" placeholder="(99) 99999-9999" required>
+                    <small>Formato: (DDD) 99999-9999</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Categoria:</label>
+                    <select id="category" required>
+                        <option value="">Selecione uma categoria</option>                        
+                        <option value="MENSAL">MENSAL</option>
+                        <option value="DIARIA">DIARIA</option>
+                        <option value="CONVIDADO">CONVIDADO</option>
+                    </select>
+                </div>
+                
+                <input type="hidden" id="playerId">
+                
+                <button type="submit" id="saveBtn" style="background-color: #4285f4;"><i class="fas fa-save"></i>&nbspSalvar</button>                
+                <button type="button" id="clearBtn" style="display: none; background-color: #ff5722;">Limpar</button>
+                <button type="button" id="deleteBtn" style="display: none; background-color: #f44336;">Excluir</button>
+            </form>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-list"></i> Lista de Integrantes Cadastrados</h2>
+            
+            <div id="playersList">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Telefone</th>
+                            <th>Posição</th>                       
+                            <th>Categoria</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <!-- Os dados serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-button:hover {
-    background-color: #45a049;
-}
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-        font-size: 0.9rem;
-    }
-    
-    th, td {
-        border: 1px solid #ddd;
-        padding: 6px;
-        text-align: left;
-    }
-    
-    th {
-        background-color: #f2f2f2;
-    }
-    
-    tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-        .total-row {
-            font-weight: bold;
-            background-color: #e6f7ff !important;
-        }
-        .filter-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .filter-controls select {
-            padding: 6px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            font-size: 0.9rem;
-        }
-        .defaulters-section {
-            margin-top: 20px;
-            background-color: #fff3f3;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 4px solid #d32f2f;
-        }
-        .defaulters-list {
-            margin-top: 10px;
-        }
-        .defaulter-item {
-            padding: 8px;
-            border-bottom: 1px solid #ffcdcd;
-            display: flex;
-            align-items: center;
-        }
-        .defaulter-photo {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 10px;
-        }
-        .defaulter-info {
-            flex: 1;
-        }
-        .defaulter-name {
-            font-weight: bold;
-            margin-bottom: 3px;
-            font-size: 0.9rem;
-        }
-        .defaulter-months {
-            color: #d32f2f;
-            font-size: 0.8em;
-        }
-        .no-defaulters {
-            color: #666;
-            font-style: italic;
-            padding: 8px;
-        }
-        .status-pago {
-            color: #388e3c;
-            font-weight: bold;
-        }
-        .status-inadimplente {
-            color: #d32f2f;
-            font-weight: bold;
-        }
-        .expense-form {
-            background-color: #fff8e1;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.appspot.com",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
 
- .expenses-list {
-            margin-top: 20px;
-        }
-        .expense-item {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            font-size: 0.9rem;
-        }
-        .expense-value {
-            font-weight: bold;
-            color: #d32f2f;
-        }
-        .tabs {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #ddd;
-            flex-wrap: wrap;
-        }
-        .tab {
-            padding: 8px 15px;
-            cursor: pointer;
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            border-bottom: none;
-            margin-right: 3px;
-            border-radius: 5px 5px 0 0;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-        .tab.active {
-            background-color: white;
-            border-bottom: 1px solid white;
-            margin-bottom: -1px;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .cash-summary {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #4285f4;
-        }
-        .cash-summary-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-        .cash-summary-item {
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .cash-summary-title {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .cash-summary-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        .cash-summary-value.positive {
-            color: #388e3c;
-        }
-        .cash-summary-value.negative {
-            color: #d32f2f;
-        }
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
 
+        // DOM elements
+        const playerForm = document.getElementById('playerForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const imageUrlInput = document.getElementById('imageUrl');
+        const positionInput = document.getElementById('position');
+        const contactInput = document.getElementById('contact');
+        const categoryInput = document.getElementById('category');
+        const playerIdInput = document.getElementById('playerId');
+        const saveBtn = document.getElementById('saveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const playersTableBody = document.getElementById('playersTableBody');
+        const messageDiv = document.getElementById('message');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewBtn = document.getElementById('previewBtn');
 
+        // Máscara para telefone
+        contactInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                value = '(' + value;
+            }
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ') ' + value.substring(3);
+            }
+            if (value.length > 10) {
+                value = value.substring(0, 10) + '-' + value.substring(10, 14);
+            }
+            e.target.value = value;
+        });
 
-    .action-btns button {
-        padding: 4px 8px;
-        margin-right: 4px;
-    }
-    
-    .edit-btn {
-        background-color: #2196F3;
-    }
-    
-    .edit-btn:hover {
-        background-color: #0b7dda;
-    }
-    
-    .delete-btn {
-        background-color: #f44336;
-    }
-    
-    .delete-btn:hover {
-        background-color: #da190b;
-    }
-    
-    .section {
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .section-title {
-        color: #4285f4;
-        margin-bottom: 12px;
-        font-size: 1.1rem;
-    }
-    
-    .message {
-        padding: 8px;
-        margin: 8px 0;
-        border-radius: 4px;
-        display: none;
-        font-size: 0.9rem;
-    }
-    
-    .success {
-        background-color: #dff0d8;
-        color: #3c763d;
-    }
-    
-    .error {
-        background-color: #f2dede;
-        color: #a94442;
-    }
+        // Preview image button
+        previewBtn.addEventListener('click', () => {
+            const url = imageUrlInput.value;
+            if (url) {
+                imagePreview.src = url;
+                imagePreview.style.display = 'block';
+            } else {
+                alert('Por favor, insira uma URL válida');
+            }
+        });
 
- .btn-submit {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .btn-submit:hover {
-            background-color: #45a049;
+        // Check auth state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // User is not logged in, redirect to login page
+                window.location.href = 'index.html';
+            } else {
+                // User is logged in, show email
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                // Load players data
+                loadPlayers();
+            }
+        });
+
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+        // Form submit
+        playerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const playerData = {
+                name: nameInput.value,
+                email: emailInput.value || null,
+                imageUrl: imageUrlInput.value || null,
+                position: positionInput.value,
+                contact: contactInput.value,
+                category: categoryInput.value,
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                if (playerIdInput.value) {
+                    // Update existing player
+                    const updates = {};
+                    updates['players/' + playerIdInput.value] = playerData;
+                    await update(ref(database), updates);
+                    showMessage("Integrante atualizado com sucesso!", "success");
+                } else {
+                    // Add new player
+                    const newPlayerRef = push(ref(database, 'players'));
+                    await set(newPlayerRef, playerData);
+                    showMessage("Integrante cadastrado com sucesso!", "success");
+                }
+                
+                // Clear form
+                clearForm();
+            } catch (error) {
+                console.error("Error saving player: ", error);
+                showMessage("Erro ao salvar integrante: " + error.message, "error");
+            }
+        });
+
+        // Delete button click
+        deleteBtn.addEventListener('click', () => {
+            if (playerIdInput.value) {
+                deletePlayer(playerIdInput.value);
+            }
+        });
+
+        // Clear form
+        clearBtn.addEventListener('click', clearForm);
+
+        function clearForm() {
+            playerForm.reset();
+            playerIdInput.value = '';
+            saveBtn.textContent = 'Salvar';
+            deleteBtn.style.display = 'none';
+            imagePreview.style.display = 'none';
         }
 
-
-.player-info {
-    background-color: #e6f7ff;
-    padding: 12px;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.player-photo {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #4285f4;
-}
-
-.player-details {
-    flex: 1;
-    text-align: center;
-}
-
-.player-details h3 {
-    margin-top: 0;
-    color: #4285f4;
-    font-size: 1.5rem;
-}
-
-.player-details p {
-    margin: 4px 0;
-    font-size: 0.9rem;
-}
-
-.search-results {
-    max-height: 180px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-top: 4px;
-    display: none;
-    position: absolute;
-    width: calc(100% - 20px);
-    background: white;
-    z-index: 100;
-}
-
-
-
-.pending-alert {
-    background-color: #fff3f3;
-    color: #d32f2f;
-    padding: 15px;
-    border-radius: 5px;
-    margin-top: 20px;
-    border-left: 4px solid #d32f2f;
-    font-weight: bold;
-}
-
-.no-pending {
-    background-color: #e8f5e9;
-    color: #388e3c;
-    padding: 15px;
-    border-radius: 5px;
-    margin-top: 20px;
-    border-left: 4px solid #388e3c;
-    font-weight: bold;
-}
-
-.search-container {
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-}
-
-.search-input {
-    padding: 10px 15px;
-    width: 300px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    font-size: 16px;
-}
-
-.search-item {
-    padding: 6px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-}
-
-.search-item:hover {
-    background-color: #f5f5f5;
-}
-
-.search-item-photo {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 8px;
-}
-
-.status-pago {
-    color: #388e3c;
-    font-weight: bold;
-}
-
-.status-inadimplente {
-    color: #d32f2f;
-    font-weight: bold;
-}
-
-
-
-    .category-fixo {
-        background-color: #e6f7ff;
-    }
-    
-    .category-visitante {
-        background-color: #fff7e6;
-    }
-    
-    .player-image {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    
-    .image-preview {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin: 8px 0;
-        display: none;
-        border: 2px solid #ddd;
-    }
-    
-    .upload-btn {
-        background-color: #4285f4;
-        margin-top: 4px;
-    }
-    
-    .upload-btn:hover {
-        background-color: #3367d6;
-    }
-    
-    .button-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px;
-    }
-    
-    /* Media Queries */
-    @media (min-width: 768px) {
-        .header {
-            flex-direction: row;
-            justify-content: space-between;
-            padding: 20px;
-        }
-    
-        .header h2 {
-            font-size: 1.5rem;
-            text-align: left;
-        }
-    
-        .container {
-            max-width: 95%;
-            margin: 20px auto;
-            padding: 20px;
-        }
-    
-        .button-container {
-            flex-wrap: nowrap;
-            gap: 15px;
-            padding: 15px;
-        }
-    
-        button {
-            padding: 10px 15px;
-            font-size: 0.9rem;
+        // Load players from Realtime Database
+        function loadPlayers() {
+            const playersRef = ref(database, 'players');
+            
+            onValue(playersRef, (snapshot) => {
+                playersTableBody.innerHTML = '';
+                const players = snapshot.val();
+                
+                if (players) {
+                    Object.keys(players).forEach((key) => {
+                        const player = players[key];
+                        const rowClass = player.category === 'FIXO' ? 'category-fixo' : 'category-visitante';
+                        const row = `
+                            <tr class="${rowClass}">
+                                <td>
+                                    ${player.imageUrl ? 
+                                        `<img src="${player.imageUrl}" class="player-image" alt="${player.name}" data-id="${key}" style="cursor:pointer;">` : 
+                                        `<span data-id="${key}" style="cursor:pointer;">Sem foto</span>`}
+                                </td>
+                                <td>${player.name}</td>
+                                <td>${player.email || '-'}</td>
+                                <td>${player.contact || '-'}</td>
+                                <td>${player.position}</td>                               
+                                <td>${player.category}</td>
+                            </tr>
+                        `;
+                        playersTableBody.innerHTML += row;
+                    });
+                    
+                    // Add event listeners to player images for editing
+                    document.querySelectorAll('.player-image, [data-id]').forEach(element => {
+                        element.addEventListener('click', (e) => {
+                            editPlayer(e.target.getAttribute('data-id'));
+                        });
+                    });
+                }
+            }, (error) => {
+                console.error("Error loading players: ", error);
+                showMessage("Erro ao carregar integrantes: " + error.message, "error");
+            });
         }
 
-     #clearBtn {
-    width: 220px; /* Define a largura */
-    height: 20px; /* Define a altura */
-}
-
-#deleteBtn {
-    width: 220px; /* Define a largura */
-    height: 20px; /* Define a altura */
-}
-
-#saveBtn {
-    width: 220px; /* Define a largura */
-    height: 20px; /* Define a altura */
-}
-    
-        table {
-            font-size: 1rem;
-        }
-    
-        th, td {
-            padding: 10px;
-        }
-    
-        .section-title {
-            font-size: 1.3rem;
-        }
-    
-        .player-image {
-            width: 50px;
-            height: 50px;
-        }
-    
-        .image-preview {
-            width: 80px;
-            height: 80px;
-            margin: 10px 0;
-        }
-    
-        input, select {
-            padding: 8px;
-            font-size: 1rem;
-        }
-    
-        label {
-            font-size: 1rem;
-        }
-    }
-    
-    @media (min-width: 992px) {
-        .container {
-            max-width: 1200px;
-        }
-    
-        .button-container {
-            gap: 20px;
+        // Edit player
+        async function editPlayer(id) {
+            try {
+                const playerRef = ref(database, `players/${id}`);
+                const snapshot = await get(playerRef);
+                
+                if (snapshot.exists()) {
+                    const player = snapshot.val();
+                    nameInput.value = player.name;
+                    emailInput.value = player.email || '';
+                    imageUrlInput.value = player.imageUrl || '';
+                    positionInput.value = player.position;
+                    contactInput.value = player.contact || '';
+                    categoryInput.value = player.category;
+                    playerIdInput.value = id;
+                    saveBtn.textContent = 'Atualizar';
+                    deleteBtn.style.display = 'inline-block';
+                    
+                    if (player.imageUrl) {
+                        imagePreview.src = player.imageUrl;
+                        imagePreview.style.display = 'block';
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error("Error editing player: ", error);
+                showMessage("Erro ao editar integrante: " + error.message, "error");
+            }
         }
 
-     #clearBtn {
-    width: 100px; /* Define a largura */
-    height: 40px; /* Define a altura */
-}
-
-#deleteBtn {
-    width: 100px; /* Define a largura */
-    height: 40px; /* Define a altura */
-}
-
-#saveBtn {
-    width: 100px; /* Define a largura */
-    height: 40px; /* Define a altura */
-}
-
-     #savePaymentBtn {
-    width: 100px; /* Define a largura */
-    height: 40px; /* Define a altura */
-}
-
-#cancelEditBtn {
-    width: 100px; /* Define a largura */
-    height: 40px; /* Define a altura */
-}
-
-#deletePaymentBtn {
-    width: 100px; /* Define a largura */
-    height: 40px; /* Define a altura */
-}
-    
-        .header h2 {
-            font-size: 1.8rem;
+        // Delete player
+        async function deletePlayer(id) {
+            if (confirm("Tem certeza que deseja excluir este integrante?")) {
+                try {
+                    await remove(ref(database, `players/${id}`));
+                    showMessage("Integrante excluído com sucesso!", "success");
+                    clearForm();
+                } catch (error) {
+                    console.error("Error deleting player: ", error);
+                    showMessage("Erro ao excluir integrante: " + error.message, "error");
+                }
+            }
         }
-    
-        .section-title {
-            font-size: 1.5rem;
+
+        // Show message
+        function showMessage(message, type) {
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
         }
-    
-        .player-image {
-            width: 60px;
-            height: 60px;
-        }
-    
-        .image-preview {
-            width: 100px;
-            height: 100px;
-        }
-    }
+    </script>
+</body>
+</html>
