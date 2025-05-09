@@ -495,7 +495,7 @@
                 playerLimitContainer.innerHTML = `
                     <div class="limit-container">
                         <label>Limite de Participantes:</label>
-                        <input type="number" id="playerLimitInput" min="1" value="${playerLimit}">
+                        <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
                         <button id="confirmLimitBtn">Confirmar</button>
                     </div>
                 `;
@@ -559,7 +559,14 @@
             confirmLimitBtn.addEventListener('click', async () => {
                 if (!isViewingHistory) {
                     const playerLimitInput = document.getElementById('playerLimitInput');
-                    const newLimit = parseInt(playerLimitInput.value) || 20;
+                    const inputValue = playerLimitInput.value.trim();
+                    const newLimit = parseInt(inputValue);
+
+                    if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
+                        alert('Por favor, insira um número inteiro válido.');
+                        playerLimitInput.value = playerLimit;
+                        return;
+                    }
                     if (newLimit < 1) {
                         alert('O limite deve ser pelo menos 1.');
                         playerLimitInput.value = playerLimit;
@@ -683,7 +690,7 @@
                 playerLimitContainer.innerHTML = `
                     <div class="limit-container">
                         <label>Limite de Participantes:</label>
-                        <input type="number" id="playerLimitInput" min="1" value="${playerLimit}" ${isViewingHistory ? 'disabled' : ''}>
+                        <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*" ${isViewingHistory ? 'disabled' : ''}>
                         <button id="confirmLimitBtn" ${isViewingHistory ? 'disabled' : ''}>Confirmar</button>
                     </div>
                 `;
