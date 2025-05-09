@@ -130,6 +130,21 @@
             cursor: not-allowed;
         }
 
+        .player-details {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        .player-details p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .player-details strong {
+            color: var(--text);
+        }
+
         .game-list, .waitlist {
             margin-top: 20px;
         }
@@ -215,9 +230,17 @@
             <div id="content" class="section">
                 <h2 class="section-title"><i class="fas fa-volleyball-ball"></i> Gerenciamento de Presença</h2>
                 
+                <!-- Nova seção para exibir os dados do integrante -->
+                <div class="player-details" id="playerDetails" style="display: none;">
+                    <p><strong>Nome:</strong> <span id="playerName">-</span></p>
+                    <p><strong>Posição:</strong> <span id="playerPosition">-</span></p>
+                    <p><strong>Email:</strong> <span id="playerEmail">-</span></p>
+                    <p><strong>Categoria:</strong> <span id="playerCategory">-</span></p>
+                </div>
+                
                 <div class="game-controls">
                     <input type="number" id="playerLimit" min="1" placeholder="Limite de jogadores" value="12">
-                    <button id="confirmPlayer"><i class="fas fa-check"></i> Confirmar Minha Presença</button>
+                    <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Minha Presença</button>
                 </div>
                 
                 <div class="game-list">
@@ -260,6 +283,11 @@
         const confirmPlayerBtn = document.getElementById('confirmPlayer');
         const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
         const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
+        const playerDetailsDiv = document.getElementById('playerDetails');
+        const playerNameSpan = document.getElementById('playerName');
+        const playerPositionSpan = document.getElementById('playerPosition');
+        const playerEmailSpan = document.getElementById('playerEmail');
+        const playerCategorySpan = document.getElementById('playerCategory');
 
         // Variáveis globais
         let playerLimit = parseInt(playerLimitInput.value) || 12;
@@ -302,15 +330,26 @@
                     if (!currentUserPlayer) {
                         alert('Nenhum jogador associado a este email. Contate o administrador.');
                         confirmPlayerBtn.disabled = true;
+                        playerDetailsDiv.style.display = 'none';
+                    } else {
+                        // Exibir dados do integrante
+                        playerNameSpan.textContent = currentUserPlayer.name || '-';
+                        playerPositionSpan.textContent = currentUserPlayer.position || '-';
+                        playerEmailSpan.textContent = currentUserPlayer.email || '-';
+                        playerCategorySpan.textContent = currentUserPlayer.category || 'CONVIDADO';
+                        playerDetailsDiv.style.display = 'block';
+                        confirmPlayerBtn.style.display = 'inline-block'; // Mostrar botão após carregar dados
                     }
                 } else {
                     alert('Nenhum jogador encontrado no sistema.');
                     confirmPlayerBtn.disabled = true;
+                    playerDetailsDiv.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Erro ao carregar dados do jogador:', error);
                 alert('Erro ao carregar seus dados.');
                 confirmPlayerBtn.disabled = true;
+                playerDetailsDiv.style.display = 'none';
             }
         }
 
