@@ -230,7 +230,6 @@
             <div id="content" class="section">
                 <h2 class="section-title"><i class="fas fa-volleyball-ball"></i> Gerenciamento de Presença</h2>
                 
-                <!-- Nova seção para exibir os dados do integrante -->
                 <div class="player-details" id="playerDetails" style="display: none;">
                     <p><strong>Nome:</strong> <span id="playerName">-</span></p>
                     <p><strong>Posição:</strong> <span id="playerPosition">-</span></p>
@@ -338,7 +337,7 @@
                         playerEmailSpan.textContent = currentUserPlayer.email || '-';
                         playerCategorySpan.textContent = currentUserPlayer.category || 'CONVIDADO';
                         playerDetailsDiv.style.display = 'block';
-                        confirmPlayerBtn.style.display = 'inline-block'; // Mostrar botão após carregar dados
+                        confirmPlayerBtn.style.display = 'inline-block';
                     }
                 } else {
                     alert('Nenhum jogador encontrado no sistema.');
@@ -366,13 +365,21 @@
                 const data = snapshot.val() || { confirmed: {}, waitlist: {} };
                 confirmedPlayers = Object.entries(data.confirmed || {}).map(([id, player]) => ({
                     id,
-                    ...player,
-                    timestamp: player.timestamp || Date.now()
+                    name: player.name || '-',
+                    category: player.category || 'CONVIDADO',
+                    position: player.position || '-',
+                    timestamp: player.timestamp || Date.now(),
+                    paymentStatus: player.paymentStatus || 'inadimplente',
+                    imageUrl: player.imageUrl || defaultImage
                 }));
                 waitlistPlayers = Object.entries(data.waitlist || {}).map(([id, player]) => ({
                     id,
-                    ...player,
-                    timestamp: player.timestamp || Date.now()
+                    name: player.name || '-',
+                    category: player.category || 'CONVIDADO',
+                    position: player.position || '-',
+                    timestamp: player.timestamp || Date.now(),
+                    paymentStatus: player.paymentStatus || 'inadimplente',
+                    imageUrl: player.imageUrl || defaultImage
                 }));
                 updateGameList();
             });
@@ -397,7 +404,7 @@
                 const playerData = playerSnapshot.val();
                 const playerObj = {
                     id: playerId,
-                    name: playerData.name,
+                    name: playerData.name || '-',
                     category: playerData.category || 'CONVIDADO',
                     position: playerData.position || '-',
                     timestamp: Date.now(),
@@ -476,7 +483,16 @@
                             categoryPriority[current.category] > categoryPriority[highest.category] ? current : highest
                         );
                         waitlistPlayers = waitlistPlayers.filter(p => p.id !== highestPriorityPlayer.id);
-                        confirmedPlayers.push(highestPriorityPlayer);
+                        // Normalizar dados do jogador movido
+                        confirmedPlayers.push({
+                            id: highestPriorityPlayer.id,
+                            name: highestPriorityPlayer.name || '-',
+                            category: highestPriorityPlayer.category || 'CONVIDADO',
+                            position: highestPriorityPlayer.position || '-',
+                            timestamp: highestPriorityPlayer.timestamp || Date.now(),
+                            paymentStatus: highestPriorityPlayer.paymentStatus || 'inadimplente',
+                            imageUrl: highestPriorityPlayer.imageUrl || defaultImage
+                        });
                     }
                 } else {
                     waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
@@ -507,23 +523,23 @@
 
             confirmedPlayers.forEach(player => {
                 confirmed[player.id] = {
-                    name: player.name,
-                    category: player.category,
-                    position: player.position,
-                    timestamp: player.timestamp,
-                    paymentStatus: player.paymentStatus,
-                    imageUrl: player.imageUrl
+                    name: player.name || '-',
+                    category: player.category || 'CONVIDADO',
+                    position: player.position || '-', // Garantir que position nunca seja undefined
+                    timestamp: player.timestamp || Date.now(),
+                    paymentStatus: player.paymentStatus || 'inadimplente',
+                    imageUrl: player.imageUrl || defaultImage
                 };
             });
 
             waitlistPlayers.forEach(player => {
                 waitlist[player.id] = {
-                    name: player.name,
-                    category: player.category,
-                    position: player.position,
-                    timestamp: player.timestamp,
-                    paymentStatus: player.paymentStatus,
-                    imageUrl: player.imageUrl
+                    name: player.name || '-',
+                    category: player.category || 'CONVIDADO',
+                    position: player.position || '-', // Garantir que position nunca seja undefined
+                    timestamp: player.timestamp || Dateclusters.now(),
+                    paymentStatus: player.paymentStatus || 'inadimplente',
+                    imageUrl: player.imageUrl || defaultImage
                 };
             });
 
