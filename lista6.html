@@ -475,17 +475,16 @@
                 const paymentsRef = ref(database, 'payments');
                 const snapshot = await get(paymentsRef);
                 const payments = snapshot.val() || {};
-                const currentMonth = new Date().toISOString().slice(0, 7); // Ex.: "2025-05"
 
                 // Logar o nó payments completo para depuração
                 console.log(`Nó payments completo para ${playerId}:`, payments);
 
-                // Filtrar pagamentos do jogador para o mês atual
+                // Filtrar todos os pagamentos do jogador (sem restrição de mês)
                 const playerPayments = Object.values(payments)
-                    .filter(p => p && p.playerId === playerId && p.month === currentMonth);
+                    .filter(p => p && p.playerId === playerId);
 
                 // Logar pagamentos filtrados
-                console.log(`Pagamentos encontrados para ${playerId} em ${currentMonth}:`, playerPayments);
+                console.log(`Pagamentos encontrados para ${playerId}:`, playerPayments);
 
                 // Se não houver pagamentos registrados, considerar inadimplente
                 if (playerPayments.length === 0) {
@@ -622,7 +621,7 @@
                                 </span>
                             </div>
                         </div>
-                        ${player.id === currentUserPlayer?.id ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : }
+                        ${player.id === currentUserPlayer?.id ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
                     </div>
                 `).join('');
         }
