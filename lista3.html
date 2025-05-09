@@ -33,7 +33,7 @@
             background-color: #2c3e50;
             color: white;
             padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0 0,0,0,0.1);
         }
         .header h2 {
             margin: 0;
@@ -269,11 +269,11 @@
         let currentUserPlayer = null; // Dados do jogador associado ao usuário logado
         let emailLogado = null;
 
-        // Hierarquia de categorias
+        // Hierarquia de categorias ajustada para corresponder ao nó do Firebase
         const categoryPriority = {
-            'Mensalista': 3,
-            'Diarista': 2,
-            'Convidado': 1
+            'MENSAL': 3,
+            'DIARISTA': 2,
+            'CONVIDADO': 1
         };
 
         // Verificar autenticação
@@ -303,7 +303,7 @@
                     }
                 } else {
                     alert('Nenhum jogador encontrado no sistema.');
-                    confirmPlayerBtn Nationalism.disabled = true;
+                    confirmPlayerBtn.disabled = true;
                 }
             } catch (error) {
                 console.error('Erro ao carregar dados do jogador:', error);
@@ -361,11 +361,11 @@
                 const playerObj = {
                     id: playerId,
                     name: playerData.name,
-                    category: playerData.category || 'Convidado',
+                    category: playerData.category || 'CONVIDADO',
                     position: playerData.position || '-',
                     timestamp: Date.now(),
                     paymentStatus: await checkPaymentStatus(playerId),
-                    photoUrl: playerData.photoUrl || 'https://via.placeholder.com/40'
+                    imageUrl: playerData.imageUrl || 'https://via.placeholder.com/40' // Ajustado para imageUrl
                 };
 
                 // Verificar se o jogador já está na lista
@@ -486,7 +486,7 @@
                     position: player.position,
                     timestamp: player.timestamp,
                     paymentStatus: player.paymentStatus,
-                    photoUrl: player.photoUrl
+                    imageUrl: player.imageUrl // Ajustado para imageUrl
                 };
             });
 
@@ -497,7 +497,7 @@
                     position: player.position,
                     timestamp: player.timestamp,
                     paymentStatus: player.paymentStatus,
-                    photoUrl: player.photoUrl
+                    imageUrl: player.imageUrl // Ajustado para imageUrl
                 };
             });
 
@@ -514,7 +514,7 @@
                 : confirmedPlayers.map(player => `
                     <div class="player-item">
                         <div class="player-info">
-                            <img src="${player.photoUrl}" alt="${player.name}" class="player-photo">
+                            <img src="${player.imageUrl}" alt="${player.name}" class="player-photo"> <!-- Ajustado para imageUrl -->
                             <div>
                                 <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
                                 <span class="player-status status-${player.paymentStatus}">
@@ -532,7 +532,7 @@
                 : waitlistPlayers.map(player => `
                     <div class="player-item">
                         <div class="player-info">
-                            <img src="${player.photoUrl}" alt="${player.name}" class="player-photo">
+                            <img src="${player.imageUrl}" alt="${player.name}" class="player-photo"> <!-- Ajustado para imageUrl -->
                             <div>
                                 <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
                                 <span class="player-status status-${player.paymentStatus}">
