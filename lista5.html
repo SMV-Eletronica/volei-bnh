@@ -389,6 +389,9 @@
                     paymentStatus: player.paymentStatus || 'inadimplente',
                     imageUrl: player.imageUrl || defaultImage
                 }));
+                // Ordenar por timestamp
+                confirmedPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
                 updateGameList();
             });
         }
@@ -428,27 +431,25 @@
                 if (confirmedPlayers.length < playerLimit) {
                     confirmedPlayers.push(playerObj);
                 } else {
+                    // Encontrar o jogador com menor hierarquia na lista de confirmados
                     const lowestPriorityPlayer = confirmedPlayers.reduce((lowest, current) =>
                         categoryPriority[current.category] < categoryPriority[lowest.category] ? current : lowest
                     );
 
                     if (categoryPriority[playerObj.category] > categoryPriority[lowestPriorityPlayer.category]) {
+                        // Substituir o jogador com menor hierarquia
                         confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
                         waitlistPlayers.push(lowestPriorityPlayer);
                         confirmedPlayers.push(playerObj);
                     } else {
+                        // Adicionar à lista de espera
                         waitlistPlayers.push(playerObj);
                     }
                 }
 
-                confirmedPlayers.sort((a, b) => {
-                    const priorityDiff = categoryPriority[b.category] - categoryPriority[a.category];
-                    return priorityDiff !== 0 ? priorityDiff : a.timestamp - b.timestamp;
-                });
-                waitlistPlayers.sort((a, b) => {
-                    const priorityDiff = categoryPriority[b.category] - categoryPriority[a.category];
-                    return priorityDiff !== 0 ? priorityDiff : a.timestamp - b.timestamp;
-                });
+                // Ordenar por timestamp
+                confirmedPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
 
                 await updateFirebaseLists();
                 updateGameList();
@@ -487,32 +488,28 @@
                 if (fromConfirmed) {
                     confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
                     if (waitlistPlayers.length > 0 && confirmedPlayers.length < playerLimit) {
-                        const highestPriorityPlayer = waitlistPlayers.reduce((highest, current) =>
-                            categoryPriority[current.category] > categoryPriority[highest.category] ? current : highest
+                        // Promover o primeiro jogador da lista de espera (menor timestamp)
+                        const firstInWaitlist = waitlistPlayers.reduce((first, current) =>
+                            current.timestamp < first.timestamp ? current : first
                         );
-                        waitlistPlayers = waitlistPlayers.filter(p => p.id !== highestPriorityPlayer.id);
+                        waitlistPlayers = waitlistPlayers.filter(p => p.id !== firstInWaitlist.id);
                         confirmedPlayers.push({
-                            id: highestPriorityPlayer.id,
-                            name: highestPriorityPlayer.name || '-',
-                            category: highestPriorityPlayer.category || 'CONVIDADO',
-                            position: highestPriorityPlayer.position || '-',
-                            timestamp: highestPriorityPlayer.timestamp || Date.now(),
-                            paymentStatus: highestPriorityPlayer.paymentStatus || 'inadimplente',
-                            imageUrl: highestPriorityPlayer.imageUrl || defaultImage
+                            id: firstInWaitlist.id,
+                            name: firstInWaitlist.name || '-',
+                            category: firstInWaitlist.category || 'CONVIDADO',
+                            position: firstInWaitlist.position || '-',
+                            timestamp: firstInWaitlist.timestamp || Date.now(),
+                            paymentStatus: firstInWaitlist.paymentStatus || 'inadimplente',
+                            imageUrl: firstInWaitlist.imageUrl || defaultImage
                         });
                     }
                 } else {
                     waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
                 }
 
-                confirmedPlayers.sort((a, b) => {
-                    const priorityDiff = categoryPriority[b.category] - categoryPriority[a.category];
-                    return priorityDiff !== 0 ? priorityDiff : a.timestamp - b.timestamp;
-                });
-                waitlistPlayers.sort((a, b) => {
-                    const priorityDiff = categoryPriority[b.category] - categoryPriority[a.category];
-                    return priorityDiff !== 0 ? priorityDiff : a.timestamp - b.timestamp;
-                });
+                // Ordenar por timestamp
+                confirmedPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
 
                 await updateFirebaseLists();
                 updateGameList();
