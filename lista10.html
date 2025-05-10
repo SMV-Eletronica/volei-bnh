@@ -439,6 +439,16 @@
             return `${day}/${month}/${year}`; // DD/MM/YYYY
         }
 
+        // Função para ordenar jogadores
+        function sortPlayers(players) {
+            return players.sort((a, b) => {
+                const priorityA = categoryPriority[a.category] || 0;
+                const priorityB = categoryPriority[b.category] || 0;
+                if (priorityA !== priorityB) return priorityB - priorityA; // Maior prioridade primeiro
+                return a.timestamp - b.timestamp; // Menor timestamp primeiro
+            });
+        }
+
         // Verificar autenticação
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -670,8 +680,8 @@
                     await updateFirebaseLists();
                 }
 
-                confirmedPlayers.sort((a, b) => a.timestamp - b.timestamp);
-                waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
 
                 confirmPlayerBtn.disabled = isViewingHistory;
                 addPlayerBtn.disabled = isViewingHistory || !selectedPlayerId;
@@ -745,20 +755,27 @@
         }
 
         async function adjustConfirmedPlayers() {
-            if (confirmedPlayers.length <= playerLimit) return;
+            // Mover excedentes para a lista de espera
+            if (confirmedPlayers.length > playerLimit) {
+                const playersToMove = sortPlayers([...confirmedPlayers])
+                    .slice(playerLimit); // Pega os últimos após ordenar por prioridade e timestamp
 
-            const playersToMove = confirmedPlayers
-                .sort((a, b) => {
-                    const priorityA = categoryPriority[a.category] || 0;
-                    const priorityB = categoryPriority[b.category] || 0;
-                    if (priorityA !== priorityB) return priorityA - priorityB;
-                    return b.timestamp - a.timestamp;
-                })
-                .slice(0, confirmedPlayers.length - playerLimit);
+                confirmedPlayers = confirmedPlayers.filter(p => !playersToMove.includes(p));
+                waitlistPlayers.push(...playersToMove);
+            }
+            // Mover jogadores da lista de espera para confirmados, se houver espaço
+            else if (confirmedPlayers.length < playerLimit && waitlistPlayers.length > 0) {
+                const slotsAvailable = playerLimit - confirmedPlayers.length;
+                const playersToPromote = sortPlayers([...waitlistPlayers])
+                    .slice(0, slotsAvailable); // Pega os primeiros, respeitando prioridade e timestamp
 
-            confirmedPlayers = confirmedPlayers.filter(p => !playersToMove.includes(p));
-            waitlistPlayers.push(...playersToMove);
-            waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.includes(p));
+                confirmedPlayers.push(...playersToPromote);
+            }
+
+            // Reordenar ambas as listas
+            confirmedPlayers = sortPlayers(confirmedPlayers);
+            waitlistPlayers = sortPlayers(waitlistPlayers);
         }
 
         async function confirmPlayer(targetPlayerId = null) {
@@ -805,16 +822,7 @@
                     console.log(`Adicionando ${playerObj.name} diretamente à lista de confirmados.`);
                     confirmedPlayers.push(playerObj);
                 } else {
-                    const lowestPriorityPlayer = confirmedPlayers.reduce((lowest, current) => {
-                        const lowestPriority = categoryPriority[lowest.category] || 0;
-                        const currentPriority = categoryPriority[current.category] || 0;
-                        if (currentPriority < lowestPriority) {
-                            return current;
-                        } else if (currentPriority === lowestPriority && current.timestamp > lowest.timestamp) {
-                            return current;
-                        }
-                        return lowest;
-                    });
+                    const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
 
                     console.log(`Jogador com menor prioridade: ${lowestPriorityPlayer.name} (${lowestPriorityPlayer.category}, Prioridade: ${categoryPriority[lowestPriorityPlayer.category] || 0}, Timestamp: ${lowestPriorityPlayer.timestamp})`);
 
@@ -829,8 +837,8 @@
                     }
                 }
 
-                confirmedPlayers.sort((a, b) => a.timestamp - b.timestamp);
-                waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
 
                 await updateFirebaseLists();
                 updateGameList();
@@ -902,27 +910,13 @@
             try {
                 if (fromConfirmed) {
                     confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
-                    if (waitlistPlayers.length > 0 && confirmedPlayers.length < playerLimit) {
-                        const firstInWaitlist = waitlistPlayers.reduce((first, current) =>
-                            current.timestamp < first.timestamp ? current : first
-                        );
-                        waitlistPlayers = waitlistPlayers.filter(p => p.id !== firstInWaitlist.id);
-                        confirmedPlayers.push({
-                            id: firstInWaitlist.id,
-                            name: firstInWaitlist.name || '-',
-                            category: firstInWaitlist.category || 'CONVIDADO',
-                            position: firstInWaitlist.position || '-',
-                            timestamp: firstInWaitlist.timestamp || Date.now(),
-                            paymentStatus: firstInWaitlist.paymentStatus || 'inadimplente',
-                            imageUrl: firstInWaitlist.imageUrl || defaultImage
-                        });
-                    }
+                    await adjustConfirmedPlayers(); // Promover da lista de espera, se possível
                 } else {
                     waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
                 }
 
-                confirmedPlayers.sort((a, b) => a.timestamp - b.timestamp);
-                waitlistPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
 
                 await updateFirebaseLists();
                 updateGameList();
