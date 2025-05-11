@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Presença - Vôlei BNH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        :root {
+            --primary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --text: #2c3e50;
+            --muted: #7f8c8d;
+        }
+
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h2 {
+            margin: 0;
+            color: white;
+        }
+        .login-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .login-btn:hover {
+            background-color: #219653;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: background-color 0.3s;
+        }
+        .tab:hover {
+            background-color: #ddd;
+        }
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            margin-top: 0;
+            color: var(--text);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .section-title span {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            position: relative;
+            align-items: center;
+        }
+        .limit-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .limit-container label {
+            font-size: 14px;
+            color: var(--text);
+        }
+        .limit-container input, .limit-container button, .game-controls span {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .limit-container input {
+            width: 60px;
+        }
+        .limit-container button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .limit-container button:hover {
+            background-color: #2980b9;
+        }
+        .game-controls span {
+            background-color: #f9f9f9;
+            min-width: 60px;
+            text-align: center;
+        }
+        .game-controls button {
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .game-controls button:hover {
+            background-color: #2980b9;
+        }
+        .game-controls button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .finalize-btn {
+            background-color: #f39c12;
+        }
+        .finalize-btn:hover {
+            background-color: #e67e22;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+        }
+        #playerSearch {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+        .autocomplete-suggestion {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .autocomplete-suggestion:hover {
+            background-color: #f1f1f1;
+        }
+        .autocomplete-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .player-details {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        .player-details p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .player-details strong {
+            color: var(--text);
+        }
+
+        .game-list, .waitlist {
+            margin-top: 20px;
+        }
+        .game-list h3, .waitlist h3 {
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .player-item:last-child {
+            border-bottom: none;
+        }
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .player-counter {
+            width: 30px;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: right;
+        }
+        .player-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .player-name {
+            font-weight: bold;
+        }
+        .player-status {
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .status-pago {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .status-inadimplente {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        .status-pending {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .status-approved {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .player-action, .player-approve {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 5px;
+        }
+        .player-action:hover {
+            background-color: #c0392b;
+        }
+        .player-approve {
+            background-color: var(--success);
+        }
+        .player-approve:hover {
+            background-color: #219653;
+        }
+
+        .guest-controls, .admin-guest-settings {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .guest-controls input, .admin-guest-settings input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .guest-controls button, .admin-guest-settings button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .guest-controls button:hover, .admin-guest-settings button:hover {
+            background-color: #2980b9;
+        }
+
+        @media (max-width: 768px) {
+            .game-controls, .guest-controls, .admin-guest-settings {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .limit-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .player-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .player-counter {
+                text-align: left;
+            }
+            .section-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH</h2><b>Lista de Presença</b>
+        <button class="login-btn" onclick="window.location.href='restrito.html'"><i class="fas fa-sign-in-alt"></i> Área Restrita</button>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="game-list"><i class="fas fa-list"></i> Lista de Presença</div>
+        </div>
+        
+        <div id="game-list" class="tab-content active">
+            <div id="content" class="section">
+                <div class="section-title">
+                    <h2><i class="fas fa-volleyball-ball"></i> Gerenciamento de Presença</h2>
+                    <span id="gameDate"></span>
+                    <select id="historySelect">
+                        <option value="current">Atual</option>
+                    </select>
+                </div>
+                
+                <div class="player-details" id="playerDetails" style="display: none;">
+                    <p><strong>Nome:</strong> <span id="playerName">-</span></p>
+                    <p><strong>Posição:</strong> <span id="playerPosition">-</span></p>
+                    <p><strong>Email:</strong> <span id="playerEmail">-</span></p>
+                    <p><strong>Categoria:</strong> <span id="playerCategory">-</span></p>
+                </div>
+                
+                <div class="game-controls">
+                    <div id="playerLimitContainer"></div>
+                    <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Minha Presença</button>
+                    <div class="search-container" id="adminSearchContainer" style="display: none;">
+                        <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
+                        <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+                        <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
+                    </div>
+                    <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Jogo</button>
+                </div>
+                
+                <div class="guest-controls" id="guestControls" style="display: none;">
+                    <input type="text" id="guestNameInput" placeholder="Nome do Convidado">
+                    <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
+                </div>
+                
+                <div class="admin-guest-settings" id="adminGuestSettings" style="display: none;">
+                    <label>Taxa de Convidado (R$):</label>
+                    <input type="number" id="guestFeeInput" step="0.01" min="0">
+                    <button id="saveGuestFeeBtn"><i class="fas fa-save"></i> Salvar Taxa</button>
+                </div>
+                
+                <div class="game-list">
+                    <h3>Lista de Confirmados</h3>
+                    <div id="confirmedPlayers"></div>
+                </div>
+                
+                <div class="waitlist">
+                    <h3>Lista de Espera</h3>
+                    <div id="waitlistPlayers"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        // Configuração do Luxon
+        const { DateTime } = luxon;
+
+        // Elementos DOM
+        const contentDiv = document.getElementById('content');
+        const playerLimitContainer = document.getElementById('playerLimitContainer');
+        const confirmPlayerBtn = document.getElementById('confirmPlayer');
+        const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
+        const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
+        const playerDetailsDiv = document.getElementById('playerDetails');
+        const playerNameSpan = document.getElementById('playerName');
+        const playerPositionSpan = document.getElementById('playerPosition');
+        const playerEmailSpan = document.getElementById('playerEmail');
+        const playerCategorySpan = document.getElementById('playerCategory');
+        const adminSearchContainer = document.getElementById('adminSearchContainer');
+        const playerSearch = document.getElementById('playerSearch');
+        const autocompleteSuggestions = document.getElementById('autocompleteSuggestions');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const finalizeGameBtn = document.getElementById('finalizeGameBtn');
+        const gameDateSpan = document.getElementById('gameDate');
+        const historySelect = document.getElementById('historySelect');
+        const guestControls = document.getElementById('guestControls');
+        const guestNameInput = document.getElementById('guestNameInput');
+        const addGuestBtn = document.getElementById('addGuestBtn');
+        const adminGuestSettings = document.getElementById('adminGuestSettings');
+        const guestFeeInput = document.getElementById('guestFeeInput');
+        const saveGuestFeeBtn = document.getElementById('saveGuestFeeBtn');
+
+        // Variáveis globais
+        let playerLimit = 20;
+        let confirmedPlayers = [];
+        let waitlistPlayers = [];
+        let currentUserPlayer = null;
+        let emailLogado = null;
+        let allPlayers = [];
+        let selectedPlayerId = null;
+        let isViewingHistory = false;
+        let currentGameDate = null;
+        let guestFee = 5;
+        let isAdmin = false;
+
+        // Emails administrativos
+        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro@msn.com'];
+
+        // Hierarquia de categorias
+        const categoryPriority = {
+            'MENSAL': 3,
+            'DIARIA': 2,
+            'CONVIDADO': 1
+        };
+
+        // Imagem padrão
+        const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Foto_oficial_de_Luiz_In%C3%A1cio_Lula_da_Silva_%28ombros%29_denoise.jpg/250px-Foto_oficial_de_Luiz_In%C3%A1cio_Lula_da_Silva_%28ombros%29_denoise.jpg';
+
+        // Funções de formatação de data
+        function formatDateToISO(date) {
+            return DateTime.fromJSDate(date, { zone: 'America/Sao_Paulo' }).toISODate();
+        }
+
+        function formatDateToBR(dateStr) {
+            return DateTime.fromISO(dateStr, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
+        }
+
+        function getBrazilTimestamp() {
+            return DateTime.now().setZone('America/Sao_Paulo').toMillis();
+        }
+
+        function getBrazilDateTimeISO() {
+            return DateTime.now().setZone('America/Sao_Paulo').toISO();
+        }
+
+        function getBrazilMonthYear() {
+            return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
+        }
+
+        // Função para ordenar jogadores
+        function sortPlayers(players) {
+            return players.sort((a, b) => {
+                const priorityA = categoryPriority[a.category] || 0;
+                const priorityB = categoryPriority[b.category] || 0;
+                if (priorityA !== priorityB) return priorityB - priorityA;
+                return a.timestamp - b.timestamp;
+            });
+        }
+
+        // Verificar autenticação
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'restrito.html';
+            } else {
+                emailLogado = user.email;
+                isAdmin = adminEmails.includes(emailLogado);
+                await loadCurrentUserPlayer();
+                await loadGuestFee();
+                initializeGameList();
+                setupAdminFeatures();
+                loadGameHistory();
+            }
+        });
+
+        async function loadCurrentUserPlayer() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                if (snapshot.exists()) {
+                    allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+                        id,
+                        ...player
+                    }));
+                    currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+                    if (!currentUserPlayer) {
+                        alert('Nenhum jogador associado a este email. Contate o administrador.');
+                        confirmPlayerBtn.disabled = true;
+                        playerDetailsDiv.style.display = 'none';
+                        guestControls.style.display = 'none';
+                    } else {
+                        playerNameSpan.textContent = currentUserPlayer.name || '-';
+                        playerPositionSpan.textContent = currentUserPlayer.position || '-';
+                        playerEmailSpan.textContent = currentUserPlayer.email || '-';
+                        playerCategorySpan.textContent = currentUserPlayer.category || 'CONVIDADO';
+                        playerDetailsDiv.style.display = 'block';
+                        confirmPlayerBtn.style.display = 'inline-block';
+                        guestControls.style.display = 'flex';
+                    }
+                } else {
+                    alert('Nenhum jogador encontrado no sistema.');
+                    confirmPlayerBtn.disabled = true;
+                    playerDetailsDiv.style.display = 'none';
+                    guestControls.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do jogador:', error);
+                alert('Erro ao carregar seus dados.');
+                confirmPlayerBtn.disabled = true;
+                playerDetailsDiv.style.display = 'none';
+                guestControls.style.display = 'none';
+            }
+        }
+
+        async function loadGuestFee() {
+            try {
+                const settingsRef = ref(database, 'settings/guestFee');
+                const snapshot = await get(settingsRef);
+                if (snapshot.exists()) {
+                    const value = parseFloat(snapshot.val());
+                    if (!isNaN(value) && value >= 0) {
+                        guestFee = value;
+                        console.log(`Taxa de convidado carregada: R$${guestFee}`);
+                    } else {
+                        console.warn(`Valor inválido em settings/guestFee: ${snapshot.val()}. Usando padrão (5).`);
+                        guestFee = 5;
+                    }
+                } else {
+                    console.log('Nó settings/guestFee não existe. Usando padrão (5).');
+                    guestFee = 5;
+                }
+                if (isAdmin) {
+                    guestFeeInput.value = guestFee.toFixed(2);
+                }
+            } catch (error) {
+                console.warn('Erro ao carregar taxa de convidado, usando valor padrão (5):', error.message);
+                guestFee = 5;
+                if (isAdmin) {
+                    guestFeeInput.value = guestFee.toFixed(2);
+                }
+            }
+        }
+
+        function setupAdminFeatures() {
+            if (isAdmin) {
+                adminSearchContainer.style.display = 'flex';
+                finalizeGameBtn.style.display = 'inline-block';
+                adminGuestSettings.style.display = 'flex';
+                playerLimitContainer.innerHTML = `
+                    <div class="limit-container">
+                        <label>Limite de Participantes:</label>
+                        <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                        <button id="confirmLimitBtn">Confirmar</button>
+                    </div>
+                `;
+                setupPlayerSearch();
+                setupLimitConfirmation();
+                setupGuestFeeConfiguration();
+            } else {
+                adminSearchContainer.style.display = 'none';
+                finalizeGameBtn.style.display = 'none';
+                adminGuestSettings.style.display = 'none';
+                playerLimitContainer.innerHTML = `<span id="playerLimitDisplay">${playerLimit}</span>`;
+            }
+            guestControls.style.display = currentUserPlayer ? 'flex' : 'none';
+        }
+
+        function setupGuestFeeConfiguration() {
+            saveGuestFeeBtn.addEventListener('click', async () => {
+                if (!isAdmin) {
+                    alert('Você não tem permissão para alterar a taxa.');
+                    return;
+                }
+                const newFee = parseFloat(guestFeeInput.value);
+                if (isNaN(newFee) || newFee < 0) {
+                    alert('Por favor, insira um valor válido.');
+                    return;
+                }
+                try {
+                    await set(ref(database, 'settings/guestFee'), newFee);
+                    guestFee = newFee;
+                    console.log(`Taxa de convidado atualizada: R$${guestFee}`);
+                    alert('Taxa de convidado atualizada com sucesso.');
+                } catch (error) {
+                    console.error('Erro ao salvar taxa:', error);
+                    alert('Erro ao salvar taxa. Verifique suas permissões.');
+                }
+            });
+        }
+
+        function setupPlayerSearch() {
+            playerSearch.addEventListener('input', () => {
+                const query = playerSearch.value.trim().toLowerCase();
+                autocompleteSuggestions.innerHTML = '';
+                selectedPlayerId = null;
+                addPlayerBtn.disabled = true;
+
+                if (query.length > 0) {
+                    const suggestions = allPlayers
+                        .filter(player => player.name?.toLowerCase().includes(query))
+                        .slice(0, 5);
+                    if (suggestions.length > 0) {
+                        suggestions.forEach(player => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-suggestion';
+                            div.textContent = `${player.name} (${player.category || 'CONVIDADO'})`;
+                            div.addEventListener('click', () => {
+                                playerSearch.value = player.name;
+                                selectedPlayerId = player.id;
+                                addPlayerBtn.disabled = false;
+                                autocompleteSuggestions.style.display = 'none';
+                            });
+                            autocompleteSuggestions.appendChild(div);
+                        });
+                        autocompleteSuggestions.style.display = 'block';
+                    } else {
+                        autocompleteSuggestions.style.display = 'none';
+                    }
+                } else {
+                    autocompleteSuggestions.style.display = 'none';
+                }
+            });
+
+            playerSearch.addEventListener('blur', () => {
+                setTimeout(() => {
+                    autocompleteSuggestions.style.display = 'none';
+                }, 200);
+            });
+
+            addPlayerBtn.addEventListener('click', () => {
+                if (selectedPlayerId) {
+                    confirmPlayer(selectedPlayerId);
+                }
+            });
+        }
+
+        function setupLimitConfirmation() {
+            const confirmLimitBtn = document.getElementById('confirmLimitBtn');
+            confirmLimitBtn.addEventListener('click', async () => {
+                if (!isViewingHistory) {
+                    const playerLimitInput = document.getElementById('playerLimitInput');
+                    const inputValue = playerLimitInput.value.trim();
+                    const newLimit = parseInt(inputValue);
+
+                    if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
+                        alert('Por favor, insira um número inteiro válido.');
+                        playerLimitInput.value = playerLimit;
+                        return;
+                    }
+                    if (newLimit < 1) {
+                        alert('O limite deve ser pelo menos 1.');
+                        playerLimitInput.value = playerLimit;
+                        return;
+                    }
+                    if (newLimit !== playerLimit) {
+                        playerLimit = newLimit;
+                        await adjustConfirmedPlayers();
+                        await updateFirebaseLists();
+                        updateGameList();
+                    }
+                } else {
+                    alert('Não é possível alterar o limite ao visualizar o histórico.');
+                }
+            });
+        }
+
+        function setupGuestControls() {
+            addGuestBtn.addEventListener('click', addGuest);
+        }
+
+        async function addGuest() {
+            if (isViewingHistory) {
+                alert('Não é possível adicionar convidados ao visualizar o histórico.');
+                return;
+            }
+            if (!currentUserPlayer) {
+                alert('Você precisa estar registrado como jogador para adicionar convidados.');
+                return;
+            }
+            const guestName = guestNameInput.value.trim();
+            if (!guestName) {
+                alert('Por favor, insira o nome do convidado.');
+                return;
+            }
+            if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO') ||
+                waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO')) {
+                alert('Este convidado já foi adicionado.');
+                return;
+            }
+            const confirmed = confirm(`Você está convidando ${guestName}. Uma taxa de R$${guestFee.toFixed(2)} será cobrada após aprovação. Deseja confirmar?`);
+            if (!confirmed) {
+                guestNameInput.value = '';
+                return;
+            }
+            try {
+                const guestId = `guest_${Date.now()}`;
+                const guestObj = {
+                    id: guestId,
+                    name: guestName,
+                    category: 'CONVIDADO',
+                    position: '-',
+                    timestamp: getBrazilTimestamp(),
+                    paymentStatus: 'inadimplente',
+                    imageUrl: defaultImage,
+                    invitedById: currentUserPlayer.id,
+                    invitedByName: currentUserPlayer.name,
+                    status: 'pending',
+                    additionalInfo: guestName,
+                    createdAt: getBrazilDateTimeISO(),
+                    date: formatDateToISO(new Date()),
+                    month: getBrazilMonthYear(),
+                    paymentType: 'CONVIDADO',
+                    value: parseFloat(guestFee.toFixed(2)) // Garante que value seja um número
+                };
+                console.log(`Adicionando convidado com taxa: R$${guestObj.value}`);
+                if (confirmedPlayers.length < playerLimit) {
+                    confirmedPlayers.push(guestObj);
+                } else {
+                    const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
+                    if ((categoryPriority[guestObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
+                        confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
+                        waitlistPlayers.push(lowestPriorityPlayer);
+                        confirmedPlayers.push(guestObj);
+                    } else {
+                        waitlistPlayers.push(guestObj);
+                    }
+                }
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
+                await updateFirebaseLists();
+                updateGameList();
+                guestNameInput.value = '';
+                alert('Convidado adicionado com sucesso, aguardando aprovação.');
+            } catch (error) {
+                console.error('Erro ao adicionar convidado:', error);
+                alert('Erro ao adicionar convidado.');
+            }
+        }
+
+        async function approveGuest(guestId, fromConfirmed = true) {
+            if (isViewingHistory) {
+                alert('Não é possível aprovar convidados ao visualizar o histórico.');
+                return;
+            }
+            if (!isAdmin) {
+                alert('Você não tem permissão para aprovar convidados.');
+                return;
+            }
+            try {
+                const guest = fromConfirmed
+                    ? confirmedPlayers.find(p => p.id === guestId)
+                    : waitlistPlayers.find(p => p.id === guestId);
+                if (!guest || guest.status !== 'pending') {
+                    alert('Convidado não encontrado ou já aprovado.');
+                    return;
+                }
+                guest.status = 'approved';
+                guest.paymentStatus = 'pago';
+                // Validar o valor da taxa
+                let paymentValue = parseFloat(guest.value);
+                if (isNaN(paymentValue) || paymentValue < 0) {
+                    console.warn(`Valor inválido para convidado ${guest.name}: ${guest.value}. Usando guestFee: ${guestFee}`);
+                    paymentValue = parseFloat(guestFee.toFixed(2));
+                }
+                const paymentData = {
+                    additionalInfo: guest.additionalInfo,
+                    createdAt: guest.createdAt,
+                    date: guest.date,
+                    month: guest.month,
+                    paymentType: 'CONVIDADO',
+                    playerId: guest.invitedById,
+                    playerName: guest.invitedByName,
+                    value: paymentValue
+                };
+                console.log(`Salvando pagamento para ${guest.name} com valor: R$${paymentValue}`);
+                const paymentRef = ref(database, `payments/payment_${Date.now()}`);
+                await set(paymentRef, paymentData);
+                await updateFirebaseLists();
+                updateGameList();
+                alert('Convidado aprovado e taxa registrada.');
+            } catch (error) {
+                console.error('Erro ao aprovar convidado:', error);
+                alert('Erro ao aprovar convidado.');
+            }
+        }
+
+        async function loadGameHistory() {
+            try {
+                const historyRef = ref(database, 'gameHistory');
+                const snapshot = await get(historyRef);
+                const historyData = snapshot.val() || {};
+                const dates = Object.keys(historyData).sort((a, b) => b.localeCompare(a));
+
+                historySelect.innerHTML = '<option value="current">Atual</option>';
+                dates.forEach(date => {
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.textContent = formatDateToBR(date);
+                    historySelect.appendChild(option);
+                });
+
+                historySelect.addEventListener('change', () => {
+                    const selectedDate = historySelect.value;
+                    isViewingHistory = selectedDate !== 'current';
+                    currentGameDate = selectedDate === 'current' ? formatDateToISO(new Date()) : selectedDate;
+                    gameDateSpan.textContent = `(${formatDateToBR(currentGameDate)})`;
+                    loadGameData(selectedDate);
+                });
+
+                currentGameDate = formatDateToISO(new Date());
+                gameDateSpan.textContent = `(${formatDateToBR(currentGameDate)})`;
+                loadGameData('current');
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+            }
+        }
+
+        async function loadGameData(selectedDate) {
+            try {
+                const isAdmin = adminEmails.includes(emailLogado);
+                const path = selectedDate === 'current' ? 'gameList' : `gameHistory/${selectedDate}`;
+                const gameRef = ref(database, path);
+                const snapshot = await get(gameRef);
+                const data = snapshot.val() || { confirmed: {}, waitlist: {}, playerLimit: 20 };
+
+                playerLimit = data.playerLimit || 20;
+                updatePlayerLimitDisplay(isAdmin);
+
+                confirmedPlayers = Object.entries(data.confirmed || {}).map(([id, player]) => {
+                    const playerData = allPlayers.find(p => p.id === id) || {};
+                    const category = playerData.category || player.category || 'CONVIDADO';
+                    if (!['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category)) {
+                        console.warn(`Categoria inválida para jogador ${id}: ${category}. Usando 'CONVIDADO'.`);
+                    }
+                    return {
+                        id,
+                        name: player.name || '-',
+                        category: ['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category) ? category : 'CONVIDADO',
+                        position: player.position || '-',
+                        timestamp: player.timestamp || getBrazilTimestamp(),
+                        paymentStatus: player.paymentStatus || 'inadimplente',
+                        imageUrl: player.imageUrl || defaultImage,
+                        invitedById: player.invitedById || null,
+                        invitedByName: player.invitedByName || null,
+                        status: player.status || null,
+                        additionalInfo: player.additionalInfo || null,
+                        createdAt: player.createdAt || null,
+                        date: player.date || null,
+                        month: player.month || null,
+                        paymentType: player.paymentType || null,
+                        value: player.value || null
+                    };
+                });
+
+                waitlistPlayers = Object.entries(data.waitlist || {}).map(([id, player]) => {
+                    const playerData = allPlayers.find(p => p.id === id) || {};
+                    const category = playerData.category || player.category || 'CONVIDADO';
+                    if (!['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category)) {
+                        console.warn(`Categoria inválida para jogador ${id}: ${category}. Usando 'CONVIDADO'.`);
+                    }
+                    return {
+                        id,
+                        name: player.name || '-',
+                        category: ['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category) ? category : 'CONVIDADO',
+                        position: player.position || '-',
+                        timestamp: player.timestamp || getBrazilTimestamp(),
+                        paymentStatus: player.paymentStatus || 'inadimplente',
+                        imageUrl: player.imageUrl || defaultImage,
+                        invitedById: player.invitedById || null,
+                        invitedByName: player.invitedByName || null,
+                        status: player.status || null,
+                        additionalInfo: player.additionalInfo || null,
+                        createdAt: player.createdAt || null,
+                        date: player.date || null,
+                        month: player.month || null,
+                        paymentType: player.paymentType || null,
+                        value: player.value || null
+                    };
+                });
+
+                if (selectedDate === 'current') {
+                    for (let player of confirmedPlayers) {
+                        if (player.category !== 'CONVIDADO') {
+                            player.paymentStatus = await checkPaymentStatus(player.id);
+                        }
+                    }
+                    for (let player of waitlistPlayers) {
+                        if (player.category !== 'CONVIDADO') {
+                            player.paymentStatus = await checkPaymentStatus(player.id);
+                        }
+                    }
+                    await updateFirebaseLists();
+                }
+
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
+
+                confirmPlayerBtn.disabled = isViewingHistory;
+                addPlayerBtn.disabled = isViewingHistory || !selectedPlayerId;
+                playerSearch.disabled = isViewingHistory;
+                finalizeGameBtn.disabled = isViewingHistory;
+                addGuestBtn.disabled = isViewingHistory;
+                guestNameInput.disabled = isViewingHistory;
+                saveGuestFeeBtn.disabled = isViewingHistory;
+                guestFeeInput.disabled = isViewingHistory;
+
+                updateGameList();
+            } catch (error) {
+                console.error('Erro ao carregar dados do jogo:', error);
+                alert('Erro ao carregar dados.');
+            }
+        }
+
+        function updatePlayerLimitDisplay(isAdmin) {
+            if (isAdmin) {
+                playerLimitContainer.innerHTML = `
+                    <div class="limit-container">
+                        <label>Limite de Participantes:</label>
+                        <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*" ${isViewingHistory ? 'disabled' : ''}>
+                        <button id="confirmLimitBtn" ${isViewingHistory ? 'disabled' : ''}>Confirmar</button>
+                    </div>
+                `;
+                if (!isViewingHistory) {
+                    setupLimitConfirmation();
+                }
+            } else {
+                playerLimitContainer.innerHTML = `<span id="playerLimitDisplay">${playerLimit}</span>`;
+            }
+        }
+
+        async function initializeGameList() {
+            const isAdmin = adminEmails.includes(emailLogado);
+
+            finalizeGameBtn.addEventListener('click', async () => {
+                try {
+                    const today = formatDateToISO(new Date());
+                    const historyRef = ref(database, `gameHistory/${today}`);
+                    const snapshot = await get(historyRef);
+                    if (snapshot.exists()) {
+                        alert('O histórico para hoje já foi salvo.');
+                        return;
+                    }
+
+                    const gameListRef = ref(database, 'gameList');
+                    const gameSnapshot = await get(gameListRef);
+                    const gameData = gameSnapshot.val() || { confirmed: {}, waitlist: {}, playerLimit: 20 };
+
+                    await set(historyRef, {
+                        ...gameData,
+                        playerLimit,
+                        date: today
+                    });
+
+                    await set(gameListRef, { confirmed: {}, waitlist: {}, playerLimit });
+                    alert('Jogo finalizado e salvo no histórico.');
+                    loadGameHistory();
+                } catch (error) {
+                    console.error('Erro ao finalizar jogo:', error);
+                    alert('Erro ao salvar histórico.');
+                }
+            });
+
+            confirmPlayerBtn.addEventListener('click', () => confirmPlayer());
+            setupGuestControls();
+
+            const gameListRef = ref(database, 'gameList');
+            onValue(gameListRef, async (snapshot) => {
+                if (!isViewingHistory) {
+                    loadGameData('current');
+                }
+            });
+        }
+
+        async function adjustConfirmedPlayers() {
+            if (confirmedPlayers.length > playerLimit) {
+                const playersToMove = sortPlayers([...confirmedPlayers]).slice(playerLimit);
+                confirmedPlayers = confirmedPlayers.filter(p => !playersToMove.includes(p));
+                waitlistPlayers.push(...playersToMove);
+            } else if (confirmedPlayers.length < playerLimit && waitlistPlayers.length > 0) {
+                const slotsAvailable = playerLimit - confirmedPlayers.length;
+                const playersToPromote = sortPlayers([...waitlistPlayers]).slice(0, slotsAvailable);
+                waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.includes(p));
+                confirmedPlayers.push(...playersToPromote);
+            }
+            confirmedPlayers = sortPlayers(confirmedPlayers);
+            waitlistPlayers = sortPlayers(waitlistPlayers);
+        }
+
+        async function confirmPlayer(targetPlayerId = null) {
+            if (isViewingHistory) {
+                alert('Não é possível modificar a lista ao visualizar o histórico.');
+                return;
+            }
+
+            const isAdmin = adminEmails.includes(emailLogado);
+            const playerId = isAdmin && targetPlayerId ? targetPlayerId : currentUserPlayer?.id;
+
+            if (!playerId) {
+                alert('Nenhum jogador selecionado ou associado a este email.');
+                return;
+            }
+
+            try {
+                const playerRef = ref(database, `players/${playerId}`);
+                const playerSnapshot = await get(playerRef);
+                if (!playerSnapshot.exists()) {
+                    alert('Jogador não encontrado.');
+                    return;
+                }
+
+                const playerData = playerSnapshot.val();
+                const playerObj = {
+                    id: playerId,
+                    name: playerData.name || '-',
+                    category: playerData.category || 'CONVIDADO',
+                    position: playerData.position || '-',
+                    timestamp: getBrazilTimestamp(),
+                    paymentStatus: await checkPaymentStatus(playerId),
+                    imageUrl: playerData.imageUrl || defaultImage
+                };
+
+                if (confirmedPlayers.some(p => p.id === playerId) || waitlistPlayers.some(p => p.id === playerId)) {
+                    alert('Este jogador já confirmou sua presença.');
+                    return;
+                }
+
+                if (confirmedPlayers.length < playerLimit) {
+                    confirmedPlayers.push(playerObj);
+                } else {
+                    const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
+                    if ((categoryPriority[playerObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
+                        confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
+                        waitlistPlayers.push(lowestPriorityPlayer);
+                        confirmedPlayers.push(playerObj);
+                    } else {
+                        waitlistPlayers.push(playerObj);
+                    }
+                }
+
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
+
+                await updateFirebaseLists();
+                updateGameList();
+
+                if (isAdmin && targetPlayerId) {
+                    playerSearch.value = '';
+                    selectedPlayerId = null;
+                    addPlayerBtn.disabled = true;
+                    autocompleteSuggestions.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Erro ao confirmar presença:', error);
+                alert('Erro ao processar confirmação.');
+            }
+        }
+
+        async function checkPaymentStatus(playerId) {
+            try {
+                const paymentsRef = ref(database, 'payments');
+                const snapshot = await get(paymentsRef);
+                const payments = snapshot.val() || {};
+
+                const playerPayments = Object.values(payments)
+                    .filter(p => p && p.playerId === playerId);
+
+                if (playerPayments.length === 0) {
+                    return 'inadimplente';
+                }
+
+                const hasPending = playerPayments.some(p => {
+                    const value = p.value;
+                    return value === 0 || value === '0' || value == null || value === undefined || (typeof value === 'number' && value <= 0);
+                });
+
+                return hasPending ? 'inadimplente' : 'pago';
+            } catch (error) {
+                console.error('Erro ao verificar status de pagamento:', error);
+                return 'inadimplente';
+            }
+        }
+
+        async function removePlayer(playerId, fromConfirmed = true) {
+            if (isViewingHistory) {
+                alert('Não é possível modificar a lista ao visualizar o histórico.');
+                return;
+            }
+
+            const player = fromConfirmed
+                ? confirmedPlayers.find(p => p.id === playerId)
+                : waitlistPlayers.find(p => p.id === playerId);
+
+            if (!player) {
+                alert('Jogador ou convidado não encontrado.');
+                return;
+            }
+
+            if (!isAdmin && playerId !== currentUserPlayer?.id && player.invitedById !== currentUserPlayer?.id) {
+                alert('Você só pode remover sua própria presença ou seus convidados.');
+                return;
+            }
+
+            try {
+                if (fromConfirmed) {
+                    confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
+                    await adjustConfirmedPlayers();
+                } else {
+                    waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
+                }
+
+                confirmedPlayers = sortPlayers(confirmedPlayers);
+                waitlistPlayers = sortPlayers(waitlistPlayers);
+
+                await updateFirebaseLists();
+                updateGameList();
+
+            } catch ( AGAerror) {
+                console.error('Erro ao remover jogador:', error);
+                alert('Erro ao remover presença.');
+            }
+        }
+
+        async function updateFirebaseLists() {
+            if (isViewingHistory) return;
+
+            const gameListRef = ref(database, 'gameList');
+            const confirmed = {};
+            const waitlist = {};
+
+            confirmedPlayers.forEach(player => {
+                confirmed[player.id] = {
+                    name: player.name || '-',
+                    category: player.category || 'CONVIDADO',
+                    position: player.position || '-',
+                    timestamp: player.timestamp || getBrazilTimestamp(),
+                    paymentStatus: player.paymentStatus || 'inadimplente',
+                    imageUrl: player.imageUrl || defaultImage,
+                    invitedById: player.invitedById || null,
+                    invitedByName: player.invitedByName || null,
+                    status: player.status || null,
+                    additionalInfo: player.additionalInfo || null,
+                    createdAt: player.createdAt || null,
+                    date: player.date || null,
+                    month: player.month || null,
+                    paymentType: player.paymentType || null,
+                    value: player.value || null
+                };
+            });
+
+            waitlistPlayers.forEach(player => {
+                waitlist[player.id] = {
+                    name: player.name || '-',
+                    category: player.category || 'CONVIDADO',
+                    position: player.position || '-',
+                    timestamp: player.timestamp || getBrazilTimestamp(),
+                    paymentStatus: player.paymentStatus || 'inadimplente',
+                    imageUrl: player.imageUrl || defaultImage,
+                    invitedById: player.invitedById || null,
+                    invitedByName: player.invitedByName || null,
+                    status: player.status || null,
+                    additionalInfo: player.additionalInfo || null,
+                    createdAt: player.createdAt || null,
+                    date: player.date || null,
+                    month: player.month || null,
+                    paymentType: player.paymentType || null,
+                    value: player.value || null
+                };
+            });
+
+            await set(gameListRef, {
+                confirmed,
+                waitlist,
+                playerLimit
+            });
+        }
+
+        function updateGameList() {
+            const isAdmin = adminEmails.includes(emailLogado);
+            confirmedPlayersDiv.innerHTML = confirmedPlayers.length === 0
+                ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
+                : confirmedPlayers.map((player, index) => `
+                    <div class="player-item">
+                        <div class="player-info">
+                            <span class="player-counter">${index + 1}.</span>
+                            <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+                            <div>
+                                <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+                                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName}</span>` : ''}
+                                <span class="player-status status-${player.paymentStatus}">
+                                    ${player.paymentStatus === 'pago' ? 'Em dia' : 'Pendente'}
+                                </span>
+                                ${player.category === 'CONVIDADO' ? `<span class="player-status status-${player.status}">
+                                    ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
+                                </span>` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            ${!isViewingHistory && isAdmin && player.category === 'CONVIDADO' && player.status === 'pending' ? `<button class="player-approve" onclick="approveGuest('${player.id}', true)">Aprovar</button>` : ''}
+                            ${!isViewingHistory && (isAdmin || player.id === currentUserPlayer?.id || player.invitedById === currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', true)">Remover</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+            waitlistPlayersDiv.innerHTML = waitlistPlayers.length === 0
+                ? '<div style="color: var(--muted); padding: 10px;">Ninguém na lista de espera.</div>'
+                : waitlistPlayers.map((player, index) => `
+                    <div class="player-item">
+                        <div class="player-info">
+                            <span class="player-counter">${index + 1}.</span>
+                            <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+                            <div>
+                                <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+                                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName}</span>` : ''}
+                                <span class="player-status status-${player.paymentStatus}">
+                                    ${player.paymentStatus === 'pago' ? 'Em dia' : 'Pendente'}
+                                </span>
+                                ${player.category === 'CONVIDADO' ? `<span class="player-status status-${player.status}">
+                                    ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
+                                </span>` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            ${!isViewingHistory && isAdmin && player.category === 'CONVIDADO' && player.status === 'pending' ? `<button class="player-approve" onclick="approveGuest('${player.id}', false)">Aprovar</button>` : ''}
+                            ${!isViewingHistory && (isAdmin || player.id === currentUserPlayer?.id || player.invitedById === currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        window.removePlayer = removePlayer;
+        window.approveGuest = approveGuest;
+    </script>
+</body>
+</html>
