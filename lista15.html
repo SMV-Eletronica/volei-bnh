@@ -1278,7 +1278,7 @@
                             <span class="player-counter">${index + 1}.</span>
                             <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
                             <div>
-                                <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+                                <span class="player-name">${player.name}</span> (${player.category})
                                 ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName}</span>` : ''}
                                 <span class="player-status status-${player.paymentStatus}">
                                     ${player.paymentStatus === 'pago' ? 'Em dia' : 'Pendente'}
