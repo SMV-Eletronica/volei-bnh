@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Presença - Vôlei BNH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
+    <style>
+        /* [Manter todos os estilos anteriores] */
+        
+        /* Novos estilos para o modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary);
+        }
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--muted);
+        }
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .modal-btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+        .modal-btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .modal-btn-secondary {
+            background-color: #ddd;
+            color: var(--text);
+        }
+        .modal-btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        /* Estilo para botão de convidado */
+        .guest-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .guest-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        /* Estilo para status de aprovação */
+        .status-pendente {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .status-aprovado {
+            color: var(--success);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- [Manter todo o HTML anterior] -->
+    
+    <!-- Adicionar modal para convidados -->
+    <div id="guestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Adicionar Convidado</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="guestName">Nome do Convidado:</label>
+                    <input type="text" id="guestNameInput" class="form-control" placeholder="Digite o nome completo">
+                </div>
+                <div class="form-group">
+                    <p><strong>Taxa de Convidado:</strong> R$ <span id="guestFeeValue">5,00</span></p>
+                    <p class="small-text">Ao confirmar, você concorda com a taxa de R$5,00 que será cobrada em seu nome.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelGuestBtn" class="modal-btn modal-btn-secondary">Cancelar</button>
+                <button id="confirmGuestBtn" class="modal-btn modal-btn-primary">Confirmar Convidado</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para administradores aprovarem convidados -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Aprovar Convidado</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Convidado: <strong id="approveGuestName">-</strong></p>
+                <p>Convidado por: <strong id="approveHostName">-</strong></p>
+                <div class="form-group">
+                    <label for="approveFeeValue">Valor da Taxa (R$):</label>
+                    <input type="number" id="approveFeeValue" step="0.01" min="0" value="5.00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="rejectGuestBtn" class="modal-btn modal-btn-danger">Recusar</button>
+                <button id="approveGuestBtn" class="modal-btn modal-btn-primary">Aprovar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // [Manter todas as importações e configurações iniciais]
+        
+        // Adicionar novas variáveis globais
+        let guestFee = 5; // Valor padrão da taxa
+        let currentGuestToApprove = null;
+        
+        // Elementos DOM adicionais
+        const guestModal = document.getElementById('guestModal');
+        const closeModalBtns = document.querySelectorAll('.close-modal');
+        const cancelGuestBtn = document.getElementById('cancelGuestBtn');
+        const confirmGuestBtn = document.getElementById('confirmGuestBtn');
+        const guestNameInput = document.getElementById('guestNameInput');
+        const guestFeeValue = document.getElementById('guestFeeValue');
+        
+        const approveModal = document.getElementById('approveModal');
+        const approveGuestName = document.getElementById('approveGuestName');
+        const approveHostName = document.getElementById('approveHostName');
+        const approveFeeValue = document.getElementById('approveFeeValue');
+        const rejectGuestBtn = document.getElementById('rejectGuestBtn');
+        const approveGuestBtn = document.getElementById('approveGuestBtn');
+        
+        // [Manter todas as funções existentes até onAuthStateChanged]
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'restrito.html';
+            } else {
+                emailLogado = user.email;
+                await loadGuestFee(); // Carregar valor da taxa
+                await loadCurrentUserPlayer();
+                initializeGameList();
+                setupAdminFeatures();
+                loadGameHistory();
+                setupModals();
+            }
+        });
+        
+        // Nova função para carregar valor da taxa
+        async function loadGuestFee() {
+            try {
+                const feeRef = ref(database, 'config/guestFee');
+                const snapshot = await get(feeRef);
+                if (snapshot.exists()) {
+                    guestFee = parseFloat(snapshot.val()) || 5;
+                }
+                guestFeeValue.textContent = guestFee.toFixed(2);
+            } catch (error) {
+                console.error('Erro ao carregar taxa de convidado:', error);
+            }
+        }
+        
+        // Configurar modais
+        function setupModals() {
+            // Modal de convidado
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    guestModal.style.display = 'none';
+                    approveModal.style.display = 'none';
+                });
+            });
+            
+            cancelGuestBtn.addEventListener('click', () => {
+                guestModal.style.display = 'none';
+            });
+            
+            confirmGuestBtn.addEventListener('click', async () => {
+                const guestName = guestNameInput.value.trim();
+                if (!guestName) {
+                    alert('Por favor, digite o nome do convidado.');
+                    return;
+                }
+                
+                try {
+                    // Criar registro no gameList
+                    const newGuestRef = push(ref(database, 'gameList/guests'));
+                    await set(newGuestRef, {
+                        name: guestName,
+                        hostId: currentUserPlayer.id,
+                        hostName: currentUserPlayer.name,
+                        status: 'pendente',
+                        proposedFee: guestFee,
+                        fee: 0, // Inicialmente zero
+                        createdAt: new Date().toISOString(),
+                        paymentType: 'Convidado'
+                    });
+                    
+                    alert('Convidado adicionado com sucesso! Aguarde aprovação.');
+                    guestModal.style.display = 'none';
+                    guestNameInput.value = '';
+                    loadGameData('current');
+                } catch (error) {
+                    console.error('Erro ao adicionar convidado:', error);
+                    alert('Erro ao adicionar convidado.');
+                }
+            });
+            
+            // Modal de aprovação
+            rejectGuestBtn.addEventListener('click', async () => {
+                if (currentGuestToApprove) {
+                    try {
+                        await remove(ref(database, `gameList/guests/${currentGuestToApprove.id}`));
+                        approveModal.style.display = 'none';
+                        loadGameData('current');
+                    } catch (error) {
+                        console.error('Erro ao recusar convidado:', error);
+                        alert('Erro ao recusar convidado.');
+                    }
+                }
+            });
+            
+            approveGuestBtn.addEventListener('click', async () => {
+                if (currentGuestToApprove) {
+                    const fee = parseFloat(approveFeeValue.value) || 0;
+                    
+                    try {
+                        // Atualizar no gameList
+                        await update(ref(database, `gameList/guests/${currentGuestToApprove.id}`), {
+                            status: 'aprovado',
+                            fee: fee
+                        });
+                        
+                        // Criar registro em payments
+                        const paymentRef = push(ref(database, 'payments'));
+                        await set(paymentRef, {
+                            additionalInfo: currentGuestToApprove.name,
+                            createdAt: new Date().toISOString(),
+                            date: formatDateToISO(new Date()),
+                            month: DateTime.now().toFormat('yyyy-MM'),
+                            paymentType: 'Convidado',
+                            playerId: currentGuestToApprove.hostId,
+                            playerName: currentGuestToApprove.hostName,
+                            value: fee
+                        });
+                        
+                        approveModal.style.display = 'none';
+                        loadGameData('current');
+                    } catch (error) {
+                        console.error('Erro ao aprovar convidado:', error);
+                        alert('Erro ao aprovar convidado.');
+                    }
+                }
+            });
+        }
+        
+        // [Manter setupAdminFeatures existente, mas adicionar:]
+        function setupAdminFeatures() {
+            const isAdmin = adminEmails.includes(emailLogado);
+            if (isAdmin) {
+                // [Manter código existente...]
+                
+                // Adicionar botão para configurar taxa
+                const feeConfigBtn = document.createElement('button');
+                feeConfigBtn.innerHTML = '<i class="fas fa-cog"></i> Taxa Convidado';
+                feeConfigBtn.addEventListener('click', () => {
+                    const newFee = prompt('Digite o novo valor da taxa de convidado:', guestFee);
+                    if (newFee !== null) {
+                        const parsedFee = parseFloat(newFee.replace(',', '.'));
+                        if (!isNaN(parsedFee) && parsedFee >= 0) {
+                            setGuestFee(parsedFee);
+                        } else {
+                            alert('Valor inválido. Digite um número positivo.');
+                        }
+                    }
+                });
+                gameControls.appendChild(feeConfigBtn);
+            }
+        }
+        
+        // Função para atualizar valor da taxa
+        async function setGuestFee(newFee) {
+            try {
+                await set(ref(database, 'config/guestFee'), newFee);
+                guestFee = newFee;
+                guestFeeValue.textContent = newFee.toFixed(2);
+                alert('Taxa de convidado atualizada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao atualizar taxa:', error);
+                alert('Erro ao atualizar taxa.');
+            }
+        }
+        
+        // Modificar loadGameData para incluir convidados
+        async function loadGameData(selectedDate) {
+            try {
+                // [Manter código existente...]
+                
+                // Carregar convidados
+                const guestsRef = ref(database, 'gameList/guests');
+                const guestsSnapshot = await get(guestsRef);
+                const guestsData = guestsSnapshot.val() || {};
+                
+                // Processar convidados
+                const guests = Object.entries(guestsData).map(([id, guest]) => ({
+                    id,
+                    ...guest,
+                    isGuest: true
+                }));
+                
+                // Adicionar convidados aprovados às listas normais
+                const approvedGuests = guests.filter(g => g.status === 'aprovado');
+                approvedGuests.forEach(guest => {
+                    const guestPlayer = {
+                        id: `guest_${guest.id}`,
+                        name: guest.name,
+                        category: 'CONVIDADO',
+                        position: 'Convidado',
+                        timestamp: new Date(guest.createdAt).getTime(),
+                        paymentStatus: guest.fee > 0 ? 'pago' : 'inadimplente',
+                        imageUrl: defaultImage,
+                        isGuest: true,
+                        guestData: guest
+                    };
+                    
+                    if (confirmedPlayers.length < playerLimit) {
+                        confirmedPlayers.push(guestPlayer);
+                    } else {
+                        waitlistPlayers.push(guestPlayer);
+                    }
+                });
+                
+                // [Manter resto do código existente...]
+                
+                // Adicionar seção de convidados pendentes para admins
+                if (isAdmin && selectedDate === 'current') {
+                    const pendingGuests = guests.filter(g => g.status === 'pendente');
+                    if (pendingGuests.length > 0) {
+                        const pendingSection = document.createElement('div');
+                        pendingSection.className = 'section';
+                        pendingSection.innerHTML = `
+                            <h3 class="section-title"><i class="fas fa-user-clock"></i> Convidados Pendentes</h3>
+                            <div id="pendingGuests"></div>
+                        `;
+                        contentDiv.appendChild(pendingSection);
+                        
+                        const pendingGuestsDiv = document.getElementById('pendingGuests');
+                        pendingGuestsDiv.innerHTML = pendingGuests.map(guest => `
+                            <div class="player-item">
+                                <div class="player-info">
+                                    <img src="${defaultImage}" class="player-photo">
+                                    <div>
+                                        <span class="player-name">${guest.name}</span>
+                                        <span class="status-pendente">Pendente</span>
+                                        <p>Convidado por: ${guest.hostName}</p>
+                                    </div>
+                                </div>
+                                <button class="player-action" onclick="showApproveModal('${guest.id}')">Aprovar</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+                
+                // [Manter resto do código...]
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados do jogo:', error);
+            }
+        }
+        
+        // Função para mostrar modal de aprovação
+        window.showApproveModal = function(guestId) {
+            const guestRef = ref(database, `gameList/guests/${guestId}`);
+            get(guestRef).then(snapshot => {
+                if (snapshot.exists()) {
+                    currentGuestToApprove = {
+                        id: guestId,
+                        ...snapshot.val()
+                    };
+                    approveGuestName.textContent = currentGuestToApprove.name;
+                    approveHostName.textContent = currentGuestToApprove.hostName;
+                    approveFeeValue.value = currentGuestToApprove.proposedFee.toFixed(2);
+                    approveModal.style.display = 'block';
+                }
+            });
+        };
+        
+        // Adicionar botão para convidar (modificar initializeGameList)
+        function initializeGameList() {
+            // [Manter código existente...]
+            
+            // Adicionar botão de convidado
+            const guestBtn = document.createElement('button');
+            guestBtn.className = 'guest-btn';
+            guestBtn.innerHTML = '<i class="fas fa-user-plus"></i> Adicionar Convidado';
+            guestBtn.addEventListener('click', () => {
+                if (isViewingHistory) {
+                    alert('Não é possível adicionar convidados ao visualizar histórico.');
+                    return;
+                }
+                guestModal.style.display = 'block';
+            });
+            gameControls.appendChild(guestBtn);
+        }
+        
+        // [Manter todas as outras funções existentes]
+    </script>
+</body>
+</html>
