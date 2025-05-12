@@ -9,7 +9,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css?v=1.0">
 
-   
+    <style>
+        /* Adicionando estilo para máscara de telefone */
+        input[type="tel"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -42,6 +50,11 @@
                 </div>
                 
                 <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email">
+                </div>
+                
+                <div class="form-group">
                     <label for="imageUrl">URL da Imagem do Jogador:</label>
                     <input type="url" id="imageUrl" placeholder="https://exemplo.com/foto.jpg">
                     <button type="button" id="previewBtn" class="upload-btn"><i class="fas fa-eye"></i>&nbspVisualizar</button>
@@ -61,8 +74,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="contact">Contato:</label>
-                    <input type="text" id="contact" required>
+                    <label for="contact">Telefone (com DDD):</label>
+                    <input type="tel" id="contact" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" placeholder="(99) 99999-9999" required>
+                    <small>Formato: (DDD) 99999-9999</small>
                 </div>
                 
                 <div class="form-group">
@@ -92,6 +106,8 @@
                         <tr>
                             <th>Foto</th>
                             <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Telefone</th>
                             <th>Posição</th>                       
                             <th>Categoria</th>
                         </tr>
@@ -130,6 +146,7 @@
         // DOM elements
         const playerForm = document.getElementById('playerForm');
         const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
         const imageUrlInput = document.getElementById('imageUrl');
         const positionInput = document.getElementById('position');
         const contactInput = document.getElementById('contact');
@@ -142,6 +159,21 @@
         const messageDiv = document.getElementById('message');
         const imagePreview = document.getElementById('imagePreview');
         const previewBtn = document.getElementById('previewBtn');
+
+        // Máscara para telefone
+        contactInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                value = '(' + value;
+            }
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ') ' + value.substring(3);
+            }
+            if (value.length > 10) {
+                value = value.substring(0, 10) + '-' + value.substring(10, 14);
+            }
+            e.target.value = value;
+        });
 
         // Preview image button
         previewBtn.addEventListener('click', () => {
@@ -182,6 +214,7 @@
             
             const playerData = {
                 name: nameInput.value,
+                email: emailInput.value || null,
                 imageUrl: imageUrlInput.value || null,
                 position: positionInput.value,
                 contact: contactInput.value,
@@ -249,6 +282,8 @@
                                         `<span data-id="${key}" style="cursor:pointer;">Sem foto</span>`}
                                 </td>
                                 <td>${player.name}</td>
+                                <td>${player.email || '-'}</td>
+                                <td>${player.contact || '-'}</td>
                                 <td>${player.position}</td>                               
                                 <td>${player.category}</td>
                             </tr>
@@ -278,9 +313,10 @@
                 if (snapshot.exists()) {
                     const player = snapshot.val();
                     nameInput.value = player.name;
+                    emailInput.value = player.email || '';
                     imageUrlInput.value = player.imageUrl || '';
                     positionInput.value = player.position;
-                    contactInput.value = player.contact;
+                    contactInput.value = player.contact || '';
                     categoryInput.value = player.category;
                     playerIdInput.value = id;
                     saveBtn.textContent = 'Atualizar';
