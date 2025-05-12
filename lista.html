@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
     <style>
-        * {
+        * 
+        {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -115,19 +116,18 @@
         }
 
         .game-controls {
-    display: flex;
-    flex-direction: row;     /* Itens em linha (opcional, padrão do Flexbox) */
-    flex-wrap: wrap;         /* Itens podem quebrar para a próxima linha */
-    gap: 20px;              /* Espaço entre os itens */
-    justify-content: flex-start; /* Alinhamento horizontal à esquerda */
-    align-items: flex-start; /* Alinhamento vertical no topo */
-    margin-bottom: 20px;     /* Margem inferior */
-}
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: flex-start;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
         .limit-container {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
             margin-bottom: 10px;
         }
         .limit-container label {
@@ -180,6 +180,40 @@
         }
         .finalize-btn:hover {
             background-color: #e67e22;
+        }
+
+        .admin-time-settings {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .admin-time-settings label {
+            font-size: 14px;
+            color: var(--text);
+        }
+        .admin-time-settings input[type="time"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            width: 120px;
+        }
+        .admin-time-settings button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .admin-time-settings button:hover {
+            background-color: #2980b9;
+        }
+        .admin-time-settings button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
 
         .search-container {
@@ -235,14 +269,14 @@
 
         .game-list, .waitlist {
             margin-top: 20px;
-
-            border: 1px solid #ccc; /* borda cinza */
-    padding: 10px; /* espaçamento interno */
-    margin-bottom: 20px; /* margem inferior */
-    border-radius: 5px; /* cantos arredondados */
-    background-color: #fdfcfc;
-          
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #fdfcfc;
         }
+        
+
         .game-list h3, .waitlist h3 {
             margin-bottom: 15px;
             color: var(--text);
@@ -343,19 +377,17 @@
             background-color: #2980b9;
         }
 
-
         #confirmPlayer {
-    width: 250px; /* Define a largura */
-    height: 50px; /* Define a altura */
-  
-    padding: 10px 20px; /* Adiciona espaço interno */
-}
+            width: 250px;
+            height: 50px;
+            padding: 10px 20px;
+        }
 
         @media (max-width: 768px) {
-            .game-controls, .guest-controls, .admin-guest-settings {
-                flex-direction: column; /* Empilha os itens verticalmente */
-                gap: 8px;             /* Espaçamento reduzido */
-                align-items: flex-start; /* Alinha à esquerda (opcional) */
+            .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
             }
             .limit-container {
                 flex-direction: row;
@@ -374,8 +406,6 @@
                 align-items: flex-start;
             }
         }
-
-
     </style>
 </head>
 <body>
@@ -385,14 +415,10 @@
     </div>
     
     <div class="container">
-        
-        
-        
         <div id="game-list" class="tab-content active">
             <div id="content" class="section">
                 <div class="section-title">
-                    <h2><i class="fas fa-volleyball-ball"></i> Jogo do Dia: <span id="gameDate"></span> </h2>
-                    
+                    <h2><i class="fas fa-volleyball-ball"></i> Jogo do Dia: <span id="gameDate"></span></h2>
                     <select id="historySelect">
                         <option value="current">Atual</option>
                     </select>
@@ -406,63 +432,45 @@
                 </div>
 
                 <div class="game-list">
-                    <h3>Lista de Confirmados</h3> <!-- Feche o H3 corretamente -->
-
-                    <div id="playerLimitContainer" class="limit-container">
-                             <!-- Será preenchido dinamicamente pelo JavaScript -->
-                    </div>
-
+                    <h3>Lista de Confirmados</h3>
+                    <div id="playerLimitContainer" class="limit-container"></div>
                     <div id="confirmedPlayers"></div>
-                
                 </div>
                 
-                    <div class="waitlist">
-                         <h3>Lista de Espera</h3>
-                         <div id="waitlistPlayers"></div>
-                    </div>
+                <div class="waitlist">
+                    <h3>Lista de Espera</h3>
+                    <div id="waitlistPlayers"></div>
+                </div>
                 
                 <div class="game-controls">
+                    <!-- Campo de horário (visível apenas para ADMs) -->
+                    <div class="admin-time-settings" id="adminTimeSettings" style="display: none;">
+                        <label>Horário do Jogo:</label>
+                        <input type="time" id="gameTimeInput">
+                        <button id="saveGameTimeBtn"><i class="fas fa-save"></i> Salvar</button>
+                    </div>
                     <!-- Botão Confirmar Minha Presença (visível para todos os usuários logados) -->
                     <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Minha Presença</button>
-                 <br>
-
-
-                 
-                   
-                    
-                    
                     <!-- Controles de Administrador (somente para ADMs) -->
                     <div class="search-container" id="adminSearchContainer" style="display: none;">
                         <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
                         <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
                         <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
                     </div>
-                    
-                    
                     <!-- Taxa de Convidado (somente para ADMs) -->
                     <div class="admin-guest-settings" id="adminGuestSettings" style="display: none;">
                         <label>Taxa de Convidado (R$):</label>
                         <input type="number" id="guestFeeInput" step="0.01" min="0">
                         <button id="saveGuestFeeBtn"><i class="fas fa-save"></i> Salvar Taxa</button>
                     </div>
-                   
                     <!-- Controles de Convidado (visível para todos) -->
                     <div class="guest-controls" id="guestControls" style="display: none;">
                         <input type="text" id="guestNameInput" placeholder="Nome do Convidado">
                         <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
                     </div>
-                    
                     <!-- Botão Finalizar Jogo (somente para ADMs) -->
                     <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Lista</button>
                 </div>
-
-
-
-                
-               
-                
-
-
             </div>
         </div>
     </div>
@@ -515,6 +523,9 @@
         const adminGuestSettings = document.getElementById('adminGuestSettings');
         const guestFeeInput = document.getElementById('guestFeeInput');
         const saveGuestFeeBtn = document.getElementById('saveGuestFeeBtn');
+        const adminTimeSettings = document.getElementById('adminTimeSettings');
+        const gameTimeInput = document.getElementById('gameTimeInput');
+        const saveGameTimeBtn = document.getElementById('saveGameTimeBtn');
 
         // Variáveis globais
         let playerLimit = 20;
@@ -527,6 +538,7 @@
         let isViewingHistory = false;
         let currentGameDate = null;
         let guestFee = 5;
+        let gameTime = "19:30"; // Horário padrão
         let isAdmin = false;
 
         // Emails administrativos
@@ -563,6 +575,12 @@
             return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
         }
 
+        // Função para atualizar a exibição da data e horário
+        function updateGameDateDisplay() {
+            const formattedDate = formatDateToBR(currentGameDate);
+            gameDateSpan.textContent = `${formattedDate} às ${gameTime}`;
+        }
+
         // Função para ordenar jogadores
         function sortPlayers(players) {
             return players.sort((a, b) => {
@@ -582,6 +600,7 @@
                 isAdmin = adminEmails.includes(emailLogado);
                 await loadCurrentUserPlayer();
                 await loadGuestFee();
+                await loadGameTime();
                 initializeGameList();
                 setupAdminFeatures();
                 loadGameHistory();
@@ -656,36 +675,68 @@
             }
         }
 
+        async function loadGameTime() {
+            try {
+                const settingsRef = ref(database, 'settings/gameTime');
+                const snapshot = await get(settingsRef);
+                if (snapshot.exists()) {
+                    const time = snapshot.val();
+                    if (/^\d{2}:\d{2}$/.test(time)) {
+                        gameTime = time;
+                        console.log(`Horário do jogo carregado: ${gameTime}`);
+                    } else {
+                        console.warn(`Formato de horário inválido: ${time}. Usando padrão (19:30).`);
+                        gameTime = "19:30";
+                    }
+                } else {
+                    console.log('Nó settings/gameTime não existe. Usando padrão (19:30).');
+                    gameTime = "19:30";
+                    // Não gravar automaticamente o padrão para evitar escritas desnecessárias
+                }
+                if (isAdmin) {
+                    gameTimeInput.value = gameTime;
+                }
+                updateGameDateDisplay();
+            } catch (error) {
+                console.warn('Erro ao carregar horário, usando valor padrão (19:30):', error.message);
+                gameTime = "19:30";
+                if (isAdmin) {
+                    gameTimeInput.value = gameTime;
+                }
+                updateGameDateDisplay();
+            }
+        }
+
         function setupAdminFeatures() {
-    if (isAdmin) {
-        // Para ADMs - Mostrar controles completos
-        adminSearchContainer.style.display = 'flex';
-        finalizeGameBtn.style.display = 'inline-block';
-        adminGuestSettings.style.display = 'flex';
-        
-        playerLimitContainer.innerHTML = `
-            <label>Limite de Participantes:</label>
-            <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
-            <button id="confirmLimitBtn">Confirmar</button>
-        `;
-        
-        setupPlayerSearch();
-        setupLimitConfirmation();
-        setupGuestFeeConfiguration();
-    } else {
-        // Para não-ADMs - Mostrar apenas o texto com o limite
-        adminSearchContainer.style.display = 'none';
-        finalizeGameBtn.style.display = 'none';
-        adminGuestSettings.style.display = 'none';
-        
-        playerLimitContainer.innerHTML = `
-            <span>Limite de Participantes: ${playerLimit}</span>
-        `;
-    }
-    
-    // Controles de convidado visíveis se o usuário estiver logado
-    guestControls.style.display = currentUserPlayer ? 'flex' : 'none';
-}
+            if (isAdmin) {
+                adminSearchContainer.style.display = 'flex';
+                finalizeGameBtn.style.display = 'inline-block';
+                adminGuestSettings.style.display = 'flex';
+                adminTimeSettings.style.display = 'flex';
+
+                playerLimitContainer.innerHTML = `
+                    <label>Limite de Participantes:</label>
+                    <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                    <button id="confirmLimitBtn">Confirmar</button>
+                `;
+                
+                setupPlayerSearch();
+                setupLimitConfirmation();
+                setupGuestFeeConfiguration();
+                setupGameTimeConfiguration();
+            } else {
+                adminSearchContainer.style.display = 'none';
+                finalizeGameBtn.style.display = 'none';
+                adminGuestSettings.style.display = 'none';
+                adminTimeSettings.style.display = 'none';
+                
+                playerLimitContainer.innerHTML = `
+                    <span>Limite de Participantes: ${playerLimit}</span>
+                `;
+            }
+            
+            guestControls.style.display = currentUserPlayer ? 'flex' : 'none';
+        }
 
         function setupGuestFeeConfiguration() {
             saveGuestFeeBtn.addEventListener('click', async () => {
@@ -706,6 +757,30 @@
                 } catch (error) {
                     console.error('Erro ao salvar taxa:', error);
                     alert('Erro ao salvar taxa. Verifique suas permissões.');
+                }
+            });
+        }
+
+        function setupGameTimeConfiguration() {
+            saveGameTimeBtn.addEventListener('click', async () => {
+                if (!isAdmin) {
+                    alert('Você não tem permissão para alterar o horário.');
+                    return;
+                }
+                const newTime = gameTimeInput.value;
+                if (!newTime) {
+                    alert('Por favor, selecione um horário válido.');
+                    return;
+                }
+                try {
+                    await set(ref(database, 'settings/gameTime'), newTime);
+                    gameTime = newTime;
+                    console.log(`Horário do jogo atualizado: ${gameTime}`);
+                    updateGameDateDisplay();
+                    alert('Horário do jogo atualizado com sucesso.');
+                } catch (error) {
+                    console.error('Erro ao salvar horário:', error);
+                    alert('Erro ao salvar horário. Verifique suas permissões.');
                 }
             });
         }
@@ -832,7 +907,7 @@
                     date: formatDateToISO(new Date()),
                     month: getBrazilMonthYear(),
                     paymentType: 'CONVIDADO',
-                    value: parseFloat(guestFee.toFixed(2)) // Garante que value seja um número
+                    value: parseFloat(guestFee.toFixed(2))
                 };
                 console.log(`Adicionando convidado com taxa: R$${guestObj.value}`);
                 if (confirmedPlayers.length < playerLimit) {
@@ -878,7 +953,6 @@
                 }
                 guest.status = 'approved';
                 guest.paymentStatus = 'pago';
-                // Validar o valor da taxa
                 let paymentValue = parseFloat(guest.value);
                 if (isNaN(paymentValue) || paymentValue < 0) {
                     console.warn(`Valor inválido para convidado ${guest.name}: ${guest.value}. Usando guestFee: ${guestFee}`);
@@ -925,12 +999,11 @@
                     const selectedDate = historySelect.value;
                     isViewingHistory = selectedDate !== 'current';
                     currentGameDate = selectedDate === 'current' ? formatDateToISO(new Date()) : selectedDate;
-                    gameDateSpan.textContent = `${formatDateToBR(currentGameDate)}`;
                     loadGameData(selectedDate);
                 });
 
                 currentGameDate = formatDateToISO(new Date());
-                gameDateSpan.textContent = `${formatDateToBR(currentGameDate)}`;
+                updateGameDateDisplay();
                 loadGameData('current');
             } catch (error) {
                 console.error('Erro ao carregar histórico:', error);
@@ -946,7 +1019,16 @@
                 const data = snapshot.val() || { confirmed: {}, waitlist: {}, playerLimit: 20 };
 
                 playerLimit = data.playerLimit || 20;
+                // Carregar gameTime apenas do histórico, caso esteja visualizando histórico
+                if (selectedDate !== 'current') {
+                    gameTime = data.gameTime || "19:30";
+                }
                 updatePlayerLimitDisplay(isAdmin);
+
+                if (isAdmin) {
+                    gameTimeInput.value = gameTime;
+                }
+                updateGameDateDisplay();
 
                 confirmedPlayers = Object.entries(data.confirmed || {}).map(([id, player]) => {
                     const playerData = allPlayers.find(p => p.id === id) || {};
@@ -1000,6 +1082,7 @@
                     };
                 });
 
+                // Atualizar status de pagamento apenas se necessário, sem chamar updateFirebaseLists automaticamente
                 if (selectedDate === 'current') {
                     for (let player of confirmedPlayers) {
                         if (player.category !== 'CONVIDADO') {
@@ -1011,7 +1094,7 @@
                             player.paymentStatus = await checkPaymentStatus(player.id);
                         }
                     }
-                    await updateFirebaseLists();
+                    // Não chamar updateFirebaseLists aqui para evitar loop
                 }
 
                 confirmedPlayers = sortPlayers(confirmedPlayers);
@@ -1025,6 +1108,8 @@
                 guestNameInput.disabled = isViewingHistory;
                 saveGuestFeeBtn.disabled = isViewingHistory;
                 guestFeeInput.disabled = isViewingHistory;
+                gameTimeInput.disabled = isViewingHistory;
+                saveGameTimeBtn.disabled = isViewingHistory;
 
                 updateGameList();
             } catch (error) {
@@ -1046,9 +1131,7 @@
                     setupLimitConfirmation();
                 }
             } else {
-             
                 playerLimitContainer.innerHTML = `<span>Limite de Participantes: ${playerLimit}</span>`;
-                
             }
         }
 
@@ -1072,6 +1155,7 @@
                     await set(historyRef, {
                         ...gameData,
                         playerLimit,
+                        gameTime, // Salvar o horário atual no histórico
                         date: today
                     });
 
@@ -1087,10 +1171,59 @@
             confirmPlayerBtn.addEventListener('click', () => confirmPlayer());
             setupGuestControls();
 
+            // Modificado para evitar loop: usar once em vez de onValue
             const gameListRef = ref(database, 'gameList');
+            const snapshot = await get(gameListRef);
+            if (!isViewingHistory) {
+                loadGameData('current');
+            }
+
+            // Adicionar listener apenas para atualizações futuras, mas controlar chamadas
             onValue(gameListRef, async (snapshot) => {
                 if (!isViewingHistory) {
-                    loadGameData('current');
+                    // Evitar chamar loadGameData diretamente para não disparar updateFirebaseLists
+                    const data = snapshot.val() || { confirmed: {}, waitlist: {}, playerLimit: 20 };
+                    playerLimit = data.playerLimit || 20;
+                    confirmedPlayers = Object.entries(data.confirmed || {}).map(([id, player]) => ({
+                        id,
+                        name: player.name || '-',
+                        category: player.category || 'CONVIDADO',
+                        position: player.position || '-',
+                        timestamp: player.timestamp || getBrazilTimestamp(),
+                        paymentStatus: player.paymentStatus || 'inadimplente',
+                        imageUrl: player.imageUrl || defaultImage,
+                        invitedById: player.invitedById || null,
+                        invitedByName: player.invitedByName || null,
+                        status: player.status || null,
+                        additionalInfo: player.additionalInfo || null,
+                        createdAt: player.createdAt || null,
+                        date: player.date || null,
+                        month: player.month || null,
+                        paymentType: player.paymentType || null,
+                        value: player.value || null
+                    }));
+                    waitlistPlayers = Object.entries(data.waitlist || {}).map(([id, player]) => ({
+                        id,
+                        name: player.name || '-',
+                        category: player.category || 'CONVIDADO',
+                        position: player.position || '-',
+                        timestamp: player.timestamp || getBrazilTimestamp(),
+                        paymentStatus: player.paymentStatus || 'inadimplente',
+                        imageUrl: player.imageUrl || defaultImage,
+                        invitedById: player.invitedById || null,
+                        invitedByName: player.invitedByName || null,
+                        status: player.status || null,
+                        additionalInfo: player.additionalInfo || null,
+                        createdAt: player.createdAt || null,
+                        date: player.date || null,
+                        month: player.month || null,
+                        paymentType: player.paymentType || null,
+                        value: player.value || null
+                    }));
+                    confirmedPlayers = sortPlayers(confirmedPlayers);
+                    waitlistPlayers = sortPlayers(waitlistPlayers);
+                    updatePlayerLimitDisplay(isAdmin);
+                    updateGameList();
                 }
             });
         }
@@ -1173,7 +1306,6 @@
                     addPlayerBtn.disabled = true;
                     autocompleteSuggestions.style.display = 'none';
                 }
-
             } catch (error) {
                 console.error('Erro ao confirmar presença:', error);
                 alert('Erro ao processar confirmação.');
@@ -1238,8 +1370,7 @@
 
                 await updateFirebaseLists();
                 updateGameList();
-
-            } catch ( AGAerror) {
+            } catch (error) {
                 console.error('Erro ao remover jogador:', error);
                 alert('Erro ao remover presença.');
             }
@@ -1292,6 +1423,7 @@
                 };
             });
 
+            // Não incluir gameTime aqui, pois é gerenciado em settings/gameTime
             await set(gameListRef, {
                 confirmed,
                 waitlist,
