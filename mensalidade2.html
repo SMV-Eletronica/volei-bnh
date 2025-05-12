@@ -89,7 +89,7 @@
                         <option value="">Selecione...</option>
                         <option value="Mensal">Mensal</option>
                         <option value="Diaria">Diária</option>
-                        <option value="Convidado">Convidado</option>
+                        <option value="CONVIDADO">CONVIDADO</option>
                         <option value="Outros">Outros</option>
                     </select>
                 </div>
@@ -204,7 +204,7 @@
 
         // Mostrar/ocultar campo de especificação conforme seleção
         paymentTypeSelect.addEventListener('change', () => {
-            if (paymentTypeSelect.value === 'Convidado') {
+            if (paymentTypeSelect.value === 'CONVIDADO') {
                 guestFieldLabel.textContent = 'Nome do Convidado:';
                 guestNameInput.placeholder = 'Digite o nome do convidado';
                 guestFieldContainer.style.display = 'block';
@@ -312,7 +312,7 @@
             };
             
             // Adiciona informação adicional se for Convidado ou Outros
-            if (paymentTypeSelect.value === 'Convidado' || paymentTypeSelect.value === 'Outros') {
+            if (paymentTypeSelect.value === 'CONVIDADO' || paymentTypeSelect.value === 'Outros') {
                 paymentData.additionalInfo = guestNameInput.value;
             }
             
@@ -426,11 +426,11 @@
                     editingPaymentIdInput.value = paymentId;
                     
                     // Mostra campos adicionais se necessário
-                    if (paymentData.paymentType === 'Convidado' || paymentData.paymentType === 'Outros') {
+                    if (paymentData.paymentType === 'CONVIDADO' || paymentData.paymentType === 'Outros') {
                         guestFieldContainer.style.display = 'block';
                         guestNameInput.value = paymentData.additionalInfo || '';
                         
-                        if (paymentData.paymentType === 'Convidado') {
+                        if (paymentData.paymentType === 'CONVIDADO') {
                             guestFieldLabel.textContent = 'Nome do Convidado:';
                             guestNameInput.placeholder = 'Digite o nome do convidado';
                         } else {
