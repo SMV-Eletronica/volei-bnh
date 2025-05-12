@@ -616,7 +616,7 @@
                 adminGuestSettings.style.display = 'flex';
                 playerLimitContainer.innerHTML = `
                     <div class="limit-container">
-                        <label>Limite de Participantes:</label>
+                        <label>Configurar Limite de Participantes:</label>
                         <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
                         <button id="confirmLimitBtn">Confirmar</button>
                     </div>
@@ -983,7 +983,7 @@
             if (isAdmin) {
                 playerLimitContainer.innerHTML = `
                     <div class="limit-container">
-                        <label>Limite de Participantes:</label>
+                        <label>Configurar Limite de Participantes:</label>
                         <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*" ${isViewingHistory ? 'disabled' : ''}>
                         <button id="confirmLimitBtn" ${isViewingHistory ? 'disabled' : ''}>Confirmar</button>
                     </div>
