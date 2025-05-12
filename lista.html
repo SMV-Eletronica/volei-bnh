@@ -628,7 +628,8 @@
                 adminSearchContainer.style.display = 'none';
                 finalizeGameBtn.style.display = 'none';
                 adminGuestSettings.style.display = 'none';
-                playerLimitContainer.innerHTML = `<span>Limite de Participantes: ${playerLimit}</span>`;
+                <label>Limite de Participantes:</label>
+                playerLimitContainer.innerHTML = `<span id="playerLimitDisplay">${playerLimit}</span>`;
             }
             guestControls.style.display = currentUserPlayer ? 'flex' : 'none';
         }
@@ -992,7 +993,8 @@
                     setupLimitConfirmation();
                 }
             } else {
-                playerLimitContainer.innerHTML = `<span>Limite de Participantes: ${playerLimit}</span>`;
+                <label>Limite de Participantes:</label>
+                playerLimitContainer.innerHTML = `<span id="playerLimitDisplay">${playerLimit}</span>`;
             }
         }
 
