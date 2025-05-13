@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrantes-Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i>
+        Vôlei-BNH Gestão</h2></center>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>            
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="userEmail"></div>
+        <br>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar integrante...">
+        </div>
+        
+        <div class="profile-container">
+            <div class="profile-header">
+                <button id="prevPlayer" class="nav-arrow">←</button>
+                <img id="profilePhoto" class="profile-photo" src="" alt="Foto do integrante">
+                <button id="nextPlayer" class="nav-arrow">→</button>
+            </div>
+            
+            <div class="profile-details">
+                <h2 id="profileName" class="profile-name">Carregando...</h2>
+                
+                <div class="profile-info">
+                    <div class="info-item">
+                        <div class="info-label">Posição</div>
+                        <div id="playerPosition" class="info-value">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Categoria</div>
+                        <div id="playerCategory" class="info-value">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Contato</div>
+                        <div id="playerContact" class="info-value">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Data de Nascimento</div>
+                        <div id="playerBirthdate" class="info-value">-</div>
+                    </div>
+                </div>
+                
+                <div class="payment-status">
+                    <h3 class="status-title">Status das Contribuições</h3>
+                    <div id="paymentsList"></div>
+                </div>
+                
+                <div id="pendingStatus" class="pending-alert" style="display: none;">
+                    Este integrante possui pendências!
+                </div>
+                
+                <div id="noPendingStatus" class="no-pending" style="display: none;">
+                    Integrante em dia com as Contribuições!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Elementos DOM
+        const profilePhoto = document.getElementById('profilePhoto');
+        const profileName = document.getElementById('profileName');
+        const playerPosition = document.getElementById('playerPosition');
+        const playerCategory = document.getElementById('playerCategory');
+        const playerBirthdate = document.getElementById('playerBirthdate');
+        const playerContact = document.getElementById('playerContact');
+        const paymentsList = document.getElementById('paymentsList');
+        const prevPlayerBtn = document.getElementById('prevPlayer');
+        const nextPlayerBtn = document.getElementById('nextPlayer');
+        const searchInput = document.getElementById('searchInput');
+        const pendingStatus = document.getElementById('pendingStatus');
+        const noPendingStatus = document.getElementById('noPendingStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Variáveis globais
+        let players = [];
+        let currentPlayerIndex = 0;
+        let filteredPlayers = [];
+
+        // Verificar estado de autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                loadPlayers();
+            }
+        });
+
+        // Botão de logout
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+        // Carregar todos os jogadores
+        async function loadPlayers() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                
+                if (snapshot.exists()) {
+                    players = Object.entries(snapshot.val()).map(([id, player]) => ({ id, ...player }));
+                    players.sort((a, b) => a.name.localeCompare(b.name));
+                    filteredPlayers = [...players];
+                    
+                    if (filteredPlayers.length > 0) {
+                        currentPlayerIndex = 0;
+                        showPlayer(currentPlayerIndex);
+                    } else {
+                        profileName.textContent = "Nenhum integrante cadastrado";
+                    }
+                } else {
+                    profileName.textContent = "Nenhum integrante cadastrado";
+                }
+            } catch (error) {
+                console.error("Error loading players: ", error);
+                profileName.textContent = "Erro ao carregar dados";
+            }
+        }
+
+        // Mostrar jogador atual
+        function showPlayer(index) {
+            if (filteredPlayers.length === 0) return;
+            
+            if (index < 0) index = filteredPlayers.length - 1;
+            if (index >= filteredPlayers.length) index = 0;
+            
+            currentPlayerIndex = index;
+            const player = filteredPlayers[index];
+            
+            profileName.textContent = player.name || "-";
+            playerPosition.textContent = player.position || "-";
+            playerCategory.textContent = player.category || "-";
+            playerBirthdate.textContent = player.birthdate ? formatDate(player.birthdate) : "-";
+            playerContact.textContent = player.contact || "-";
+            
+            if (player.imageUrl) {
+                profilePhoto.src = player.imageUrl;
+                profilePhoto.style.display = "block";
+            } else {
+                profilePhoto.style.display = "none";
+            }
+            
+            loadPlayerPayments(player.id);
+            
+            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
+            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+        }
+
+        // Carregar pagamentos do jogador
+        async function loadPlayerPayments(playerId) {
+            try {
+                const paymentsRef = ref(database, 'payments');
+                const snapshot = await get(paymentsRef);
+                const payments = snapshot.val() || {};
+                
+                const playerPayments = Object.values(payments)
+                    .filter(p => p.playerId === playerId)
+                    .sort((a, b) => b.month.localeCompare(a.month));
+                
+                renderPayments(playerPayments);
+                
+                const hasPending = playerPayments.some(p => p.value === 0 || p.value === '0');
+                
+                if (hasPending) {
+                    pendingStatus.style.display = "block";
+                    noPendingStatus.style.display = "none";
+                } else {
+                    pendingStatus.style.display = "none";
+                    noPendingStatus.style.display = "block";
+                }
+                
+            } catch (error) {
+                console.error("Error loading payments: ", error);
+                paymentsList.innerHTML = "<div>Erro ao carregar pagamentos</div>";
+            }
+        }
+
+        // Renderizar lista de pagamentos
+        function renderPayments(payments) {
+            paymentsList.innerHTML = '';
+            
+            if (payments.length === 0) {
+                paymentsList.innerHTML = "<div>Nenhum pagamento registrado</div>";
+                return;
+            }
+            
+            payments.forEach(payment => {
+                const isPaid = payment.value > 0;
+                const [year, month] = payment.month.split('-');
+                const monthName = getMonthName(month);
+                
+                const paymentEl = document.createElement('div');
+                paymentEl.className = 'status-item';
+                paymentEl.innerHTML = `
+                    <div>
+                        <span class="status-label">Mês de Referência:</span>
+                        <span class="status-value">${monthName}/${year}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Origem:</span>
+                        <span class="status-value">${payment.additionalInfo || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Tipo de Pagamento:</span>
+                        <span class="status-value">${payment.paymentType || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data do Pagamento:</span>
+                        <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Valor:</span>
+                        <span class="status-value ${isPaid ? 'paid' : 'unpaid'}">
+                            ${isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 'Não pago'}
+                        </span>
+                    </div>
+                `;
+                paymentsList.appendChild(paymentEl);
+            });
+        }
+
+        // Navegação entre jogadores
+        prevPlayerBtn.addEventListener('click', () => {
+            showPlayer(currentPlayerIndex - 1);
+        });
+        
+        nextPlayerBtn.addEventListener('click', () => {
+            showPlayer(currentPlayerIndex + 1);
+        });
+
+        // Pesquisa de jogadores
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            
+            if (searchTerm === '') {
+                filteredPlayers = [...players];
+            } else {
+                filteredPlayers = players.filter(player => 
+                    player.name.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filteredPlayers.length > 0) {
+                currentPlayerIndex = 0;
+                showPlayer(currentPlayerIndex);
+            } else {
+                profileName.textContent = "Nenhum integrante encontrado";
+                paymentsList.innerHTML = "";
+                pendingStatus.style.display = "none";
+                noPendingStatus.style.display = "none";
+            }
+        });
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            const date = new Date(dateString);
+            const offset = date.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(date.getTime() + offset);
+            
+            return adjustedDate.toLocaleDateString('pt-BR');
+        }
+        
+        function getMonthName(monthNumber) {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return months[parseInt(monthNumber) - 1];
+        }
+    </script>
+</body>
+</html>
