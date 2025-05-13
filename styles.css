@@ -226,7 +226,36 @@ body {
     font-weight: bold;
 }
 
-
+.status-title {
+            color: var(--text);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .status-item {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+        }
+        .status-item div {
+            margin-bottom: 5px;
+        }
+        .status-label {
+            font-weight: bold;
+            color: var(--muted);
+        }
+        .status-value {
+            color: var(--text);
+        }
+        .status-value.paid {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .status-value.unpaid {
+            color: var(--danger);
+            font-weight: bold;
+        }
     
      .form-group {
             margin-bottom: 10px;
