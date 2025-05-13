@@ -341,22 +341,29 @@
             padding-bottom: 10px;
         }
         .status-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
         }
-        .status-month {
-            color: var(--text);
+        .status-item div {
+            margin-bottom: 5px;
+        }
+        .status-label {
+            font-weight: bold;
+            color: var(--muted);
         }
         .status-value {
-            font-weight: bold;
+            color: var(--text);
         }
         .status-value.paid {
             color: var(--success);
+            font-weight: bold;
         }
         .status-value.unpaid {
             color: var(--danger);
+            font-weight: bold;
         }
         .pending-alert {
             background-color: #f8d7da;
@@ -1031,9 +1038,27 @@
                 const paymentEl = document.createElement('div');
                 paymentEl.className = 'status-item';
                 paymentEl.innerHTML = `
-                    <div class="status-month">${monthName}/${year}</div>
-                    <div class="status-value ${isPaid ? 'paid' : 'unpaid'}">
-                        ${isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 'Não pago'}
+                    <div>
+                        <span class="status-label">Mês de Referência:</span>
+                        <span class="status-value">${monthName}/${year}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Origem:</span>
+                        <span class="status-value">${payment.additionalInfo || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Tipo de Pagamento:</span>
+                        <span class="status-value">${payment.paymentType || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data do Pagamento:</span>
+                        <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Valor:</span>
+                        <span class="status-value ${isPaid ? 'paid' : 'unpaid'}">
+                            ${isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 'Não pago'}
+                        </span>
                     </div>
                 `;
                 paymentsList.appendChild(paymentEl);
