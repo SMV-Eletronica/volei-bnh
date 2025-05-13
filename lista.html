@@ -41,27 +41,23 @@
             color: white;
         }
 
-
-           .logout-btn {
-               position: absolute;
+        .logout-btn {
+            position: absolute;
             top: 55px;
             right: 20px;
-        background-color: #d32f2f;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
     
-    .logout-btn:hover {
-        background-color: #b71c1c;
-    }
+        .logout-btn:hover {
+            background-color: #b71c1c;
+        }
 
-
-
-        
         .login-btn {
             position: absolute;
             top: 15px;
@@ -79,8 +75,7 @@
             background-color: #219653;
         }
 
-
-         .transparencia-btn {
+        .transparencia-btn {
             position: absolute;
             top: 15px;
             right: 20px;
@@ -137,16 +132,16 @@
             margin-bottom: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-       .section-title {
-    margin-top: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    color: var(--text);
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    gap: 10px;
-}
+        .section-title {
+            margin-top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            color: var(--text);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            gap: 10px;
+        }
 
         .section-title select {
             padding: 5px;
@@ -449,10 +444,10 @@
             background-color: #c0392b !important;
         }
 
-         #gameDate {
-                font-size: 24px; /* Ajuste o tamanho conforme necessário */
-                font-weight: bold; /* Opcional: deixa o texto em negrito */
-            } 
+        #gameDate {
+            font-size: 24px; /* Ajuste o tamanho conforme necessário */
+            font-weight: bold; /* Opcional: deixa o texto em negrito */
+        } 
          
         @media (max-width: 768px) {
             .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
@@ -486,9 +481,9 @@
 <body>
     <div class="header">
         <h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH</h2><b>Lista de Presença</b>        
-         <button class="transparencia-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
-        <button class="login-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-sign-in-alt"></i> Gestão</button>
-        <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+        <button id="transparenciaBtn" class="transparencia-btn" onclick="window.location.href='transparencia.html'" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+        <button id="loginBtn" class="login-btn" onclick="window.location.href='dashboard.html'" style="display: none;"><i class="fas fa-sign-in-alt"></i> Gestão</button>
+        <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
     </div>
     
     <div class="container">
@@ -496,9 +491,9 @@
             <div id="content" class="section">
                 <div class="section-title">
                     <h2><i class="fas fa-volleyball-ball"></i> Jogo do Dia:<br> <span id="gameDate"></span></h2>
-                   <h3>Listas anteriores</h3>
+                    <h3>Listas anteriores</h3>
                     <select id="historySelect">
-                      <option value="current">Atual</option>
+                        <option value="current">Atual</option>
                     </select>
                 </div>
                 
@@ -556,7 +551,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Configuração do Firebase
         const firebaseConfig = {
@@ -573,6 +568,7 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         const auth = getAuth(app);
+        console.log('Objeto auth inicializado:', auth); // Log de depuração
 
         // Configuração do Luxon
         const { DateTime } = luxon;
@@ -669,6 +665,20 @@
             });
         }
 
+        // Função para controlar a visibilidade dos botões
+        function updateButtonVisibility() {
+            const transparenciaBtn = document.getElementById('transparenciaBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (isAdmin) {
+                transparenciaBtn.style.display = 'none';
+                loginBtn.style.display = 'inline-block';
+            } else {
+                transparenciaBtn.style.display = 'inline-block';
+                loginBtn.style.display = 'none';
+            }
+        }
+
         // Verificar autenticação
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -681,6 +691,7 @@
             } else {
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
+                updateButtonVisibility(); // Ajustar visibilidade dos botões
                 await loadCurrentUserPlayer();
                 await loadGuestFee();
                 await loadGameTime();
@@ -690,17 +701,44 @@
             }
         });
 
-   // Logout button
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = 'index.html';
-            }).catch((error) => {
-                console.error('Error signing out:', error);
+        // Logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                console.log('Botão de logout clicado');
+                if (!auth) {
+                    console.error('Objeto auth não está definido');
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro interno de autenticação.',
+                    });
+                    return;
+                }
+                try {
+                    await signOut(auth);
+                    console.log('Logout bem-sucedido');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Logout',
+                        text: 'Você saiu com sucesso.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                    window.location.assign('index.html');
+                } catch (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Não foi possível fazer logout. Tente novamente.',
+                    });
+                }
             });
-        });
+        } else {
+            console.error('Elemento com ID "logoutBtn" não encontrado');
+        }
 
-
-        
         async function loadCurrentUserPlayer() {
             try {
                 const playersRef = ref(database, 'players');
@@ -823,6 +861,7 @@
         }
 
         function setupAdminFeatures() {
+            updateButtonVisibility(); // Reforçar visibilidade dos botões
             if (isAdmin) {
                 adminSearchContainer.style.display = 'flex';
                 finalizeGameBtn.style.display = 'inline-block';
@@ -1160,7 +1199,7 @@
                     console.warn(`Valor ajustado para jogador ${player.name}: ${player.value}. Usando ${paymentValue}`);
                 }
                 const paymentData = {
-                    additionalInfo: player.additionalInfo,
+                    additionalSara: player.additionalInfo,
                     createdAt: player.createdAt,
                     date: player.date,
                     month: player.month,
