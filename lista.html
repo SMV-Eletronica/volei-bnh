@@ -1101,9 +1101,9 @@
             const result = await Swal.fire({
                 icon: 'question',
                 title: 'Confirmar Convidado',
-                text: `Você está convidando ${guestName}. E declara estar ciente de que uma taxa de R$${guestFee.toFixed(2)} será inserida ao seu registro. Deseja confirmar?`,
+                text: `Você está convidando ${guestName}. E declara estar ciente de que uma taxa de R$${guestFee.toFixed(2)} será inserida ao seu registro.`,
                 showCancelButton: true,
-                confirmButtonText: 'Confirmar',
+                confirmButtonText: 'Estou Ciente',
                 cancelButtonText: 'Cancelar',
             });
             if (!result.isConfirmed) {
@@ -1571,7 +1571,7 @@
                     const result = await Swal.fire({
                         icon: 'question',
                         title: 'Confirmar Presença',
-                        text: `Você está confirmando sua presença como ${playerObj.name}. Uma taxa de R$${guestFee.toFixed(2)} será cobrada após aprovação. Deseja confirmar?`,
+                        text: `Você está confirmando sua presença como ${playerObj.name}. Como membro não fixo, declara estar ciente de que uma taxa de R$${guestFee.toFixed(2)} será inserida ao seu registro.`,
                         showCancelButton: true,
                         confirmButtonText: 'Confirmar',
                         cancelButtonText: 'Cancelar',
