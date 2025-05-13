@@ -7,28 +7,25 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-       <link rel="stylesheet" href="styles.css">
-
+    <link rel="stylesheet" href="styles.css">
+    
 </head>
 <body>
     <div class="header">
         <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i>
         Vôlei-BNH Gestão</h2></center>
         <div class="button-container">
-            
-            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i>&nbspCadastro</button>            
-            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i>&nbspContribuições</button>
-            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i>&nbspFinanceiro</button>
-            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i>&nbspIntegrantes</button>            
-            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>            
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>
     </div>
 
-     <div class="container">
+    <div class="container">
         <div id="userEmail"></div>
         <br>
-    
-  
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar integrante...">
         </div>
@@ -36,9 +33,7 @@
         <div class="profile-container">
             <div class="profile-header">
                 <button id="prevPlayer" class="nav-arrow">←</button>
-                
                 <img id="profilePhoto" class="profile-photo" src="" alt="Foto do integrante">
-                
                 <button id="nextPlayer" class="nav-arrow">→</button>
             </div>
             
@@ -54,23 +49,19 @@
                         <div class="info-label">Categoria</div>
                         <div id="playerCategory" class="info-value">-</div>
                     </div>
-                   
                     <div class="info-item">
                         <div class="info-label">Contato</div>
                         <div id="playerContact" class="info-value">-</div>
                     </div>
-
-                     <div class="info-item">
-                        <div class="info-label">.</div>
+                    <div class="info-item">
+                        <div class="info-label">Data de Nascimento</div>
                         <div id="playerBirthdate" class="info-value">-</div>
                     </div>
                 </div>
                 
                 <div class="payment-status">
                     <h3 class="status-title">Status das Contribuições</h3>
-                    <div id="paymentsList">
-                        <!-- Os pagamentos serão carregados aqui -->
-                    </div>
+                    <div id="paymentsList"></div>
                 </div>
                 
                 <div id="pendingStatus" class="pending-alert" style="display: none;">
@@ -151,10 +142,7 @@
                 
                 if (snapshot.exists()) {
                     players = Object.entries(snapshot.val()).map(([id, player]) => ({ id, ...player }));
-                    
-                    // Ordenar jogadores por nome (ordem alfabética)
                     players.sort((a, b) => a.name.localeCompare(b.name));
-                    
                     filteredPlayers = [...players];
                     
                     if (filteredPlayers.length > 0) {
@@ -176,21 +164,18 @@
         function showPlayer(index) {
             if (filteredPlayers.length === 0) return;
             
-            // Garantir que o índice está dentro dos limites
             if (index < 0) index = filteredPlayers.length - 1;
             if (index >= filteredPlayers.length) index = 0;
             
             currentPlayerIndex = index;
             const player = filteredPlayers[index];
             
-            // Atualizar informações básicas
             profileName.textContent = player.name || "-";
             playerPosition.textContent = player.position || "-";
             playerCategory.textContent = player.category || "-";
             playerBirthdate.textContent = player.birthdate ? formatDate(player.birthdate) : "-";
             playerContact.textContent = player.contact || "-";
             
-            // Atualizar foto
             if (player.imageUrl) {
                 profilePhoto.src = player.imageUrl;
                 profilePhoto.style.display = "block";
@@ -198,10 +183,8 @@
                 profilePhoto.style.display = "none";
             }
             
-            // Carregar pagamentos do jogador
             loadPlayerPayments(player.id);
             
-            // Atualizar estado dos botões de navegação
             prevPlayerBtn.disabled = filteredPlayers.length <= 1;
             nextPlayerBtn.disabled = filteredPlayers.length <= 1;
         }
@@ -213,14 +196,12 @@
                 const snapshot = await get(paymentsRef);
                 const payments = snapshot.val() || {};
                 
-                // Filtrar pagamentos do jogador atual
                 const playerPayments = Object.values(payments)
                     .filter(p => p.playerId === playerId)
-                    .sort((a, b) => b.month.localeCompare(a.month)); // Ordenar do mais recente
+                    .sort((a, b) => b.month.localeCompare(a.month));
                 
                 renderPayments(playerPayments);
                 
-                // Verificar se há pendências
                 const hasPending = playerPayments.some(p => p.value === 0 || p.value === '0');
                 
                 if (hasPending) {
@@ -254,9 +235,27 @@
                 const paymentEl = document.createElement('div');
                 paymentEl.className = 'status-item';
                 paymentEl.innerHTML = `
-                    <div class="status-month">${monthName}/${year}</div>
-                    <div class="status-value ${isPaid ? 'paid' : 'unpaid'}">
-                        ${isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 'Não pago'}
+                    <div>
+                        <span class="status-label">Mês de Referência:</span>
+                        <span class="status-value">${monthName}/${year}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Origem:</span>
+                        <span class="status-value">${payment.additionalInfo || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Tipo de Pagamento:</span>
+                        <span class="status-value">${payment.paymentType || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data do Pagamento:</span>
+                        <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Valor:</span>
+                        <span class="status-value ${isPaid ? 'paid' : 'unpaid'}">
+                            ${isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 'Não pago'}
+                        </span>
                     </div>
                 `;
                 paymentsList.appendChild(paymentEl);
@@ -308,8 +307,8 @@
         
         function getMonthName(monthNumber) {
             const months = [
-                'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-                'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
             ];
             return months[parseInt(monthNumber) - 1];
         }
