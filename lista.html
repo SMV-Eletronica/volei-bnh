@@ -668,6 +668,17 @@
             }
         });
 
+   // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+
+        
         async function loadCurrentUserPlayer() {
             try {
                 const playersRef = ref(database, 'players');
