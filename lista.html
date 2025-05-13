@@ -1571,9 +1571,9 @@
                     const result = await Swal.fire({
                         icon: 'question',
                         title: 'Confirmar Presença',
-                        text: `Você está confirmando sua presença como ${playerObj.name}. Como membro não fixo, declara estar ciente da contribuição por jogo de R$${guestFee.toFixed(2)} será inserida ao seu registro.`,
+                        text: `${playerObj.name} você está confirmando sua presença, como membro não fixo, declara estar ciente de que é devivo uma taxa diária de R$${guestFee.toFixed(2)} podenedo a mesma ser inserida ao seu registro.`,
                         showCancelButton: true,
-                        confirmButtonText: 'Confirmar',
+                        confirmButtonText: 'Estou Ciente',
                         cancelButtonText: 'Cancelar',
                     });
                     if (!result.isConfirmed) {
