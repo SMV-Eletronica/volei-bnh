@@ -1101,7 +1101,7 @@
             const result = await Swal.fire({
                 icon: 'question',
                 title: 'Confirmar Convidado',
-                html: `Você está convidando <strong>${guestName}</strong>.<br>E declara estar ciente de que a contribuição de <strong>R$${guestFee.toFixed(2)}</strong> é de sua responsabilidade, sendo a mesma inserida em seu registro para transparência e controle`,
+                html: `Você está convidando <strong>${guestName}</strong>.<br>Declara estar ciente de que a contribuição de <strong>R$${guestFee.toFixed(2)}</strong> é de sua responsabilidade e será inserida em seu registro para fins de transparência e controle.`,
                 showCancelButton: true,
                 confirmButtonText: 'Estou Ciente',
                 cancelButtonText: 'Cancelar',
@@ -1571,7 +1571,7 @@
                     const result = await Swal.fire({
                         icon: 'question',
                         title: 'Confirmar Presença',
-                        html: `${playerObj.name} você está confirmando sua presença, como membro não fixo, declara estar ciente de que é devivo uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma ser inserida em seu registro para transparência e controle.`,
+                        html: `${playerObj.name} Você está confirmando sua presença como membro não fixo e declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle.`,
                         showCancelButton: true,
                         confirmButtonText: 'Estou Ciente',
                         cancelButtonText: 'Cancelar',
