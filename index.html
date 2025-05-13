@@ -180,6 +180,11 @@
                     <input type="password" id="password" required placeholder="Digite sua senha">
                 </div>
                 
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="confirmPassword">Confirmar Senha:</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirme sua senha">
+                </div>
+                
                 <button type="submit" id="actionBtn">
                     <i class="fas fa-sign-in-alt"></i> <span id="actionText">Entrar</span>
                 </button>
@@ -220,6 +225,8 @@
         const loginForm = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
         const actionBtn = document.getElementById('actionBtn');
         const actionText = document.getElementById('actionText');
         const actionIcon = actionBtn.querySelector('i');
@@ -240,12 +247,16 @@
                 passwordInput.placeholder = 'Crie sua senha';
                 toggleAction.textContent = 'Entrar';
                 signupText.textContent = 'Já tem uma conta?';
+                confirmPasswordGroup.style.display = 'block';
+                confirmPasswordInput.required = true;
             } else {
                 actionText.textContent = 'Entrar';
                 actionIcon.className = 'fas fa-sign-in-alt';
                 passwordInput.placeholder = 'Digite sua senha';
                 toggleAction.textContent = 'Cadastre-se';
                 signupText.textContent = 'Não tem uma conta?';
+                confirmPasswordGroup.style.display = 'none';
+                confirmPasswordInput.required = false;
             }
             
             messageDiv.style.display = 'none';
@@ -259,9 +270,17 @@
             
             const email = emailInput.value;
             const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
             
             try {
                 if (isSignUpMode) {
+                    // Validate password confirmation
+                    if (password !== confirmPassword) {
+                        showMessage("As senhas não coincidem.", "error");
+                        actionBtn.disabled = false;
+                        actionBtn.innerHTML = `<i class="fas fa-user-plus"></i> <span>Cadastrar</span>`;
+                        return;
+                    }
                     // Sign up logic
                     await createUserWithEmailAndPassword(auth, email, password);
                     showMessage("Cadastro realizado com sucesso! Agora você pode fazer login.", "success");
@@ -273,6 +292,8 @@
                     passwordInput.placeholder = 'Digite sua senha';
                     toggleAction.textContent = 'Cadastre-se';
                     signupText.textContent = 'Não tem uma conta?';
+                    confirmPasswordGroup.style.display = 'none';
+                    confirmPasswordInput.required = false;
                 } else {
                     // Login logic
                     await signInWithEmailAndPassword(auth, email, password);
