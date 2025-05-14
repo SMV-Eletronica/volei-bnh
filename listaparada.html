@@ -965,7 +965,7 @@
                     .filter(value => value !== "");
                 const closestListId = findClosestFutureList(listIds);
                 if (closestListId) {
-                    currentListId closestListId;
+                    currentListId = closestListId;
                     listSelect.value = closestListId;
                     await loadGameData(closestListId);
                     setupListListener();
