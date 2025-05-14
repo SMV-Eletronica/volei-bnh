@@ -1039,17 +1039,18 @@
                 paymentEl.className = 'status-item';
                 paymentEl.innerHTML = `
                     <div>
-                        <span class="status-label">Referência Caixa:</span>
+                        <span class="status-label">Referente ao Caixa:</span>
                         <span class="status-value">${monthName}/${year}</span>
-                    </div>
-                    <div>
-                        <span class="status-label">Descrição:</span>
-                        <span class="status-value">${payment.additionalInfo || '-'}</span>
                     </div>
                     <div>
                         <span class="status-label">Tipo de Pagamento:</span>
                         <span class="status-value">${payment.paymentType || '-'}</span>
                     </div>
+                    <div>
+                        <span class="status-label">Descrição:</span>
+                        <span class="status-value">${payment.additionalInfo || '-'}</span>
+                    </div>
+                    
                     <div>
                         <span class="status-label">Data do Pagamento:</span>
                         <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
