@@ -1990,29 +1990,66 @@
                 `).join('');
         }
 
-        async function finalizeGame() {
-            if (!currentListId) {
-                await Swal.fire({
-                    icon: 'warning',
-                    title: 'Nenhuma Lista Selecionada',
-                    text: 'Por favor, selecione uma lista para finalizar.',
-                });
-                return;
-            }
-            try {
-                const listRef = ref(database, `gameLists/${currentListId}`);
-                const historyRef = ref(database, `gameHistory/${currentListId}`);
-                const snapshot = await get(historyRef);
-                if (snapshot.exists()) {
-                    await Swal.fire({
-                        icon: 'info',
-                        title: 'Histórico Já Salvo',
-                        text: 'Esta lista já foi finalizada.',
-                    });
-                    return;
-                }
+       async function finalizeGame() {
+    if (!currentListId) {
+        await Swal.fire({
+            icon: 'warning',
+            title: 'Nenhuma Lista Selecionada',
+            text: 'Por favor, selecione uma lista para finalizar.',
+        });
+        return;
+    }
+    try {
+        const listRef = ref(database, `gameLists/${currentListId}`);
+        const historyRef = ref(database, `gameHistory/${currentListId}`);
+        const snapshot = await get(historyRef);
+        if (snapshot.exists()) {
+            await Swal.fire({
+                icon: 'info',
+                title: 'Histórico Já Salvo',
+                text: 'Esta lista já foi finalizada.',
+            });
+            return;
+        }
 
-                const listSnapshot = await get(listRef);
-                const listData = listSnapshot.val() || { confirmed: {}, waitlist: {}, playerLimit: 20, gameTime: "19:30", date: currentGameDate };
+        const listSnapshot = await get(listRef);
+        const listData = listSnapshot.val() || { confirmed: {}, waitlist: {}, playerLimit: 20, gameTime: "19:30", date: currentGameDate };
 
-                await
+        await set(historyRef, {
+            ...listData,
+            playerLimit,
+            gameTime,
+            date: currentGameDate
+        });
+
+        await set(listRef, null);
+        await Swal.fire({
+            icon: 'success',
+            title: 'Sucesso',
+            text: 'Lista finalizada e salva no histórico.',
+        });
+        currentListId = null;
+        confirmedPlayers = [];
+        waitlistPlayers = [];
+        updateGameDateDisplay();
+        updateGameList();
+        await loadLists();
+        await loadGameHistory();
+    } catch (error) {
+        console.error('Erro ao finalizar jogo:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Erro ao salvar histórico.',
+        });
+    }
+}
+
+finalizeGameBtn.addEventListener('click', finalizeGame);
+
+window.removePlayer = removePlayer;
+window.approvePlayer = approvePlayer;
+
+    </script>
+</body>
+</html>
