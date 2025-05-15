@@ -508,13 +508,16 @@
                     <!-- Controles para novo jogo (visível apenas para ADMs) -->
                     <div class="new-game-controls" id="newGameControls" style="display: none;">
                         <h3>Criar Novo Jogo</h3>
-                        <div>
+                        <div class="player-details">
                             <label>Data:</label>
                             <input type="date" id="newGameDate">
+                            <br>
                             <label>Horário:</label>
                             <input type="time" id="newGameTime" value="19:30">
+                            <br>
                             <label>Limite de Jogadores:</label>
                             <input type="number" id="newGameLimit" min="1" value="20">
+                            <br>
                             <button id="createGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
                         </div>
                     </div>
