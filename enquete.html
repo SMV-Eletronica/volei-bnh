@@ -18,6 +18,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f5f5;
             color: #333;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         :root {
@@ -119,6 +123,10 @@
             border-radius: 4px;
             border: 1px solid #ddd;
             max-width: 300px;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
         .new-poll-controls .poll-details textarea {
             resize: vertical;
@@ -176,6 +184,7 @@
         .poll-title {
             font-weight: bold;
             font-size: 16px;
+            display: inline-block;
         }
         .poll-description {
             font-size: 14px;
@@ -199,23 +208,12 @@
             gap: 10px;
             margin-top: 10px;
         }
-        .vote-btn, .results-btn, .close-poll-btn, .reopen-poll-btn {
+        .results-btn, .close-poll-btn, .reopen-poll-btn, .delete-poll-btn {
             padding: 5px 10px;
             border-radius: 4px;
             border: none;
             cursor: pointer;
             font-size: 14px;
-        }
-        .vote-btn {
-            background-color: var(--success);
-            color: white;
-        }
-        .vote-btn:hover {
-            background-color: #219653;
-        }
-        .vote-btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
         }
         .results-btn {
             background-color: var(--primary);
@@ -230,6 +228,13 @@
         }
         .close-poll-btn:hover, .reopen-poll-btn:hover {
             background-color: #e67e22;
+        }
+        .delete-poll-btn {
+            background-color: #c0392b;
+            color: white;
+        }
+        .delete-poll-btn:hover {
+            background-color: #a5281f;
         }
 
         .poll-vote-options {
@@ -314,6 +319,40 @@
             background-color: #c0392b !important;
         }
 
+        /* Estilos para as abas */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            background-color: #f1f1f1;
+            color: #333;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px 5px 0 0;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        .tab:hover:not(.active) {
+            background-color: #e0e0e0;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .poll-item {
                 flex-direction: column;
@@ -326,6 +365,14 @@
             }
             .poll-vote-options {
                 flex-direction: column;
+            }
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .tab {
+                border-radius: 5px;
+                padding: 8px;
             }
         }
     </style>
@@ -366,17 +413,19 @@
                 <div id="activePolls"></div>
             </div>
 
-            <!-- Lista de enquetes finalizadas -->
-            <div class="poll-list">
-                <h3>Enquetes Finalizadas</h3>
-                <div id="closedPolls"></div>
+            <!-- Abas para enquetes aprovadas e reprovadas -->
+            <div class="tabs">
+                <div class="tab active" data-tab="approved"><i class="fas fa-check-circle"></i> Enquetes Aprovadas</div>
+                <div class="tab" data-tab="reproved"><i class="fas fa-times-circle"></i> Enquetes Reprovadas</div>
             </div>
+            <div id="approvedPolls" class="tab-content poll-list active"></div>
+            <div id="reprovedPolls" class="tab-content poll-list"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, get, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Configuração do Firebase
@@ -404,7 +453,8 @@
         const newPollTitle = document.getElementById('newPollTitle');
         const newPollDescription = document.getElementById('newPollDescription');
         const activePollsDiv = document.getElementById('activePolls');
-        const closedPollsDiv = document.getElementById('closedPolls');
+        const approvedPollsDiv = document.getElementById('approvedPolls');
+        const reprovedPollsDiv = document.getElementById('reprovedPolls');
         const transparenciaBtn = document.getElementById('transparenciaBtn');
         const loginBtn = document.getElementById('loginBtn');
 
@@ -414,6 +464,7 @@
         let isAdmin = false;
         let allPolls = [];
         let selectedPollId = null;
+        let activeTab = 'approved';
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro@msn.com'];
         const defaultImage = 'https://i.postimg.cc/Y0t3mgr8/volei.jpg';
 
@@ -439,6 +490,18 @@
             }
         }
 
+        // Função para alternar abas
+        function switchTab(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabName}Polls`);
+            });
+            updatePollLists();
+        }
+
         // Verificar autenticação
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -454,6 +517,10 @@
                 await loadCurrentUserPlayer();
                 await loadPolls();
                 updateButtonVisibility();
+                // Configurar eventos das abas
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+                });
             }
         });
 
@@ -493,7 +560,7 @@
                         await Swal.fire({
                             icon: 'error',
                             title: 'Erro',
-                            text: 'Nenhum jogador associ monotone a este email.',
+                            text: 'Nenhum jogador associado a este email.',
                         });
                     }
                     isAdmin = isAdmin || currentUserPlayer?.category === 'ADMIN';
@@ -520,7 +587,6 @@
                             ...poll
                         }));
                     }
-                    allPolls.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                     updatePollLists();
                 });
             } catch (error) {
@@ -535,29 +601,53 @@
 
         async function updatePollLists() {
             try {
-                const activePolls = allPolls.filter(poll => poll.is_active);
-                const closedPolls = allPolls.filter(poll => !poll.is_active);
+                const activePolls = allPolls.filter(poll => poll.is_active)
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                const closedPolls = allPolls.filter(poll => !poll.is_active)
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                const approvedPolls = [];
+                const reprovedPolls = [];
+
+                for (const poll of closedPolls) {
+                    const { isApproved } = await renderPollItem(poll, 1); // Número temporário
+                    if (isApproved) {
+                        approvedPolls.push(poll);
+                    } else {
+                        reprovedPolls.push(poll);
+                    }
+                }
+
+                // Ordenar enquetes aprovadas e reprovadas
+                approvedPolls.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                reprovedPolls.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
                 const activePollsHtml = activePolls.length === 0
                     ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete ativa.</div>'
-                    : (await Promise.all(activePolls.map(poll => renderPollItem(poll)))).join('');
+                    : (await Promise.all(activePolls.map((poll, index) => renderPollItem(poll, index + 1).then(res => res.html)))).join('');
 
-                const closedPollsHtml = closedPolls.length === 0
-                    ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete finalizada.</div>'
-                    : (await Promise.all(closedPolls.map(poll => renderPollItem(poll)))).join('');
+                const approvedPollsHtml = approvedPolls.length === 0
+                    ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete aprovada.</div>'
+                    : (await Promise.all(approvedPolls.map((poll, index) => renderPollItem(poll, index + 1).then(res => res.html)))).join('');
+
+                const reprovedPollsHtml = reprovedPolls.length === 0
+                    ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete reprovada.</div>'
+                    : (await Promise.all(reprovedPolls.map((poll, index) => renderPollItem(poll, index + 1).then(res => res.html)))).join('');
 
                 activePollsDiv.innerHTML = activePollsHtml;
-                closedPollsDiv.innerHTML = closedPollsHtml;
+                approvedPollsDiv.innerHTML = approvedPollsHtml;
+                reprovedPollsDiv.innerHTML = reprovedPollsHtml;
             } catch (error) {
                 console.error('Erro ao atualizar listas de enquetes:', error);
                 activePollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes ativas.</div>';
-                closedPollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes finalizadas.</div>';
+                approvedPollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes aprovadas.</div>';
+                reprovedPollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes reprovadas.</div>';
             }
         }
 
-        async function renderPollItem(poll) {
+        async function renderPollItem(poll, pollNumber) {
             try {
-                console.log(`Renderizando enquete: ${poll.id}, Título: ${poll.title}`);
+                console.log(`Renderizando enquete: ${poll.id}, Título: ${poll.title}, Número: ${pollNumber}`);
                 const userVoteRef = ref(database, `votes/${poll.id}/${currentUserPlayer?.id}`);
                 let voteSnapshot;
                 try {
@@ -572,6 +662,10 @@
                 const isSelected = poll.id === selectedPollId;
 
                 let voteCountHtml = '';
+                let isApproved = false;
+                let concordoCount = 0;
+                let naoConcordoCount = 0;
+
                 if (isAdmin && poll.is_active) {
                     const votesRef = ref(database, `votes/${poll.id}`);
                     let votesSnapshot;
@@ -581,11 +675,29 @@
                         console.warn(`Erro ao obter contagem de votos para enquete ${poll.id}:`, error);
                     }
                     const votes = votesSnapshot?.val() || {};
-                    const concordoCount = Object.values(votes).filter(v => v.option === 'concordo').length;
-                    const naoConcordoCount = Object.values(votes).filter(v => v.option === 'nao_concordo').length;
+                    concordoCount = Object.values(votes).filter(v => v.option === 'concordo').length;
+                    naoConcordoCount = Object.values(votes).filter(v => v.option === 'nao_concordo').length;
                     voteCountHtml = `
                         <div class="admin-vote-count">
                             Concordo: ${concordoCount} | Não Concordo: ${naoConcordoCount}
+                        </div>
+                    `;
+                }
+
+                let votersHtml = '';
+                if (poll.is_active && hasVoted && isSelected) {
+                    const voterHtml = `
+                        <div class="voter-item">
+                            <img src="${currentUserPlayer?.imageUrl || defaultImage}" alt="${currentUserPlayer?.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
+                            <div class="voter-info">
+                                ${currentUserPlayer?.name || '-'} (${currentUserPlayer?.position || '-'})
+                            </div>
+                        </div>
+                    `;
+                    votersHtml = `
+                        <div class="poll-voters visible">
+                            <p><strong>${userVoteOption === 'concordo' ? 'Concordo' : 'Não Concordo'}:</strong></p>
+                            ${voterHtml}
                         </div>
                     `;
                 }
@@ -601,12 +713,12 @@
                     }
                     const votes = votesSnapshot?.val() || {};
                     const totalVotes = Object.keys(votes).length;
-                    const concordoCount = Object.values(votes).filter(v => v.option === 'concordo').length;
-                    const naoConcordoCount = Object.values(votes).filter(v => v.option === 'nao_concordo').length;
+                    concordoCount = Object.values(votes).filter(v => v.option === 'concordo').length;
+                    naoConcordoCount = Object.values(votes).filter(v => v.option === 'nao_concordo').length;
                     const concordoPercent = totalVotes ? ((concordoCount / totalVotes) * 100).toFixed(1) : 0;
                     const naoConcordoPercent = totalVotes ? ((naoConcordoCount / totalVotes) * 100).toFixed(1) : 0;
+                    isApproved = concordoCount > naoConcordoCount;
 
-                    let votersHtml = '';
                     if (isSelected) {
                         const concordoVoters = [];
                         const naoConcordoVoters = [];
@@ -652,10 +764,10 @@
                     `;
                 }
 
-                return `
+                const html = `
                     <div class="poll-item ${isSelected ? 'selected' : ''}" onclick="selectPoll('${poll.id}')">
                         <div class="poll-info">
-                            <span class="poll-title">${poll.title || 'Sem título'}</span>
+                            <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'}</span>
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
                             <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
                                 ${poll.is_active ? 'Ativa' : 'Finalizada'}
@@ -666,34 +778,27 @@
                                 <div class="poll-vote-options">
                                     <button class="vote-option-btn concordo ${userVoteOption === 'concordo' ? 'selected' : ''}" 
                                             onclick="votePoll('${poll.id}', 'concordo')" 
-                                            ${hasVoted || !canVote ? 'disabled' : ''}>
+                                            ${!canVote ? 'disabled' : ''}>
                                         Concordo
                                     </button>
                                     <button class="vote-option-btn nao-concordo ${userVoteOption === 'nao_concordo' ? 'selected' : ''}" 
                                             onclick="votePoll('${poll.id}', 'nao_concordo')" 
-                                            ${hasVoted || !canVote ? 'disabled' : ''}>
+                                            ${!canVote ? 'disabled' : ''}>
                                         Não Concordo
                                     </button>
                                 </div>
+                                ${votersHtml}
                             ` : ''}
                             ${resultsHtml}
                         </div>
                         ${isSelected ? `
                             <div class="poll-actions">
-                                ${poll.is_active && canVote && hasVoted ? `
-                                    <button class="vote-btn" onclick="enableVoteChange('${poll.id}')">
-                                        Alterar Voto
-                                    </button>
-                                ` : poll.is_active && canVote ? `
-                                    <button class="vote-btn" onclick="votePoll('${poll.id}', null)" disabled>
-                                        Votar
-                                    </button>
-                                ` : ''}
                                 ${!poll.is_active ? `
                                     <button class="results-btn"><i class="fas fa-check"></i> Resultados Disponíveis</button>
                                 ` : ''}
                                 ${isAdmin && poll.is_active ? `
                                     <button class="close-poll-btn" onclick="closePoll('${poll.id}')">Finalizar Enquete</button>
+                                    <button class="delete-poll-btn" onclick="deletePoll('${poll.id}')">Excluir Enquete</button>
                                 ` : ''}
                                 ${isAdmin && !poll.is_active ? `
                                     <button class="reopen-poll-btn" onclick="reopenPoll('${poll.id}')">Reabrir Enquete</button>
@@ -702,16 +807,19 @@
                         ` : ''}
                     </div>
                 `;
+
+                return { html, isApproved };
             } catch (error) {
                 console.error(`Erro ao renderizar enquete ${poll.id}:`, error);
-                return `
+                const html = `
                     <div class="poll-item">
                         <div class="poll-info">
-                            <span class="poll-title">Erro ao carregar enquete</span>
+                            <span class="poll-title">${pollNumber}. Erro ao carregar enquete</span>
                             <span class="poll-description">Não foi possível carregar esta enquete.</span>
                         </div>
                     </div>
                 `;
+                return { html, isApproved: false };
             }
         }
 
@@ -793,6 +901,20 @@
                 return;
             }
             try {
+                const poll = pollSnapshot.val();
+                const actionText = option === 'concordo' ? 'concordando' : 'não concordando';
+                const confirmation = await Swal.fire({
+                    icon: 'question',
+                    title: 'Confirmar Voto',
+                    text: `Você está ${actionText} com a enquete "${poll.title}"? Confirma?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirmar',
+                    cancelButtonText: 'Cancelar'
+                });
+                if (!confirmation.isConfirmed) {
+                    return;
+                }
+
                 const voteRef = ref(database, `votes/${pollId}/${currentUserPlayer.id}`);
                 const voteSnapshot = await get(voteRef);
                 await set(voteRef, {
@@ -806,7 +928,7 @@
                     timer: 1500,
                     showConfirmButton: false
                 });
-                updatePollLists(); // Atualizar para refletir o voto e "Alterar Voto"
+                updatePollLists();
             } catch (error) {
                 console.error('Erro ao registrar voto:', error);
                 await Swal.fire({
@@ -815,17 +937,6 @@
                     text: 'Não foi possível registrar o voto.',
                 });
             }
-        }
-
-        function enableVoteChange(pollId) {
-            // Reabilitar botões de votação para alteração
-            const concordoBtn = document.querySelector(`.vote-option-btn.concordo[onclick*="votePoll('${pollId}', 'concordo')"]`);
-            const naoConcordoBtn = document.querySelector(`.vote-option-btn.nao-concordo[onclick*="votePoll('${pollId}', 'nao_concordo')"]`);
-            if (concordoBtn && naoConcordoBtn) {
-                concordoBtn.disabled = false;
-                naoConcordoBtn.disabled = false;
-            }
-            updatePollLists(); // Atualizar para garantir consistência
         }
 
         async function closePoll(pollId) {
@@ -888,6 +999,58 @@
             }
         }
 
+        async function deletePoll(pollId) {
+            if (!isAdmin) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Permissão Negada',
+                    text: 'Apenas administradores podem excluir enquetes.',
+                });
+                return;
+            }
+            try {
+                const pollRef = ref(database, `polls/${pollId}`);
+                const pollSnapshot = await get(pollRef);
+                if (!pollSnapshot.exists()) {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Enquete Não Encontrada',
+                        text: 'A enquete não existe.',
+                    });
+                    return;
+                }
+                const poll = pollSnapshot.val();
+                const confirmation = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Confirmar Exclusão',
+                    text: `Tem certeza que deseja excluir a enquete "${poll.title}"? Esta ação é irreversível!`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Excluir',
+                    cancelButtonText: 'Cancelar'
+                });
+                if (!confirmation.isConfirmed) {
+                    return;
+                }
+                await remove(pollRef);
+                await remove(ref(database, `votes/${pollId}`));
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Enquete Excluída',
+                    text: 'A enquete foi excluída com sucesso.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                updatePollLists();
+            } catch (error) {
+                console.error('Erro ao excluir enquete:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível excluir a enquete.',
+                });
+            }
+        }
+
         function selectPoll(pollId) {
             selectedPollId = selectedPollId === pollId ? null : pollId;
             updatePollLists();
@@ -898,10 +1061,11 @@
 
         // Expor funções globais
         window.votePoll = votePoll;
-        window.enableVoteChange = enableVoteChange;
         window.closePoll = closePoll;
         window.reopenPoll = reopenPoll;
+        window.deletePoll = deletePoll;
         window.selectPoll = selectPoll;
+        window.switchTab = switchTab;
     </script>
 </body>
 </html>
