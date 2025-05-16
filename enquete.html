@@ -237,14 +237,32 @@
             gap: 10px;
             margin-top: 10px;
         }
-        .poll-vote-options label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .vote-option-btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
             font-size: 14px;
+            transition: all 0.2s;
         }
-        .poll-vote-options input[type="radio"] {
-            accent-color: var(--primary);
+        .vote-option-btn.concordo {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .vote-option-btn.nao-concordo {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .vote-option-btn.selected {
+            border: 2px solid #2c3e50;
+            transform: scale(1.05);
+        }
+        .vote-option-btn:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+        .vote-option-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
 
         .poll-results {
@@ -475,7 +493,7 @@
                         await Swal.fire({
                             icon: 'error',
                             title: 'Erro',
-                            text: 'Nenhum jogador associado a este email.',
+                            text: 'Nenhum jogador associ monotone a este email.',
                         });
                     }
                     isAdmin = isAdmin || currentUserPlayer?.category === 'ADMIN';
@@ -548,6 +566,7 @@
                     console.warn(`Erro ao verificar voto do usuário para enquete ${poll.id}:`, error);
                 }
                 const hasVoted = voteSnapshot?.exists();
+                const userVoteOption = voteSnapshot?.val()?.option;
                 const userCategory = currentUserPlayer?.category || 'CONVIDADO';
                 const canVote = userCategory === 'MENSAL' && poll.is_active;
                 const isSelected = poll.id === selectedPollId;
@@ -645,17 +664,29 @@
                             ${voteCountHtml}
                             ${poll.is_active && canVote && isSelected ? `
                                 <div class="poll-vote-options">
-                                    <label><input type="radio" name="vote_${poll.id}" value="concordo" ${hasVoted && voteSnapshot?.val().option === 'concordo' ? 'checked' : ''}> Concordo</label>
-                                    <label><input type="radio" name="vote_${poll.id}" value="nao_concordo" ${hasVoted && voteSnapshot?.val().option === 'nao_concordo' ? 'checked' : ''}> Não Concordo</label>
+                                    <button class="vote-option-btn concordo ${userVoteOption === 'concordo' ? 'selected' : ''}" 
+                                            onclick="votePoll('${poll.id}', 'concordo')" 
+                                            ${hasVoted || !canVote ? 'disabled' : ''}>
+                                        Concordo
+                                    </button>
+                                    <button class="vote-option-btn nao-concordo ${userVoteOption === 'nao_concordo' ? 'selected' : ''}" 
+                                            onclick="votePoll('${poll.id}', 'nao_concordo')" 
+                                            ${hasVoted || !canVote ? 'disabled' : ''}>
+                                        Não Concordo
+                                    </button>
                                 </div>
                             ` : ''}
                             ${resultsHtml}
                         </div>
                         ${isSelected ? `
                             <div class="poll-actions">
-                                ${poll.is_active && canVote ? `
-                                    <button class="vote-btn" onclick="votePoll('${poll.id}')" ${!canVote ? 'disabled' : ''}>
-                                        ${hasVoted ? 'Alterar Voto' : 'Votar'}
+                                ${poll.is_active && canVote && hasVoted ? `
+                                    <button class="vote-btn" onclick="enableVoteChange('${poll.id}')">
+                                        Alterar Voto
+                                    </button>
+                                ` : poll.is_active && canVote ? `
+                                    <button class="vote-btn" onclick="votePoll('${poll.id}', null)" disabled>
+                                        Votar
                                     </button>
                                 ` : ''}
                                 ${!poll.is_active ? `
@@ -734,7 +765,7 @@
             }
         }
 
-        async function votePoll(pollId) {
+        async function votePoll(pollId, option) {
             if (!currentUserPlayer || currentUserPlayer.category !== 'MENSAL') {
                 await Swal.fire({
                     icon: 'error',
@@ -753,12 +784,11 @@
                 });
                 return;
             }
-            const selectedOption = document.querySelector(`input[name="vote_${pollId}"]:checked`);
-            if (!selectedOption) {
+            if (!option) {
                 await Swal.fire({
                     icon: 'warning',
                     title: 'Selecione uma Opção',
-                    text: 'Por favor, selecione Concordo ou Não Concordo.',
+                    text: 'Por favor, clique em Concordo ou Não Concordo.',
                 });
                 return;
             }
@@ -766,17 +796,17 @@
                 const voteRef = ref(database, `votes/${pollId}/${currentUserPlayer.id}`);
                 const voteSnapshot = await get(voteRef);
                 await set(voteRef, {
-                    option: selectedOption.value,
+                    option: option,
                     voted_at: getBrazilDateTimeISO()
                 });
                 await Swal.fire({
                     icon: 'success',
                     title: voteSnapshot.exists() ? 'Voto Alterado' : 'Voto Registrado',
-                    text: `Seu voto (${selectedOption.value === 'concordo' ? 'Concordo' : 'Não Concordo'}) foi registrado!`,
+                    text: `Seu voto (${option === 'concordo' ? 'Concordo' : 'Não Concordo'}) foi registrado!`,
                     timer: 1500,
                     showConfirmButton: false
                 });
-                updatePollLists(); // Atualizar para refletir "Alterar Voto"
+                updatePollLists(); // Atualizar para refletir o voto e "Alterar Voto"
             } catch (error) {
                 console.error('Erro ao registrar voto:', error);
                 await Swal.fire({
@@ -785,6 +815,17 @@
                     text: 'Não foi possível registrar o voto.',
                 });
             }
+        }
+
+        function enableVoteChange(pollId) {
+            // Reabilitar botões de votação para alteração
+            const concordoBtn = document.querySelector(`.vote-option-btn.concordo[onclick*="votePoll('${pollId}', 'concordo')"]`);
+            const naoConcordoBtn = document.querySelector(`.vote-option-btn.nao-concordo[onclick*="votePoll('${pollId}', 'nao_concordo')"]`);
+            if (concordoBtn && naoConcordoBtn) {
+                concordoBtn.disabled = false;
+                naoConcordoBtn.disabled = false;
+            }
+            updatePollLists(); // Atualizar para garantir consistência
         }
 
         async function closePoll(pollId) {
@@ -857,6 +898,7 @@
 
         // Expor funções globais
         window.votePoll = votePoll;
+        window.enableVoteChange = enableVoteChange;
         window.closePoll = closePoll;
         window.reopenPoll = reopenPoll;
         window.selectPoll = selectPoll;
