@@ -279,13 +279,7 @@
             position: relative;
             flex: 1;
         }
-        #playerSearch {
-            width: 50%;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            font-size: 14px;
-        }
+       
         .autocomplete-suggestions {
             position: absolute;
             top: 100%;
@@ -633,7 +627,7 @@
                     <!-- Botão Confirmar Minha Presença (visível para todos os usuários logados) -->
                     <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Minha Presença</button>
                     <!-- Controles de Administrador (somente para ADMs) -->
-                    <div class="search-container" id="adminSearchContainer" style="display: none;">
+                    <div class="guest-controls" id="adminSearchContainer" style="display: none;">
                         <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
                         <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
                         <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
