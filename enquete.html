@@ -138,7 +138,7 @@
             background-color: #2980b9;
         }
 
-        .poll-list, .poll-history {
+        .poll-list {
             margin-top: 20px;
             border: 1px solid #ccc;
             padding: 10px;
@@ -146,17 +146,24 @@
             background-color: #fdfcfc;
         }
 
-        .poll-list h3, .poll-history h3 {
+        .poll-list h3 {
             margin-bottom: 15px;
             color: var(--text);
         }
 
         .poll-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             padding: 10px;
             border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .poll-item:hover {
+            background-color: #f1f1f1;
+        }
+        .poll-item.selected {
+            border: 2px solid var(--primary);
+            border-radius: 4px;
+            background-color: #e6f3ff;
         }
         .poll-item:last-child {
             border-bottom: none;
@@ -190,6 +197,7 @@
         .poll-actions {
             display: flex;
             gap: 10px;
+            margin-top: 10px;
         }
         .vote-btn, .results-btn, .close-poll-btn, .reopen-poll-btn {
             padding: 5px 10px;
@@ -251,6 +259,10 @@
         }
         .poll-voters {
             margin-top: 10px;
+            display: none;
+        }
+        .poll-voters.visible {
+            display: block;
         }
         .voter-item {
             display: flex;
@@ -266,36 +278,6 @@
         }
         .voter-info {
             font-size: 14px;
-        }
-
-        .poll-selector {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .poll-selector select {
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            font-size: 14px;
-        }
-        .poll-selector button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .poll-selector button:hover {
-            background-color: #2980b9;
-        }
-
-        .admin-vote-count {
-            margin-top: 10px;
-            font-size: 14px;
-            color: var(--text);
         }
 
         .swal2-popup {
@@ -326,10 +308,6 @@
             }
             .poll-vote-options {
                 flex-direction: column;
-            }
-            .poll-selector {
-                flex-direction: column;
-                align-items: flex-start;
             }
         }
     </style>
@@ -364,14 +342,6 @@
                 </div>
             </div>
 
-            <!-- Seletor de enquetes -->
-            <div class="poll-selector">
-                <select id="pollSelect">
-                    <option value="">Selecione uma enquete</option>
-                </select>
-                <button id="refreshPollsBtn"><i class="fas fa-sync-alt"></i></button>
-            </div>
-
             <!-- Lista de enquetes ativas -->
             <div class="poll-list">
                 <h3>Enquetes Ativas</h3>
@@ -382,12 +352,6 @@
             <div class="poll-list">
                 <h3>Enquetes Finalizadas</h3>
                 <div id="closedPolls"></div>
-            </div>
-
-            <!-- Histórico de enquetes -->
-            <div class="poll-history">
-                <h3>Histórico de Enquetes</h3>
-                <div id="pollHistory"></div>
             </div>
         </div>
     </div>
@@ -421,11 +385,8 @@
         const createPollBtn = document.getElementById('createPollBtn');
         const newPollTitle = document.getElementById('newPollTitle');
         const newPollDescription = document.getElementById('newPollDescription');
-        const pollSelect = document.getElementById('pollSelect');
-        const refreshPollsBtn = document.getElementById('refreshPollsBtn');
         const activePollsDiv = document.getElementById('activePolls');
         const closedPollsDiv = document.getElementById('closedPolls');
-        const pollHistoryDiv = document.getElementById('pollHistory');
         const transparenciaBtn = document.getElementById('transparenciaBtn');
         const loginBtn = document.getElementById('loginBtn');
 
@@ -434,7 +395,7 @@
         let emailLogado = null;
         let isAdmin = false;
         let allPolls = [];
-        let currentPollId = null;
+        let selectedPollId = null;
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro@msn.com'];
         const defaultImage = 'https://i.postimg.cc/Y0t3mgr8/volei.jpg';
 
@@ -542,7 +503,6 @@
                         }));
                     }
                     allPolls.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    updatePollSelect();
                     updatePollLists();
                 });
             } catch (error) {
@@ -555,52 +515,21 @@
             }
         }
 
-        function updatePollSelect() {
-            pollSelect.innerHTML = '<option value="">Selecione uma enquete</option>';
-            allPolls.forEach(poll => {
-                const option = document.createElement('option');
-                option.value = poll.id;
-                option.textContent = `${poll.title} (${poll.is_active ? 'Ativa' : 'Finalizada'})`;
-                pollSelect.appendChild(option);
-            });
-        }
-
         async function updatePollLists() {
             try {
                 const activePolls = allPolls.filter(poll => poll.is_active);
                 const closedPolls = allPolls.filter(poll => !poll.is_active);
 
-                // Resolver todas as Promises para enquetes ativas
                 const activePollsHtml = activePolls.length === 0
                     ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete ativa.</div>'
                     : (await Promise.all(activePolls.map(poll => renderPollItem(poll)))).join('');
 
-                // Resolver todas as Promises para enquetes finalizadas
                 const closedPollsHtml = closedPolls.length === 0
                     ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete finalizada.</div>'
                     : (await Promise.all(closedPolls.map(poll => renderPollItem(poll)))).join('');
 
                 activePollsDiv.innerHTML = activePollsHtml;
                 closedPollsDiv.innerHTML = closedPollsHtml;
-
-                // Histórico não precisa de renderPollItem, pois não exibe resultados detalhados
-                pollHistoryDiv.innerHTML = allPolls.length === 0
-                    ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete encontrada.</div>'
-                    : allPolls.map(poll => `
-                        <div class="poll-item">
-                            <div class="poll-info">
-                                <span class="poll-title">${poll.title || 'Sem título'}</span>
-                                <span class="poll-description">${poll.description || 'Sem descrição'}</span>
-                                <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
-                                    ${poll.is_active ? 'Ativa' : 'Finalizada'}
-                                </span>
-                                <span>Data: ${formatDateToBR(poll.created_at)}</span>
-                            </div>
-                            <div class="poll-actions">
-                                <button class="results-btn" onclick="selectPoll('${poll.id}')">Ver Detalhes</button>
-                            </div>
-                        </div>
-                    `).join('');
             } catch (error) {
                 console.error('Erro ao atualizar listas de enquetes:', error);
                 activePollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes ativas.</div>';
@@ -621,6 +550,7 @@
                 const hasVoted = voteSnapshot?.exists();
                 const userCategory = currentUserPlayer?.category || 'CONVIDADO';
                 const canVote = userCategory === 'MENSAL' && poll.is_active;
+                const isSelected = poll.id === selectedPollId;
 
                 let voteCountHtml = '';
                 if (isAdmin && poll.is_active) {
@@ -657,44 +587,54 @@
                     const concordoPercent = totalVotes ? ((concordoCount / totalVotes) * 100).toFixed(1) : 0;
                     const naoConcordoPercent = totalVotes ? ((naoConcordoCount / totalVotes) * 100).toFixed(1) : 0;
 
-                    const concordoVoters = [];
-                    const naoConcordoVoters = [];
-                    for (const [userId, vote] of Object.entries(votes)) {
-                        const playerRef = ref(database, `players/${userId}`);
-                        let playerSnapshot;
-                        try {
-                            playerSnapshot = await get(playerRef);
-                        } catch (error) {
-                            console.warn(`Erro ao obter dados do jogador ${userId}:`, error);
-                        }
-                        const player = playerSnapshot?.val() || {};
-                        const voterHtml = `
-                            <div class="voter-item">
-                                <img src="${player.imageUrl || defaultImage}" alt="${player.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
-                                <div class="voter-info">
-                                    ${player.name || '-'} (${player.position || '-'})
+                    let votersHtml = '';
+                    if (isSelected) {
+                        const concordoVoters = [];
+                        const naoConcordoVoters = [];
+                        for (const [userId, vote] of Object.entries(votes)) {
+                            const playerRef = ref(database, `players/${userId}`);
+                            let playerSnapshot;
+                            try {
+                                playerSnapshot = await get(playerRef);
+                            } catch (error) {
+                                console.warn(`Erro ao obter dados do jogador ${userId}:`, error);
+                            }
+                            const player = playerSnapshot?.val() || {};
+                            const voterHtml = `
+                                <div class="voter-item">
+                                    <img src="${player.imageUrl || defaultImage}" alt="${player.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
+                                    <div class="voter-info">
+                                        ${player.name || '-'} (${player.position || '-'})
+                                    </div>
                                 </div>
+                            `;
+                            if (vote.option === 'concordo') {
+                                concordoVoters.push(voterHtml);
+                            } else {
+                                naoConcordoVoters.push(voterHtml);
+                            }
+                        }
+                        votersHtml = `
+                            <div class="poll-voters visible">
+                                <p><strong>Concordo:</strong></p>
+                                ${concordoVoters.join('') || 'Nenhum votante'}
+                                <p><strong>Não Concordo:</strong></p>
+                                ${naoConcordoVoters.join('') || 'Nenhum votante'}
                             </div>
                         `;
-                        if (vote.option === 'concordo') {
-                            concordoVoters.push(voterHtml);
-                        } else {
-                            naoConcordoVoters.push(voterHtml);
-                        }
                     }
 
                     resultsHtml = `
                         <div class="poll-results">
                             <p>Concordo: ${concordoCount} votos (${concordoPercent}%)</p>
-                            <div class="poll-voters">${concordoVoters.join('') || 'Nenhum votante'}</div>
                             <p>Não Concordo: ${naoConcordoCount} votos (${naoConcordoPercent}%)</p>
-                            <div class="poll-voters">${naoConcordoVoters.join('') || 'Nenhum votante'}</div>
+                            ${votersHtml}
                         </div>
                     `;
                 }
 
                 return `
-                    <div class="poll-item">
+                    <div class="poll-item ${isSelected ? 'selected' : ''}" onclick="selectPoll('${poll.id}')">
                         <div class="poll-info">
                             <span class="poll-title">${poll.title || 'Sem título'}</span>
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
@@ -703,7 +643,7 @@
                             </span>
                             <span>Data: ${formatDateToBR(poll.created_at)}</span>
                             ${voteCountHtml}
-                            ${poll.is_active && canVote ? `
+                            ${poll.is_active && canVote && isSelected ? `
                                 <div class="poll-vote-options">
                                     <label><input type="radio" name="vote_${poll.id}" value="concordo" ${hasVoted && voteSnapshot?.val().option === 'concordo' ? 'checked' : ''}> Concordo</label>
                                     <label><input type="radio" name="vote_${poll.id}" value="nao_concordo" ${hasVoted && voteSnapshot?.val().option === 'nao_concordo' ? 'checked' : ''}> Não Concordo</label>
@@ -711,20 +651,24 @@
                             ` : ''}
                             ${resultsHtml}
                         </div>
-                        <div class="poll-actions">
-                            ${poll.is_active && canVote ? `
-                                <button class="vote-btn" onclick="votePoll('${poll.id}')" ${!canVote ? 'disabled' : ''}>Votar</button>
-                            ` : ''}
-                            ${!poll.is_active ? `
-                                <button class="results-btn"><i class="fas fa-check"></i> Resultados Disponíveis</button>
-                            ` : ''}
-                            ${isAdmin && poll.is_active ? `
-                                <button class="close-poll-btn" onclick="closePoll('${poll.id}')">Finalizar Enquete</button>
-                            ` : ''}
-                            ${isAdmin && !poll.is_active ? `
-                                <button class="reopen-poll-btn" onclick="reopenPoll('${poll.id}')">Reabrir Enquete</button>
-                            ` : ''}
-                        </div>
+                        ${isSelected ? `
+                            <div class="poll-actions">
+                                ${poll.is_active && canVote ? `
+                                    <button class="vote-btn" onclick="votePoll('${poll.id}')" ${!canVote ? 'disabled' : ''}>
+                                        ${hasVoted ? 'Alterar Voto' : 'Votar'}
+                                    </button>
+                                ` : ''}
+                                ${!poll.is_active ? `
+                                    <button class="results-btn"><i class="fas fa-check"></i> Resultados Disponíveis</button>
+                                ` : ''}
+                                ${isAdmin && poll.is_active ? `
+                                    <button class="close-poll-btn" onclick="closePoll('${poll.id}')">Finalizar Enquete</button>
+                                ` : ''}
+                                ${isAdmin && !poll.is_active ? `
+                                    <button class="reopen-poll-btn" onclick="reopenPoll('${poll.id}')">Reabrir Enquete</button>
+                                ` : ''}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             } catch (error) {
@@ -832,6 +776,7 @@
                     timer: 1500,
                     showConfirmButton: false
                 });
+                updatePollLists(); // Atualizar para refletir "Alterar Voto"
             } catch (error) {
                 console.error('Erro ao registrar voto:', error);
                 await Swal.fire({
@@ -903,17 +848,12 @@
         }
 
         function selectPoll(pollId) {
-            pollSelect.value = pollId;
-            pollSelect.dispatchEvent(new Event('change'));
+            selectedPollId = selectedPollId === pollId ? null : pollId;
+            updatePollLists();
         }
 
         // Configurar eventos
         createPollBtn.addEventListener('click', createPoll);
-        refreshPollsBtn.addEventListener('click', loadPolls);
-        pollSelect.addEventListener('change', (e) => {
-            currentPollId = e.target.value;
-            updatePollLists();
-        });
 
         // Expor funções globais
         window.votePoll = votePoll;
