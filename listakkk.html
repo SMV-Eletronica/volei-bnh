@@ -169,8 +169,9 @@
             font-size: 14px;
         }
         .section-title span {
-            font-size: 14px;
+            font-size: 18px;
             color: var(--muted);
+            font-weight: bold;
         }
 
         .game-controls {
@@ -466,6 +467,32 @@
             font-size: 24px;
             font-weight: bold;
         } 
+
+
+          .new-game-controls .player-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Espaçamento entre os itens */
+    padding: 15px;
+}
+
+.new-game-controls .player-details label {
+    font-weight: bold;
+    margin-bottom: -8px; /* Ajuste fino para alinhar com os inputs */
+}
+
+.new-game-controls .player-details input {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+
+    max-width: 300px;
+}
+
+.new-game-controls .player-details button {
+    margin-top: 10px;
+    align-self: flex-start; /* Alinha o botão à esquerda */
+}
          
         @media (max-width: 768px) {
             .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
@@ -545,22 +572,28 @@
                     <!-- Controles para novo jogo (visível apenas para ADMs) -->
                     <div class="new-game-controls" id="newGameControls" style="display: none;">
                         <h3>Criar Novo Jogo</h3>
-                        <div>
-                            <label>Data:</label>
-                            <input type="date" id="newGameDate">
-                            <label>Horário:</label>
-                            <input type="time" id="newGameTime" value="19:30">
-                            <label>Limite de Jogadores:</label>
-                            <input type="number" id="newGameLimit" min="1" value="20">
-                            <button id="createGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+                        <div class="player-details">
+                            <div>
+                                  <label for="newGameDate">Data:</label>
+                                  <input type="date" id="newGameDate">
+                            </div>
+        
+                            <div>
+                                     <label for="newGameTime">Horário:</label>
+                                     <input type="time" id="newGameTime" value="19:30">
+                            </div>
+        
+                            <div>
+                                      <label for="newGameLimit">Limite de Participantes:</label>
+                                      <input type="number" id="newGameLimit" min="1" value="20" style="width:60px;">
+                            </div>                       
+                      <button id="createGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+
+
+                            </div>
                         </div>
                     </div>
-                    
-                    <h3>Listas anteriores</h3>
-                    <select id="historySelect">
-                        <option value="current">Atual</option>
-                    </select>
-                </div>
+                
                 
                 <div class="player-details" id="playerDetails" style="display: none;">
                     <p><strong>Nome:</strong> <span id="playerName">-</span></p>
@@ -656,7 +689,6 @@
         const finalizeGameBtn = document.getElementById('finalizeGameBtn');
         const gameDateSpan = document.getElementById('gameDate');
         const gameTimeSpan = document.getElementById('gameTime');
-        const historySelect = document.getElementById('historySelect');
         const guestControls = document.getElementById('guestControls');
         const guestNameInput = document.getElementById('guestNameInput');
         const addGuestBtn = document.getElementById('addGuestBtn');
@@ -682,7 +714,6 @@
         let emailLogado = null;
         let allPlayers = [];
         let selectedPlayerId = null;
-        let isViewingHistory = false;
         let currentGameDate = null;
         let guestFee = 5;
         let gameTime = "19:30";
@@ -781,7 +812,6 @@
                 await loadGameTime();
                 await initializeGameList();
                 setupAdminFeatures();
-                loadGameHistory();
             }
         });
 
@@ -1104,41 +1134,33 @@
         function setupLimitConfirmation() {
             const confirmLimitBtn = document.getElementById('confirmLimitBtn');
             confirmLimitBtn.addEventListener('click', async () => {
-                if (!isViewingHistory) {
-                    const playerLimitInput = document.getElementById('playerLimitInput');
-                    const inputValue = playerLimitInput.value.trim();
-                    const newLimit = parseInt(inputValue);
+                const playerLimitInput = document.getElementById('playerLimitInput');
+                const inputValue = playerLimitInput.value.trim();
+                const newLimit = parseInt(inputValue);
 
-                    if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Número Inválido',
-                            text: 'Por favor, insira um número inteiro válido.',
-                        });
-                        playerLimitInput.value = playerLimit;
-                        return;
-                    }
-                    if (newLimit < 1) {
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Limite Inválido',
-                            text: 'O limite deve ser pelo menos 1.',
-                        });
-                        playerLimitInput.value = playerLimit;
-                        return;
-                    }
-                    if (newLimit !== playerLimit) {
-                        playerLimit = newLimit;
-                        await adjustConfirmedPlayers();
-                        await updateFirebaseLists();
-                        updateGameList();
-                    }
-                } else {
+                if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
                     await Swal.fire({
-                        icon: 'info',
-                        title: 'Ação Não Permitida',
-                        text: 'Não é possível alterar o limite ao visualizar o histórico.',
+                        icon: 'error',
+                        title: 'Número Inválido',
+                        text: 'Por favor, insira um número inteiro válido.',
                     });
+                    playerLimitInput.value = playerLimit;
+                    return;
+                }
+                if (newLimit < 1) {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Limite Inválido',
+                        text: 'O limite deve ser pelo menos 1.',
+                    });
+                    playerLimitInput.value = playerLimit;
+                    return;
+                }
+                if (newLimit !== playerLimit) {
+                    playerLimit = newLimit;
+                    await adjustConfirmedPlayers();
+                    await updateFirebaseLists();
+                    updateGameList();
                 }
             });
         }
@@ -1148,14 +1170,6 @@
         }
 
         async function addGuest() {
-            if (isViewingHistory) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Ação Não Permitida',
-                    text: 'Não é possível adicionar convidados ao visualizar o histórico.',
-                });
-                return;
-            }
             if (!currentUserPlayer) {
                 await Swal.fire({
                     icon: 'error',
@@ -1256,14 +1270,6 @@
         }
 
         async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
-            if (isViewingHistory) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Ação Não Permitida',
-                    text: 'Não é possível aprovar jogadores ao visualizar o histórico.',
-                });
-                return;
-            }
             if (!isAdmin) {
                 await Swal.fire({
                     icon: 'error',
@@ -1328,43 +1334,6 @@
             }
         }
 
-        async function loadGameHistory() {
-            try {
-                const historyRef = ref(database, 'gameHistory');
-                const snapshot = await get(historyRef);
-                const historyData = snapshot.val() || {};
-                const dates = Object.keys(historyData).sort((a, b) => b.localeCompare(a));
-
-                historySelect.innerHTML = '<option value="current">Atual</option>';
-                dates.forEach(date => {
-                    const option = document.createElement('option');
-                    option.value = date;
-                    option.textContent = formatDateToBR(date);
-                    historySelect.appendChild(option);
-                });
-
-                historySelect.addEventListener('change', () => {
-                    const selectedDate = historySelect.value;
-                    isViewingHistory = selectedDate !== 'current';
-                    currentGameId = isViewingHistory ? selectedDate : activeGameSelect.value;
-                    loadGameData(currentGameId);
-                });
-
-                currentGameDate = formatDateToISO(new Date());
-                updateGameDateDisplay();
-                if (!currentGameId) {
-                    loadGameData('current');
-                }
-            } catch (error) {
-                console.error('Erro ao carregar histórico:', error);
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao carregar histórico.',
-                });
-            }
-        }
-
         async function loadGameData(gameId) {
             try {
                 if (!gameId || gameId === 'current') {
@@ -1378,8 +1347,7 @@
                     return;
                 }
 
-                const path = isViewingHistory ? `gameHistory/${gameId}` : `activeGames/${gameId}`;
-                const gameRef = ref(database, path);
+                const gameRef = ref(database, `activeGames/${gameId}`);
                 const snapshot = await get(gameRef);
                 
                 if (!snapshot.exists()) {
@@ -1456,32 +1424,30 @@
                     };
                 });
 
-                if (!isViewingHistory) {
-                    for (let player of confirmedPlayers) {
-                        if (player.category !== 'CONVIDADO' && player.category !== 'DIARIA') {
-                            player.paymentStatus = await checkPaymentStatus(player.id);
-                        }
+                for (let player of confirmedPlayers) {
+                    if (player.category !== 'CONVIDADO' && player.category !== 'DIARIA') {
+                        player.paymentStatus = await checkPaymentStatus(player.id);
                     }
-                    for (let player of waitlistPlayers) {
-                        if (player.category !== 'CONVIDADO' && player.category !== 'DIARIA') {
-                            player.paymentStatus = await checkPaymentStatus(player.id);
-                        }
+                }
+                for (let player of waitlistPlayers) {
+                    if (player.category !== 'CONVIDADO' && player.category !== 'DIARIA') {
+                        player.paymentStatus = await checkPaymentStatus(player.id);
                     }
                 }
 
                 confirmedPlayers = sortPlayers(confirmedPlayers);
                 waitlistPlayers = sortPlayers(waitlistPlayers);
 
-                confirmPlayerBtn.disabled = isViewingHistory;
-                addPlayerBtn.disabled = isViewingHistory || !selectedPlayerId;
-                playerSearch.disabled = isViewingHistory;
-                finalizeGameBtn.disabled = isViewingHistory;
-                addGuestBtn.disabled = isViewingHistory;
-                guestNameInput.disabled = isViewingHistory;
-                saveGuestFeeBtn.disabled = isViewingHistory;
-                guestFeeInput.disabled = isViewingHistory;
-                gameTimeInput.disabled = isViewingHistory;
-                saveGameTimeBtn.disabled = isViewingHistory;
+                confirmPlayerBtn.disabled = false;
+                addPlayerBtn.disabled = !selectedPlayerId;
+                playerSearch.disabled = false;
+                finalizeGameBtn.disabled = false;
+                addGuestBtn.disabled = false;
+                guestNameInput.disabled = false;
+                saveGuestFeeBtn.disabled = false;
+                guestFeeInput.disabled = false;
+                gameTimeInput.disabled = false;
+                saveGameTimeBtn.disabled = false;
 
                 updatePlayerLimitDisplay(isAdmin);
                 updateGameList();
@@ -1500,13 +1466,11 @@
                 playerLimitContainer.innerHTML = `
                     <div class="limit-container">
                         <label>Limite de Participantes:</label>
-                        <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*" ${isViewingHistory ? 'disabled' : ''}>
-                        <button id="confirmLimitBtn" ${isViewingHistory ? 'disabled' : ''}>Confirmar</button>
+                        <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                        <button id="confirmLimitBtn">Confirmar</button>
                     </div>
                 `;
-                if (!isViewingHistory) {
-                    setupLimitConfirmation();
-                }
+                setupLimitConfirmation();
             } else {
                 playerLimitContainer.innerHTML = `<span>Limite de Participantes: ${playerLimit}</span>`;
             }
@@ -1519,7 +1483,6 @@
             // Configurar eventos do seletor de jogos
             activeGameSelect.addEventListener('change', (e) => {
                 currentGameId = e.target.value;
-                isViewingHistory = false;
                 if (currentGameId) {
                     loadGameData(currentGameId);
                 } else {
@@ -1608,41 +1571,19 @@
                         return;
                     }
                     
-                    const gameData = snapshot.val();
-                    const historyDate = gameData.date;
-                    const historyId = `${historyDate}_${currentGameId}`;
-                    
-                    // Verificar se já existe no histórico
-                    const historyRef = ref(database, `gameHistory/${historyId}`);
-                    const historySnapshot = await get(historyRef);
-                    
-                    if (historySnapshot.exists()) {
-                        await Swal.fire({
-                            icon: 'info',
-                            title: 'Jogo Já Finalizado',
-                            text: 'Este jogo já foi finalizado e salvo no histórico.',
-                        });
-                        return;
-                    }
-                    
-                    // Mover para o histórico
-                    await set(historyRef, gameData);
-                    
                     // Remover dos jogos ativos
                     await set(gameRef, null);
                     
                     await Swal.fire({
                         icon: 'success',
                         title: 'Jogo Finalizado',
-                        text: 'O jogo foi finalizado e movido para o histórico.',
+                        text: 'O jogo foi finalizado e removido.',
                     });
                     
                     // Recarregar listas
                     currentGameId = null;
                     activeGameSelect.value = '';
                     await loadActiveGames();
-                    await loadGameHistory();
-                    
                 } catch (error) {
                     console.error('Erro ao finalizar jogo:', error);
                     await Swal.fire({
@@ -1729,14 +1670,6 @@
         }
 
         async function confirmPlayer(targetPlayerId = null) {
-            if (isViewingHistory) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Ação Não Permitida',
-                    text: 'Não é possível modificar a lista ao visualizar o histórico.',
-                });
-                return;
-            }
             if (!currentGameId) {
                 await Swal.fire({
                     icon: 'error',
@@ -1872,14 +1805,6 @@
         }
 
         async function removePlayer(playerId, fromConfirmed = true) {
-            if (isViewingHistory) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Ação Não Permitida',
-                    text: 'Não é possível modificar a lista ao visualizar o histórico.',
-                });
-                return;
-            }
             if (!currentGameId) {
                 await Swal.fire({
                     icon: 'error',
@@ -1935,7 +1860,7 @@
         }
 
         async function updateFirebaseLists() {
-            if (isViewingHistory || !currentGameId) return;
+            if (!currentGameId) return;
 
             const gameListRef = ref(database, `activeGames/${currentGameId}`);
             const confirmed = {};
@@ -2012,11 +1937,11 @@
                             </div>
                         </div>
                         <div>
-                            ${!isViewingHistory && isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') && player.status === 'pending' ? `
+                            ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') && player.status === 'pending' ? `
                                 <button class="player-approve" onclick="approvePlayer('${player.id}', true, true)">PAGO</button>
                                 <button class="player-approve-debt" onclick="approvePlayer('${player.id}', true, false)">DEVENDO</button>
                             ` : ''}
-                            ${!isViewingHistory && (isAdmin || player.id === currentUserPlayer?.id || player.invitedById === currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', true)">Remover</button>` : ''}
+                            ${(isAdmin || player.id === currentUserPlayer?.id || player.invitedById === currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', true)">Remover</button>` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -2042,11 +1967,11 @@
                             </div>
                         </div>
                         <div>
-                            ${!isViewingHistory && isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') && player.status === 'pending' ? `
-                             <button class="player-approve" onclick="approvePlayer('${player.id}', false, true)">PAGO</button>
+                            ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') && player.status === 'pending' ? `
+                                <button class="player-approve" onclick="approvePlayer('${player.id}', false, true)">PAGO</button>
                                 <button class="player-approve-debt" onclick="approvePlayer('${player.id}', false, false)">DEVENDO</button>
                             ` : ''}
-                            ${!isViewingHistory && (isAdmin || player.id === currentUserPlayer?.id || player.invitedById === currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
+                            ${(isAdmin || player.id === currentUserPlayer?.id || player.invitedById === currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -2058,6 +1983,3 @@
     </script>
 </body>
 </html>
-
-
-                                
