@@ -1634,7 +1634,8 @@
                 activeGames.forEach(game => {
                     const option = document.createElement('option');
                     option.value = game.id;
-                    option.textContent = `${formatDateToBR(game.date)} às ${game.time} (Limite: ${game.playerLimit})`;
+                 //   option.textContent = `${formatDateToBR(game.date)} às ${game.time} (Limite: ${game.playerLimit})`;
+                    option.textContent = `${formatDateToBR(game.date)} às ${game.time} `;
                     select.appendChild(option);
                 });
                 
