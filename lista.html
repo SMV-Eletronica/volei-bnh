@@ -1347,7 +1347,7 @@
                 if (!gameId || gameId === 'current') {
                     confirmedPlayers = [];
                     waitlistPlayers = [];
-                    playerLimit = 20;
+                    playerLimit = 16;
                     currentGameData = null;
                     updateGameDateDisplay();
                     updateGameList();
@@ -1366,7 +1366,7 @@
                     });
                     confirmedPlayers = [];
                     waitlistPlayers = [];
-                    playerLimit = 20;
+                    playerLimit = 16;
                     currentGameData = null;
                     updateGameDateDisplay();
                     updateGameList();
@@ -1378,7 +1378,7 @@
                 currentGameData = gameData;
                 currentGameDate = gameData.date;
                 gameTime = gameData.time;
-                playerLimit = gameData.playerLimit || 20;
+                playerLimit = gameData.playerLimit || 16;
                 
                 // Atualizar exibição
                 updateGameDateDisplay();
@@ -1618,7 +1618,7 @@
                             id,
                             date: game.date,
                             time: game.time,
-                            playerLimit: game.playerLimit || 20,
+                            playerLimit: game.playerLimit || 16,
                             createdAt: game.createdAt
                         });
                     });
