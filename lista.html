@@ -636,7 +636,7 @@
                     <div class="admin-guest-settings" id="adminGuestSettings" style="display: none;">
                         <label>Taxa de Convidado (R$):</label>
                         <input type="number" id="guestFeeInput" step="0.01" min="0">
-                        <button id="saveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
+                        <button id="saveGuestFeeBtn"><i class="fas fa-save"></i> </button>
                     </div>
                     <!-- Controles de Convidado (visível para todos) -->
                     <div class="guest-controls" id="guestControls" style="display: none;">
@@ -989,7 +989,7 @@
                 playerLimitContainer.innerHTML = `
                     <label>Limite de Participantes:</label>
                     <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
-                    <button id="confirmLimitBtn">Alterar</button>
+                    <button id="confirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
                 `;
                 
                 setupPlayerSearch();
