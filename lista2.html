@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-     <style>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -41,9 +41,7 @@
         }
 
         .logout-btn {
-            position: absolute;
-            top: 55px;
-            right: 20px;
+           
             background-color: #d32f2f;
             color: white;
             border: none;
@@ -240,6 +238,20 @@
         .finalize-btn:hover {
             background-color: #e67e22;
         }
+
+
+        .enquete-btn {
+    
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+        }
+
 
         .admin-time-settings {
             display: flex;
@@ -551,9 +563,17 @@
 <body>
     <div class="header">
         <h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH</h2><b>Lista de Presença</b>        
-        <button id="transparenciaBtn" class="transparencia-btn" onclick="window.location.href='transparencia.html'" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
-        <button id="loginBtn" class="login-btn" onclick="window.location.href='dashboard.html'" style="display: none;"><i class="fas fa-sign-in-alt"></i> Gestão</button>
-        <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+         <div class="button-container">
+            <button id="loginBtn" class="login-btn" onclick="window.location.href='dashboard.html'" style="display: none;"><i class="fas fa-sign-in-alt"></i> Gestão</button>
+            <button id="transparenciaBtn" class="enquete-btn" onclick="window.location.href='transparencia.html'" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+         
+            
+     
+
+            <button class="enquete-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>            
+            <button class="enquete-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>   
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+        </div>  
     </div>
     
     <div class="container">
@@ -573,7 +593,7 @@
                         <button id="refreshGamesBtn"><i class="fas fa-sync-alt"></i></button>
                     </div>
 
-                    <!-- Botão Confirmar Minha Presença (visível para todos os usuários logados) -->
+                     <!-- Botão Confirmar Minha Presença (visível para todos os usuários logados) -->
                     <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
                     
                     <!-- Controles para novo jogo (visível apenas para ADMs) -->
@@ -581,36 +601,37 @@
                         <h3>Criar novo Jogo</h3>
                         <div class="player-details">
                             <div>
-                                <label for="newGameDate">Data:</label>
-                                <input type="date" id="newGameDate">
+                                  <label for="newGameDate">Data:</label>
+                                  <input type="date" id="newGameDate">
                             </div>
+        
                             <div>
-                                <label for="newGameTime">Horário:</label>
-                                <input type="time" id="newGameTime" value="19:30">
+                                     <label for="newGameTime">Horário:</label>
+                                     <input type="time" id="newGameTime" value="19:30">
                             </div>
+        
                             <div>
-                                <label for="newGameLimit">Limite de Participantes:</label>
-                                <input type="number" id="newGameLimit" min="1" value="16" style="width:60px;">
+                                      <label for="newGameLimit">Limite de Participantes:</label>
+                                      <input type="number" id="newGameLimit" min="1" value="16" style="width:60px;">
                             </div>                       
-                            <button id="createGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+                      <button id="createGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+
+
+                            </div>
                         </div>
                     </div>
-                 </div>
+                
+                
                 <div class="player-details" id="playerDetails" style="display: none;">
                     <p><strong>Nome:</strong> <span id="playerName">-</span></p>
                     <p><strong>Posição:</strong> <span id="playerPosition">-</span></p>
                     <p><strong>Email:</strong> <span id="playerEmail">-</span></p>
                     <p><strong>Categoria:</strong> <span id="playerCategory">-</span></p>
-               </div>
+                </div>
 
                 <div class="game-list">
                     <h3>Lista dos Titulares</h3>
                     <div id="playerLimitContainer" class="limit-container"></div>
-                    <div id="adminGameTimeSettings" class="admin-game-time-settings" style="display: none;">
-                        <label>Horário do Jogo:</label>
-                        <input type="time" id="gameTimeInput" value="19:30">
-                        <button id="updateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
-                    </div>
                     <div id="confirmedPlayers"></div>
                 </div>
                 
@@ -620,6 +641,16 @@
                 </div>
                 
                 <div class="game-controls">
+                    <!-- Campo de horário (visível apenas para ADMs) -->
+                    <div class="admin-time-settings" id="adminTimeSettings" style="display: none;">
+                        <label>Horário do Jogo:</label>
+                        <input type="time" id="gameTimeInput">
+                        <button id="saveGameTimeBtn"><i class="fas fa-save"></i> Salvar</button>
+                    </div>
+                    <!-- Botão Confirmar Minha Presença (visível para todos os usuários logados) -->
+                    <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
+                    <!-- Controles de Administrador (somente para ADMs) -->
+                    
                     <!-- Taxa de Convidado (somente para ADMs) -->
                     <div class="admin-guest-settings" id="adminGuestSettings" style="display: none;">
                         <label>Taxa de Convidado (R$):</label>
@@ -692,9 +723,9 @@
         const adminGuestSettings = document.getElementById('adminGuestSettings');
         const guestFeeInput = document.getElementById('guestFeeInput');
         const saveGuestFeeBtn = document.getElementById('saveGuestFeeBtn');
-        const adminGameTimeSettings = document.getElementById('adminGameTimeSettings');
+        const adminTimeSettings = document.getElementById('adminTimeSettings');
         const gameTimeInput = document.getElementById('gameTimeInput');
-        const updateGameTimeBtn = document.getElementById('updateGameTimeBtn');
+        const saveGameTimeBtn = document.getElementById('saveGameTimeBtn');
         const activeGameSelect = document.getElementById('activeGameSelect');
         const refreshGamesBtn = document.getElementById('refreshGamesBtn');
         const newGameControls = document.getElementById('newGameControls');
@@ -806,6 +837,7 @@
                 updateButtonVisibility();
                 await loadCurrentUserPlayer();
                 await loadGuestFee();
+                await loadGameTime();
                 await initializeGameList();
                 setupAdminFeatures();
             }
@@ -934,23 +966,65 @@
             }
         }
 
+        async function loadGameTime() {
+            try {
+                const settingsRef = ref(database, 'settings/gameTime');
+                const snapshot = await get(settingsRef);
+                if (snapshot.exists()) {
+                    const time = snapshot.val();
+                    if (/^\d{2}:\d{2}$/.test(time)) {
+                        gameTime = time;
+                        console.log(`Horário do jogo carregado: ${gameTime}`);
+                    } else {
+                        console.warn(`Formato de horário inválido: ${time}. Usando padrão (19:30).`);
+                        gameTime = "19:30";
+                    }
+                } else {
+                    console.log('Nó settings/gameTime não existe. Usando padrão (19:30).');
+                    gameTime = "19:30";
+                }
+                if (isAdmin) {
+                    gameTimeInput.value = gameTime;
+                }
+                updateGameDateDisplay();
+            } catch (error) {
+                console.warn('Erro ao carregar horário, usando valor padrão (19:30):', error.message);
+                gameTime = "19:30";
+                if (isAdmin) {
+                    gameTimeInput.value = gameTime;
+                }
+                updateGameDateDisplay();
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Aviso',
+                    text: 'Erro ao carregar horário. Usando padrão (19:30).',
+                });
+            }
+        }
+
         function setupAdminFeatures() {
             updateButtonVisibility();
             if (isAdmin) {
                 adminSearchContainer.style.display = 'flex';
                 finalizeGameBtn.style.display = 'inline-block';
                 adminGuestSettings.style.display = 'flex';
-                adminGameTimeSettings.style.display = 'flex';
+                adminTimeSettings.style.display = 'flex';
+
+                playerLimitContainer.innerHTML = `
+                    <label>Limite de Participantes:</label>
+                    <input type="text" id="playerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                    <button id="confirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
+                `;
                 
                 setupPlayerSearch();
                 setupLimitConfirmation();
                 setupGuestFeeConfiguration();
-                setupGameTimeUpdate();
+                setupGameTimeConfiguration();
             } else {
                 adminSearchContainer.style.display = 'none';
                 finalizeGameBtn.style.display = 'none';
                 adminGuestSettings.style.display = 'none';
-                adminGameTimeSettings.style.display = 'none';
+                adminTimeSettings.style.display = 'none';
                 
                 playerLimitContainer.innerHTML = `
                     <span>Limite de Participantes: ${playerLimit}</span>
@@ -999,21 +1073,13 @@
             });
         }
 
-        function setupGameTimeUpdate() {
-            updateGameTimeBtn.addEventListener('click', async () => {
+        function setupGameTimeConfiguration() {
+            saveGameTimeBtn.addEventListener('click', async () => {
                 if (!isAdmin) {
                     await Swal.fire({
                         icon: 'error',
                         title: 'Permissão Negada',
                         text: 'Você não tem permissão para alterar o horário.',
-                    });
-                    return;
-                }
-                if (!currentGameId) {
-                    await Swal.fire({
-                        icon: 'error',
-                        title: 'Nenhum Jogo Selecionado',
-                        text: 'Por favor, selecione um jogo para alterar o horário.',
                     });
                     return;
                 }
@@ -1027,26 +1093,21 @@
                     return;
                 }
                 try {
-                    const gameRef = ref(database, `activeGames/${currentGameId}`);
-                    await set(gameRef, {
-                        ...currentGameData,
-                        time: newTime
-                    });
-                    currentGameData.time = newTime;
+                    await set(ref(database, 'settings/gameTime'), newTime);
                     gameTime = newTime;
+                    console.log(`Horário do jogo atualizado: ${gameTime}`);
                     updateGameDateDisplay();
-                    await loadActiveGames(); // Atualiza o seletor com o novo horário
                     await Swal.fire({
                         icon: 'success',
                         title: 'Sucesso',
                         text: 'Horário do jogo atualizado com sucesso.',
                     });
                 } catch (error) {
-                    console.error('Erro ao atualizar horário:', error);
+                    console.error('Erro ao salvar horário:', error);
                     await Swal.fire({
                         icon: 'error',
                         title: 'Erro',
-                        text: 'Erro ao atualizar horário. Verifique suas permissões.',
+                        text: 'Erro ao salvar horário. Verifique suas permissões.',
                     });
                 }
             });
@@ -1414,7 +1475,7 @@
                 saveGuestFeeBtn.disabled = false;
                 guestFeeInput.disabled = false;
                 gameTimeInput.disabled = false;
-                updateGameTimeBtn.disabled = false;
+                saveGameTimeBtn.disabled = false;
 
                 updatePlayerLimitDisplay(isAdmin);
                 updateGameList();
@@ -1438,10 +1499,8 @@
                     </div>
                 `;
                 setupLimitConfirmation();
-                adminGameTimeSettings.style.display = 'flex';
             } else {
                 playerLimitContainer.innerHTML = `<span>Limite de Participantes: ${playerLimit}</span>`;
-                adminGameTimeSettings.style.display = 'none';
             }
         }
 
@@ -1599,7 +1658,8 @@
                 activeGames.forEach(game => {
                     const option = document.createElement('option');
                     option.value = game.id;
-                    option.textContent = `${formatDateToBR(game.date)} às ${game.time}`;
+                 //   option.textContent = `${formatDateToBR(game.date)} às ${game.time} (Limite: ${game.playerLimit})`;
+                    option.textContent = `${formatDateToBR(game.date)} às ${game.time} `;
                     select.appendChild(option);
                 });
                 
