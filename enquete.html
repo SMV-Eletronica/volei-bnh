@@ -350,11 +350,16 @@
             align-items: center;
             gap: 8px;
         }
-        .tab.active {
-            background-color: var(--primary);
-            color: white;
-            font-weight: bold;
-        }
+        .tab.active[data-tab="approved"] {
+    background-color: var(--primary);
+    color: white;
+    font-weight: bold;
+}
+.tab.active[data-tab="reproved"] {
+    background-color: var(--danger);
+    color: white;
+    font-weight: bold;
+}
         .tab:hover:not(.active) {
             background-color: #e0e0e0;
         }
