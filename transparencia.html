@@ -36,7 +36,6 @@
             color: white;
         }
         .logout-btn {
-           
             background-color: #d32f2f;
             color: white;
             border: none;
@@ -396,25 +395,23 @@
             padding: 20px;
             color: var(--muted);
         }
-
-.button-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px;
-    }        
-
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+        }        
         .enquete-btn {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
-        
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
         @media (max-width: 768px) {
             .filter-controls {
                 flex-direction: column;
@@ -447,14 +444,13 @@
 </head>
 <body>
     <div class="header">
-      <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> +Vôlei-BNH</h2></center>     
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH</h2></center>     
         <div class="button-container">
-           <button id="loginBtn" class="login-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> </button>
+            <button id="loginBtn" class="login-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> </button>
             <button id="transparenciaBtn" class="enquete-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
-          
-                 <button class="enquete-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>            
+            <button class="enquete-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>            
             <button class="enquete-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>   
-            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>&nbspSair</button>
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>  
     </div>
     <div class="container">
@@ -643,15 +639,15 @@
         const adminEmails = ['admin@example.com']; // Substitua pelos emails de admin reais
 
         // Função para atualizar visibilidade dos botões
-       function updateButtonVisibility(user) {
-    if (user) {
-        logoutBtn.style.display = 'block';
-        loginBtn.style.display = isAdmin ? 'inline-block' : 'none'; // Mostra loginBtn apenas para admins
-    } else {
-        logoutBtn.style.display = 'none';
-       // loginBtn.style.display = 'inline-block';
-    }
-}
+        function updateButtonVisibility(user) {
+            if (user) {
+                logoutBtn.style.display = 'block';
+                loginBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            } else {
+                logoutBtn.style.display = 'none';
+                loginBtn.style.display = 'inline-block';
+            }
+        }
 
         // Verificar autenticação
         onAuthStateChanged(auth, async (user) => {
@@ -1072,7 +1068,6 @@
                         <span class="status-label">Descrição:</span>
                         <span class="status-value">${payment.additionalInfo || '-'}</span>
                     </div>
-                    
                     <div>
                         <span class="status-label">Data do Pagamento:</span>
                         <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
