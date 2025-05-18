@@ -642,22 +642,16 @@
         let allPlayers = [];
         const adminEmails = ['admin@example.com']; // Substitua pelos emails de admin reais
 
-        // Função para controlar a visibilidade dos botões
-        function updateButtonVisibility() {
-            const transparenciaBtn = document.getElementById('transparenciaBtn');
-            const  = document.getElementById('');
-            
-            if (isAdmin) {
-                
-                .style.display = 'inline-block';
-                newGameControls.style.display = 'block';
-            } else {
-                transparenciaBtn.style.display = 'inline-block';
+        // Função para atualizar visibilidade dos botões
+        function updateButtonVisibility(user) {
+            if (user) {
+                logoutBtn.style.display = 'block';
                 loginBtn.style.display = 'none';
-                newGameControls.style.display = 'none';
+            } else {
+                logoutBtn.style.display = 'none';
+                loginBtn.style.display = 'inline-block';
             }
         }
-
 
         // Verificar autenticação
         onAuthStateChanged(auth, async (user) => {
