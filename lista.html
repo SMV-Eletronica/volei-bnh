@@ -830,11 +830,7 @@
     <div class="container">
         <div id="game-list" class="tab-content active">
             <div id="content" class="section">
-                <div class="section-title">
-                    <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados</h2>
-                    <div class="game-info">
-                        <span id="gameDate"></span> - <span id="gameTime"></span>
-                    </div>
+                <div class="section-title">                
                     
                    
                     <div class="new-game-controls" id="newGameControls" style="display: none;">
@@ -856,6 +852,8 @@
                         </div>
                     </div>
                 </div>
+<h2><i class="fas fa-volleyball-ball"></i> Jogos Programados</h2>
+
                 <div class="game-selector">
                         <h3>Selecione um Jogo</h3>
                         <select id="gameSelect" class="game-select"></select>
@@ -863,6 +861,10 @@
                  <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
                 <div class="game-list">
                     <h3>Lista dos Confirmados: <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i></button></h3>
+                    <div class="game-info">
+                        <span id="gameDate"></span> - <span id="gameTime"></span>
+                    </div>
+                    
                     
                     <div id="confirmedPlayers"></div>
                 </div>
@@ -1048,6 +1050,46 @@
                 setupAdminFeatures();
             }
         });
+
+
+
+          // Logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                console.log('Botão de logout clicado');
+                if (!auth) {
+                    console.error('Objeto auth não está definido');
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro interno de autenticação.',
+                    });
+                    return;
+                }
+                try {
+                    await signOut(auth);
+                    console.log('Logout bem-sucedido');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Logout',
+                        text: 'Você saiu com sucesso.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                    window.location.assign('index.html');
+                } catch (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Não foi possível fazer logout. Tente novamente.',
+                    });
+                }
+            });
+        } else {
+            console.error('Elemento com ID "logoutBtn" não encontrado');
+        }
 
         async function loadCurrentUserPlayer() {
             try {
