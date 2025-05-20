@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+
 
     <style>
         
@@ -301,14 +301,18 @@
         }
 
         .player-details {
-            margin-bottom: 20px;
-            padding: 5px 5px 5px 10px;
+           
+            /*padding: 5px 5px 5px 10px;*/
             background-color: transparent;
-            border-radius: 5px;
-            border: 1px solid #675f5f;
+           /* border-radius: 5px;
+            border: 1px solid #675f5f; */
+            gap: 5px;
+    align-items: center;
+    justify-content: center;
+            
         }
         .player-details p {
-            margin: 5px 0;
+          /*  margin: 5px 0;*/
             font-size: 14px;
         }
         .player-details strong {
@@ -322,7 +326,7 @@
             align-items: flex-end; /* Alinha os itens à direita */
             border: 1px solid #e7e4e4;
             padding: 10px;
-            width: 300px;
+            max-width: 320px;
             gap: 10px;
         }
 
@@ -491,7 +495,7 @@
             border: none;
             cursor: pointer;
             transition: background-color 0.3s;
-            width: 300px;
+            width: 250px;
             height: 50px;
             padding: 10px 20px;
             border-radius: 4px;
@@ -817,10 +821,9 @@
             <button class="enquete-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>   
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>  
-        <div class="player-details" id="playerDetails" style="display: none;">
-            <p><strong>Nome:</strong> <span id="playerName">-</span></p>
-            <p><strong>Posição:</strong> <span id="playerPosition">-</span></p>
-            <p><strong>Email:</strong> <span id="playerEmail">-</span></p>
+        <div class="player-details" id="playerDetails" style="display: flex;">
+            <p><strong>Jogador:</strong> <span id="playerName">-</span></p>            
+            <p><strong>/</strong> <span id="playerEmail">-</span></p>
         </div>
     </div>
     
@@ -828,15 +831,12 @@
         <div id="game-list" class="tab-content active">
             <div id="content" class="section">
                 <div class="section-title">
-                    <h2><i class="fas fa-volleyball-ball"></i> Jogos Agendados</h2>
+                    <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados</h2>
                     <div class="game-info">
                         <span id="gameDate"></span> - <span id="gameTime"></span>
                     </div>
-                    <div class="game-selector">
-                        <h3>Selecione um Jogo</h3>
-                        <select id="gameSelect" class="game-select"></select>
-                    </div>
-                    <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
+                    
+                   
                     <div class="new-game-controls" id="newGameControls" style="display: none;">
                         <h3>Criar novo Jogo</h3>
                         <div class="player-details">
@@ -856,13 +856,18 @@
                         </div>
                     </div>
                 </div>
+                <div class="game-selector">
+                        <h3>Selecione um Jogo</h3>
+                        <select id="gameSelect" class="game-select"></select>
+                    </div>
+                 <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
                 <div class="game-list">
-                    <h3>Lista dos Titulares <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i></button></h3>
+                    <h3>Lista dos Confirmados: <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i></button></h3>
                     
                     <div id="confirmedPlayers"></div>
                 </div>
                 <div class="waitlist">
-                    <h3>Lista dos Reservas</h3>
+                    <h3>Lista de Espera:</h3>
                     <div id="waitlistPlayers"></div>
                 </div>
                 <div class="game-controls">
@@ -1061,13 +1066,13 @@
                             text: 'Nenhum jogador associado a este email. Contate o administrador.',
                         });
                         confirmPlayerBtn.disabled = true;
-                        playerDetailsDiv.style.display = 'none';
+                        playerDetailsDiv.style.display = 'flex';
                         guestControls.style.display = 'none';
                     } else {
                         playerNameSpan.textContent = currentUserPlayer.name || '-';
-                        playerPositionSpan.textContent = currentUserPlayer.position || '-';
+                       
                         playerEmailSpan.textContent = currentUserPlayer.email || '-';
-                        playerDetailsDiv.style.display = 'block';
+                        playerDetailsDiv.style.display = 'flex';
                         confirmPlayerBtn.style.display = 'inline-block';
                         guestControls.style.display = 'flex';
                     }
@@ -1143,23 +1148,26 @@
                     Swal.fire({
                         title: 'Configurações Administrativas',
                         html: `
-                            <div class="modal-section">
+                        <div class="organiza">
+                            <div class="organiza2">
                                 <label>Participantes:</label>
                                 <input type="text" id="modalPlayerLimitInput" value="${playerLimit}" pattern="[0-9]*">
                                 <button id="modalConfirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
                             </div>
-                            <div class="modal-section">
+                            <div class="organiza2">
                                 <label>Taxa (R$):</label>
                                 <input type="number" id="modalGuestFeeInput" step="0.01" min="0" value="${guestFee.toFixed(2)}">
                                 <button id="modalSaveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
                             </div>
-                            <div class="modal-section">
+                            <div class="organiza2">
                                 <label>Horário:</label>
                                 <input type="time" id="modalGameTimeInput" value="${gameTime}">
                                 <button id="modalUpdateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
-                            </div>
+                        
+                                </div>
+                        </div>
                         `,
-                        showCancelButton: true,
+                        showCancelButton: false,
                         confirmButtonText: 'Fechar',
                         didOpen: () => {
                             console.log('Modal SweetAlert2 aberto');
@@ -1563,7 +1571,7 @@
             const result = await Swal.fire({
                 icon: 'question',
                 title: 'Confirmar Convidado',
-                html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle.`,
+                html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
                 showCancelButton: true,
                 confirmButtonText: 'Estou Ciente',
                 cancelButtonText: 'Cancelar',
@@ -1899,7 +1907,7 @@
                     const result = await Swal.fire({
                         icon: 'question',
                         title: 'Confirmar Presença',
-                        html: `<strong>${playerObj.name}</strong>, você está confirmando sua presença, mas sendo "Integrante Diarista" declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle.`,
+                        html: `<strong>${playerObj.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
                         showCancelButton: true,
                         confirmButtonText: 'Estou Ciente',
                         cancelButtonText: 'Cancelar',
