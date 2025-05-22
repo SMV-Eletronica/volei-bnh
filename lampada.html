@@ -43,7 +43,7 @@
 
           /* Ícone da lâmpada como link */
         .lampada {
-            font-size: 40px;
+            font-size: 20px;
             cursor: pointer;
             color: #007BFF;
             transition: color 0.3s ease;
@@ -64,13 +64,14 @@
     </div>
 
     <script>
-        function mostrarPopup() {
-            document.getElementById("meuPopup").style.display = "block";
-        }
+        // Adicionando as funções ao escopo global
+window.mostrarPopup = function() {
+    document.getElementById("meuPopup").style.display = "block";
+};
 
-        function fecharPopup() {
-            document.getElementById("meuPopup").style.display = "none";
-        }
+window.fecharPopup = function() {
+    document.getElementById("meuPopup").style.display = "none";
+};
     </script>
 
 </body>
