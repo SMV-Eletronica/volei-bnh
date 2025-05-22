@@ -2258,6 +2258,14 @@
         window.removePlayer = async function(playerId, fromConfirmed) {
             await removePlayer(playerId, fromConfirmed);
         };
+
+         function mostrarPopup() {
+            document.getElementById("meuPopup").style.display = "block";
+        }
+
+        function fecharPopup() {
+            document.getElementById("meuPopup").style.display = "none";
+        }
     </script>
 </body>
 </html>
