@@ -2261,13 +2261,15 @@
             await removePlayer(playerId, fromConfirmed);
         };
 
-         function mostrarPopup() {
-            document.getElementById("meuPopup").style.display = "block";
-        }
+        // Adicionando as funções ao escopo global
+window.mostrarPopup = function() {
+    document.getElementById("meuPopup").style.display = "block";
+};
 
-        function fecharPopup() {
-            document.getElementById("meuPopup").style.display = "none";
-        }
+window.fecharPopup = function() {
+    document.getElementById("meuPopup").style.display = "none";
+};
+
     </script>
 </body>
 </html>
