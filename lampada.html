@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popup Compatível com Mobile</title>
+    <title>Múltiplos Popups</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,8 +11,10 @@
             padding: 20px;
         }
 
+      
+
         .popup {
-            display: none;
+           display: none;
             position: fixed;
             width: 80%;
             max-width: 300px;
@@ -38,15 +40,15 @@
         }
 
         .popup button:hover {
-            background-color: #0056b3;
+            background-color: #d15a60;
         }
-
-          /* Ícone da lâmpada como link */
         .lampada {
-            font-size: 20px;
+            font-size: 15px;
             cursor: pointer;
             color: #007BFF;
             transition: color 0.3s ease;
+            margin: 20px;
+            display: inline-block;
         }
 
         .lampada:hover {
@@ -56,22 +58,35 @@
 </head>
 <body>
 
-   <span class="lampada" onclick="mostrarPopup()">💡</span>
+    <!-- Lâmpadas para abrir diferentes popups -->
+    <span class="lampada" onclick="mostrarPopup('popup1')">💡 Explicação 1</span>
+    <span class="lampada" onclick="mostrarPopup('popup2')">💡 Explicação 2</span>
 
-    <div id="meuPopup" class="popup">
-        <p>Esta é a explicação detalhada! 😊</p>
-        <button onclick="fecharPopup()">Fechar</button>
+    <!-- Popups separados -->
+    <div id="popup1" class="popup">
+        <p>Explicação detalhada 1! 😊</p>
+        <button class="close-btn" onclick="fecharPopup('popup1')">Fechar</button>
     </div>
 
-    <script>
-        // Adicionando as funções ao escopo global
-window.mostrarPopup = function() {
-    document.getElementById("meuPopup").style.display = "block";
-};
+    <div id="popup2" class="popup">
+        <p>Explicação detalhada 2! 🚀</p>
+        <button class="close-btn" onclick="fecharPopup('popup2')">Fechar</button>
+    </div>
 
-window.fecharPopup = function() {
-    document.getElementById("meuPopup").style.display = "none";
-};
+    
+
+    <script>
+        // Adicionando as funções ao escopo global<script>
+    // Adicionando as funções ao escopo global corretamente
+    window.mostrarPopup = function(id) {
+        document.getElementById(id).style.display = "block";
+    };
+
+    window.fecharPopup = function(id) {
+        document.getElementById(id).style.display = "none";
+    };
+</script>
+
     </script>
 
 </body>
