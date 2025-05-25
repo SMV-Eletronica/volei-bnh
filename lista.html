@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <style>
+    <style>
     * {
     margin: 0;
     padding: 0;
@@ -949,7 +949,7 @@ body {
             projectId: "volei-25301",
             storageBucket: "volei-25301.firebasestorage.app",
             messagingSenderId: "1007197261034",
-            appId: "1:1007194761034:web:f2c7ab9cb2793a694cdb93",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
             measurementId: "G-CYMLX0SJJQ"
         };
 
@@ -1750,12 +1750,12 @@ body {
                 });
                 return;
             }
-            if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO') ||
-                waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO')) {
+            if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === currentUserPlayer.id) ||
+                waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === currentUserPlayer.id)) {
                 await Swal.fire({
                     icon: 'warning',
                     title: 'Convidado Já Adicionado',
-                    text: 'Este convidado já foi adicionado.',
+                    text: 'Este convidado já foi adicionado para este jogo.',
                 });
                 return;
             }
@@ -1772,7 +1772,7 @@ body {
                 return;
             }
             try {
-                const guestId = `guest_${Date.now()}`;
+                const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const guestObj = {
                     id: guestId,
                     name: guestName,
@@ -1791,7 +1791,26 @@ body {
                     paymentType: 'CONVIDADO',
                     value: parseFloat(guestFee.toFixed(2))
                 };
-                console.log(`Adicionando convidado com taxa: R$${guestObj.value}`);
+                console.log(`Adicionando convidado com taxa: R$${guestObj.value}, ID: ${guestId}`);
+                
+                // Criar registro de pagamento para o convidado
+                const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
+                const paymentRef = ref(database, `payments/${paymentId}`);
+                await set(paymentRef, {
+                    additionalInfo: guestName,
+                    createdAt: getBrazilDateTimeISO(),
+                    month: getBrazilMonthYear(),
+                    paymentType: 'CONVIDADO',
+                    playerId: currentUserPlayer.id,
+                    playerName: currentUserPlayer.name,
+                    value: parseFloat(guestFee.toFixed(2)),
+                    gameId: currentGameId,
+                    date: null,
+                    paymentStatus: 'inadimplente',
+                    guestId: guestId,
+                    guestName: guestName
+                });
+
                 if (confirmedPlayers.length < playerLimit) {
                     confirmedPlayers.push(guestObj);
                 } else {
@@ -1824,7 +1843,7 @@ body {
             }
         }
 
-        async function findExistingPayment(playerId, gameId, paymentType) {
+        async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
             try {
                 const paymentsRef = ref(database, 'payments');
                 const snapshot = await get(paymentsRef);
@@ -1837,7 +1856,12 @@ body {
                         paymentId: id,
                         ...payment
                     }))
-                    .filter(p => p.playerId === playerId && p.gameId === gameId && p.paymentType === paymentType);
+                    .filter(p => 
+                        p.playerId === playerId && 
+                        p.gameId === gameId && 
+                        p.paymentType === paymentType && 
+                        p.additionalInfo === additionalInfo
+                    );
                 return playerPayments.length > 0 ? playerPayments[0] : null;
             } catch (error) {
                 console.error('Erro ao buscar pagamento existente:', error);
@@ -1896,14 +1920,18 @@ body {
                     playerName: player.category === 'CONVIDADO' ? player.invitedByName || player.name : player.name,
                     value: paymentValue,
                     gameId: currentGameId,
-                    date: isPaid ? (player.date || formatDateToISO(new Date())) : null
+                    date: isPaid ? (player.date || formatDateToISO(new Date())) : null,
+                    paymentStatus: player.paymentStatus,
+                    guestId: player.category === 'CONVIDADO' ? player.id : null,
+                    guestName: player.category === 'CONVIDADO' ? player.name : null
                 };
 
                 // Busca pagamento existente
                 const existingPayment = await findExistingPayment(
                     paymentData.playerId,
                     currentGameId,
-                    paymentData.paymentType
+                    paymentData.paymentType,
+                    paymentData.additionalInfo
                 );
 
                 if (existingPayment) {
@@ -2160,6 +2188,24 @@ body {
                     }
                 }
 
+                if (playerObj.category === 'DIARIA') {
+                    // Criar registro de pagamento para DIARIA
+                    const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
+                    const paymentRef = ref(database, `payments/${paymentId}`);
+                    await set(paymentRef, {
+                        additionalInfo: playerObj.name,
+                        createdAt: getBrazilDateTimeISO(),
+                        month: getBrazilMonthYear(),
+                        paymentType: 'DIARIA',
+                        playerId: playerId,
+                        playerName: playerObj.name,
+                        value: parseFloat(guestFee.toFixed(2)),
+                        gameId: currentGameId,
+                        date: null,
+                        paymentStatus: 'inadimplente'
+                    });
+                }
+
                 if (confirmedPlayers.length < playerLimit) {
                     confirmedPlayers.push(playerObj);
                 } else {
@@ -2257,6 +2303,31 @@ body {
                     waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
                 }
 
+                // Remover pagamento associado ao convidado, se aplicável
+                if (player.category === 'CONVIDADO') {
+                    const existingPayment = await findExistingPayment(
+                        player.invitedById || currentUserPlayer.id,
+                        currentGameId,
+                        'CONVIDADO',
+                        player.name
+                    );
+                    if (existingPayment) {
+                        const paymentRef = ref(database, `payments/${existingPayment.paymentId}`);
+                        await set(paymentRef, null);
+                    }
+                } else if (player.category === 'DIARIA') {
+                    const existingPayment = await findExistingPayment(
+                        playerId,
+                        currentGameId,
+                        'DIARIA',
+                        player.name
+                    );
+                    if (existingPayment) {
+                        const paymentRef = ref(database, `payments/${existingPayment.paymentId}`);
+                        await set(paymentRef, null);
+                    }
+                }
+
                 confirmedPlayers = sortPlayers(confirmedPlayers);
                 waitlistPlayers = sortPlayers(waitlistPlayers);
 
@@ -2348,7 +2419,7 @@ body {
                             <div>
                                 <br>
                                 <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
-                                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName}</span>` : ''}
+                                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
                                 <br>
                                 <span class="player-status status-${player.paymentStatus}">
                                     ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
@@ -2378,7 +2449,7 @@ body {
                             <div>
                                 <br>
                                 <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
-                                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName}</span>` : ''}
+                                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
                                 <br>
                                 <span class="player-status status-${player.paymentStatus}">
                                     ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
