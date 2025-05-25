@@ -7,11 +7,9 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
+ <style>
     * {
     margin: 0;
     padding: 0;
@@ -877,7 +875,6 @@ body {
     }
 }
 </style>
-
 </head>
 <body>
     <div class="header">
@@ -942,7 +939,7 @@ body {
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, get, set, onValue, push, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -952,7 +949,7 @@ body {
             projectId: "volei-25301",
             storageBucket: "volei-25301.firebasestorage.app",
             messagingSenderId: "1007197261034",
-            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            appId: "1:1007194761034:web:f2c7ab9cb2793a694cdb93",
             measurementId: "G-CYMLX0SJJQ"
         };
 
@@ -1789,7 +1786,7 @@ body {
                     status: 'pending',
                     additionalInfo: guestName,
                     createdAt: getBrazilDateTimeISO(),
-                    date: formatDateToISO(new Date()),
+                    date: null,
                     month: getBrazilMonthYear(),
                     paymentType: 'CONVIDADO',
                     value: parseFloat(guestFee.toFixed(2))
@@ -1827,6 +1824,27 @@ body {
             }
         }
 
+        async function findExistingPayment(playerId, gameId, paymentType) {
+            try {
+                const paymentsRef = ref(database, 'payments');
+                const snapshot = await get(paymentsRef);
+                if (!snapshot.exists()) {
+                    return null;
+                }
+                const payments = snapshot.val() || {};
+                const playerPayments = Object.entries(payments)
+                    .map(([id, payment]) => ({
+                        paymentId: id,
+                        ...payment
+                    }))
+                    .filter(p => p.playerId === playerId && p.gameId === gameId && p.paymentType === paymentType);
+                return playerPayments.length > 0 ? playerPayments[0] : null;
+            } catch (error) {
+                console.error('Erro ao buscar pagamento existente:', error);
+                return null;
+            }
+        }
+
         async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
             if (!isAdmin) {
                 await Swal.fire({
@@ -1848,49 +1866,76 @@ body {
                 const player = fromConfirmed
                     ? confirmedPlayers.find(p => p.id === playerId)
                     : waitlistPlayers.find(p => p.id === playerId);
-                if (!player || player.status !== 'pending') {
+                if (!player) {
                     await Swal.fire({
                         icon: 'warning',
-                        title: 'Jogador Inválido',
-                        text: 'Jogador não encontrado ou já aprovado.',
+                        title: 'Jogador Não Encontrado',
+                        text: 'Jogador não encontrado.',
                     });
                     return;
                 }
-                player.status = 'approved';
+
+                // Atualiza status apenas se necessário
+                if (player.status !== 'approved') {
+                    player.status = 'approved';
+                }
                 player.paymentStatus = isPaid ? 'pago' : 'inadimplente';
+
                 let paymentValue = parseFloat(guestFee.toFixed(2));
                 if (isNaN(paymentValue) || paymentValue <= 0) {
                     console.warn(`Valor inválido para jogador ${player.name}: ${paymentValue}. Usando valor padrão: ${guestFee}`);
                     paymentValue = parseFloat(guestFee.toFixed(2));
                 }
+
                 const paymentData = {
-                    additionalInfo: player.additionalInfo,
-                    createdAt: player.createdAt,
-                    month: player.month,
-                    paymentType: player.paymentType,
-                    playerId: player.category === 'CONVIDADO' ? player.invitedById : player.id,
-                    playerName: player.category === 'CONVIDADO' ? player.invitedByName : player.name,
-                    value: paymentValue
+                    additionalInfo: player.additionalInfo || player.name,
+                    createdAt: player.createdAt || getBrazilDateTimeISO(),
+                    month: player.month || getBrazilMonthYear(),
+                    paymentType: player.paymentType || (player.category === 'CONVIDADO' ? 'CONVIDADO' : 'DIARIA'),
+                    playerId: player.category === 'CONVIDADO' ? player.invitedById || player.id : player.id,
+                    playerName: player.category === 'CONVIDADO' ? player.invitedByName || player.name : player.name,
+                    value: paymentValue,
+                    gameId: currentGameId,
+                    date: isPaid ? (player.date || formatDateToISO(new Date())) : null
                 };
-                if (isPaid) {
-                    paymentData.date = player.date || formatDateToISO(new Date());
+
+                // Busca pagamento existente
+                const existingPayment = await findExistingPayment(
+                    paymentData.playerId,
+                    currentGameId,
+                    paymentData.paymentType
+                );
+
+                if (existingPayment) {
+                    console.log(`Atualizando pagamento existente para ${player.name}, ID: ${existingPayment.paymentId}`);
+                    const paymentRef = ref(database, `payments/${existingPayment.paymentId}`);
+                    await update(paymentRef, {
+                        paymentStatus: player.paymentStatus,
+                        date: paymentData.date,
+                        value: paymentValue,
+                        updatedAt: getBrazilDateTimeISO()
+                    });
+                } else {
+                    console.log(`Criando novo pagamento para ${player.name}`);
+                    const paymentId = `payment_${player.id}_${currentGameId}_${paymentData.paymentType}_${Date.now()}`;
+                    const paymentRef = ref(database, `payments/${paymentId}`);
+                    await set(paymentRef, paymentData);
                 }
-                console.log(`Salvando pagamento para ${player.name} com valor: R$${paymentValue}, pago: ${isPaid}`);
-                const paymentRef = ref(database, `payments/payment_${Date.now()}`);
-                await set(paymentRef, paymentData);
+
                 await updateFirebaseLists();
                 updateGameList();
+
                 await Swal.fire({
                     icon: 'success',
                     title: 'Sucesso',
-                    text: `Jogador aprovado como ${isPaid ? 'pago' : 'devendo'} e taxa registrada.`,
+                    text: `Jogador marcado como ${isPaid ? 'pago' : 'devendo'} e registro atualizado.`,
                 });
             } catch (error) {
                 console.error('Erro ao aprovar jogador:', error);
                 await Swal.fire({
                     icon: 'error',
                     title: 'Erro',
-                    text: 'Erro ao aprovar jogador.',
+                    text: 'Erro ao processar aprovação.',
                 });
             }
         }
@@ -2016,8 +2061,9 @@ body {
 
         function updatePlayerLimitDisplay(isAdmin) {
             console.log('Atualizando playerLimitDisplay, isAdmin:', isAdmin);
-            const playerLimitContainer = document.getElementById('playerLimitContainer') || document.createElement('div');
-            if (!document.getElementById('playerLimitContainer')) {
+            let playerLimitContainer = document.getElementById('playerLimitContainer');
+            if (!playerLimitContainer) {
+                playerLimitContainer = document.createElement('div');
                 playerLimitContainer.id = 'playerLimitContainer';
                 confirmedPlayersDiv.parentNode.insertBefore(playerLimitContainer, confirmedPlayersDiv);
             }
@@ -2027,12 +2073,12 @@ body {
         async function adjustConfirmedPlayers() {
             if (confirmedPlayers.length > playerLimit) {
                 const playersToMove = sortPlayers([...confirmedPlayers]).slice(playerLimit);
-                confirmedPlayers = confirmedPlayers.filter(p => !playersToMove.includes(p));
+                confirmedPlayers = confirmedPlayers.filter(p => !playersToMove.some(m => m.id === p.id));
                 waitlistPlayers.push(...playersToMove);
             } else if (confirmedPlayers.length < playerLimit && waitlistPlayers.length > 0) {
                 const slotsAvailable = playerLimit - confirmedPlayers.length;
                 const playersToPromote = sortPlayers([...waitlistPlayers]).slice(0, slotsAvailable);
-                waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.includes(p));
+                waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.some(m => m.id === p.id));
                 confirmedPlayers.push(...playersToPromote);
             }
             confirmedPlayers = sortPlayers(confirmedPlayers);
@@ -2085,7 +2131,7 @@ body {
                     status: playerData.category === 'CONVIDADO' || playerData.category === 'DIARIA' ? 'pending' : null,
                     additionalInfo: playerData.name || null,
                     createdAt: getBrazilDateTimeISO(),
-                    date: formatDateToISO(new Date()),
+                    date: null,
                     month: getBrazilMonthYear(),
                     paymentType: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? playerData.category : null,
                     value: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? parseFloat(guestFee.toFixed(2)) : null
@@ -2140,7 +2186,7 @@ body {
                     autocompleteSuggestions.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Erro ao confirmar presença:', error);
+                console.error('Erro ao confirmar jogador:', error);
                 await Swal.fire({
                     icon: 'error',
                     title: 'Erro',
@@ -2187,7 +2233,7 @@ body {
 
             if (!player) {
                 await Swal.fire({
-                    icon: 'error',
+                    icon: 'warning',
                     title: 'Jogador Não Encontrado',
                     text: 'Jogador ou convidado não encontrado.',
                 });
@@ -2313,7 +2359,7 @@ body {
                             </div>
                         </div>
                         <div>
-                            ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') && player.status === 'pending' ? `
+                            ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
                                 <button class="player-approve" onclick="approvePlayer('${player.id}', true, true)">PAGO</button>
                                 <button class="player-approve-debt" onclick="approvePlayer('${player.id}', true, false)">DEVENDO</button>
                             ` : ''}
@@ -2343,7 +2389,7 @@ body {
                             </div>
                         </div>
                         <div>
-                            ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') && player.status === 'pending' ? `
+                            ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
                                 <button class="player-approve" onclick="approvePlayer('${player.id}', false, true)">PAGO</button>
                                 <button class="player-approve-debt" onclick="approvePlayer('${player.id}', false, false)">DEVENDO</button>
                             ` : ''}
@@ -2352,6 +2398,7 @@ body {
                     </div>
                 `).join('');
         }
+
         function mostrarPopup() {
             document.getElementById('meuPopup').style.display = 'block';
         }
