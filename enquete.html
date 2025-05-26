@@ -93,6 +93,14 @@
             background-color: #219653;
         }
 
+
+         #userEmail {
+            color: #877e7e94;
+            text-align: center;
+            padding: 1px;
+        }
+
+        
         .container {
             max-width: 1200px;
             margin: 20px auto;
@@ -460,6 +468,7 @@
             <button class="enquete-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>   
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>  
+        <div id="userEmail"></div>
     </div>
 
     <div class="container">
@@ -614,6 +623,7 @@
             } else {
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
                 await loadCurrentUserPlayer();
                 await loadPolls();
                 updateButtonVisibility();
