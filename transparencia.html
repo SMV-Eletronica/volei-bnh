@@ -684,7 +684,7 @@
             else {
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
-                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                document.getElementById('userEmail').textContent = `Logado como: ${user.name}`;
                 updateButtonVisibility(user);
                 await loadCurrentUserPlayer();
                 loadFinancialData();
