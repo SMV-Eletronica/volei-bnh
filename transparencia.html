@@ -667,10 +667,11 @@
                 await Swal.fire({
                     icon: 'error',
                     title: 'Acesso Negado',
-                    text: 'Você precisa estar logado para acessar esta página.',
-                });
+                    text: 'Você precisa estar logado para acessar esta página.', });
                 window.location.href = 'index.html';
-            } else {
+            } 
+            
+            else {
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
                 document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
@@ -690,7 +691,7 @@
                     icon: 'success',
                     title: 'Logout',
                     text: 'Você saiu com sucesso.',
-                    timer: 1500,
+                    timer: 3500,
                     showConfirmButton: false,
                 });
                 window.location.href = 'index.html';
