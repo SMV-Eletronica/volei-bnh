@@ -106,6 +106,12 @@ body {
     background-color: #b71c1c;
 }
 
+  #userEmail {
+            color: #877e7e94;
+            text-align: center;
+            padding: 1px;
+        }
+
 .container {
     max-width: 1200px;
     margin: 20px auto;
@@ -874,6 +880,7 @@ body {
     .organiza2 button {
         width: 100%;
         /*max-width: none;*/
+        
     }
 }
 </style>
@@ -888,10 +895,13 @@ body {
             <button class="enquete-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>   
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>  
+         <div id="userEmail"></div>
+        <!--
         <div class="player-details" id="playerDetails" style="display: flex;">
             <p><strong>Jogador:</strong> <span id="playerName">-</span></p>            
             <p><strong>/</strong> <span id="playerEmail">-</span></p>
         </div>
+        -->
     </div>
     
     <div class="container">
@@ -976,9 +986,9 @@ body {
         const confirmPlayerBtn = document.getElementById('confirmPlayer');
         const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
         const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
-        const playerDetailsDiv = document.getElementById('playerDetails');
-        const playerNameSpan = document.getElementById('playerName');
-        const playerEmailSpan = document.getElementById('playerEmail');
+       // const playerDetailsDiv = document.getElementById('playerDetails');
+       // const playerNameSpan = document.getElementById('playerName');
+       // const playerEmailSpan = document.getElementById('playerEmail');
         const adminSearchContainer = document.getElementById('adminSearchContainer');
         const playerSearch = document.getElementById('playerSearch');
         const autocompleteSuggestions = document.getElementById('autocompleteSuggestions');
@@ -1085,6 +1095,7 @@ body {
             } else {
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
+                 document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
                 console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
                 updateButtonVisibility();
                 await loadCurrentUserPlayer();
@@ -1149,12 +1160,12 @@ body {
                             text: 'Nenhum jogador associado a este email. Contate o administrador.',
                         });
                         confirmPlayerBtn.disabled = true;
-                        playerDetailsDiv.style.display = 'flex';
+                      //  playerDetailsDiv.style.display = 'flex';
                         guestControls.style.display = 'none';
                     } else {
-                        playerNameSpan.textContent = currentUserPlayer.name || '-';
-                        playerEmailSpan.textContent = currentUserPlayer.email || '-';
-                        playerDetailsDiv.style.display = 'flex';
+                       // playerNameSpan.textContent = currentUserPlayer.name || '-';
+                     //   playerEmailSpan.textContent = currentUserPlayer.email || '-';
+                       // playerDetailsDiv.style.display = 'flex';
                         confirmPlayerBtn.style.display = 'inline-block';
                         guestControls.style.display = 'flex';
                     }
@@ -1165,7 +1176,7 @@ body {
                         text: 'Nenhum jogador encontrado no sistema.',
                     });
                     confirmPlayerBtn.disabled = true;
-                    playerDetailsDiv.style.display = 'none';
+               //     playerDetailsDiv.style.display = 'none';
                     guestControls.style.display = 'none';
                 }
             } catch (error) {
@@ -1176,7 +1187,7 @@ body {
                     text: 'Erro ao carregar seus dados.',
                 });
                 confirmPlayerBtn.disabled = true;
-                playerDetailsDiv.style.display = 'none';
+             //   playerDetailsDiv.style.display = 'none';
                 guestControls.style.display = 'none';
             }
         }
