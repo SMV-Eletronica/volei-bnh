@@ -433,6 +433,40 @@
             100% { transform: rotate(360deg); }
         }
 
+
+         .footer {
+    text-align: center;
+    padding: 15px;
+    background: var(--text);
+    color: white;
+    font-size: 14px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.footer a:hover {
+    color: var(--success);
+}
+
+.footer i {
+    margin-right: 5px;
+}
+        
+
         @media (max-width: 768px) {
             .poll-item {
                 flex-direction: column;
