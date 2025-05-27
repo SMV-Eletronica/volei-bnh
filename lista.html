@@ -669,6 +669,40 @@ body {
     padding: 10px;
 }
 
+ .footer {
+    text-align: center;
+    padding: 15px;
+    background: var(--text);
+    color: white;
+    font-size: 14px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.footer a:hover {
+    color: var(--success);
+}
+
+.footer i {
+    margin-right: 5px;
+}
+
+        
+
 @media (max-width: 768px) {
     .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
         flex-direction: column;
@@ -947,6 +981,18 @@ body {
             <p>A lista é preenchida de forma hierárquica: Mensal, Diária e Convidado! 😊</p>
             <button onclick="fecharPopup()">Fechar</button>
         </div>
+
+        <footer class="footer">
+    <p>&copy; 2025 Marcio Vasques - Todos os direitos reservados</p>
+   
+    <div class="footer-links">
+        <a href="https://github.com/seu-usuario" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+        <a href="https://firebase.google.com/" target="_blank"><i class="fas fa-fire"></i> Firebase</a>        
+    </div>
+   
+</footer>
+
+        
     </div>
 
     <script type="module">
