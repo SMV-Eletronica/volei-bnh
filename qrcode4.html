@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro-Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        /* Estilo adicional para o grid do resumo do caixa */
+        .cash-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        /* Estilo para o modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .modal-content th, .modal-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .modal-content th {
+            background-color: #f2f2f2;
+        }
+
+        .defaulter-item {
+            cursor: pointer;
+        }
+
+        .qr-reader-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn-submit {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-stop {
+            padding: 8px 16px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .btn-stop:hover {
+            background-color: #d32f2f;
+        }
+
+        #qrVideo {
+            border: 1px solid #000;
+            margin-top: 10px;
+        }
+
+        #qrCanvas {
+            border: 1px solid #000;
+            margin-top: 10px;
+        }
+
+        #qrResult {
+            margin-top: 10px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH Gestão</h2></center>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Gerais</button>   
+            <button onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>     
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="userEmail"></div>
+        <br>
+        <div class="tabs">
+            <div class="tab active" data-tab="report"><i class="fas fa-file-alt"></i> Relatório Financeiro</div>
+            <div class="tab" data-tab="expenses"><i class="fas fa-receipt"></i> Despesas</div>
+        </div>
+        
+        <div id="report" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-chart-pie"></i> Resumo Financeiro </h2>
+                
+                <div class="filter-controls">
+                    <div>
+                        <label for="yearFilter">Ano:</label>
+                        <select id="yearFilter">
+                            <option value="all">Todos</option>                            
+                        </select>
+                    </div>
+                    <div>
+                        <label for="monthFilter">Mês:</label>
+                        <select id="monthFilter">
+                            <option value="all">Todos</option>
+                            <option value="01">Janeiro</option>
+                            <option value="02">Fevereiro</option>
+                            <option value="03">Março</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Maio</option>
+                            <option value="06">Junho</option>
+                            <option value="07">Julho</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Resumo do Caixa -->
+                <div id="cashSummary" class="cash-summary">
+                    <h3>Resumo do Caixa</h3>
+                    <div class="cash-summary-grid">
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Total Receita Recebida</div>
+                            <div id="totalIncome" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Total Receitas a Receber</div>
+                            <div id="totalReceivables" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Total Despesas</div>
+                            <div id="totalExpenses" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Saldo Atual</div>
+                            <div id="currentBalance" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="financialSummary">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mês/Ano</th>
+                                <th>Receitas Recebidas (R$)</th>
+                                <th>Receitas a Receber (R$)</th>
+                                <th>Despesas (R$)</th>
+                                <th>Saldo (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financialData">
+                            <!-- Os dados serão inseridos aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="defaulters-section">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Integrantes Inadimplentes</h3>
+                    <div id="defaultersList" class="defaulters-list">
+                        <div class="no-defaulters">Carregando informações...</div>
+                    </div>
+                </div>
+                
+                <div class="qr-reader-section">
+                    <h3><i class="fas fa-qrcode"></i> Leitor de QR Code</h3>
+                    <button id="startQrReader" class="btn-submit">Iniciar Leitor de QR Code</button>
+                    <button id="stopQrReader" class="btn-stop" style="display: none;">Parar Leitor</button>
+                    <video id="qrVideo" style="display: none; width: 100%; max-width: 300px;"></video>
+                    <canvas id="qrCanvas" style="display: block; margin-top: 10px;"></canvas>
+                    <div id="qrResult" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="expenses" class="tab-content">
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-plus-circle"></i> Registrar Nova Despesa</h2>
+                
+                <div id="expenseMessage" class="message"></div>
+                
+                <form id="expenseForm" class="expense-form">
+                    <div class="form-group">
+                        <label for="expenseDate">Data:</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseMonth">Mês/Ano de Referência:</label>
+                        <input type="month" id="expenseMonth" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseValue">Valor (R$):</label>
+                        <input type="number" id="expenseValue" step="0.01" min="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseCategory">Categoria:</label>
+                        <select id="expenseCategory" required>
+                            <option value="">Selecione uma categoria</option>
+                            <option value="Material Esportivo">Material Esportivo</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Uniforme">Uniforme</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Competições">Competições</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseDescription">Descrição:</label>
+                        <textarea id="expenseDescription" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit">Registrar Despesa</button>
+                </form>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-history"></i> Últimas Despesas Registradas</h2>
+                
+                <div id="recentExpenses" class="expenses-list">
+                    <!-- As despesas serão carregadas aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para detalhes de inadimplentes -->
+        <div id="defaulterModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">×</span>
+                <div id="modalContent"></div>
+                <div id="qrcode" style="margin-top: 20px; text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, get, onValue, push, set, remove, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Elementos DOM
+        const yearFilter = document.getElementById('yearFilter');
+        const monthFilter = document.getElementById('monthFilter');
+        const financialData = document.getElementById('financialData');
+        const defaultersList = document.getElementById('defaultersList');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const expenseForm = document.getElementById('expenseForm');
+        const expenseMessage = document.getElementById('expenseMessage');
+        const recentExpenses = document.getElementById('recentExpenses');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const totalIncomeElement = document.getElementById('totalIncome');
+        const totalReceivablesElement = document.getElementById('totalReceivables');
+        const totalExpensesElement = document.getElementById('totalExpenses');
+        const currentBalanceElement = document.getElementById('currentBalance');
+        const startQrReaderBtn = document.getElementById('startQrReader');
+        const stopQrReaderBtn = document.getElementById('stopQrReader');
+        const qrVideo = document.getElementById('qrVideo');
+        const qrCanvas = document.getElementById('qrCanvas');
+        const qrResult = document.getElementById('qrResult');
+
+        // Configurar data atual como padrão
+        const today = new Date();
+        document.getElementById('expenseDate').valueAsDate = today;
+        document.getElementById('expenseMonth').value = today.toISOString().slice(0, 7);
+
+        // Configurar abas
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Verificar estado de autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                loadFinancialData();
+                loadDefaulters();
+                loadRecentExpenses();
+            }
+        });
+
+        // Botão de logout
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+        // Carregar dados financeiros
+        async function loadFinancialData() {
+            const currentSelectedYear = yearFilter.value;
+            const currentSelectedMonth = monthFilter.value;
+            yearFilter.disabled = true;
+            
+            const paymentsRef = ref(database, 'payments');
+            const expensesRef = ref(database, 'expenses');
+            
+            try {
+                const [paymentsSnapshot, expensesSnapshot] = await Promise.all([
+                    get(paymentsRef),
+                    get(expensesRef)
+                ]);
+                
+                const payments = paymentsSnapshot.val() || {};
+                const expenses = expensesSnapshot.val() || {};
+                const monthlyData = {};
+                const years = new Set();
+                
+                // Variáveis para o resumo do caixa
+                let filteredIncome = 0; // Receitas recebidas
+                let filteredReceivables = 0; // Receitas a receber
+                let filteredExpenses = 0;
+                
+                // Processar pagamentos
+                Object.values(payments).forEach(payment => {
+                    if (!payment.month || payment.value === undefined) return;
+                    
+                    const [year, month] = payment.month.split('-');
+                    years.add(year);
+                    
+                    // Aplicar filtros
+                    const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
+                    const matchesMonth = currentSelectedMonth === 'all' || month === currentSelectedMonth;
+                    
+                    if (!matchesYear || !matchesMonth) return;
+                    
+                    const monthKey = `${year}-${month}`;
+                    const monthName = getMonthName(month);
+                    
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = {
+                            monthName,
+                            year,
+                            month,
+                            income: 0,
+                            receivables: 0,
+                            expenses: 0,
+                            paymentsCount: 0,
+                            lateCount: 0
+                        };
+                    }
+                    
+                    const paymentValue = parseFloat(payment.value) || 0;
+                    
+                    if (payment.date) {
+                        // Pagamento recebido (tem data)
+                        monthlyData[monthKey].income += paymentValue;
+                        filteredIncome += paymentValue;
+                    } else {
+                        // Pagamento a receber (sem data)
+                        monthlyData[monthKey].receivables += paymentValue;
+                        monthlyData[monthKey].lateCount++;
+                        filteredReceivables += paymentValue;
+                    }
+                    
+                    monthlyData[monthKey].paymentsCount++;
+                });
+                
+                // Processar despesas
+                Object.values(expenses).forEach(expense => {
+                    if (!expense.month || expense.value === undefined) return;
+                    
+                    const [year, month] = expense.month.split('-');
+                    years.add(year);
+                    
+                    // Aplicar filtros
+                    const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
+                    const matchesMonth = currentSelectedMonth === 'all' || month === currentSelectedMonth;
+                    
+                    if (!matchesYear || !matchesMonth) return;
+                    
+                    const monthKey = `${year}-${month}`;
+                    
+                    if (!monthlyData[monthKey]) {
+                        const monthName = getMonthName(month);
+                        monthlyData[monthKey] = {
+                            monthName,
+                            year,
+                            month,
+                            income: 0,
+                            receivables: 0,
+                            expenses: 0,
+                            paymentsCount: 0,
+                            lateCount: 0
+                        };
+                    }
+                    
+                    const expenseValue = parseFloat(expense.value) || 0;
+                    monthlyData[monthKey].expenses += expenseValue;
+                    filteredExpenses += expenseValue;
+                });
+                
+                // Atualizar filtro de anos
+                updateYearFilterOptions(Array.from(years).sort().reverse());
+                
+                // Atualizar resumo do caixa com os valores filtrados
+                updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses);
+                
+                // Renderizar dados
+                renderFinancialData(monthlyData);
+                
+            } catch (error) {
+                console.error("Error loading financial data: ", error);
+            } finally {
+                yearFilter.disabled = false;
+            }
+        }
+
+        // Atualizar opções do filtro de ano
+        function updateYearFilterOptions(years) {
+            const currentSelectedYear = yearFilter.value;
+    
+            yearFilter.innerHTML = '<option value="all">Todos</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+    
+            if (currentSelectedYear !== 'all' && years.includes(currentSelectedYear)) {
+                yearFilter.value = currentSelectedYear;
+            } else {
+                yearFilter.value = 'all';
+            }
+        }
+
+        // Atualizar resumo do caixa
+        function updateCashSummary(income, receivables, expenses) {
+            const balance = income - expenses;
+            
+            totalIncomeElement.textContent = `R$ ${income.toFixed(2)}`;
+            totalReceivablesElement.textContent = `R$ ${receivables.toFixed(2)}`;
+            totalExpensesElement.textContent = `R$ ${expenses.toFixed(2)}`;
+            
+            currentBalanceElement.textContent = `R$ ${Math.abs(balance).toFixed(2)}`;
+            currentBalanceElement.className = `cash-summary-value ${balance >= 0 ? 'positive' : 'negative'}`;
+            
+            if (balance < 0) {
+                currentBalanceElement.textContent = `-R$ ${Math.abs(balance).toFixed(2)}`;
+            }
+        }
+
+        // Carregar inadimplentes
+        async function loadDefaulters() {
+            const paymentsRef = ref(database, 'payments');
+            const playersRef = ref(database, 'players');
+            
+            try {
+                const [paymentsSnapshot, playersSnapshot] = await Promise.all([
+                    get(paymentsRef),
+                    get(playersRef)
+                ]);
+                
+                const payments = paymentsSnapshot.val() || {};
+                const players = playersSnapshot.val() || {};
+                const defaulters = {};
+                const selectedYear = yearFilter.value;
+                const selectedMonth = monthFilter.value;
+                
+                // Processar pagamentos para identificar inadimplentes
+                Object.values(payments).forEach(payment => {
+                    if (!payment.date && payment.value > 0) { // Inadimplente se não tiver data e valor > 0
+                        const [year, month] = payment.month.split('-');
+                        
+                        // Aplicar filtros
+                        if (selectedYear !== 'all' && year !== selectedYear) return;
+                        if (selectedMonth !== 'all' && month !== selectedMonth) return;
+                        
+                        if (!defaulters[payment.playerId]) {
+                            defaulters[payment.playerId] = {
+                                name: payment.playerName,
+                                months: [],
+                                photo: players[payment.playerId]?.imageUrl || null
+                            };
+                        }
+                        defaulters[payment.playerId].months.push(payment.month);
+                    }
+                });
+                
+                renderDefaultersList(defaulters);
+            } catch (error) {
+                console.error("Error loading defaulters: ", error);
+                defaultersList.innerHTML = '<div class="no-defaulters">Erro ao carregar inadimplentes</div>';
+            }
+        }
+
+        // Renderizar lista de inadimplentes
+        function renderDefaultersList(defaulters) {
+            defaultersList.innerHTML = '';
+            
+            if (Object.keys(defaulters).length === 0) {
+                defaultersList.innerHTML = '<div class="no-defaulters">Nenhum integrante inadimplente no período selecionado</div>';
+                return;
+            }
+            
+            Object.entries(defaulters).forEach(([playerId, defaulter]) => {
+                const defaulterEl = document.createElement('div');
+                defaulterEl.className = 'defaulter-item';
+                defaulterEl.style.cursor = 'pointer'; // Indica que o item é clicável
+                
+                // Formatar meses de inadimplência
+                const formattedMonths = defaulter.months.map(month => {
+                    const [year, monthNum] = month.split('-');
+                    return `${getMonthName(monthNum)}/${year}`;
+                }).join(', ');
+                
+                defaulterEl.innerHTML = `
+                    ${defaulter.photo ? 
+                        `<img src="${defaulter.photo}" class="defaulter-photo" alt="${defaulter.name}">` : 
+                        '<div class="defaulter-photo" style="background:#eee;"></div>'}
+                    <div class="defaulter-info">
+                        <div class="defaulter-name">${defaulter.name}</div>
+                        <div class="defaulter-months">${formattedMonths}</div>
+                    </div>
+                `;
+                
+                // Adicionar evento de clique
+                defaulterEl.addEventListener('click', () => {
+                    showDefaulterDetails(playerId, defaulter.name);
+                });
+                
+                defaultersList.appendChild(defaulterEl);
+            });
+        }
+
+        // Exibir detalhes do inadimplente
+        async function showDefaulterDetails(playerId, playerName) {
+            const paymentsRef = ref(database, 'payments');
+            try {
+                const snapshot = await get(paymentsRef);
+                const payments = snapshot.val() || {};
+                
+                // Filtrar pagamentos inadimplentes do jogador
+                const defaulterPayments = Object.values(payments).filter(
+                    payment => payment.playerId === playerId && !payment.date && payment.value > 0
+                );
+                
+                // Criar conteúdo do modal
+                let detailsHtml = `<h3>Detalhes de Inadimplência - ${playerName}</h3>`;
+                if (defaulterPayments.length === 0) {
+                    detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
+                } else {
+                    detailsHtml += '<table><thead><tr><th>Mês/Ano</th><th>Valor (R$)</th><th>Tipo de Pagamento</th></tr></thead><tbody>';
+                    defaulterPayments.forEach(payment => {
+                        const [year, month] = payment.month.split('-');
+                        const formattedMonth = `${getMonthName(month)}/${year}`;
+                        const paymentType = payment.paymentType || 'Não especificado';
+                        detailsHtml += `<tr><td>${formattedMonth}</td><td>R$ ${parseFloat(payment.value).toFixed(2)}</td><td>${paymentType}</td></tr>`;
+                    });
+                    detailsHtml += '</tbody></table>';
+                }
+                
+                showModal(detailsHtml);
+                
+                // Gerar QR code com dados simplificados
+                const qrcodeContainer = document.getElementById('qrcode');
+                qrcodeContainer.innerHTML = ''; // Limpar QR code anterior
+                if (defaulterPayments.length > 0) {
+                    // Usar apenas o primeiro pagamento para simplificar
+                    const qrData = `${playerName} - ${defaulterPayments[0].month} - R$${parseFloat(defaulterPayments[0].value).toFixed(2)}`;
+                    console.log('Gerando QR Code com dados:', qrData);
+                    new QRCode(qrcodeContainer, {
+                        text: qrData,
+                        width: 128,
+                        height: 128
+                    });
+                }
+                
+            } catch (error) {
+                console.error("Error loading defaulter details: ", error);
+                showModal('<h3>Erro</h3><p>Não foi possível carregar os detalhes: ' + error.message + '</p>');
+                document.getElementById('qrcode').innerHTML = '';
+            }
+        }
+
+        // Funções para gerenciar o modal
+        function showModal(content) {
+            const modal = document.getElementById('defaulterModal');
+            const modalContent = document.getElementById('modalContent');
+            const closeModalBtn = document.querySelector('.close-modal');
+            
+            modalContent.innerHTML = content;
+            modal.style.display = 'block';
+            
+            closeModalBtn.addEventListener('click', closeModal);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('defaulterModal');
+            modal.style.display = 'none';
+            const closeModalBtn = document.querySelector('.close-modal');
+            closeModalBtn.removeEventListener('click', closeModal);
+            document.getElementById('qrcode').innerHTML = '';
+        }
+
+        // Leitor de QR Code
+        let stream = null;
+        let isScanning = false;
+
+        function startQrReader() {
+            if (isScanning) {
+                console.log('Leitor já está ativo, ignorando nova inicialização.');
+                return;
+            }
+
+            // Limpar qualquer stream existente
+            stopQrReader();
+
+            isScanning = true;
+            startQrReaderBtn.style.display = 'none';
+            stopQrReaderBtn.style.display = 'inline-block';
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(newStream => {
+                    stream = newStream;
+                    qrVideo.srcObject = stream;
+                    qrVideo.style.display = 'block';
+                    qrVideo.play();
+                    console.log('Câmera iniciada com sucesso.');
+
+                    // Configurar canvas
+                    qrCanvas.width = 300;
+                    qrCanvas.height = 300;
+                    const canvasContext = qrCanvas.getContext('2d');
+
+                    // Função para escanear QR code com intervalo
+                    let lastScan = 0;
+                    const scanQrCode = (timestamp) => {
+                        if (!isScanning) return; // Parar se não estiver escaneando
+
+                        if (timestamp - lastScan < 500) { // Escanear a cada 500ms
+                            requestAnimationFrame(scanQrCode);
+                            return;
+                        }
+                        lastScan = timestamp;
+
+                        if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
+                            canvasContext.drawImage(qrVideo, 0, 0, qrCanvas.width, qrCanvas.height);
+                            const imageData = canvasContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+                            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                            console.log('Escaneando... Dados da imagem:', imageData.width, imageData.height);
+
+                            if (code) {
+                                console.log('QR Code detectado:', code.data);
+                                qrResult.textContent = `QR Code detectado: ${code.data}`;
+                                stopQrReader();
+                            } else {
+                                qrResult.textContent = 'Escaneando... Aponte a câmera para um QR code.';
+                            }
+                        }
+                        requestAnimationFrame(scanQrCode);
+                    };
+
+                    scanQrCode(performance.now());
+                })
+                .catch(error => {
+                    console.error('Error accessing camera:', error);
+                    qrResult.textContent = 'Erro ao acessar a câmera: ' + error.message;
+                    isScanning = false;
+                    startQrReaderBtn.style.display = 'inline-block';
+                    stopQrReaderBtn.style.display = 'none';
+                });
+        }
+
+        function stopQrReader() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                console.log('Stream da câmera encerrado.');
+            }
+            if (qrVideo.srcObject) {
+                qrVideo.srcObject = null;
+            }
+            qrVideo.style.display = 'none';
+            qrResult.textContent = '';
+            isScanning = false;
+            startQrReaderBtn.style.display = 'inline-block';
+            stopQrReaderBtn.style.display = 'none';
+        }
+
+        // Configurar eventos dos botões
+        startQrReaderBtn.addEventListener('click', startQrReader);
+        stopQrReaderBtn.addEventListener('click', stopQrReader);
+
+        // Carregar despesas recentes
+        async function loadRecentExpenses() {
+            const expensesRef = ref(database, 'expenses');
+            
+            try {
+                const snapshot = await get(expensesRef);
+                const expenses = snapshot.val() || {};
+                const expensesArray = [];
+                
+                Object.keys(expenses).forEach(key => {
+                    expensesArray.push({
+                        id: key,
+                        ...expenses[key]
+                    });
+                });
+                
+                // Ordenar por data (mais recente primeiro)
+                expensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+                
+                renderRecentExpenses(expensesArray.slice(0, 10));
+            } catch (error) {
+                console.error("Error loading recent expenses: ", error);
+                recentExpenses.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas</div>';
+            }
+        }
+
+        // Renderizar despesas recentes
+        function renderRecentExpenses(expenses) {
+            recentExpenses.innerHTML = '';
+            
+            if (expenses.length === 0) {
+                recentExpenses.innerHTML = '<div class="no-defaulters">Nenhuma despesa registrada ainda</div>';
+                return;
+            }
+            
+            expenses.forEach(expense => {
+                const [year, month] = expense.month.split('-');
+                const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                
+                const expenseEl = document.createElement('div');
+                expenseEl.className = 'expense-item';
+                expenseEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
+                        <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                    </div>
+                    <div style="color: #666; margin-bottom: 5px;">${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}</div>
+                    <div>${expense.description || 'Sem descrição'}</div>
+                    <button class="delete-expense-btn" data-id="${expense.id}" style="margin-top: 10px; padding: 3px 8px; font-size: 12px; background-color: #f44336; color: white; border: none; border-radius: 3px; cursor: pointer;">Excluir</button>
+                `;
+                
+                recentExpenses.appendChild(expenseEl);
+            });
+            
+            // Adicionar event listeners aos botões de exclusão
+            document.querySelectorAll('.delete-expense-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    deleteExpense(btn.getAttribute('data-id'));
+                });
+            });
+        }
+
+        // Formulário de despesa
+        expenseForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const expenseData = {
+                date: document.getElementById('expenseDate').value,
+                month: document.getElementById('expenseMonth').value,
+                value: parseFloat(document.getElementById('expenseValue').value),
+                category: document.getElementById('expenseCategory').value,
+                description: document.getElementById('expenseDescription').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                const newExpenseRef = push(ref(database, 'expenses'));
+                await set(newExpenseRef, expenseData);
+                
+                showMessage('Despesa registrada com sucesso!', 'success', expenseMessage);
+                expenseForm.reset();
+                
+                // Resetar valores padrão
+                document.getElementById('expenseDate').valueAsDate = new Date();
+                document.getElementById('expenseMonth').value = today.toISOString().slice(0, 7);
+                
+                // Recarregar dados
+                loadFinancialData();
+                loadRecentExpenses();
+                
+            } catch (error) {
+                console.error("Error saving expense: ", error);
+                showMessage('Erro ao registrar despesa: ' + error.message, 'error', expenseMessage);
+            }
+        });
+
+        // Excluir despesa
+        async function deleteExpense(expenseId) {
+            if (confirm('Tem certeza que deseja excluir esta despesa?')) {
+                try {
+                    await remove(ref(database, `expenses/${expenseId}`));
+                    showMessage('Despesa excluída com sucesso!', 'success', expenseMessage);
+                    loadFinancialData();
+                    loadRecentExpenses();
+                } catch (error) {
+                    console.error("Error deleting expense: ", error);
+                    showMessage('Erro ao excluir despesa: ' + error.message, 'error', expenseMessage);
+                }
+            }
+        }
+
+        // Renderizar dados financeiros
+        function renderFinancialData(monthlyData) {
+            const selectedYear = yearFilter.value;
+            const selectedMonth = monthFilter.value;
+            const sortedMonths = Object.keys(monthlyData).sort().reverse();
+            
+            financialData.innerHTML = '';
+            
+            sortedMonths.forEach(monthKey => {
+                const data = monthlyData[monthKey];
+                
+                // Aplicar filtros
+                if (selectedYear !== 'all' && data.year !== selectedYear) return;
+                if (selectedMonth !== 'all' && data.month !== selectedMonth) return;
+                
+                const balance = data.income - data.expenses;
+                const balanceClass = balance >= 0 ? 'status-pago' : 'status-inadimplente';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.monthName} ${data.year}</td>
+                    <td>R$ ${data.income.toFixed(2)}</td>
+                    <td>R$ ${data.receivables.toFixed(2)}</td>
+                    <td>R$ ${data.expenses.toFixed(2)}</td>
+                    <td class="${balanceClass}">R$ ${balance.toFixed(2)}</td>
+                `;
+                financialData.appendChild(row);
+            });
+        }
+
+        // Helper functions
+        function getMonthName(monthNumber) {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return months[parseInt(monthNumber) - 1];
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            const date = new Date(dateString);
+            const offset = date.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(date.getTime() + offset);
+            
+            return adjustedDate.toLocaleDateString('pt-BR');
+        }
+        
+        function expenseCategoryName(category) {
+            return category || 'Sem categoria';
+        }
+        
+        function showMessage(message, type, element) {
+            element.textContent = message;
+            element.className = `message ${type}`;
+            element.style.display = 'block';
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // Listeners para filtros
+        yearFilter.addEventListener('change', () => {
+            loadFinancialData();
+            loadDefaulters();
+        });
+        
+        monthFilter.addEventListener('change', () => {
+            loadFinancialData();
+            loadDefaulters();
+        });
+    </script>
+</body>
+</html>
