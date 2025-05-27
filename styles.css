@@ -514,6 +514,12 @@ button:hover {
         margin-bottom: 12px;
         font-size: 1.1rem;
     }
+
+ .admin-actions h3 {
+            color: #4285f4;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+        }
     
     .message {
         padding: 8px;
@@ -752,6 +758,9 @@ button:hover {
         .section-title {
             font-size: 1.5rem;
         }
+     .admin-actions h3 {
+                      font-size: 1.5rem;
+     }
     
         .player-image {
             width: 60px;
