@@ -738,10 +738,17 @@ button:hover {
     height: 40px; /* Define a altura */
 }
 
-     #savePaymentBtn {
+     #generateMonthlyBtn {
     width: 100px; /* Define a largura */
     height: 40px; /* Define a altura */
 }
+
+#savePaymentBtn {
+    width: 100px;
+    height: 40px;
+}
+
+
 
 #cancelEditBtn {
     width: 100px; /* Define a largura */
