@@ -960,7 +960,8 @@ body {
         <div id="game-list" class="tab-content active">
             <div id="content" class="section">
                 <div class="section-title">
-                    <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados</h2>
+                    <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados 
+                    <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Abrir Lista</button></h2>
                 </div>
                 <div class="game-selector">
                     <h3>Selecione um Jogo</h3>
@@ -969,8 +970,7 @@ body {
                 <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
                 <div class="game-list">
                     <h3>Lista do Dia: 
-                        <span class="lampada" onclick="mostrarPopup()">💡</span>
-                        <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Abrir Lista</button>
+                        <span class="lampada" onclick="mostrarPopup('meupopup1')">💡</span>                        
                     </h3>
                     <div class="game-info">
                         <span id="gameDate"></span> - <span id="gameTime"></span>
@@ -978,7 +978,10 @@ body {
                     <div id="confirmedPlayers"></div>
                 </div>
                 <div class="waitlist">
-                    <h3>Lista de Espera:</h3>
+                    <h3>Lista de Espera:
+                        <span class="lampada" onclick="mostrarPopup('meupopup2')">💡</span> 
+
+                    </h3>
                     <div id="waitlistPlayers"></div>
                 </div>
                 <div class="game-controls">
@@ -995,9 +998,15 @@ body {
                 </div>
             </div>
         </div>
-        <div id="meuPopup" class="popup">
+     
+        <div id="meupopup1" class="popup">
             <p>A lista é preenchida de acordo com a seguinte hierarquia: Mensal, Diária e Convidado. Dentro de cada categoria, a ordem é definida pelo momento da confirmação. 😊</p>
-            <button onclick="fecharPopup()">Fechar</button>
+            <button onclick="fecharPopup('meupopup1')">Fechar</button>
+        </div>
+       
+        <div id="meupopup2" class="popup">
+            <p>A lista de espera é utilizada quando o limite de participantes é atingido, seguindo a mesma hierarquia. Caso um integrante saia da Lista do Dia, o primeiro da Lista de Espera sobe automaticamente. 😊</p>
+            <button onclick="fecharPopup('meupopup2')">Fechar</button>
         </div>
 
         <footer class="footer">
@@ -2551,12 +2560,12 @@ body {
                 `).join('');
         }
 
-        function mostrarPopup() {
-            document.getElementById('meuPopup').style.display = 'block';
+        function mostrarPopup(popupId) {
+            document.getElementById(popupId).style.display = 'block';
         }
 
-        function fecharPopup() {
-            document.getElementById('meuPopup').style.display = 'none';
+        function fecharPopup(popupId) {
+            document.getElementById(popupId).style.display = 'none';
         }
 
         // Expor funções globais para uso nos botões inline
