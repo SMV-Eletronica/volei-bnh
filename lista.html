@@ -2320,6 +2320,17 @@ body {
                 await updateFirebaseLists();
                 updateGameList();
 
+
+                 if (playerObj.category === 'DIARIA') {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                html: 'Presença confirmada com sucesso, aguardando aprovação dos ADMs para registro da contribuição.<br><br>PIX para pagamento:<br>fabioluiztx@outlook.com',
+            });
+        }
+                
+                
+
                 if (isAdmin && targetPlayerId) {
                     playerSearch.value = '';
                     selectedPlayerId = null;
