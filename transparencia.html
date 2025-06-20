@@ -404,7 +404,7 @@
             justify-content: center;
         }
         .search-input {
-            padding: 10px 15px;
+            padding:  10px 15px;
             width: 300px;
             border: 1px solid #ddd;
             border-radius: 20px;
@@ -1142,28 +1142,26 @@
                     get(deletedPaymentsRef)
                 ]);
                 let playerPayments = [];
-                console.log('Processing payments for player:', playerId, paymentsSnapshot.val());
-                if (paymentsSnapshot.exists()) {
-                    const paymentsData = paymentsSnapshot.val();
-                    for (const year in paymentsData) {
-                        for (const month in paymentsData[year]) {
-                            const payments = paymentsData[year][month];
-                            for (const paymentId in payments) {
-                                const payment = payments[paymentId];
-                                if (payment.playerId === playerId) {
-                                    playerPayments.push({ id: paymentId, ...payment, isDeleted: false });
-                                }
+                const paymentsData = paymentsSnapshot.val() || {};
+                console.log('Processing payments for player:', playerId, paymentsData);
+                // Processar pagamentos na nova estrutura payments/ano/mês
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            if (payment.playerId === playerId) {
+                                playerPayments.push({ id: paymentId, ...payment, isDeleted: false });
                             }
                         }
                     }
                 }
-                if (deletedPaymentsSnapshot.exists()) {
-                    const deletedPayments = deletedPaymentsSnapshot.val();
-                    for (const deletedPaymentId in deletedPayments) {
-                        const payment = deletedPayments[deletedPaymentId];
-                        if (payment.playerId === playerId) {
-                            playerPayments.push({ id: deletedPaymentId, ...payment, isDeleted: true });
-                        }
+                // Processar pagamentos excluídos
+                const deletedPayments = deletedPaymentsSnapshot.val() || {};
+                for (const deletedPaymentId in deletedPayments) {
+                    const payment = deletedPayments[deletedPaymentId];
+                    if (payment.playerId === playerId) {
+                        playerPayments.push({ id: deletedPaymentId, ...payment, isDeleted: true });
                     }
                 }
                 playerPayments.sort((a, b) => b.month.localeCompare(a.month));
