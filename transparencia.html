@@ -1228,6 +1228,14 @@
                         <span class="status-label">Motivo da Exclusão:</span>
                         <span class="status-value">${payment.deleteReason || '-'}</span>
                     </div>
+
+                    <div>
+                        <span class="status-label">Data da Exclusão:</span>
+                        <span class="status-value">${payment.deletedAt ? formatDate(payment.date) : '-'}</span>
+                        
+                    </div>
+
+
                     <div>
                         <span class="status-label">Excluído por:</span>
                         <span class="status-value">${payment.deletedBy || '-'}</span>
