@@ -258,8 +258,21 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border-left: 4px solid var(--primary);
         }
+        .expenseDel-item {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #ff002f;
+        }
         .expense-value {
             color: var(--danger);
+            font-weight: bold;
+        }
+
+        .expenseDel-value {
+            color: rgb(202, 200, 200);
             font-weight: bold;
         }
         .profile-container {
@@ -467,6 +480,9 @@
         .firebase-link:hover {
             color: #FF6600;
         }
+        .expenses-section {
+            margin-top: 30px;
+        }
         @media (max-width: 768px) {
             .filter-controls {
                 flex-direction: column;
@@ -569,7 +585,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Mês/Aano</th>
+                                <th>Mês/Ano</th>
                                 <th>Receitas Recebidas (R$)</th>
                                 <th>Receitas a Receber (R$)</th>
                                 <th>Despesas (R$)</th>
@@ -591,8 +607,16 @@
         </div>
         <div id="expenses" class="tab-content">
             <div class="section">
-                <h2 class="section-title"><i class="fas fa-history"></i> Despesas Registradas</h2>
+                <h2 class="section-title"><i class="fas fa-history"></i> Controle de Despesas</h2>
                 <div id="recentExpenses" class="expenses-list">
+                    <div class="expenses-section">
+                        <h3><i class="fas fa-money-bill-wave"></i> Despesas Ativas</h3>
+                        <div id="activeExpenses" class="expenses-list"></div>
+                    </div>
+                    <div class="expenses-section">
+                        <h3><i class="fas fa-trash"></i> Despesas Excluídas</h3>
+                        <div id="deletedExpenses" class="expenses-list"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -676,7 +700,8 @@
         const monthFilter = document.getElementById('monthFilter');
         const financialData = document.getElementById('financialData');
         const defaultersList = document.getElementById('defaultersList');
-        const recentExpenses = document.getElementById('recentExpenses');
+        const activeExpenses = document.getElementById('activeExpenses');
+        const deletedExpensesElement = document.getElementById('deletedExpenses');
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
         const totalIncomeElement = document.getElementById('totalIncome');
@@ -995,28 +1020,35 @@
                     get(expensesRef),
                     get(deletedExpensesRef)
                 ]);
-                const expenses = expensesSnapshot.val() || {};
-                const deletedExpenses = deletedExpensesSnapshot.val() || {};
-                const expensesArray = [];
-                Object.entries(expenses).forEach(([key, expense]) => {
-                    expensesArray.push({
+                const activeExpensesData = [];
+                const deletedExpensesArray = [];
+                const expensesData = expensesSnapshot.val() || {};
+                const deletedExpensesData = deletedExpensesSnapshot.val() || {};
+                Object.entries(expensesData).forEach(([key, expense]) => {
+                    activeExpensesData.push({
                         id: key,
                         ...expense,
                         isDeleted: false
                     });
                 });
-                Object.entries(deletedExpenses).forEach(([key, expense]) => {
-                    expensesArray.push({
+                Object.entries(deletedExpensesData).forEach(([key, expense]) => {
+                    deletedExpensesArray.push({
                         id: key,
                         ...expense,
                         isDeleted: true
                     });
                 });
-                expensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
-                renderRecentExpenses(expensesArray.slice(0, 10));
+                activeExpensesData.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+                deletedExpensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+                renderRecentExpenses(activeExpensesData.slice(0, 10), deletedExpensesArray.slice(0, 10));
             } catch (error) {
                 console.error("Error loading recent expenses:", error);
-                recentExpenses.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas</div>';
+                if (activeExpenses && activeExpenses instanceof HTMLElement) {
+                    activeExpenses.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas</div>';
+                }
+                if (deletedExpensesElement && deletedExpensesElement instanceof HTMLElement) {
+                    deletedExpensesElement.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas excluídas</div>';
+                }
                 Swal.fire({
                     icon: 'error',
                     title: 'Erro',
@@ -1051,39 +1083,72 @@
             }
         }
 
-        function renderRecentExpenses(expenses) {
-            recentExpenses.innerHTML = '';
-            if (expenses.length === 0) {
-                recentExpenses.innerHTML = '<div class="no-defaulters">Nenhuma despesa registrada ainda</div>';
+        function renderRecentExpenses(activeExpensesData, deletedExpensesArray) {
+            if (!activeExpenses || !(activeExpenses instanceof HTMLElement)) {
+                console.error("Elemento 'activeExpenses' não encontrado ou não é um elemento DOM válido.");
                 return;
             }
-            for (const expense of expenses) {
-                const [year, month] = expense.month.split('-');
-                const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
-                const createdBy = expense.createdByName || 'Não informado';
-                const deletedBy = expense.isDeleted ? (expense.deletedByName || 'Não informado') : '';
-                const deletedAt = expense.isDeleted && expense.deletedAt ? formatDate(expense.deletedAt) : '';
-                const deletionReason = expense.isDeleted ? (expense.deletionReason || 'Não informado') : '';
-                const expenseEl = document.createElement('div');
-                expenseEl.className = 'expense-item';
-                expenseEl.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
-                        <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
-                    </div>
-                    <div style="color: #666; margin-bottom: 5px;">
-                        ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
-                    </div>
-                    <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
-                    <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
-                    ${expense.isDeleted ? `
+            if (!deletedExpensesElement || !(deletedExpensesElement instanceof HTMLElement)) {
+                console.error("Elemento 'deletedExpenses' não encontrado ou não é um elemento DOM válido.");
+                return;
+            }
+
+            activeExpenses.innerHTML = '';
+            deletedExpensesElement.innerHTML = '';
+
+            if (activeExpensesData.length === 0) {
+                activeExpenses.innerHTML = '<div class="no-defaulters">Nenhuma despesa registrada</div>';
+            } else {
+                for (const expense of activeExpensesData) {
+                    const [year, month] = expense.month.split('-');
+                    const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                    const createdBy = expense.createdByName || 'Não informado';
+                    const expenseEl = document.createElement('div');
+                    expenseEl.className = 'expense-item';
+                    expenseEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
+                            <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                        </div>
+                        <div style="color: #666; margin-bottom: 5px;">
+                            ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                        </div>
+                        <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
+                        <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
+                    `;
+                    activeExpenses.appendChild(expenseEl);
+                }
+            }
+
+            if (deletedExpensesArray.length === 0) {
+                deletedExpensesElement.innerHTML = '<div class="no-defaulters">Nenhuma despesa excluída</div>';
+            } else {
+                for (const expense of deletedExpensesArray) {
+                    const [year, month] = expense.month.split('-');
+                    const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                    const createdBy = expense.createdByName || 'Não informado';
+                    const deletedBy = expense.deletedByName || 'Não informado';
+                    const deletedAt = expense.deletedAt ? formatDate(expense.deletedAt) : 'Não informado';
+                    const deletionReason = expense.deletionReason || 'Não informado';
+                    const expenseEl = document.createElement('div');
+                    expenseEl.className = 'expenseDel-item';
+                    expenseEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
+                            <span class="expenseDel-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                        </div>
+                        <div style="color: #666; margin-bottom: 5px;">
+                            ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                        </div>
+                        <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
+                        <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
                         <div style="margin-bottom: 5px; color: #e74c3c;">
                             Excluído por: ${deletedBy} em ${deletedAt}<br>
                             Justificativa: ${deletionReason}
                         </div>
-                    ` : ''}
-                `;
-                recentExpenses.appendChild(expenseEl);
+                    `;
+                    deletedExpensesElement.appendChild(expenseEl);
+                }
             }
         }
 
@@ -1170,7 +1235,6 @@
                 let playerPayments = [];
                 const paymentsData = paymentsSnapshot.val() || {};
                 console.log('Processing payments for player:', playerId, paymentsData);
-                // Processar pagamentos na nova estrutura payments/ano/mês
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
@@ -1182,7 +1246,6 @@
                         }
                     }
                 }
-                // Processar pagamentos excluídos
                 const deletedPayments = deletedPaymentsSnapshot.val() || {};
                 for (const deletedPaymentId in deletedPayments) {
                     const payment = deletedPayments[deletedPaymentId];
