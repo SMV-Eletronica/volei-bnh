@@ -404,7 +404,7 @@
             justify-content: center;
         }
         .search-input {
-            padding:  10px 15px;
+            padding: 10px 15px;
             width: 300px;
             border: 1px solid #ddd;
             border-radius: 20px;
@@ -569,7 +569,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Mês/Ano</th>
+                                <th>Mês/Aano</th>
                                 <th>Receitas Recebidas (R$)</th>
                                 <th>Receitas a Receber (R$)</th>
                                 <th>Despesas (R$)</th>
@@ -989,16 +989,29 @@
 
         async function loadRecentExpenses() {
             const expensesRef = ref(database, 'expenses');
+            const deletedExpensesRef = ref(database, 'deletedExpenses');
             try {
-                const snapshot = await get(expensesRef);
-                const expenses = snapshot.val() || {};
+                const [expensesSnapshot, deletedExpensesSnapshot] = await Promise.all([
+                    get(expensesRef),
+                    get(deletedExpensesRef)
+                ]);
+                const expenses = expensesSnapshot.val() || {};
+                const deletedExpenses = deletedExpensesSnapshot.val() || {};
                 const expensesArray = [];
-                for (const key in expenses) {
+                Object.entries(expenses).forEach(([key, expense]) => {
                     expensesArray.push({
                         id: key,
-                        ...expenses[key]
+                        ...expense,
+                        isDeleted: false
                     });
-                }
+                });
+                Object.entries(deletedExpenses).forEach(([key, expense]) => {
+                    expensesArray.push({
+                        id: key,
+                        ...expense,
+                        isDeleted: true
+                    });
+                });
                 expensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
                 renderRecentExpenses(expensesArray.slice(0, 10));
             } catch (error) {
@@ -1047,6 +1060,10 @@
             for (const expense of expenses) {
                 const [year, month] = expense.month.split('-');
                 const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                const createdBy = expense.createdByName || 'Não informado';
+                const deletedBy = expense.isDeleted ? (expense.deletedByName || 'Não informado') : '';
+                const deletedAt = expense.isDeleted && expense.deletedAt ? formatDate(expense.deletedAt) : '';
+                const deletionReason = expense.isDeleted ? (expense.deletionReason || 'Não informado') : '';
                 const expenseEl = document.createElement('div');
                 expenseEl.className = 'expense-item';
                 expenseEl.innerHTML = `
@@ -1054,8 +1071,17 @@
                         <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
                         <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
                     </div>
-                    <div style="color: #666; margin-bottom: 5px;">${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}</div>
-                    <div>${expense.description || 'Sem descrição'}</div>
+                    <div style="color: #666; margin-bottom: 5px;">
+                        ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                    </div>
+                    <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
+                    <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
+                    ${expense.isDeleted ? `
+                        <div style="margin-bottom: 5px; color: #e74c3c;">
+                            Excluído por: ${deletedBy} em ${deletedAt}<br>
+                            Justificativa: ${deletionReason}
+                        </div>
+                    ` : ''}
                 `;
                 recentExpenses.appendChild(expenseEl);
             }
@@ -1228,14 +1254,10 @@
                         <span class="status-label">Motivo da Exclusão:</span>
                         <span class="status-value">${payment.deleteReason || '-'}</span>
                     </div>
-
                     <div>
                         <span class="status-label">Data da Exclusão:</span>
                         <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
-                        
                     </div>
-
-
                     <div>
                         <span class="status-label">Excluído por:</span>
                         <span class="status-value">${payment.deletedBy || '-'}</span>
