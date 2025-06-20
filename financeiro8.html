@@ -7,16 +7,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Estilo adicional para o grid do resumo do caixa */
         .cash-summary-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
         }
-
-        /* Estilo para o modal */
         .modal {
             display: none;
             position: fixed;
@@ -28,7 +26,6 @@
             background-color: rgba(0, 0, 0, 0.5);
             overflow: auto;
         }
-
         .modal-content {
             background-color: #fff;
             margin: 15% auto;
@@ -39,7 +36,6 @@
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-
         .close-modal {
             color: #aaa;
             float: right;
@@ -47,29 +43,24 @@
             font-weight: bold;
             cursor: pointer;
         }
-
         .close-modal:hover,
         .close-modal:focus {
             color: #000;
             text-decoration: none;
         }
-
         .modal-content table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
-
         .modal-content th, .modal-content td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
-
         .modal-content th {
             background-color: #f2f2f2;
         }
-
         .defaulter-item {
             cursor: pointer;
         }
@@ -127,7 +118,6 @@
                     </div>
                 </div>
                 
-                <!-- Resumo do Caixa -->
                 <div id="cashSummary" class="cash-summary">
                     <h3>Resumo do Caixa</h3>
                     <div class="cash-summary-grid">
@@ -162,7 +152,6 @@
                             </tr>
                         </thead>
                         <tbody id="financialData">
-                            <!-- Os dados serão inseridos aqui via JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -225,12 +214,10 @@
                 <h2 class="section-title"><i class="fas fa-history"></i> Últimas Despesas Registradas</h2>
                 
                 <div id="recentExpenses" class="expenses-list">
-                    <!-- As despesas serão carregadas aqui -->
                 </div>
             </div>
         </div>
 
-        <!-- Modal para detalhes de inadimplentes -->
         <div id="defaulterModal" class="modal">
             <div class="modal-content">
                 <span class="close-modal">×</span>
@@ -259,7 +246,6 @@
         const auth = getAuth(app);
         const database = getDatabase(app);
 
-        // Elementos DOM
         const yearFilter = document.getElementById('yearFilter');
         const monthFilter = document.getElementById('monthFilter');
         const financialData = document.getElementById('financialData');
@@ -275,12 +261,12 @@
         const totalExpensesElement = document.getElementById('totalExpenses');
         const currentBalanceElement = document.getElementById('currentBalance');
 
-        // Configurar data atual como padrão
+        let currentUserPlayer = null;
+
         const today = new Date();
         document.getElementById('expenseDate').valueAsDate = today;
         document.getElementById('expenseMonth').value = today.toISOString().slice(0, 7);
 
-        // Configurar abas
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
@@ -291,19 +277,42 @@
             });
         });
 
-        // Verificar estado de autenticação
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
             } else {
                 document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                await loadCurrentUserPlayer(user.email);
                 loadFinancialData();
                 loadDefaulters();
                 loadRecentExpenses();
             }
         });
 
-        // Botão de logout
+        async function loadCurrentUserPlayer(email) {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                if (snapshot.exists()) {
+                    const allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+                        id,
+                        ...player
+                    }));
+                    currentUserPlayer = allPlayers.find(player => player.email === email);
+                    if (!currentUserPlayer) {
+                        console.warn('Nenhum jogador associado a este email:', email);
+                        currentUserPlayer = { name: 'Usuário' };
+                    }
+                } else {
+                    console.warn('Nenhum jogador encontrado no sistema.');
+                    currentUserPlayer = { name: 'Usuário' };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do jogador:', error);
+                currentUserPlayer = { name: 'Usuário' };
+            }
+        }
+
         logoutBtn.addEventListener('click', () => {
             signOut(auth).then(() => {
                 window.location.href = 'index.html';
@@ -312,7 +321,6 @@
             });
         });
 
-        // Carregar dados financeiros
         async function loadFinancialData() {
             const currentSelectedYear = yearFilter.value;
             const currentSelectedMonth = monthFilter.value;
@@ -332,20 +340,17 @@
                 const monthlyData = {};
                 const years = new Set();
                 
-                // Variáveis para o resumo do caixa
-                let filteredIncome = 0; // Receitas recebidas
-                let filteredReceivables = 0; // Receitas a receber
+                let filteredIncome = 0;
+                let filteredReceivables = 0;
                 let filteredExpenses = 0;
                 
                 console.log('Processing payments data:', paymentsData);
-                // Processar pagamentos na nova estrutura payments/ano/mês
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
                         const normalizedMonth = month.padStart(2, '0');
                         years.add(year);
                         
-                        // Aplicar filtros
                         const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
                         const matchesMonth = currentSelectedMonth === 'all' || normalizedMonth === currentSelectedMonth;
                         
@@ -375,11 +380,9 @@
                             const paymentValue = parseFloat(payment.value) || 0;
                             
                             if (payment.date) {
-                                // Pagamento recebido (tem data)
                                 monthlyData[monthKey].income += paymentValue;
                                 filteredIncome += paymentValue;
                             } else {
-                                // Pagamento a receber (sem data)
                                 monthlyData[monthKey].receivables += paymentValue;
                                 monthlyData[monthKey].lateCount++;
                                 filteredReceivables += paymentValue;
@@ -391,14 +394,12 @@
                 }
                 
                 console.log('Processing expenses data:', expenses);
-                // Processar despesas
                 Object.values(expenses).forEach(expense => {
                     if (!expense.month || expense.value === undefined) return;
                     
                     const [year, month] = expense.month.split('-');
                     years.add(year);
                     
-                    // Aplicar filtros
                     const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
                     const matchesMonth = currentSelectedMonth === 'all' || month === currentSelectedMonth;
                     
@@ -425,13 +426,8 @@
                     filteredExpenses += expenseValue;
                 });
                 
-                // Atualizar filtro de anos
                 updateYearFilterOptions(Array.from(years).sort().reverse());
-                
-                // Atualizar resumo do caixa com os valores filtrados
                 updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses);
-                
-                // Renderizar dados
                 renderFinancialData(monthlyData);
                 
             } catch (error) {
@@ -441,7 +437,6 @@
             }
         }
 
-        // Atualizar opções do filtro de ano
         function updateYearFilterOptions(years) {
             const currentSelectedYear = yearFilter.value;
     
@@ -460,7 +455,6 @@
             }
         }
 
-        // Atualizar resumo do caixa
         function updateCashSummary(income, receivables, expenses) {
             const balance = income - expenses;
             
@@ -476,7 +470,6 @@
             }
         }
 
-        // Carregar inadimplentes
         async function loadDefaulters() {
             const paymentsRef = ref(database, 'payments');
             const playersRef = ref(database, 'players');
@@ -494,19 +487,17 @@
                 const selectedMonth = monthFilter.value;
                 
                 console.log('Processing defaulters from payments:', paymentsData);
-                // Processar pagamentos na nova estrutura payments/ano/mês
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
                         const normalizedMonth = month.padStart(2, '0');
                         
-                        // Aplicar filtros
                         if (selectedYear !== 'all' && year !== selectedYear) continue;
                         if (selectedMonth !== 'all' && normalizedMonth !== selectedMonth) continue;
                         
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
-                            if (!payment.date && payment.value > 0) { // Inadimplente se não tiver data e valor > 0
+                            if (!payment.date && payment.value > 0) {
                                 if (!defaulters[payment.playerId]) {
                                     defaulters[payment.playerId] = {
                                         name: payment.playerName,
@@ -527,7 +518,6 @@
             }
         }
 
-        // Renderizar lista de inadimplentes
         function renderDefaultersList(defaulters) {
             defaultersList.innerHTML = '';
             
@@ -539,9 +529,8 @@
             Object.entries(defaulters).forEach(([playerId, defaulter]) => {
                 const defaulterEl = document.createElement('div');
                 defaulterEl.className = 'defaulter-item';
-                defaulterEl.style.cursor = 'pointer'; // Indica que o item é clicável
+                defaulterEl.style.cursor = 'pointer';
                 
-                // Formatar meses de inadimplência
                 const formattedMonths = defaulter.months.map(month => {
                     const [year, monthNum] = month.split('-');
                     return `${getMonthName(monthNum)}/${year}`;
@@ -557,7 +546,6 @@
                     </div>
                 `;
                 
-                // Adicionar evento de clique
                 defaulterEl.addEventListener('click', () => {
                     showDefaulterDetails(playerId, defaulter.name);
                 });
@@ -566,7 +554,6 @@
             });
         }
 
-        // Exibir detalhes do inadimplente
         async function showDefaulterDetails(playerId, playerName) {
             const paymentsRef = ref(database, 'payments');
             try {
@@ -574,7 +561,6 @@
                 const paymentsData = snapshot.val() || {};
                 
                 console.log('Processing defaulter details for player:', playerId, paymentsData);
-                // Filtrar pagamentos inadimplentes do jogador na nova estrutura
                 const defaulterPayments = [];
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
@@ -588,7 +574,6 @@
                     }
                 }
                 
-                // Criar conteúdo do modal
                 let detailsHtml = `<h3>Detalhes de Inadimplência - ${playerName}</h3>`;
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
@@ -611,7 +596,6 @@
             }
         }
 
-        // Funções para gerenciar o modal
         function showModal(content) {
             const modal = document.getElementById('defaulterModal');
             const modalContent = document.getElementById('modalContent');
@@ -620,35 +604,46 @@
             modalContent.innerHTML = content;
             modal.style.display = 'block';
             
-            // Adicionar evento de clique para fechar o modal
             closeModalBtn.addEventListener('click', closeModal);
         }
 
         function closeModal() {
             const modal = document.getElementById('defaulterModal');
             modal.style.display = 'none';
-            // Remover o event listener para evitar múltiplos listeners
             const closeModalBtn = document.querySelector('.close-modal');
             closeModalBtn.removeEventListener('click', closeModal);
         }
 
-        // Carregar despesas recentes
         async function loadRecentExpenses() {
             const expensesRef = ref(database, 'expenses');
+            const deletedExpensesRef = ref(database, 'deletedExpenses');
             
             try {
-                const snapshot = await get(expensesRef);
-                const expenses = snapshot.val() || {};
+                const [expensesSnapshot, deletedExpensesSnapshot] = await Promise.all([
+                    get(expensesRef),
+                    get(deletedExpensesRef)
+                ]);
+                
+                const expenses = expensesSnapshot.val() || {};
+                const deletedExpenses = deletedExpensesSnapshot.val() || {};
                 const expensesArray = [];
                 
-                Object.keys(expenses).forEach(key => {
+                Object.entries(expenses).forEach(([key, expense]) => {
                     expensesArray.push({
                         id: key,
-                        ...expenses[key]
+                        ...expense,
+                        isDeleted: false
                     });
                 });
                 
-                // Ordenar por data (mais recente primeiro)
+                Object.entries(deletedExpenses).forEach(([key, expense]) => {
+                    expensesArray.push({
+                        id: key,
+                        ...expense,
+                        isDeleted: true
+                    });
+                });
+                
                 expensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
                 
                 renderRecentExpenses(expensesArray.slice(0, 10));
@@ -658,7 +653,6 @@
             }
         }
 
-        // Renderizar despesas recentes
         function renderRecentExpenses(expenses) {
             recentExpenses.innerHTML = '';
             
@@ -670,6 +664,10 @@
             expenses.forEach(expense => {
                 const [year, month] = expense.month.split('-');
                 const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                const createdBy = expense.createdByName || 'Não informado';
+                const deletedBy = expense.isDeleted ? (expense.deletedByName || 'Não informado') : '';
+                const deletedAt = expense.isDeleted && expense.deletedAt ? formatDate(expense.deletedAt) : '';
+                const deletionReason = expense.isDeleted ? (expense.deletionReason || 'Não informado') : '';
                 
                 const expenseEl = document.createElement('div');
                 expenseEl.className = 'expense-item';
@@ -678,15 +676,25 @@
                         <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
                         <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
                     </div>
-                    <div style="color: #666; margin-bottom: 5px;">${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}</div>
-                    <div>${expense.description || 'Sem descrição'}</div>
-                    <button class="delete-expense-btn" data-id="${expense.id}" style="margin-top: 10px; padding: 3px 8px; font-size: 12px; background-color: #f44336; color: white; border: none; border-radius: 3px; cursor: pointer;">Excluir</button>
+                    <div style="color: #666; margin-bottom: 5px;">
+                        ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                    </div>
+                    <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
+                    <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
+                    ${expense.isDeleted ? `
+                        <div style="margin-bottom: 5px; color: #f44336;">
+                            Excluído por: ${deletedBy} em ${deletedAt}<br>
+                            Justificativa: ${deletionReason}
+                        </div>
+                    ` : ''}
+                    ${!expense.isDeleted ? `
+                        <button class="delete-expense-btn" data-id="${expense.id}" style="margin-top: 10px; padding: 3px 8px; font-size: 12px; background-color: #f44336; color: white; border: none; border-radius: 3px; cursor: pointer;">Excluir</button>
+                    ` : ''}
                 `;
                 
                 recentExpenses.appendChild(expenseEl);
             });
             
-            // Adicionar event listeners aos botões de exclusão
             document.querySelectorAll('.delete-expense-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -695,7 +703,6 @@
             });
         }
 
-        // Formulário de despesa
         expenseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -705,7 +712,8 @@
                 value: parseFloat(document.getElementById('expenseValue').value),
                 category: document.getElementById('expenseCategory').value,
                 description: document.getElementById('expenseDescription').value,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                createdByName: currentUserPlayer?.name || 'Usuário'
             };
             
             try {
@@ -715,11 +723,9 @@
                 showMessage('Despesa registrada com sucesso!', 'success', expenseMessage);
                 expenseForm.reset();
                 
-                // Resetar valores padrão
                 document.getElementById('expenseDate').valueAsDate = new Date();
                 document.getElementById('expenseMonth').value = today.toISOString().slice(0, 7);
                 
-                // Recarregar dados
                 loadFinancialData();
                 loadRecentExpenses();
                 
@@ -729,22 +735,57 @@
             }
         });
 
-        // Excluir despesa
         async function deleteExpense(expenseId) {
-            if (confirm('Tem certeza que deseja excluir esta despesa?')) {
-                try {
-                    await remove(ref(database, `expenses/${expenseId}`));
-                    showMessage('Despesa excluída com sucesso!', 'success', expenseMessage);
-                    loadFinancialData();
-                    loadRecentExpenses();
-                } catch (error) {
-                    console.error("Error deleting expense:", error);
-                    showMessage('Erro ao excluir despesa: ' + error.message, 'error', expenseMessage);
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Confirmar Exclusão',
+                text: 'Por favor, informe o motivo da exclusão:',
+                input: 'textarea',
+                inputPlaceholder: 'Digite a justificativa aqui...',
+                inputAttributes: {
+                    required: true
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Excluir',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value.trim()) {
+                        return 'A justificativa é obrigatória!';
+                    }
                 }
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const expenseRef = ref(database, `expenses/${expenseId}`);
+                const deletedExpenseRef = ref(database, `deletedExpenses/${expenseId}`);
+                const snapshot = await get(expenseRef);
+                
+                if (!snapshot.exists()) {
+                    showMessage('Despesa não encontrada.', 'error', expenseMessage);
+                    return;
+                }
+                
+                const expenseData = snapshot.val();
+                expenseData.deletedByName = currentUserPlayer?.name || 'Usuário';
+                expenseData.deletedAt = new Date().toISOString();
+                expenseData.deletionReason = result.value;
+                
+                await Promise.all([
+                    set(deletedExpenseRef, expenseData),
+                    remove(expenseRef)
+                ]);
+                
+                showMessage('Despesa excluída com sucesso!', 'success', expenseMessage);
+                loadFinancialData();
+                loadRecentExpenses();
+            } catch (error) {
+                console.error("Error deleting expense:", error);
+                showMessage('Erro ao excluir despesa: ' + error.message, 'error', expenseMessage);
             }
         }
 
-        // Renderizar dados financeiros
         function renderFinancialData(monthlyData) {
             const selectedYear = yearFilter.value;
             const selectedMonth = monthFilter.value;
@@ -755,7 +796,6 @@
             sortedMonths.forEach(monthKey => {
                 const data = monthlyData[monthKey];
                 
-                // Aplicar filtros
                 if (selectedYear !== 'all' && data.year !== selectedYear) return;
                 if (selectedMonth !== 'all' && data.month !== selectedMonth) return;
                 
@@ -774,7 +814,6 @@
             });
         }
 
-        // Helper functions
         function getMonthName(monthNumber) {
             const months = [
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -807,7 +846,6 @@
             }, 5000);
         }
 
-        // Listeners para filtros
         yearFilter.addEventListener('change', () => {
             loadFinancialData();
             loadDefaulters();
