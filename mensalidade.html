@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css?v=1.1">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         select {
             width: 100%;
@@ -200,26 +201,6 @@
         </div>
     </div>
 
-    <div id="deleteModal" class="modal">
-        <div class="modal-content">
-            <h3>Justificativa de Exclusão</h3>
-            <form id="deleteReasonForm">
-                <div class="form-group">
-                    <label for="deleteReason">Motivo da exclusão:</label>
-                    <textarea id="deleteReason" required rows="4" style="width: 100%;"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="deletedBy">Excluído por:</label>
-                    <input type="text" id="deletedBy" readonly>
-                </div>
-                <div class="form-buttons">
-                    <button id="confirmDeleteBtn" type="submit" class="confirm"><i class="fas fa-check"></i> Confirmar</button>
-                    <button type="button" class="cancel" onclick="document.getElementById('deleteModal').style.display='none'"><i class="fas fa-times"></i> Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -262,19 +243,12 @@
         const editingPaymentMonthInput = document.getElementById('editingPaymentMonth');
         const paymentsSection = document.getElementById('paymentsSection');
         const paymentsTableBody = document.getElementById('paymentsTableBody');
-        const messageDiv = document.getElementById('message');
-        const savePaymentBtn = document.getElementById('savePaymentBtn');
         const generateMonthlyForm = document.getElementById('generateMonthlyForm');
         const generateMonthlyBtn = document.getElementById('generateMonthlyBtn');
         const generateMonthInput = document.getElementById('generateMonth');
         const generateValueInput = document.getElementById('generateValue');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const deletePaymentBtn = document.getElementById('deletePaymentBtn');
-        const deleteModal = document.getElementById('deleteModal');
-        const deleteReasonForm = document.getElementById('deleteReasonForm');
-        const deleteReasonInput = document.getElementById('deleteReason');
-        const deletedByInput = document.getElementById('deletedBy');
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
         paymentDateInput.valueAsDate = new Date();
 
@@ -283,17 +257,31 @@
                 window.location.href = 'index.html';
             } else {
                 document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
-                deletedByInput.value = user.email;
                 loadFirstPlayerAlphabetically();
             }
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth).then(() => {
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Logout',
+                    text: 'Você saiu com sucesso.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 window.location.href = 'index.html';
-            }).catch((error) => {
+            } catch (error) {
                 console.error('Error signing out:', error);
-            });
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao fazer logout: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
         });
 
         async function loadFirstPlayerAlphabetically() {
@@ -316,6 +304,13 @@
                 }
             } catch (error) {
                 console.error("Error loading first player:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar jogador: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
         }
 
@@ -377,7 +372,13 @@
                 }
             } catch (error) {
                 console.error("Error searching players:", error);
-                showMessage("Erro ao pesquisar integrantes: " + error.message, "error");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao pesquisar integrantes: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
         });
 
@@ -391,18 +392,33 @@
             e.preventDefault();
             
             if (!generateMonthInput.value || !generateValueInput.value) {
-                showMessage("Por favor, preencha o Mês/Ano e o Valor antes de gerar as dívidas.", "error");
-                return;
-            }
-
-            if (!confirm("Deseja realmente gerar dívidas para todos os integrantes da categoria Mensal?")) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Por favor, preencha o Mês/Ano e o Valor antes de gerar as mensalidades.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 return;
             }
 
             try {
                 const playersRef = ref(database, 'players');
                 const playersSnapshot = await get(playersRef);
-                const players = playersSnapshot.val();
+                const players = playersSnapshot.val() || {};
+                const monthlyPlayersCount = Object.values(players).filter(p => p.category === 'MENSAL').length;
+
+                const { value: confirmed } = await Swal.fire({
+                    icon: 'question',
+                    title: 'Confirmar Geração',
+                    text: `Deseja gerar mensalidades para ${monthlyPlayersCount} jogadores da categoria MENSAL?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Gerar',
+                    cancelButtonText: 'Cancelar',
+                });
+
+                if (!confirmed) return;
+
                 const [year, month] = generateMonthInput.value.split('-');
                 const debtValue = parseFloat(generateValueInput.value);
                 let createdCount = 0;
@@ -437,14 +453,27 @@
                     }
                 }
 
-                showMessage(`Dívidas geradas com sucesso para ${createdCount} integrantes mensais!`, "success");
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: `Mensalidades geradas para ${createdCount} de ${monthlyPlayersCount} jogadores mensais!`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+
                 if (playerIdInput.value) {
                     loadPayments(playerIdInput.value);
                 }
                 generateMonthlyForm.reset();
             } catch (error) {
                 console.error("Error generating monthly debts:", error);
-                showMessage("Erro ao gerar dívidas: " + error.message, "error");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao gerar mensalidades: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
         });
 
@@ -494,12 +523,24 @@
                 if (editingPaymentIdInput.value) {
                     console.log('Updating payment:', editingPaymentIdInput.value, year, month);
                     await update(ref(database, `payments/${year}/${month}/${editingPaymentIdInput.value}`), paymentData);
-                    showMessage("Pagamento atualizado com sucesso!", "success");
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Pagamento atualizado com sucesso!',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
                 } else {
                     console.log('Creating new payment:', year, month);
                     const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
                     await set(newPaymentRef, paymentData);
-                    showMessage("Pagamento registrado com sucesso!", "success");
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Pagamento registrado com sucesso!',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
                 }
 
                 resetForm();
@@ -507,7 +548,13 @@
                 loadPayments(playerIdInput.value);
             } catch (error) {
                 console.error("Error saving payment:", error);
-                showMessage("Erro ao registrar pagamento: " + error.message, "error");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao registrar pagamento: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
         });
 
@@ -516,57 +563,57 @@
             resetForm();
         });
 
-        deletePaymentBtn.addEventListener('click', () => {
+        deletePaymentBtn.addEventListener('click', async () => {
             console.log('Delete button clicked. Payment ID:', editingPaymentIdInput.value, 'Year:', editingPaymentYearInput.value, 'Month:', editingPaymentMonthInput.value);
-            if (editingPaymentIdInput.value && editingPaymentYearInput.value && editingPaymentMonthInput.value) {
-                deleteModal.style.display = 'flex';
-                deleteReasonForm.onsubmit = async (e) => {
-                    e.preventDefault();
-                    console.log('Submitting delete reason form');
+            if (!editingPaymentIdInput.value || !editingPaymentYearInput.value || !editingPaymentMonthInput.value) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Nenhum pagamento selecionado para exclusão.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+                return;
+            }
 
-                    if (confirmDeleteBtn) {
-                        confirmDeleteBtn.disabled = true;
-                        confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            const { value: reason } = await Swal.fire({
+                title: 'Justificativa de Exclusão',
+                input: 'textarea',
+                inputLabel: 'Motivo da exclusão',
+                inputPlaceholder: 'Digite o motivo da exclusão...',
+                inputAttributes: {
+                    required: true,
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (inputValue) => {
+                    if (!inputValue.trim()) {
+                        Swal.showValidationMessage('Por favor, preencha o motivo da exclusão.');
                     }
+                    return inputValue.trim();
+                },
+            });
 
-                    const reason = deleteReasonInput.value.trim();
-                    const deletedBy = deletedByInput.value.trim();
-
-                    if (!reason) {
-                        showMessage("Por favor, preencha o motivo da exclusão.", "error");
-                        if (confirmDeleteBtn) {
-                            confirmDeleteBtn.disabled = false;
-                            confirmDeleteBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar';
-                        }
-                        return;
-                    }
-
-                    try {
-                        await deletePayment(
-                            editingPaymentIdInput.value,
-                            reason,
-                            deletedBy,
-                            editingPaymentYearInput.value,
-                            editingPaymentMonthInput.value
-                        );
-                        if (confirmDeleteBtn) {
-                            confirmDeleteBtn.disabled = false;
-                            confirmDeleteBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar';
-                        }
-                        deleteModal.style.display = 'none';
-                        deleteReasonForm.reset();
-                        deletedByInput.value = auth.currentUser ? auth.currentUser.email : '';
-                    } catch (error) {
-                        console.error("Error deleting payment:", error);
-                        showMessage("Erro ao excluir pagamento: " + error.message, "error");
-                        if (confirmDeleteBtn) {
-                            confirmDeleteBtn.disabled = false;
-                            confirmDeleteBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar';
-                        }
-                    }
-                };
-            } else {
-                showMessage("Nenhum pagamento selecionado para exclusão.", "error");
+            if (reason) {
+                try {
+                    await deletePayment(
+                        editingPaymentIdInput.value,
+                        reason,
+                        auth.currentUser ? auth.currentUser.email : '',
+                        editingPaymentYearInput.value,
+                        editingPaymentMonthInput.value
+                    );
+                } catch (error) {
+                    console.error("Error deleting payment:", error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro ao excluir pagamento: ' + error.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                }
             }
         });
 
@@ -599,7 +646,6 @@
                             const payments = years[year][month];
                             for (const [paymentId, payment] of Object.entries(payments)) {
                                 if (payment.playerId === playerId) {
-                                    // Normaliza o formato do mês
                                     const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
                                     playerPayments.push({ id: paymentId, year, month: normalizedMonth, ...payment, isDeleted: false });
                                 }
@@ -650,15 +696,20 @@
                         paymentsTableBody.appendChild(row);
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
                     console.error("Error loading payments:", error);
-                    showMessage("Erro ao carregar pagamentos: " + error.message, "error");
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro ao carregar pagamentos: ' + error.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
                 });
         }
 
         async function editPayment(paymentId, year, month) {
             console.log('Editing payment:', paymentId, year, month);
-            // Normaliza o formato do mês para o caminho do Firebase
             const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
             console.log('Normalized path:', `payments/${year}/${normalizedMonth}/${paymentId}`);
             try {
@@ -692,17 +743,28 @@
                     paymentForm.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     console.error('Payment not found at:', `payments/${year}/${normalizedMonth}/${paymentId}`);
-                    showMessage("Pagamento não encontrado. Verifique se os dados foram migrados corretamente para payments/ano/mês.", "error");
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não encontrado. Verifique se os dados foram migrados corretamente.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
                 }
             } catch (error) {
                 console.error("Error loading payment for edit:", error);
-                showMessage("Erro ao carregar pagamento para edição: " + error.message, "error");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar pagamento para edição: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
         }
 
         async function deletePayment(paymentId, reason, deletedBy, year, month) {
             console.log('Deleting payment:', paymentId, year, month);
-            // Normaliza o formato do mês
             const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
             try {
                 const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
@@ -718,7 +780,13 @@
                         deletedAt: new Date().toISOString()
                     });
                     await remove(paymentRef);
-                    showMessage("Pagamento excluído com sucesso!", "success");
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Pagamento excluído com sucesso!',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
                     
                     if (editingPaymentIdInput.value === paymentId) {
                         resetForm();
@@ -726,11 +794,23 @@
                     loadPayments(playerIdInput.value);
                 } else {
                     console.error('Payment not found at:', `payments/${year}/${normalizedMonth}/${paymentId}`);
-                    showMessage("Pagamento não encontrado.", "error");
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não encontrado.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
                 }
             } catch (error) {
                 console.error("Error deleting payment:", error);
-                showMessage("Erro ao excluir pagamento: " + error.message, "error");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao excluir pagamento: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
         }
 
@@ -747,16 +827,6 @@
             const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                               'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
             return `${monthNames[parseInt(month) - 1]} ${year}`;
-        }
-
-        function showMessage(message, type) {
-            console.log('Showing message:', type, message);
-            messageDiv.textContent = message;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
         }
     </script>
 </body>
