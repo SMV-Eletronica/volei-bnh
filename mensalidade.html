@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contribuição-Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=1.1">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        #guestFieldContainer {
+            transition: all 0.3s ease;
+        }
+        .admin-actions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .modal-content h3 {
+            margin-top: 0;
+        }
+        .modal-content .form-group {
+            margin-bottom: 15px;
+        }
+        .modal-content .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .modal-content button.confirm {
+            background-color: #f44336;
+            color: white;
+        }
+        .modal-content button.cancel {
+            background-color: #ccc;
+        }
+        /* Estilos adicionados para Histórico de Contribuições */
+        :root {
+            --primary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --text: #2c3e50;
+            --muted: #7f8c8d;
+        }
+        .status-item {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+        }
+        .status-item.excluded {
+            border-left: 4px solid var(--danger);
+        }
+        .status-item.active {
+            border-left: 4px solid var(--primary);
+        }
+        .status-item div {
+            margin-bottom: 5px;
+        }
+        .status-label {
+            font-weight: bold;
+            color: var(--muted);
+        }
+        .status-value {
+            color: var(--text);
+        }
+        .status-value.paid {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .status-value.unpaid {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .status-item {
+                padding: 10px;
+            }
+            .status-item div {
+                display: flex;
+                
+            }
+            .status-label {
+                margin-bottom: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH Gestão</h2></center>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>  
+            <button onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>   
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="userEmail"></div>
+        
+        <div class="section">
+            <h2 class="section-title">Lançamento e Controle de Contribuições</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <div class="form-group" style="position: relative;">
+                <label for="searchName">Nome do Integrante:</label>
+                <input type="text" id="searchName" placeholder="Digite o nome para pesquisar" autocomplete="off">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </div>
+        
+        <div id="playerSection" class="section" style="display: none;">
+            <h2 class="section-title"><i class="fas fa-user"></i> Dados do Integrante</h2>
+            
+            <div class="player-info">
+                <img id="playerPhoto" class="player-photo" src="" alt="Foto do jogador" style="display: none;">
+                <div class="player-details">
+                    <h3 id="playerName"></h3>
+                    <p><strong>Posição:</strong> <span id="playerPosition"></span></p>
+                    <p><strong>Categoria:</strong> <span id="playerCategory"></span></p>
+                    <p><strong>Contato:</strong> <span id="playerContact"></span></p>
+                </div>
+            </div>
+            
+            <div class="admin-actions">
+                <h3><i class="fas fa-users"></i> Gerar Contribuições Mensais</h3>
+                <form id="generateMonthlyForm">
+                    <div class="form-group">
+                        <label for="generateMonth">Mês/Ano:</label>
+                        <input type="month" id="generateMonth" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="generateValue">Valor (R$):</label>
+                        <input type="number" id="generateValue" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" id="generateMonthlyBtn" style="background-color: #2196F3;"><i class="fas fa-users"></i> Gerar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <h3 class="section-title"><i class="fas fa-money-bill-wave"></i> Registrar Pagamentos em Geral</h3>
+           
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="paymentMonth">Mês/Ano:</label>
+                    <input type="month" id="paymentMonth" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentValue">Valor (R$):</label>
+                    <input type="number" id="paymentValue" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentDate">Data do Pagamento:</label>
+                    <input type="date" id="paymentDate">
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentType">Destino do Pagamento:</label>
+                    <select id="paymentType" required>
+                        <option value="">Selecione...</option>
+                        <option value="Mensal">Mensal</option>
+                        <option value="Diaria">Diária</option>
+                        <option value="CONVIDADO">CONVIDADO</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+
+                <div id="guestFieldContainer" class="form-group" style="display: none;">
+                    <label for="guestName" id="guestFieldLabel">Nome do Convidado:</label>
+                    <input type="text" id="guestName" placeholder="Especifique">
+                </div>
+                
+                <input type="hidden" id="playerId">
+                <input type="hidden" id="editingPaymentId">
+                <input type="hidden" id="editingPaymentYear">
+                <input type="hidden" id="editingPaymentMonth">
+                
+                <div class="form-buttons">
+                    <button type="submit" id="savePaymentBtn" style="background-color: #4CAF50;"><i class="fas fa-save"></i> Registrar</button>
+                    <button type="button" id="cancelEditBtn" style="display: none; background-color: #ff5722;"><i class="fas fa-times"></i> Cancelar</button>
+                    <button type="button" id="deletePaymentBtn" style="display: none; background-color: #f44336;"><i class="fas fa-trash-alt"></i> Excluir</button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="paymentsSection" class="section" style="display: none;">
+            <h2 class="section-title"><i class="fas fa-history"></i> Histórico de Contribuições </h2>
+            
+            <div id="paymentsList"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        const searchNameInput = document.getElementById('searchName');
+        const searchResultsDiv = document.getElementById('searchResults');
+        const playerSection = document.getElementById('playerSection');
+        const playerPhoto = document.getElementById('playerPhoto');
+        const playerNameSpan = document.getElementById('playerName');
+        const playerPositionSpan = document.getElementById('playerPosition');
+        const playerCategorySpan = document.getElementById('playerCategory');
+        const playerContactSpan = document.getElementById('playerContact');
+        const paymentForm = document.getElementById('paymentForm');
+        const paymentMonthInput = document.getElementById('paymentMonth');
+        const paymentValueInput = document.getElementById('paymentValue');
+        const paymentDateInput = document.getElementById('paymentDate');
+        const paymentTypeSelect = document.getElementById('paymentType');
+        const guestFieldContainer = document.getElementById('guestFieldContainer');
+        const guestNameInput = document.getElementById('guestName');
+        const guestFieldLabel = document.getElementById('guestFieldLabel');
+        const playerIdInput = document.getElementById('playerId');
+        const editingPaymentIdInput = document.getElementById('editingPaymentId');
+        const editingPaymentYearInput = document.getElementById('editingPaymentYear');
+        const editingPaymentMonthInput = document.getElementById('editingPaymentMonth');
+        const paymentsSection = document.getElementById('paymentsSection');
+        const paymentsList = document.getElementById('paymentsList');
+        const generateMonthlyForm = document.getElementById('generateMonthlyForm');
+        const generateMonthlyBtn = document.getElementById('generateMonthlyBtn');
+        const generateMonthInput = document.getElementById('generateMonth');
+        const generateValueInput = document.getElementById('generateValue');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const deletePaymentBtn = document.getElementById('deletePaymentBtn');
+
+        paymentDateInput.valueAsDate = new Date();
+
+        onAuthStateChanged(auth, async (user) => {
+            console.log('onAuthStateChanged triggered');
+            if (!user) {
+                console.log('No user is logged in. Redirecting to index.html');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            console.log('User logged in:', {
+                uid: user.uid,
+                email: user.email
+            });
+
+            try {
+                console.log('Fetching authorizedEmails from database');
+                const authorizedEmailsRef = ref(database, 'authorizedEmails');
+                const snapshot = await get(authorizedEmailsRef);
+                
+                console.log('Snapshot retrieved:', {
+                    exists: snapshot.exists(),
+                    value: snapshot.exists() ? snapshot.val() : null
+                });
+
+                let isAuthorized = false;
+                if (snapshot.exists()) {
+                    const authorizedEmails = snapshot.val();
+                    const transformedEmail = user.email.replace('.', ',');
+                    console.log('Checking authorization for email:', transformedEmail);
+                    isAuthorized = authorizedEmails[transformedEmail] === true;
+                    console.log('Authorization result:', isAuthorized);
+                } else {
+                    console.log('No authorizedEmails data found in database');
+                }
+
+                if (!isAuthorized) {
+                    console.log('User is not authorized. Redirecting to lista.html');
+                    window.location.href = 'lista.html';
+                    return;
+                }
+
+                console.log('User is authorized. Loading page content');
+                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
+                loadFirstPlayerAlphabetically();
+            } catch (error) {
+                console.error('Error during authorization check:', {
+                    message: error.message,
+                    code: error.code
+                });
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao verificar autorização: ' + error.message,
+                    timer: 3500,
+                    showConfirmButton: false,
+                }).then(() => {
+                    console.log('Error alert shown. Redirecting to lista.html');
+                    window.location.href = 'lista.html';
+                });
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Logout',
+                    text: 'Você saiu com sucesso.',
+                    timer: 3500,
+                    showConfirmButton: false,
+                });
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao fazer logout: ' + error.message,
+                    timer: 3500,
+                    showConfirmButton: false,
+                });
+            }
+        });
+
+        async function loadFirstPlayerAlphabetically() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                
+                if (snapshot.exists()) {
+                    const players = snapshot.val();
+                    const playersArray = Object.keys(players).map(key => ({
+                        id: key,
+                        ...players[key]
+                    }));
+                    
+                    playersArray.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    if (playersArray.length > 0) {
+                        selectPlayer(playersArray[0].id, playersArray[0]);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading first player:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar jogador: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        }
+
+        paymentTypeSelect.addEventListener('change', () => {
+            console.log('paymentTypeSelect changed:', paymentTypeSelect.value);
+            if (paymentTypeSelect.value === 'CONVIDADO') {
+                guestFieldLabel.textContent = 'Nome do Convidado:';
+                guestNameInput.placeholder = 'Digite o nome do convidado';
+                guestFieldContainer.style.display = 'block';
+            } else if (paymentTypeSelect.value === 'Outros') {
+                guestFieldLabel.textContent = 'Especificação:';
+                guestNameInput.placeholder = 'Digite a razão do pagamento';
+                guestFieldContainer.style.display = 'block';
+            } else {
+                guestFieldContainer.style.display = 'none';
+                guestNameInput.value = '';
+            }
+        });
+
+        searchNameInput.addEventListener('input', async () => {
+            const searchTerm = searchNameInput.value.trim().toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                searchResultsDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                searchResultsDiv.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const players = snapshot.val();
+                    let hasResults = false;
+                    
+                    Object.keys(players).forEach((key) => {
+                        const player = players[key];
+                        if (player.name.toLowerCase().includes(searchTerm)) {
+                            hasResults = true;
+                            const playerItem = document.createElement('div');
+                            playerItem.className = 'search-item';
+                            playerItem.innerHTML = `
+                                ${player.imageUrl ? `<img src="${player.imageUrl}" class="search-item-photo" alt="${player.name}">` : '<div class="search-item-photo" style="background:#eee;"></div>'}
+                                <span>${player.name}</span>
+                            `;
+                            playerItem.addEventListener('click', () => {
+                                selectPlayer(key, player);
+                                searchResultsDiv.style.display = 'none';
+                                searchNameInput.value = player.name;
+                            });
+                            searchResultsDiv.appendChild(playerItem);
+                        }
+                    });
+                    
+                    searchResultsDiv.style.display = hasResults ? 'block' : 'none';
+                } else {
+                    searchResultsDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error searching players:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao pesquisar integrantes: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchNameInput) {
+                searchResultsDiv.style.display = 'none';
+            }
+        });
+
+        generateMonthlyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!generateMonthInput.value || !generateValueInput.value) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Por favor, preencha o Mês/Ano e o Valor antes de gerar as mensalidades.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+                return;
+            }
+
+            try {
+                const playersRef = ref(database, 'players');
+                const playersSnapshot = await get(playersRef);
+                const players = playersSnapshot.val() || {};
+                const monthlyPlayersCount = Object.values(players).filter(p => p.category === 'MENSAL').length;
+
+                const { value: confirmed } = await Swal.fire({
+                    icon: 'question',
+                    title: 'Confirmar Geração',
+                    text: `Deseja gerar mensalidades para ${monthlyPlayersCount} jogadores da categoria MENSAL?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Gerar',
+                    cancelButtonText: 'Cancelar',
+                });
+
+                if (!confirmed) return;
+
+                const [year, month] = generateMonthInput.value.split('-');
+                const debtValue = parseFloat(generateValueInput.value);
+                let createdCount = 0;
+
+                for (const [playerId, player] of Object.entries(players)) {
+                    if (player.category === 'MENSAL') {
+                        const paymentsRef = ref(database, `payments/${year}/${month}`);
+                        const paymentsSnapshot = await get(paymentsRef);
+                        const payments = paymentsSnapshot.val() || {};
+
+                        let paymentExists = false;
+                        for (const payment of Object.values(payments)) {
+                            if (payment.playerId === playerId && payment.paymentType === 'Mensal') {
+                                paymentExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!paymentExists) {
+                            const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+                            await set(newPaymentRef, {
+                                month: `${year}-${month}`,
+                                value: debtValue,
+                                date: null,
+                                playerId: playerId,
+                                playerName: player.name,
+                                paymentType: 'Mensal',
+                                createdAt: new Date().toISOString()
+                            });
+                            createdCount++;
+                        }
+                    }
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: `Mensalidades geradas para ${createdCount} de ${monthlyPlayersCount} jogadores mensais!`,
+                    timer: 3500,
+                    showConfirmButton: false,
+                });
+
+                if (playerIdInput.value) {
+                    loadPayments(playerIdInput.value);
+                }
+                generateMonthlyForm.reset();
+            } catch (error) {
+                console.error("Error generating monthly debts:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao gerar mensalidades: ' + error.message,
+                    timer: 3500,
+                    showConfirmButton: false,
+                });
+            }
+        });
+
+        function selectPlayer(playerId, playerData) {
+            console.log('Selecting player:', playerId, playerData.name);
+            playerNameSpan.textContent = playerData.name;
+            playerPositionSpan.textContent = playerData.position;
+            playerCategorySpan.textContent = playerData.category;
+            playerContactSpan.textContent = playerData.contact;
+            playerIdInput.value = playerId;
+            
+            if (playerData.imageUrl) {
+                playerPhoto.src = playerData.imageUrl;
+                playerPhoto.style.display = 'block';
+            } else {
+                playerPhoto.style.display = 'none';
+            }
+            
+            playerSection.style.display = 'block';
+            paymentsSection.style.display = 'block';
+            
+            resetForm();
+            loadPayments(playerId);
+        }
+
+        paymentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Submitting payment form');
+
+            const year = editingPaymentIdInput.value ? editingPaymentYearInput.value : paymentMonthInput.value.split('-')[0];
+            const month = editingPaymentIdInput.value ? editingPaymentMonthInput.value : paymentMonthInput.value.split('-')[1];
+            const paymentData = {
+                month: paymentMonthInput.value,
+                value: parseFloat(paymentValueInput.value),
+                date: paymentValueInput.value > 0 && paymentDateInput.value ? paymentDateInput.value : null,
+                playerId: playerIdInput.value,
+                playerName: playerNameSpan.textContent,
+                paymentType: paymentTypeSelect.value,
+                createdAt: new Date().toISOString()
+            };
+
+            if (paymentTypeSelect.value === 'CONVIDADO' || paymentTypeSelect.value === 'Outros') {
+                paymentData.additionalInfo = guestNameInput.value;
+            }
+
+            try {
+                if (editingPaymentIdInput.value) {
+                    console.log('Updating payment:', editingPaymentIdInput.value, year, month);
+                    await update(ref(database, `payments/${year}/${month}/${editingPaymentIdInput.value}`), paymentData);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Pagamento atualizado com sucesso!',
+                        timer: 3500,
+                        showConfirmButton: false,
+                    });
+                } else {
+                    console.log('Creating new payment:', year, month);
+                    const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+                    await set(newPaymentRef, paymentData);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Pagamento registrado com sucesso!',
+                        timer: 3500,
+                        showConfirmButton: false,
+                    });
+                }
+
+                resetForm();
+                paymentDateInput.valueAsDate = new Date();
+                loadPayments(playerIdInput.value);
+            } catch (error) {
+                console.error("Error saving payment:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao registrar pagamento: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            console.log('Canceling edit');
+            resetForm();
+        });
+
+        deletePaymentBtn.addEventListener('click', async () => {
+            console.log('Delete button clicked. Payment ID:', editingPaymentIdInput.value, 'Year:', editingPaymentYearInput.value, 'Month:', editingPaymentMonthInput.value);
+            if (!editingPaymentIdInput.value || !editingPaymentYearInput.value || !editingPaymentMonthInput.value) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Nenhum pagamento selecionado para exclusão.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+                return;
+            }
+
+            const { value: reason } = await Swal.fire({
+                title: 'Justificativa de Exclusão',
+                input: 'textarea',
+                inputLabel: 'Motivo da exclusão',
+                inputPlaceholder: 'Digite o motivo da exclusão...',
+                inputAttributes: {
+                    required: true,
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (inputValue) => {
+                    if (!inputValue.trim()) {
+                        Swal.showValidationMessage('Por favor, preencha o motivo da exclusão.');
+                    }
+                    return inputValue.trim();
+                },
+            });
+
+            if (reason) {
+                try {
+                    await deletePayment(
+                        editingPaymentIdInput.value,
+                        reason,
+                        auth.currentUser ? auth.currentUser.email : '',
+                        editingPaymentYearInput.value,
+                        editingPaymentMonthInput.value
+                    );
+                } catch (error) {
+                    console.error("Error deleting payment:", error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro ao excluir pagamento: ' + error.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                }
+            }
+        });
+
+        function resetForm() {
+            console.log('Resetting form');
+            paymentForm.reset();
+            editingPaymentIdInput.value = '';
+            editingPaymentYearInput.value = '';
+            editingPaymentMonthInput.value = '';
+            guestFieldContainer.style.display = 'none';
+            guestNameInput.value = '';
+            savePaymentBtn.innerHTML = '<i class="fas fa-save"></i> Registrar';
+            cancelEditBtn.style.display = 'none';
+            deletePaymentBtn.style.display = 'none';
+            paymentDateInput.valueAsDate = new Date();
+        }
+
+        function loadPayments(playerId) {
+            console.log('Loading payments for player:', playerId);
+            paymentsList.innerHTML = '';
+            let playerPayments = [];
+
+            const loadActivePayments = async () => {
+                const paymentsRef = ref(database, 'payments');
+                const snapshot = await get(paymentsRef);
+                if (snapshot.exists()) {
+                    const years = snapshot.val();
+                    for (const year in years) {
+                        for (const month in years[year]) {
+                            const payments = years[year][month];
+                            for (const [paymentId, payment] of Object.entries(payments)) {
+                                if (payment.playerId === playerId) {
+                                    const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
+                                    playerPayments.push({ id: paymentId, year, month: normalizedMonth, ...payment, isDeleted: false });
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const loadDeletedPayments = async () => {
+                const deletedPaymentsRef = ref(database, 'deletedPayments');
+                const snapshot = await get(deletedPaymentsRef);
+                if (snapshot.exists()) {
+                    const deletedPayments = snapshot.val();
+                    for (const [paymentId, payment] of Object.entries(deletedPayments)) {
+                        if (payment.playerId === playerId) {
+                            playerPayments.push({ id: paymentId, ...payment, isDeleted: true });
+                        }
+                    }
+                }
+            };
+
+            Promise.all([loadActivePayments(), loadDeletedPayments()])
+                .then(() => {
+                    console.log('Payments loaded:', playerPayments.length);
+                    playerPayments.sort((a, b) => b.month.localeCompare(a.month));
+                    renderPayments(playerPayments);
+                })
+                .catch(async (error) => {
+                    console.error("Error loading payments:", error);
+                    paymentsList.innerHTML = "<div>Erro ao carregar pagamentos</div>";
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro ao carregar pagamentos: ' + error.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                });
+        }
+
+        function renderPayments(payments) {
+            paymentsList.innerHTML = '';
+            if (payments.length === 0) {
+                paymentsList.innerHTML = "<div>Nenhum pagamento registrado</div>";
+                return;
+            }
+            for (const payment of payments) {
+                const isPaid = payment.date && payment.value > 0 && !payment.isDeleted;
+                const isExcluded = payment.isDeleted;
+                const [year, month] = payment.month.split('-');
+                const monthName = getMonthName(month);
+                const paymentEl = document.createElement('div');
+                paymentEl.className = `status-item ${isExcluded ? 'excluded' : 'active'}`;
+                paymentEl.setAttribute('data-id', payment.id);
+                paymentEl.innerHTML = `
+                    <div>
+                        <span class="status-label">Referente ao Caixa:</span>
+                        <span class="status-value">${monthName}/${year}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Tipo de Pagamento:</span>
+                        <span class="status-value">${payment.paymentType || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Descrição:</span>
+                        <span class="status-value">${payment.additionalInfo || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data do Pagamento:</span>
+                        <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Valor:</span>
+                        <span class="status-value ${isPaid ? 'paid' : isExcluded ? 'unpaid' : 'unpaid'}">
+                            ${isExcluded ? `R$ ${parseFloat(payment.value).toFixed(2)} (Excluído)` : 
+                            isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 
+                            `R$ ${parseFloat(payment.value).toFixed(2)} (Pendente)`}
+                        </span>
+                    </div>
+                    ${isExcluded ? `
+                    <div>
+                        <span class="status-label">Motivo da Exclusão:</span>
+                        <span class="status-value">${payment.deleteReason || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data da Exclusão:</span>
+                        <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Cancelada por:</span>
+                        <span class="status-value">${payment.deletedBy || '-'}</span>
+                    </div>` : ''}
+                `;
+                if (!payment.isDeleted) {
+                    paymentEl.addEventListener('click', () => {
+                        console.log('Payment clicked:', payment.id, payment.year, payment.month);
+                        editPayment(payment.id, payment.year, payment.month);
+                    });
+                }
+                paymentsList.appendChild(paymentEl);
+            }
+        }
+
+        async function editPayment(paymentId, year, month) {
+            console.log('Editing payment:', paymentId, year, month);
+            const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
+            console.log('Normalized path:', `payments/${year}/${normalizedMonth}/${paymentId}`);
+            try {
+                const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
+                const snapshot = await get(paymentRef);
+                
+                if (snapshot.exists()) {
+                    const paymentData = snapshot.val();
+                    console.log('Payment data:', paymentData);
+                    
+                    paymentMonthInput.value = paymentData.month;
+                    paymentValueInput.value = paymentData.value;
+                    paymentDateInput.value = paymentData.date || '';
+                    paymentTypeSelect.value = paymentData.paymentType || '';
+                    editingPaymentIdInput.value = paymentId;
+                    editingPaymentYearInput.value = year;
+                    editingPaymentMonthInput.value = normalizedMonth;
+                    
+                    if (paymentData.paymentType === 'CONVIDADO' || paymentData.paymentType === 'Outros') {
+                        guestFieldContainer.style.display = 'block';
+                        guestNameInput.value = paymentData.additionalInfo || '';
+                        guestFieldLabel.textContent = paymentData.paymentType === 'CONVIDADO' ? 'Nome do Convidado:' : 'Especificação:';
+                        guestNameInput.placeholder = paymentData.paymentType === 'CONVIDADO' ? 'Digite o nome do convidado' : 'Digite a razão do pagamento';
+                    } else {
+                        guestFieldContainer.style.display = 'none';
+                    }
+                    
+                    savePaymentBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+                    cancelEditBtn.style.display = 'inline-block';
+                    deletePaymentBtn.style.display = 'inline-block';
+                    paymentForm.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    console.error('Payment not found at:', `payments/${year}/${normalizedMonth}/${paymentId}`);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não encontrado. Verifique se os dados foram migrados corretamente.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading payment for edit:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar pagamento para edição: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        }
+
+        async function deletePayment(paymentId, reason, deletedBy, year, month) {
+            console.log('Deleting payment:', paymentId, year, month);
+            const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
+            try {
+                const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
+                const snapshot = await get(paymentRef);
+                
+                if (snapshot.exists()) {
+                    const paymentData = snapshot.val();
+                    const deletedPaymentRef = push(ref(database, 'deletedPayments'));
+                    await set(deletedPaymentRef, {
+                        ...paymentData,
+                        deleteReason: reason,
+                        deletedBy: deletedBy,
+                        deletedAt: new Date().toISOString()
+                    });
+                    await remove(paymentRef);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Pagamento excluído com sucesso!',
+                        timer: 3500,
+                        showConfirmButton: false,
+                    });
+                    
+                    if (editingPaymentIdInput.value === paymentId) {
+                        resetForm();
+                    }
+                    loadPayments(playerIdInput.value);
+                } else {
+                    console.error('Payment not found at:', `payments/${year}/${normalizedMonth}/${paymentId}`);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não encontrado.',
+                        timer: 3500,
+                        showConfirmButton: false,
+                    });
+                }
+            } catch (error) {
+                console.error("Error deleting payment:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao excluir pagamento: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            const offset = date.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(date.getTime() + offset);
+            return adjustedDate.toLocaleDateString('pt-BR');
+        }
+
+        function formatMonthYear(monthYear) {
+            const [year, month] = monthYear.split('-');
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return `${monthNames[parseInt(month) - 1]} ${year}`;
+        }
+
+        function getMonthName(monthNumber) {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return months[parseInt(monthNumber) - 1];
+        }
+    </script>
+</body>
+</html>
