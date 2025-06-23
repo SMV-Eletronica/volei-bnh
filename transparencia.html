@@ -1077,7 +1077,7 @@
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo de Pagamento</th></tr></thead><tbody>';
+                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo / Descrição</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
                         const [year, month] = payment.month.split('-');
                         const formattedMonth = `${getMonthName(month)}/${year}`;
