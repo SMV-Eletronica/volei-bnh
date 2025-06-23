@@ -631,13 +631,13 @@
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table><thead><tr><th>Mês/Ano</th><th>Valor (R$)</th><th>Tipo de Pagamento</th><th>Detalhe</th></tr></thead><tbody>';
+                    detailsHtml += '<table><thead><tr><th>Mês/Ano</th><th>Valor (R$)</th><th>Tipo de Pagamento</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
                         const [year, month] = payment.month.split('-');
                         const formattedMonth = `${getMonthName(month)}/${year}`;
                         const paymentType = payment.paymentType || 'Não especificado';
-                        const guestName = payment.guestName || 'Não especificado';
-                        detailsHtml += `<tr><td>${formattedMonth}</td><td>R$ ${parseFloat(payment.value).toFixed(2)}</td><td>${paymentType}</td><td>${guestName}</td></tr>`;
+                        const guestName = payment.guestName || '-';
+                        detailsHtml += `<tr><td>${formattedMonth}</td><td>R$ ${parseFloat(payment.value).toFixed(2)}</td><td>${paymentType} / ${guestName}</td></tr>`;
                     });
                     detailsHtml += '</tbody></table>';
                 }
