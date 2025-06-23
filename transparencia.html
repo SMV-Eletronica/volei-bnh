@@ -1230,7 +1230,7 @@
                     activeExpenses.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas</div>';
                 }
                 if (deletedExpensesElement && deletedExpensesElement instanceof HTMLElement) {
-                    deletedExpensesElement.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas excluídas</div>';
+                    deletedExpensesElement.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas Canceladas</div>';
                 }
                 Swal.fire({
                     icon: 'error',
@@ -1278,7 +1278,7 @@
             }
 
             if (deletedExpensesArray.length === 0) {
-                deletedExpensesElement.innerHTML = '<div class="no-defaulters">Nenhuma despesa excluída</div>';
+                deletedExpensesElement.innerHTML = '<div class="no-defaulters">Nenhuma despesa Cancelada</div>';
             } else {
                 for (const expense of deletedExpensesArray) {
                     const [year, month] = expense.month.split('-');
@@ -1300,7 +1300,7 @@
                         <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
                         <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
                         <div style="margin-bottom: 5px; color: #e74c3c;">
-                            Excluído por: ${deletedBy} em ${deletedAt}<br>
+                            Cancelada por: ${deletedBy} em ${deletedAt}<br>
                             Justificativa: ${deletionReason}
                         </div>
                     `;
@@ -1471,15 +1471,15 @@
                     </div>
                     ${isExcluded ? `
                     <div>
-                        <span class="status-label">Motivo da Exclusão:</span>
+                        <span class="status-label">Motivo do Cancelamento:</span>
                         <span class="status-value">${payment.deleteReason || '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Data da Exclusão:</span>
+                        <span class="status-label">Data do Cancelamento:</span>
                         <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Excluído por:</span>
+                        <span class="status-label">Cancelado por:</span>
                         <span class="status-value">${payment.deletedBy || '-'}</span>
                     </div>` : ''}
                 `;
