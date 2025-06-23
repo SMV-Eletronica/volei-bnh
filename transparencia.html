@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+     <style>
         * {
             padding: 0;
             box-sizing: border-box;
@@ -16,6 +16,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f5f5;
             color: #333;
+            user-select: none;
+  -webkit-user-select: none; /* Para compatibilidade com navegadores WebKit */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* Internet Explorer/Edge */
         }
         :root {
             --primary: #3498db;
@@ -215,6 +219,7 @@
             margin-top: 15px;
         }
         .defaulter-item {
+            cursor: pointer;
             background-color: white;
             border-radius: 5px;
             padding: 15px;
@@ -487,86 +492,6 @@
 
 
 
-         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            overflow: auto;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 600px;
-            min-width: 280px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            max-height: 80vh;
-            overflow-y: auto;
-            margin: auto;
-        }
-        .close-modal {
-            color: #aaa;
-            position: absolute;
-            right: 15px;
-            top: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .close-modal:hover,
-        .close-modal:focus {
-            color: #000;
-            text-decoration: none;
-        }
-        .modal-content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        .modal-content th, .modal-content td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-        }
-        .modal-content th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .modal-content h3 {
-            margin: 0 0 15px;
-            font-size: 18px;
-        }
-        .defaulter-item {
-            cursor: pointer;
-        }
-        @media screen and (max-width: 480px) {
-            .modal-content {
-                width: 95%;
-                padding: 15px;
-            }
-            .modal-content th, .modal-content td {
-                font-size: 12px;
-                padding: 8px;
-            }
-            .modal-content h3 {
-                font-size: 16px;
-            }
-        }
-
 
 
 
@@ -599,7 +524,6 @@
             }
         }
     </style>
-   
 </head>
 <body>
     <div class="header">
@@ -750,12 +674,7 @@
                 </div>
             </div>
         </div>
-        <div id="defaulterModal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal">×</span>
-                <div id="modalContent"></div>
-            </div>
-        </div>
+        <!-- Removed defaulterModal HTML as SweetAlert2 will handle the popup -->
         <footer class="footer">
             © 2025 Marcio Vasques - Todos os direitos reservados<br>
             <div class="footer-links">
@@ -772,7 +691,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -975,7 +894,7 @@
                                     paymentsCount: 0,
                                     lateCount: 0
                                 };
-                        }
+                            }
                             const paymentValue = parseFloat(payment.value) || 0;
                             if (payment.date) {
                                 monthlyData[monthKey].income += paymentValue;
@@ -1154,46 +1073,56 @@
                         }
                     }
                 }
-                let detailsHtml = `<h3>Pendências - ${playerName}</h3>`;
+                let detailsHtml = `<h3 style="margin-top: 0;">Pendências - ${playerName}</h3>`;
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table><thead><tr><th>Mês/Ano</th><th>Valor (R$)</th><th>Tipo de Pagamento</th></tr></thead><tbody>';
+                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo de Pagamento</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
                         const [year, month] = payment.month.split('-');
                         const formattedMonth = `${getMonthName(month)}/${year}`;
                         const paymentType = payment.paymentType || 'Não informado';
                         const guestName = payment.guestName || '-';
-                        detailsHtml += `<tr><td>${formattedMonth}</td><td>R$ ${parseFloat(payment.value).toFixed(2)}</td><td>${paymentType} / ${guestName}</td></tr>`;
+                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${paymentType} / ${guestName}</td></tr>`;
                     });
                     detailsHtml += '</tbody></table>';
                 }
-                showModal(detailsHtml);
+                Swal.fire({
+                    title: '',
+                    html: detailsHtml,
+                    icon: defaulterPayments.length > 0 ? 'warning' : 'info',
+                    confirmButtonText: 'Fechar',
+                    customClass: {
+                        popup: 'swal-wide',
+                        htmlContainer: 'swal-content'
+                    },
+                    width: '90%',
+                    maxWidth: '600px',
+                    showCloseButton: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
             } catch (error) {
                 console.error("Error loading defaulter details:", error);
-                showModal('<h3>Erro</h3><p>Não foi possível carregar os detalhes: ' + error.message + '</p>');
+                Swal.fire({
+                    title: 'Erro',
+                    html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
+                    icon: 'error',
+                    confirmButtonText: 'Fechar',
+                    customClass: {
+                        popup: 'swal-wide',
+                        htmlContainer: 'swal-content'
+                    },
+                    width: '90%',
+                    maxWidth: '600px',
+                    showCloseButton: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
             }
         }
 
-        function showModal(content) {
-            const modal = document.getElementById('defaulterModal');
-            const modalContent = document.getElementById('modalContent');
-            const closeModalBtn = document.querySelector('.close-modal');
-            modalContent.innerHTML = content;
-            modal.style.display = 'flex';
-            closeModalBtn.addEventListener('click', closeModal);
-            // Close modal when clicking outside
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('defaulterModal');
-            modal.style.display = 'none';
-            const closeModalBtn = document.querySelector('.close-modal');
-            closeModalBtn.removeEventListener('click', closeModal);
-        }
+        // Removed showModal and closeModal functions as they are no longer needed
 
         async function loadRecentExpenses() {
             const expensesRef = ref(database, 'expenses');
@@ -1230,7 +1159,7 @@
                     activeExpenses.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas</div>';
                 }
                 if (deletedExpensesElement && deletedExpensesElement instanceof HTMLElement) {
-                    deletedExpensesElement.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas Canceladas</div>';
+                    deletedExpensesElement.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas excluídas</div>';
                 }
                 Swal.fire({
                     icon: 'error',
@@ -1278,14 +1207,14 @@
             }
 
             if (deletedExpensesArray.length === 0) {
-                deletedExpensesElement.innerHTML = '<div class="no-defaulters">Nenhuma despesa Cancelada</div>';
+                deletedExpensesElement.innerHTML = '<div class="no-defaulters">Nenhuma despesa excluída</div>';
             } else {
                 for (const expense of deletedExpensesArray) {
                     const [year, month] = expense.month.split('-');
                     const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
                     const createdBy = expense.createdByName || 'Não informado';
                     const deletedBy = expense.deletedByName || 'Não informado';
-                    const deletedAt = expense.deletedAt ? formatDate(expense.deletedAt) : 'Não identificado';
+                    const deletedAt = expense.deletedAt ? formatDate(expense.deletedAt) : 'Não informado';
                     const deletionReason = expense.deletionReason || 'Não informado';
                     const expenseEl = document.createElement('div');
                     expenseEl.className = 'expenseDel-item';
@@ -1300,7 +1229,7 @@
                         <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
                         <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
                         <div style="margin-bottom: 5px; color: #e74c3c;">
-                            Cancelada por: ${deletedBy} em ${deletedAt}<br>
+                            Excluído por: ${deletedBy} em ${deletedAt}<br>
                             Justificativa: ${deletionReason}
                         </div>
                     `;
@@ -1471,15 +1400,15 @@
                     </div>
                     ${isExcluded ? `
                     <div>
-                        <span class="status-label">Motivo do Cancelamento:</span>
+                        <span class="status-label">Motivo da Exclusão:</span>
                         <span class="status-value">${payment.deleteReason || '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Data do Cancelamento:</span>
+                        <span class="status-label">Data da Exclusão:</span>
                         <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Cancelado por:</span>
+                        <span class="status-label">Excluído por:</span>
                         <span class="status-value">${payment.deletedBy || '-'}</span>
                     </div>` : ''}
                 `;
