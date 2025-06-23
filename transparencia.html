@@ -7,7 +7,9 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-     <style>
+
+
+    <style>
         * {
             padding: 0;
             box-sizing: border-box;
@@ -524,6 +526,21 @@
             }
         }
     </style>
+
+    <style>
+        .defaulter-item {
+            cursor: pointer;
+        }
+        /* Estilo para o popup do SweetAlert2 */
+        .swal-wide {
+            width: 90% !important;
+            max-width: 600px !important;
+        }
+        .swal-content {
+            padding: 15px !important;
+            text-align: center !important;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -674,7 +691,6 @@
                 </div>
             </div>
         </div>
-        <!-- Removed defaulterModal HTML as SweetAlert2 will handle the popup -->
         <footer class="footer">
             © 2025 Marcio Vasques - Todos os direitos reservados<br>
             <div class="footer-links">
@@ -1077,7 +1093,7 @@
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo / Descrição</th></tr></thead><tbody>';
+                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;"> Tipo / Descrição</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
                         const [year, month] = payment.month.split('-');
                         const formattedMonth = `${getMonthName(month)}/${year}`;
@@ -1097,7 +1113,6 @@
                         htmlContainer: 'swal-content'
                     },
                     width: '90%',
-                    maxWidth: '600px',
                     showCloseButton: true,
                     allowOutsideClick: true,
                     allowEscapeKey: true
@@ -1114,15 +1129,12 @@
                         htmlContainer: 'swal-content'
                     },
                     width: '90%',
-                    maxWidth: '600px',
                     showCloseButton: true,
                     allowOutsideClick: true,
                     allowEscapeKey: true
                 });
             }
         }
-
-        // Removed showModal and closeModal functions as they are no longer needed
 
         async function loadRecentExpenses() {
             const expensesRef = ref(database, 'expenses');
@@ -1400,15 +1412,15 @@
                     </div>
                     ${isExcluded ? `
                     <div>
-                        <span class="status-label">Motivo do Cancelamento:</span>
+                        <span class="status-label">Motivo da Exclusão:</span>
                         <span class="status-value">${payment.deleteReason || '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Data do Cancelamento:</span>
+                        <span class="status-label">Data da Exclusão:</span>
                         <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Cancelado por:</span>
+                        <span class="status-label">Cancelada por:</span>
                         <span class="status-value">${payment.deletedBy || '-'}</span>
                     </div>` : ''}
                 `;
