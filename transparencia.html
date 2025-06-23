@@ -1229,7 +1229,7 @@
                         <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
                         <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
                         <div style="margin-bottom: 5px; color: #e74c3c;">
-                            Excluído por: ${deletedBy} em ${deletedAt}<br>
+                            Cancelada por: ${deletedBy} em ${deletedAt}<br>
                             Justificativa: ${deletionReason}
                         </div>
                     `;
@@ -1400,15 +1400,15 @@
                     </div>
                     ${isExcluded ? `
                     <div>
-                        <span class="status-label">Motivo da Exclusão:</span>
+                        <span class="status-label">Motivo do Cancelamento:</span>
                         <span class="status-value">${payment.deleteReason || '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Data da Exclusão:</span>
+                        <span class="status-label">Data do Cancelamento:</span>
                         <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
                     </div>
                     <div>
-                        <span class="status-label">Excluído por:</span>
+                        <span class="status-label">Cancelado por:</span>
                         <span class="status-value">${payment.deletedBy || '-'}</span>
                     </div>` : ''}
                 `;
