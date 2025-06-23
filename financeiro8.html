@@ -733,7 +733,7 @@
                     <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
                     ${expense.isDeleted ? `
                         <div style="margin-bottom: 5px; color: #f44336;">
-                            Excluído por: ${deletedBy} em ${deletedAt}<br>
+                            Cancelado por: ${deletedBy} em ${deletedAt}<br>
                             Justificativa: ${deletionReason}
                         </div>
                     ` : ''}
@@ -788,16 +788,16 @@
         async function deleteExpense(expenseId) {
             const result = await Swal.fire({
                 icon: 'warning',
-                title: 'Confirmar Exclusão',
-                text: 'Por favor, informe o motivo da exclusão:',
+                title: 'Confirmar Cancelamento',
+                text: 'Por favor, informe o motivo do Cancelamento:',
                 input: 'textarea',
                 inputPlaceholder: 'Digite a justificativa aqui...',
                 inputAttributes: {
                     required: true
                 },
                 showCancelButton: true,
-                confirmButtonText: 'Excluir',
-                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Sair',
                 inputValidator: (value) => {
                     if (!value.trim()) {
                         return 'A justificativa é obrigatória!';
@@ -827,7 +827,7 @@
                     remove(expenseRef)
                 ]);
                 
-                showMessage('Despesa excluída com sucesso!', 'success', expenseMessage);
+                showMessage('Despesa Cancelada com sucesso!', 'success', expenseMessage);
                 loadFinancialData();
                 loadRecentExpenses();
             } catch (error) {
