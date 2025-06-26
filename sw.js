@@ -2,6 +2,8 @@ const CACHE_NAME = 'volei-bnh-cache-v2'; // Alterado para v2 para evitar conflit
 const urlsToCache = [
   '/volei-bnh/index.html', // Página principal
   '/volei-bnh/lista.html',
+  '/volei-bnh/transparencia.html',
+  '/volei-bnh/enquete.html',
   '/volei-bnh/android-chrome-192x192.png', // Corrigido
   '/volei-bnh/android-chrome-512x512.png', // Corrigido
   '/volei-bnh/favicon.ico',
