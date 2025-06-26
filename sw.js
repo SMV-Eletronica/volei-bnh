@@ -1,13 +1,12 @@
 const CACHE_NAME = 'volei-bnh-cache-v1';
 const urlsToCache = [
-  '/',
   '/volei-bnh/',
-  '/lista.html',
-  '/favicon-192x192.png',
-  '/favicon-512x512.png',
-  '/favicon.ico',
-  '/style.css',
-  '/main.js'
+  '/volei-bnh/lista.html',
+  '/volei-bnh/favicon-192x192.png',
+  '/volei-bnh/favicon-512x512.png',
+  '/volei-bnh/favicon.ico',
+  '/volei-bnh/style.css',
+  '/volei-bnh/main.js'
 ];
 
 self.addEventListener('install', function(event) {
