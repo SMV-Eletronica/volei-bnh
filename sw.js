@@ -1,11 +1,13 @@
 const CACHE_NAME = 'volei-bnh-cache-v1';
 const urlsToCache = [
-   '/volei-bnh/lista.html',
-  '/volei-bnh/favicon-192x192.png',
-  '/volei-bnh/favicon-512x512.png',
+  '/volei-bnh/index.html', // Página principal
+  '/volei-bnh/lista.html',
+  '/volei-bnh/android-chrome-192x192.png', // Corrigido
+  '/volei-bnh/android-chrome-512x512.png', // Corrigido
   '/volei-bnh/favicon.ico',
   '/volei-bnh/styles.css',
-  '/volei-bnh/main.js'
+  '/volei-bnh/main.js',
+ // '/volei-bnh/offline.html' // Opcional: para suporte offline
 ];
 
 self.addEventListener('install', function(event) {
