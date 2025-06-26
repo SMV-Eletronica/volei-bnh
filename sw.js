@@ -4,9 +4,9 @@ const urlsToCache = [
   '/volei-bnh/lista.html',
   '/volei-bnh/transparencia.html',
   '/volei-bnh/enquete.html',
-  '/volei-bnh/android-chrome-192x192.png', // Corrigido
   '/volei-bnh/splash.png', // Corrigido
-   '/volei-bnh/splash.png', // Corrigido
+  '/volei-bnh/android-chrome-192x192.png', // Corrigido 
+  '/volei-bnh/android-chrome-512x512.png', // Corrigido
   '/volei-bnh/favicon.ico',
   '/volei-bnh/styles.css',
   '/volei-bnh/main.js',
