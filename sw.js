@@ -1,11 +1,10 @@
 const CACHE_NAME = 'volei-bnh-cache-v1';
 const urlsToCache = [
-  '/volei-bnh/',
-  '/volei-bnh/lista.html',
+   '/volei-bnh/lista.html',
   '/volei-bnh/favicon-192x192.png',
   '/volei-bnh/favicon-512x512.png',
   '/volei-bnh/favicon.ico',
-  '/volei-bnh/style.css',
+  '/volei-bnh/styles.css',
   '/volei-bnh/main.js'
 ];
 
