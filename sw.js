@@ -1,4 +1,4 @@
-const CACHE_NAME = 'volei-bnh-cache-v4'; // Alterado para v2 para evitar conflitos com cache antigo
+const CACHE_NAME = 'volei-bnh-cache-v5'; // Alterado para v5 para evitar conflitos com cache antigo
 const urlsToCache = [
   '/volei-bnh/index.html', // Página principal
   '/volei-bnh/lista.html',
