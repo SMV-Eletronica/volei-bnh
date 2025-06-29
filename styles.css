@@ -59,6 +59,16 @@ body {
     }
 
 
+div:where(.swal2-icon).swal2-warning {
+    border-color: #f8bb86;
+    color: #f8bb86;
+  }
+
+div:where(.swal2-icon).swal2-info {
+    border-color: #f8bb86;
+    color: #f8bb86;
+}
+
 
 .swal2-popup {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
