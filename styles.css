@@ -60,6 +60,37 @@ body {
 
 
 
+.swal2-popup {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.swal2-title {
+    font-size: 1.5em;
+    color: var(--text);
+    margin-bottom: 15px;
+}
+
+.swal2-confirm {
+    background-color: var(--primary) !important;
+}
+
+.swal2-confirm:hover {
+    background-color: #2980b9 !important;
+}
+
+.swal2-cancel {
+    background-color: var(--danger) !important;
+}
+
+.swal2-cancel:hover {
+    background-color: #c0392b !important;
+}
+
+
 
 
 #clearBtn {
