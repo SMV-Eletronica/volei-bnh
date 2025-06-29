@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="styles.css">
     
 </head>
+  <style>
+        .defaulter-item {
+            cursor: pointer;
+        }
+        /* Estilo para o popup do SweetAlert2 */
+        .swal-wide {
+            width: 90% !important;
+            max-width: 600px !important;
+        }
+        .swal-content {
+            padding: 15px !important;
+            text-align: center !important;
+        }
+    </style>
+
+    
 <body>
     <div class="header">
         <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH Gestão</h2></center>
@@ -583,7 +599,7 @@
                     confirmButtonText: 'Fechar',
                     width: '600px',
                     customClass: {
-                        popup: 'swal2-defaulter-popup'
+                        popup: 'swal-wide'
                     }
                 });
                 
