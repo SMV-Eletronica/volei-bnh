@@ -5,7 +5,12 @@
   "id": "/volei-bnh",
   "start_url": "/volei-bnh/lista.html",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "fullscreen",
+    "minimal-ui",
+    "window-controls-overlay"
+  ],
   "orientation": "portrait",
   "launch_handler": {
     "client_mode": "navigate-existing"
