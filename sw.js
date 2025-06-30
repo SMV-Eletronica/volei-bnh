@@ -1,4 +1,4 @@
-const CACHE_NAME = 'volei-bnh-cache-v7';
+const CACHE_NAME = 'volei-bnh-cache-v2';
 const urlsToCache = [
   '/volei-bnh/index.html',
   '/volei-bnh/lista.html',
@@ -13,35 +13,23 @@ const urlsToCache = [
   '/volei-bnh/offline.html'
 ];
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache aberto:', CACHE_NAME);
-        return cache.addAll(urlsToCache).catch(error => {
-          console.error('Falha ao adicionar recursos ao cache:', error);
-          throw error;
-        });
-      })
-      .catch(error => {
-        console.error('Erro ao abrir o cache:', error);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Se a resposta for 404, mostra offline.html
         if (response.status === 404) {
           return caches.match('/volei-bnh/offline.html');
         }
         return response;
       })
-      .catch(() => {
-        // Em caso de erro de rede, mostra offline.html
-        return caches.match('/volei-bnh/offline.html');
-      })
+      .catch(() => caches.match('/volei-bnh/offline.html'))
   );
 });
