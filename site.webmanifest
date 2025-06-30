@@ -21,13 +21,13 @@
   "screenshots": [
     {
       "src": "/volei-bnh/screenshot-desktop.png",
-      "sizes": "1280x720",
+      "sizes": "1366x720",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
       "src": "/volei-bnh/screenshot-mobile.png",
-      "sizes": "360x640",
+      "sizes": "720x1600",
       "type": "image/png"
     }
   ]
