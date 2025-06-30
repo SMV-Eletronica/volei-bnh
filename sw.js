@@ -1,4 +1,4 @@
-const CACHE_NAME = 'volei-bnh-cache-v1';
+const CACHE_NAME = 'volei-bnh-cache-v7';
 const urlsToCache = [
   '/volei-bnh/index.html',
   '/volei-bnh/lista.html',
