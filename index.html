@@ -392,7 +392,7 @@
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
+            navigator.serviceWorker.register('pwabuilder-sw.js')
                 .then(reg => console.log('✅ Service Worker registrado com sucesso!'))
                 .catch(err => console.error('❌ Erro ao registrar o Service Worker:', err));
         }
