@@ -1,42 +1,35 @@
-const CACHE_NAME = 'volei-bnh-cache-v9'; // Alterado para v5 para evitar conflitos com cache antigo
+const CACHE_NAME = 'volei-bnh-cache-v2';
 const urlsToCache = [
-  '/volei-bnh/index.html', // Página principal
+  '/volei-bnh/index.html',
   '/volei-bnh/lista.html',
   '/volei-bnh/transparencia.html',
   '/volei-bnh/enquete.html',
-  '/volei-bnh/splash.png', // Corrigido
-  '/volei-bnh/android-chrome-192x192.png', // Corrigido 
-  '/volei-bnh/android-chrome-512x512.png', // Corrigido
+  '/volei-bnh/splash.png',
+  '/volei-bnh/android-chrome-192x192.png',
+  '/volei-bnh/android-chrome-512x512.png',
   '/volei-bnh/favicon.ico',
   '/volei-bnh/styles.css',
   '/volei-bnh/main.js',
-  '/volei-bnh/offline.html' // Opcional: para suporte offline
+  '/volei-bnh/offline.html'
 ];
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache aberto:', CACHE_NAME);
-        return cache.addAll(urlsToCache).catch(error => {
-          console.error('Falha ao adicionar recursos ao cache:', error);
-          throw error;
-        });
-      })
-      .catch(error => {
-        console.error('Erro ao abrir o cache:', error);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        return response || fetch(event.request).catch(() => {
-          // Fallback para página offline
+        if (response.status === 404) {
           return caches.match('/volei-bnh/offline.html');
-        });
+        }
+        return response;
       })
+      .catch(() => caches.match('/volei-bnh/offline.html'))
   );
 });
