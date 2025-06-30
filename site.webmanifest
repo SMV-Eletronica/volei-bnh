@@ -16,7 +16,7 @@
   "theme_color": "#3498db",
   "background_color": "#3498db",
   "display": "standalone",
-  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "display_override": [ "standalone", "fullscreen", "minimal-ui"],
   "start_url": "/volei-bnh/lista.html",
   "screenshots": [
     {
@@ -26,9 +26,33 @@
       "form_factor": "wide"
     },
     {
-      "src": "/volei-bnh/screenshot-mobile.png",
+      "src": "/volei-bnh/screenshot-mobile1.png",
+      "sizes": "720x1600",
+      "type": "image/png"
+    },
+     {
+      "src": "/volei-bnh/screenshot-mobile2.png",
+      "sizes": "720x1600",
+      "type": "image/png"
+    },
+
+ {
+      "src": "/volei-bnh/screenshot-mobile3.png",
+      "sizes": "720x1600",
+      "type": "image/png"
+    },
+ {
+      "src": "/volei-bnh/screenshot-mobile4.png",
+      "sizes": "720x1600",
+      "type": "image/png"
+    },
+ {
+      "src": "/volei-bnh/screenshot-mobile5.png",
       "sizes": "720x1600",
       "type": "image/png"
     }
+
+
+
   ]
 }
