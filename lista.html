@@ -2678,36 +2678,66 @@ body {
         window.fecharPopup = fecharPopup;
     </script>
 
-   <!-- OneSignal SDK -->
-<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.init({
-      appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
-      path: "/volei-bnh/",
-      serviceWorkerParam: { scope: "/volei-bnh/" },
-      autoRegister: true, // evita o prompt automático
-      notifyButton: { enable: false } // desativa o sininho
-    });
+ <!-- Script do OneSignal com botão personalizado -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" async></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        // Inicialização do OneSignal
+        await OneSignal.init({
+          appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
+          path: "/volei-bnh/",
+          serviceWorkerPath: "volei-bnh/OneSignalSDKWorker.js",
+          serviceWorkerParam: { scope: "/volei-bnh/" },
+          autoResubscribe: true, // Reinscreve automaticamente o usuário se a permissão ainda existir
+          allowLocalhostAsSecureOrigin: true // Útil para testes locais
+        });
 
-    // Personalizado: botão que ativa notificações manualmente
-    const btnNotif = document.createElement("button");
-    btnNotif.textContent = "Receber Notificações";
-    btnNotif.style = "position:fixed; bottom:20px; right:20px; padding:10px 15px; background:#3498db; color:white; border:none; border-radius:5px; cursor:pointer; z-index:1000;";
-    document.body.appendChild(btnNotif);
+        // Verifica o estado inicial da permissão
+        const permission = await OneSignal.Notifications.permission;
+        const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
 
-    btnNotif.addEventListener("click", async () => {
-      const permission = await OneSignal.Notifications.requestPermission();
-      if (permission === "granted") {
-        btnNotif.textContent = "Notificações Ativadas 🎉";
-        btnNotif.disabled = true;
-      } else {
-        alert("Você precisa permitir para receber notificações.");
+        // Cria o botão personalizado
+        const btnNotif = document.createElement("button");
+        btnNotif.textContent = permission === "granted" ? "Notificações Ativadas 🎉" : "Receber Notificações";
+        btnNotif.style = "position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 1000;";
+        btnNotif.disabled = permission === "granted";
+        document.body.appendChild(btnNotif);
+
+        // Evento de clique no botão
+        btnNotif.addEventListener("click", async () => {
+          try {
+            const permission = await OneSignal.Notifications.requestPermission();
+            if (permission === "granted") {
+              btnNotif.textContent = "Notificações Ativadas 🎉";
+              btnNotif.disabled = true;
+              // Opcional: Enviar uma notificação de boas-vindas
+              await OneSignal.User.PushSubscription.optIn();
+            } else {
+              alert("Permissão de notificações negada. Você pode ativá-las nas configurações do navegador.");
+            }
+          } catch (error) {
+            console.error("Erro ao solicitar permissão:", error);
+            alert("Ocorreu um erro ao tentar ativar as notificações. Tente novamente.");
+          }
+        });
+
+        // Listener para mudanças no estado de subscrição
+        OneSignal.User.PushSubscription.on("change", (event) => {
+          if (event.current.optedIn) {
+            btnNotif.textContent = "Notificações Ativadas 🎉";
+            btnNotif.disabled = true;
+          } else {
+            btnNotif.textContent = "Receber Notificações";
+            btnNotif.disabled = false;
+          }
+        });
+
+      } catch (error) {
+        console.error("Erro na inicialização do OneSignal:", error);
       }
     });
-  });
-</script>
-
+  </script>
 </body>
 </html>
