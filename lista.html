@@ -7,7 +7,7 @@
 
 
 
-   <!-- OneSignal SDK -->
+   <!-- OneSignal SDK 
     <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
     <script>
         window.OneSignal = window.OneSignal || [];
@@ -21,7 +21,22 @@
                 }
             });
         });
-    </script>
+    </script>  -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
+      safari_web_id: "web.onesignal.auto.40e8587d-66e6-4615-b716-6bb570edb005",
+      notifyButton: {
+        enable: true,
+      },
+    });
+  });
+</script>
+
+  
   
   <!-- Manifesto para Android suspenso
   <link rel="manifest" href="site.webmanifest">
