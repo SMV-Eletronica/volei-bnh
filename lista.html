@@ -2687,9 +2687,9 @@ body {
       // Inicialização do OneSignal
       await OneSignal.init({
         appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
-        serviceWorkerPath: "/OneSignalSDKWorker.js", // Caminho corrigido para a raiz
+        serviceWorkerPath: "/OneSignalSDKWorker.js", // Caminho corrigido para a raiz do site
         serviceWorkerUpdaterPath: "/OneSignalSDK.sw.js", // Caminho do arquivo de atualização
-        serviceWorkerParam: { scope: "/" }, // Escopo ajustado para a raiz
+        serviceWorkerParam: { scope: "/" }, // Escopo na raiz do site
         autoResubscribe: true,
         allowLocalhostAsSecureOrigin: true
       });
