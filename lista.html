@@ -19,10 +19,14 @@
         serviceWorkerUpdaterPath: "/volei-bnh/OneSignalSDK.sw.js",
         serviceWorkerParam: { scope: "/volei-bnh/" },
         notifyButton: {
-          enable: true // Ativa o botão padrão do OneSignal
+          enable: true // Ativa o botão padrão do OneSignal (sino)
         }
       });
       console.log("OneSignal inicializado com sucesso.");
+
+      // Verifica o estado inicial da permissão
+      const permission = await OneSignal.Notifications.permission;
+      console.log("Permissão de notificações inicial:", permission);
     } catch (error) {
       console.error("Erro na inicialização do OneSignal:", error);
     }
