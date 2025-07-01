@@ -2687,9 +2687,8 @@ body {
       // Inicialização do OneSignal
       await OneSignal.init({
         appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
-        serviceWorkerPath: "/volei-bnh/OneSignalSDKWorker.js", // Caminho corrigido para a raiz do site
-        serviceWorkerUpdaterPath: "/volei-bnh/OneSignalSDKWorker.js", // Caminho do arquivo de atualização
-        serviceWorkerParam: { scope: "/volei-bnh/" }, // Escopo na raiz do site
+        path: "/volei-bnh/",
+                serviceWorkerParam: { scope: "/volei-bnh/" },
         autoResubscribe: true,
         allowLocalhostAsSecureOrigin: true
        
