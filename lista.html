@@ -6,13 +6,26 @@
   <title>Lista de Presença - Vôlei BNH</title>
 
   
+<!-- Script do OneSignal para Typical Site -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
-    });
+    try {
+      console.log("Iniciando OneSignal...");
+      await OneSignal.init({
+        appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
+        serviceWorkerPath: "/volei-bnh/OneSignalSDKWorker.js",
+        serviceWorkerUpdaterPath: "/volei-bnh/OneSignalSDK.sw.js",
+        serviceWorkerParam: { scope: "/volei-bnh/" },
+        notifyButton: {
+          enable: true // Ativa o botão padrão do OneSignal
+        }
+      });
+      console.log("OneSignal inicializado com sucesso.");
+    } catch (error) {
+      console.error("Erro na inicialização do OneSignal:", error);
+    }
   });
 </script>
 
