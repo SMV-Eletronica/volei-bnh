@@ -6,7 +6,7 @@
   <title>Lista de Presença - Vôlei BNH</title>
 
 
-  <!-- OneSignal SDK -->
+  <!-- OneSignal SDK 
     <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
     <script>
         window.OneSignal = window.OneSignal || [];
@@ -20,7 +20,43 @@
                 }
             });
         });
-    </script>
+    </script>  -->
+
+
+
+
+  <!-- OneSignal SDK -->
+<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.init({
+      appId: "c0013869-0811-4ed2-bdb2-a5198088c95f",
+      path: "/volei-bnh/",
+      serviceWorkerParam: { scope: "/volei-bnh/" },
+      autoRegister: false, // evita o prompt automático
+      notifyButton: { enable: false } // desativa o sininho
+    });
+
+    // Personalizado: botão que ativa notificações manualmente
+    const btnNotif = document.createElement("button");
+    btnNotif.textContent = "Receber Notificações";
+    btnNotif.style = "position:fixed; bottom:20px; right:20px; padding:10px 15px; background:#3498db; color:white; border:none; border-radius:5px; cursor:pointer; z-index:1000;";
+    document.body.appendChild(btnNotif);
+
+    btnNotif.addEventListener("click", async () => {
+      const permission = await OneSignal.Notifications.requestPermission();
+      if (permission === "granted") {
+        btnNotif.textContent = "Notificações Ativadas 🎉";
+        btnNotif.disabled = true;
+      } else {
+        alert("Você precisa permitir para receber notificações.");
+      }
+    });
+  });
+</script>
+
+
    
   
   <!-- Manifesto para Android suspenso
