@@ -15,6 +15,30 @@
   });
 </script>
 
+  <script>
+  function mostrarToast(mensagem) {
+    const toast = document.createElement("div");
+    toast.innerText = mensagem;
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.left = "50%";
+    toast.style.transform = "translateX(-50%)";
+    toast.style.background = "#3498db";
+    toast.style.color = "#fff";
+    toast.style.padding = "12px 20px";
+    toast.style.borderRadius = "8px";
+    toast.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+    toast.style.zIndex = "9999";
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    mostrarToast("Show! Agora o Vôlei-BNH tá na sua tela inicial 🏐🔥 Bora partir pro jogo!");
+  }
+</script>
+
 
   
   
