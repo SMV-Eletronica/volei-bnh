@@ -15,6 +15,24 @@
   });
 </script>
 
+  <script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+    });
+
+    // 🎯 Escuta quando o usuário aceita notificações
+    OneSignal.on('subscriptionChange', async function (isSubscribed) {
+      if (isSubscribed && window.currentUserPlayer?.id) {
+        await OneSignal.setExternalUserId(`player-${currentUserPlayer.id}`);
+        console.log("Usuário vinculado ao OneSignal:", `player-${currentUserPlayer.id}`);
+      }
+    });
+  });
+</script>
+
+
  
   
   
@@ -2691,22 +2709,6 @@ body {
   if (window.matchMedia('(display-mode: standalone)').matches) {
     mostrarToast("Show! Agora o Vôlei-BNH tá na sua tela inicial 🏐🔥 Bora partir pro jogo!");
   }
-</script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-    });
-
-    // 🎯 Escuta quando o usuário aceita notificações
-    OneSignal.on('subscriptionChange', async function (isSubscribed) {
-      if (isSubscribed && window.currentUserPlayer?.id) {
-        await OneSignal.setExternalUserId(`player-${currentUserPlayer.id}`);
-        console.log("Usuário vinculado ao OneSignal:", `player-${currentUserPlayer.id}`);
-      }
-    });
-  });
 </script>
 
 </body>
