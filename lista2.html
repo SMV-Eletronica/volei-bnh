@@ -11,21 +11,37 @@
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     OneSignalDeferred.push(async function (OneSignal) {
-      await OneSignal.init({
-        appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-        allowLocalhostAsSecureOrigin: true // Apenas para desenvolvimento local
-      });
+      try {
+        // Inicializa o OneSignal com o App ID
+        await OneSignal.init({
+          appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+          allowLocalhostAsSecureOrigin: true // Apenas para desenvolvimento local
+        });
+        console.log('OneSignal inicializado com sucesso.');
 
-      // Capturar mudanças na subscrição push
-      OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-        if (event.current.optedIn && window.currentUserPlayer?.id) {
-          await OneSignal.setExternalUserId(window.currentUserPlayer.id);
-          console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
-        }
-      });
+        // Capturar mudanças na subscrição push
+        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
+          if (event.current.optedIn && window.currentUserPlayer?.id) {
+            // Define o external_id com o ID do jogador logado
+            await OneSignal.login(window.currentUserPlayer.id);
+            console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
+
+            // Adiciona aliases personalizados
+            await OneSignal.User.addAliases({
+              firebase_id: window.currentUserPlayer.id,
+              crm_user_id: `crm_${window.currentUserPlayer.id}` // Exemplo de alias adicional
+            });
+            console.log('Aliases adicionados com sucesso:', {
+              firebase_id: window.currentUserPlayer.id,
+              crm_user_id: `crm_${window.currentUserPlayer.id}`
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao configurar OneSignal:', error);
+      }
     });
   </script>
-
 
   <!-- Favicon padrão para navegadores -->
   <link rel="icon" type="image/png" sizes="16x16" href="windows11/Square44x44Logo.altform-unplated_targetsize-16.png">
@@ -43,7 +59,7 @@
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<style>
+  <style>
     * {
   /*  margin: 0; */
     padding: 0;
@@ -976,9 +992,6 @@ body {
     }
 }
 </style>
-
-
-  
 </head>
 <body>
   <div class="header">
@@ -1227,6 +1240,12 @@ body {
           return;
         }
         try {
+          // Remove external_id e aliases do OneSignal
+          await OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.logout();
+            console.log('OneSignal logout realizado com sucesso.');
+          });
+          
           await signOut(auth);
           console.log('Logout bem-sucedido');
           await Swal.fire({
