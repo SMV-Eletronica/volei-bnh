@@ -16,15 +16,16 @@
         allowLocalhostAsSecureOrigin: true // Apenas para desenvolvimento local
       });
 
-      // Capturar o playerId quando a subscrição for ativada
-      OneSignal.User.PushSubscription.on('change', async (subscription) => {
-        if (subscription.optedIn && window.currentUserPlayer?.id) {
+      // Capturar mudanças na subscrição push
+      OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
+        if (event.current.optedIn && window.currentUserPlayer?.id) {
           await OneSignal.setExternalUserId(window.currentUserPlayer.id);
           console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
         }
       });
     });
   </script>
+
 
   <!-- Favicon padrão para navegadores -->
   <link rel="icon" type="image/png" sizes="16x16" href="windows11/Square44x44Logo.altform-unplated_targetsize-16.png">
