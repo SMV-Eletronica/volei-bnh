@@ -59,7 +59,7 @@
 
       // Definir destinatários
       if (sendToAll) {
-        payload.included_segments = ["Subscribed Users"];
+        payload.included_segments = ["All"];
       } else {
         payload.include_external_user_ids = [externalUserId];
         payload.channel_for_external_user_ids = "push";
