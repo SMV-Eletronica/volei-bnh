@@ -1198,34 +1198,26 @@ body {
         }
 
         onAuthStateChanged(auth, async (user) => {
-  console.log('onAuthStateChanged disparado, usuário:', user);
-
-  if (!user) {
-    await Swal.fire({
-      icon: 'error',
-      title: 'Acesso Negado',
-      text: 'Você precisa estar logado para acessar esta página.',
-    });
-    window.location.href = 'index.html';
-  } else {
-    emailLogado = user.email;
-    isAdmin = adminEmails.includes(emailLogado);
-
-    // 🧠 Carrega o player e define globalmente
-    const player = await loadCurrentUserPlayer();
-    window.currentUserPlayer = player;
-
-    document.getElementById('userEmail').textContent =
-      `Logado como: ${player?.name || 'Usuário'} (${user.email})`;
-    console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
-
-    updateButtonVisibility();
-    await loadGuestFee();
-    await initializeGameList();
-    setupAdminFeatures();
-  }
-});
-
+            console.log('onAuthStateChanged disparado, usuário:', user);
+            if (!user) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Acesso Negado',
+                    text: 'Você precisa estar logado para acessar esta página.',
+                });
+                window.location.href = 'index.html';
+            } else {
+                emailLogado = user.email;
+                isAdmin = adminEmails.includes(emailLogado);
+                await loadCurrentUserPlayer();
+                document.getElementById('userEmail').textContent = `Logado como: ${currentUserPlayer?.name || 'Usuário'} (${user.email})`;
+                console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
+                updateButtonVisibility();
+                await loadGuestFee();
+                await initializeGameList();
+                setupAdminFeatures();
+            }
+        });
 
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
