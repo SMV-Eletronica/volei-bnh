@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Teste de Notificação Push OneSignal</title>
-  <!-- Inclua o SDK do OneSignal -->
-  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+  <!-- Inclua o SDK v16 do OneSignal -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function() {
-      OneSignal.init({
+    // Aguarde o OneSignal carregar completamente
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
         appId: "65e53671-840a-40bd-a24b-6db4b0e8d555", // Seu App ID
       });
       // Associar o external_user_id ao usuário
-      OneSignal.setExternalUserId("-OPCOGTGy8o_ym6DgkmV");
+      await OneSignal.login("-OPCOGTGy8o_ym6DgkmV");
     });
 
     // Função para enviar a notificação
