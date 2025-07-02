@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste de Notificação Push OneSignal</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    label { display: block; margin-bottom: 5px; }
+    input[type="text"] { padding: 8px; width: 300px; margin-bottom: 10px; }
+    input[type="radio"] { margin-right: 5px; }
+    button { padding: 8px 16px; cursor: pointer; }
+    .disabled { background-color: #f0f0f0; cursor: not-allowed; }
+  </style>
+  <!-- Inclua o SDK v16 do OneSignal -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "65e53671-840a-40bd-a24b-6db4b0e8d555", // Seu App ID
+      });
+      console.log('OneSignal inicializado com sucesso');
+    });
+
+    // Função para atualizar o estado do input de External User ID
+    function updateExternalUserIdInput() {
+      const sendToAll = document.getElementById('sendToAll').checked;
+      const externalUserIdInput = document.getElementById('externalUserId');
+      externalUserIdInput.disabled = sendToAll;
+      externalUserIdInput.classList.toggle('disabled', sendToAll);
+    }
+
+    // Função para enviar a notificação
+    async function sendPushNotification() {
+      const sendToAll = document.getElementById('sendToAll').checked;
+      const externalUserId = document.getElementById('externalUserId').value.trim();
+      const imageUrl = document.getElementById('imageUrl').value.trim();
+
+      if (!sendToAll && !externalUserId) {
+        alert('Por favor, insira um External User ID válido ou selecione "Enviar para todos os inscritos".');
+        return;
+      }
+
+      // Associar o external_user_id ao usuário, se não for para todos
+      if (!sendToAll) {
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.login(externalUserId);
+          console.log('External User ID associado:', externalUserId);
+        });
+      }
+
+      // Payload base
+      const payload = {
+        app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+        channel_for_external_user_ids: "push",
+        headings: { en: "🏐 Nova Partida!" },
+        contents: { en: "Chegue cedo pro aquecimento, jogador!" }
+      };
+
+      // Definir destinatários
+      if (sendToAll) {
+        payload.included_segments = ["Subscribed Users"];
+      } else {
+        payload.include_external_user_ids = [externalUserId];
+      }
+
+      // Adicionar imagem ao payload, se fornecida
+      if (imageUrl) {
+        if (!imageUrl.match(/\.(jpg|jpeg|png)$/i)) {
+          alert('A URL da imagem deve terminar com .jpg, .jpeg ou .png e usar HTTPS.');
+          return;
+        }
+        payload.big_picture = imageUrl; // Android
+        payload.ios_attachments = { id: imageUrl }; // iOS
+        payload.chrome_web_image = imageUrl; // Web (Chrome)
+      }
+
+      try {
+        console.log('Enviando payload:', payload);
+        const response = await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        console.log('Resposta da API:', data);
+        if (response.ok) {
+          alert('Notificação enviada com sucesso! ID: ' + data.id + ', Destinatários: ' + data.recipients);
+        } else {
+          alert('Erro ao enviar notificação: ' + JSON.stringify(data.errors || data));
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        alert('Erro ao enviar notificação: ' + error.message);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Teste de Notificação Push com Imagem</h1>
+  <div>
+    <label><input type="radio" name="recipientType" id="sendToSingle" checked onclick="updateExternalUserIdInput()"> Enviar para um External User ID</label>
+    <label><input type="radio" name="recipientType" id="sendToAll" onclick="updateExternalUserIdInput()"> Enviar para todos os inscritos</label>
+  </div>
+  <label for="externalUserId">External User ID:</label>
+  <input type="text" id="externalUserId" placeholder="Insira o External User ID" value="-OPCOGTGy8o_ym6DgkmV">
+  <label for="imageUrl">URL da Imagem (HTTPS, .jpg ou .png):</label>
+  <input type="text" id="imageUrl" placeholder="Ex.: https://exemplo.com/imagem.jpg">
+  <br><br>
+  <button onclick="sendPushNotification()">Enviar Notificação</button>
+</body>
+</html>
