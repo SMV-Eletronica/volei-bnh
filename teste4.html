@@ -2,11 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Notificação Completa com Imagem e Botões</title>
+  <title>Notificação Push com Seletor de Imagem</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    input, button { margin-top: 10px; padding: 8px; width: 100%; max-width: 400px; }
-    label { display: block; margin-top: 15px; font-weight: bold; }
+    label { font-weight: bold; margin-top: 20px; display: block; }
+    input, button { margin-top: 8px; padding: 8px; width: 100%; max-width: 400px; }
+    .thumbnails { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .thumbnails img { width: 100px; cursor: pointer; border: 2px solid transparent; border-radius: 4px; }
+    .thumbnails img.selected { border-color: #2196f3; }
   </style>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
@@ -18,6 +21,12 @@
       console.log('OneSignal iniciado');
     });
 
+    function selectImage(src, imgElement) {
+      document.getElementById('imageUrl').value = src;
+      document.querySelectorAll('.thumbnails img').forEach(img => img.classList.remove('selected'));
+      imgElement.classList.add('selected');
+    }
+
     async function sendPushNotification() {
       const externalUserId = document.getElementById('externalUserId').value.trim();
       const imageUrl = document.getElementById('imageUrl').value.trim();
@@ -27,9 +36,14 @@
         return;
       }
 
+      if (!imageUrl || !/^https:\/\/.+\.(jpg|jpeg|png)$/i.test(imageUrl)) {
+        alert("A URL da imagem precisa ser HTTPS e terminar com .jpg, .jpeg ou .png.");
+        return;
+      }
+
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.login(externalUserId);
-        console.log("Usuário conectado como:", externalUserId);
+        console.log("Usuário logado:", externalUserId);
       });
 
       const payload = {
@@ -61,24 +75,30 @@
 
         const data = await response.json();
         if (response.ok) {
-          alert(`Notificação enviada com sucesso!\nID: ${data.id}`);
+          alert(`✅ Notificação enviada com sucesso!\nID: ${data.id}`);
         } else {
-          alert("Erro ao enviar: " + JSON.stringify(data.errors || data));
+          alert("❌ Erro ao enviar: " + JSON.stringify(data.errors || data));
         }
       } catch (error) {
-        alert("Erro de rede: " + error.message);
+        alert("❌ Erro de rede: " + error.message);
       }
     }
   </script>
 </head>
 <body>
-  <h1>Notificação Push Personalizada</h1>
+  <h1>Teste de Notificação Push</h1>
 
   <label for="externalUserId">External User ID:</label>
   <input type="text" id="externalUserId" value="-OPCOGTGy8o_ym6DgkmV">
 
-  <label for="imageUrl">Imagem (HTTPS .jpg/.png):</label>
-  <input type="text" id="imageUrl" placeholder="https://exemplo.com/banner.png">
+  <label>Escolha um banner:</label>
+  <div class="thumbnails">
+    <img src="https://smv-eletronica.github.io/volei-bnh/ios/banner1.png" onclick="selectImage(this.src, this)">
+    <img src="https://smv-eletronica.github.io/volei-bnh/ios/banner2.jpg" onclick="selectImage(this.src, this)">
+    <img src="https://smv-eletronica.github.io/volei-bnh/ios/banner3.png" onclick="selectImage(this.src, this)">
+  </div>
+
+  <input type="text" id="imageUrl" placeholder="URL da imagem será preenchida aqui" readonly style="background-color:#f0f0f0;">
 
   <button onclick="sendPushNotification()">Enviar Notificação</button>
 </body>
