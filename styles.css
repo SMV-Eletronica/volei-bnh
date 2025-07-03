@@ -104,13 +104,13 @@ div:where(.swal2-icon).swal2-info {
 
 
 #clearBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
+    width: 120px; /* Define a largura troquei de 90 para 120 */
+   /* height: 30px; /* Define a altura */
 }
 
 #deleteBtn {
-    width: 90px; /* Define a largura */
-    height: 30px; /* Define a altura */
+    width: 120px; /* Define a largura troquei de 90 para 120 */
+  /*  height: 30px; /* Define a altura */
 }
 
 #saveBtn2 {
