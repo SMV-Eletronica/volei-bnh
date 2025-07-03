@@ -54,7 +54,7 @@
       const payload = {
         app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
         headings: { en: "🏐 Nova Partida! 03/07/2025" },
-        contents: { en: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Chegue cedo pro aquecimento, jogador!kkkkkkkkkkk      kkkkkkkkkkkkkkkkkk       kkkkkkkkkkkkk" },    
+        contents: { en: "Chegue cedo pro aquecimento, jogador!" },    
         big_picture: "https://smv-eletronica.github.io/volei-bnh/ios/256.png",
         url: "https://smv-eletronica.github.io/volei-bnh/" // ← Essa é a URL que será aberta ao clicar
       };
@@ -92,7 +92,7 @@
         console.log('Resposta da API:', data);
         console.log('Status HTTP:', response.status);
         if (response.ok) {
-          alert(`Notificação enviada com sucesso! ID: ${data.id}, Destinatários: ${data.recipients}`);
+          alert(`Notificação enviada com sucesso! ID: ${data.id}`);
         } else {
           console.error('Erro na API:', data.errors || data);
           alert(`Erro ao enviar notificação: ${JSON.stringify(data.errors || data)}`);
