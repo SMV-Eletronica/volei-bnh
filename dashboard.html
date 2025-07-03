@@ -464,7 +464,8 @@
                     contactInput.value = player.contact || '';
                     categoryInput.value = player.category;
                     playerIdInput.value = id;
-                    saveBtn.textContent = 'Atualizar';
+                   /* saveBtn.textContent = '<i class="fas fa-save"></i> Atualizar'; mudei .textContent por .innerHTML para que possa exibir o fas*/
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Atualizar';
                     deleteBtn.style.display = 'inline-block';
                     clearBtn.style.display = 'inline-block';
                     
