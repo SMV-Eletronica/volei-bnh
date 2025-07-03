@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css?v=1.0">
-    <!-- Adicionando SweetAlert2 CDN -->
+    <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -52,8 +52,6 @@
         <div id="userEmail"></div>
         <div class="section">
             <h2 class="section-title"><i class="fas fa-user-edit"></i> Cadastrar Novo Integrante</h2>
-            
-            <div id="message" class="message"></div>
             
             <form id="playerForm">
                 <div class="form-group">
@@ -255,55 +253,62 @@
                 let imageUrl = null;
                 const file = imageFileInput.files[0];
                 
-                if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro',
-                            text: 'A imagem deve ter no máximo 5MB.',
-                            confirmButtonText: 'OK'
-                        });
-                        return;
-                    }
-                    if (!file.type.startsWith('image/')) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro',
-                            text: 'Por favor, selecione um arquivo de imagem.',
-                            confirmButtonText: 'OK'
-                        });
-                        return;
-                    }
-
-                    const storagePath = `players/${Date.now()}_${file.name}`;
-                    const fileRef = storageRef(storage, storagePath);
-                    console.log('Iniciando upload para:', storagePath);
-                    await uploadBytes(fileRef, file);
-                    console.log('Upload concluído, obtendo URL...');
-                    imageUrl = await getDownloadURL(fileRef);
-                    console.log('URL da imagem:', imageUrl);
-                }
-
-                const playerData = {
-                    name: nameInput.value,
-                    email: emailInput.value || null,
-                    imageUrl: imageUrl || null,
-                    position: positionInput.value,
-                    contact: contactInput.value,
-                    category: categoryInput.value,
-                    createdAt: new Date().toISOString()
-                };
-                
                 if (playerIdInput.value) {
-                    // Modo de atualização: excluir imagem antiga, se houver
+                    // Modo de atualização
                     const playerRef = ref(database, `players/${playerIdInput.value}`);
                     const snapshot = await get(playerRef);
-                    if (snapshot.exists() && snapshot.val().imageUrl && file) {
-                        const oldImageRef = storageRef(storage, snapshot.val().imageUrl);
-                        await deleteObject(oldImageRef).catch((error) => {
-                            console.warn("Erro ao excluir imagem antiga:", error.code, error.message);
-                        });
+                    if (snapshot.exists()) {
+                        const existingPlayer = snapshot.val();
+                        imageUrl = existingPlayer.imageUrl; // Manter a imagem atual por padrão
+                        
+                        if (file) {
+                            // Se uma nova imagem for fornecida, excluir a antiga e fazer upload da nova
+                            if (file.size > 5 * 1024 * 1024) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: 'A imagem deve ter no máximo 5MB.',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
+                            }
+                            if (!file.type.startsWith('image/')) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: 'Por favor, selecione um arquivo de imagem.',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
+                            }
+
+                            if (existingPlayer.imageUrl) {
+                                const oldImageRef = storageRef(storage, existingPlayer.imageUrl);
+                                await deleteObject(oldImageRef).catch((error) => {
+                                    console.warn("Erro ao excluir imagem antiga:", error.code, error.message);
+                                });
+                            }
+
+                            const storagePath = `players/${Date.now()}_${file.name}`;
+                            const fileRef = storageRef(storage, storagePath);
+                            console.log('Iniciando upload para:', storagePath);
+                            await uploadBytes(fileRef, file);
+                            console.log('Upload concluído, obtendo URL...');
+                            imageUrl = await getDownloadURL(fileRef);
+                            console.log('URL da imagem:', imageUrl);
+                        }
                     }
+
+                    const playerData = {
+                        name: nameInput.value,
+                        email: emailInput.value || null,
+                        imageUrl: imageUrl || null,
+                        position: positionInput.value,
+                        contact: contactInput.value,
+                        category: categoryInput.value,
+                        createdAt: existingPlayer.createdAt // Manter a data de criação original
+                    };
+
                     const updates = {};
                     updates['players/' + playerIdInput.value] = playerData;
                     await update(ref(database), updates);
@@ -314,6 +319,46 @@
                         confirmButtonText: 'OK'
                     });
                 } else {
+                    // Modo de cadastro
+                    if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: 'A imagem deve ter no máximo 5MB.',
+                                confirmButtonText: 'OK'
+                            });
+                            return;
+                        }
+                        if (!file.type.startsWith('image/')) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: 'Por favor, selecione um arquivo de imagem.',
+                                confirmButtonText: 'OK'
+                            });
+                            return;
+                        }
+
+                        const storagePath = `players/${Date.now()}_${file.name}`;
+                        const fileRef = storageRef(storage, storagePath);
+                        console.log('Iniciando upload para:', storagePath);
+                        await uploadBytes(fileRef, file);
+                        console.log('Upload concluído, obtendo URL...');
+                        imageUrl = await getDownloadURL(fileRef);
+                        console.log('URL da imagem:', imageUrl);
+                    }
+
+                    const playerData = {
+                        name: nameInput.value,
+                        email: emailInput.value || null,
+                        imageUrl: imageUrl || null,
+                        position: positionInput.value,
+                        contact: contactInput.value,
+                        category: categoryInput.value,
+                        createdAt: new Date().toISOString()
+                    };
+
                     const newPlayerRef = push(ref(database, 'players'));
                     await set(newPlayerRef, playerData);
                     Swal.fire({
