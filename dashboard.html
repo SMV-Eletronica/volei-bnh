@@ -297,27 +297,35 @@
                             imageUrl = await getDownloadURL(fileRef);
                             console.log('URL da imagem:', imageUrl);
                         }
+
+                        const playerData = {
+                            name: nameInput.value,
+                            email: emailInput.value || null,
+                            imageUrl: imageUrl || null,
+                            position: positionInput.value,
+                            contact: contactInput.value,
+                            category: categoryInput.value,
+                            createdAt: existingPlayer.createdAt // Manter a data de criação original
+                        };
+
+                        const updates = {};
+                        updates['players/' + playerIdInput.value] = playerData;
+                        await update(ref(database), updates);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso',
+                            text: 'Integrante atualizado com sucesso!',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Jogador não encontrado no banco de dados.',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
                     }
-
-                    const playerData = {
-                        name: nameInput.value,
-                        email: emailInput.value || null,
-                        imageUrl: imageUrl || null,
-                        position: positionInput.value,
-                        contact: contactInput.value,
-                        category: categoryInput.value,
-                        createdAt: existingPlayer.createdAt // Manter a data de criação original
-                    };
-
-                    const updates = {};
-                    updates['players/' + playerIdInput.value] = playerData;
-                    await update(ref(database), updates);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sucesso',
-                        text: 'Integrante atualizado com sucesso!',
-                        confirmButtonText: 'OK'
-                    });
                 } else {
                     // Modo de cadastro
                     if (file) {
@@ -467,6 +475,13 @@
                         imagePreview.style.display = 'none';
                     }
                     imageFileInput.value = '';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Jogador não encontrado no banco de dados.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             } catch (error) {
                 console.error("Erro ao editar jogador:", error.code, error.message);
