@@ -8,6 +8,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css?v=1.0">
+    <!-- Adicionando SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         input[type="tel"], input[type="file"] {
@@ -159,7 +161,6 @@
         const deleteBtn = document.getElementById('deleteBtn');
         const clearBtn = document.getElementById('clearBtn');
         const playersTableBody = document.getElementById('playersTableBody');
-        const messageDiv = document.getElementById('message');
         const imagePreview = document.getElementById('imagePreview');
 
         contactInput.addEventListener('input', function(e) {
@@ -180,11 +181,21 @@
             const file = e.target.files[0];
             if (file) {
                 if (file.size > 5 * 1024 * 1024) {
-                    showMessage("A imagem deve ter no máximo 5MB.", "error");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'A imagem deve ter no máximo 5MB.',
+                        confirmButtonText: 'OK'
+                    });
                     return;
                 }
                 if (!file.type.startsWith('image/')) {
-                    showMessage("Por favor, selecione um arquivo de imagem.", "error");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Por favor, selecione um arquivo de imagem.',
+                        confirmButtonText: 'OK'
+                    });
                     return;
                 }
                 const reader = new FileReader();
@@ -201,8 +212,14 @@
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 console.log('Usuário não está autenticado');
-                showMessage("Por favor, faça login para acessar o sistema.", "error");
-                window.location.href = 'index.html';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acesso negado',
+                    text: 'Por favor, faça login para acessar o sistema.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
             } else {
                 console.log('Usuário autenticado:', user.email);
                 document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
@@ -212,11 +229,22 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
             signOut(auth).then(() => {
-                showMessage("Logout realizado com sucesso!", "success");
-                window.location.href = 'index.html';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Logout realizado com sucesso!',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
             }).catch((error) => {
                 console.error('Erro ao sair:', error.code, error.message);
-                showMessage("Erro ao sair: " + error.message, "error");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao sair: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
             });
         });
 
@@ -229,11 +257,21 @@
                 
                 if (file) {
                     if (file.size > 5 * 1024 * 1024) {
-                        showMessage("A imagem deve ter no máximo 5MB.", "error");
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'A imagem deve ter no máximo 5MB.',
+                            confirmButtonText: 'OK'
+                        });
                         return;
                     }
                     if (!file.type.startsWith('image/')) {
-                        showMessage("Por favor, selecione um arquivo de imagem.", "error");
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Por favor, selecione um arquivo de imagem.',
+                            confirmButtonText: 'OK'
+                        });
                         return;
                     }
 
@@ -257,20 +295,44 @@
                 };
                 
                 if (playerIdInput.value) {
+                    // Modo de atualização: excluir imagem antiga, se houver
+                    const playerRef = ref(database, `players/${playerIdInput.value}`);
+                    const snapshot = await get(playerRef);
+                    if (snapshot.exists() && snapshot.val().imageUrl && file) {
+                        const oldImageRef = storageRef(storage, snapshot.val().imageUrl);
+                        await deleteObject(oldImageRef).catch((error) => {
+                            console.warn("Erro ao excluir imagem antiga:", error.code, error.message);
+                        });
+                    }
                     const updates = {};
                     updates['players/' + playerIdInput.value] = playerData;
                     await update(ref(database), updates);
-                    showMessage("Integrante atualizado com sucesso!", "success");
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Integrante atualizado com sucesso!',
+                        confirmButtonText: 'OK'
+                    });
                 } else {
                     const newPlayerRef = push(ref(database, 'players'));
                     await set(newPlayerRef, playerData);
-                    showMessage("Integrante cadastrado com sucesso!", "success");
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Integrante cadastrado com sucesso!',
+                        confirmButtonText: 'OK'
+                    });
                 }
                 
                 clearForm();
             } catch (error) {
                 console.error("Erro ao salvar jogador:", error.code, error.message);
-                showMessage("Erro ao salvar integrante: " + error.message, "error");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao salvar integrante: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
             }
         });
 
@@ -327,7 +389,12 @@
                 }
             }, (error) => {
                 console.error("Erro ao carregar jogadores:", error.code, error.message);
-                showMessage("Erro ao carregar integrantes: " + error.message, "error");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar integrantes: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
             });
         }
 
@@ -358,7 +425,12 @@
                 }
             } catch (error) {
                 console.error("Erro ao editar jogador:", error.code, error.message);
-                showMessage("Erro ao editar integrante: " + error.message, "error");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao editar integrante: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
             }
         }
 
@@ -374,23 +446,23 @@
                         });
                     }
                     await remove(playerRef);
-                    showMessage("Integrante excluído com sucesso!", "success");
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: 'Integrante excluído com sucesso!',
+                        confirmButtonText: 'OK'
+                    });
                     clearForm();
                 } catch (error) {
                     console.error("Erro ao excluir jogador:", error.code, error.message);
-                    showMessage("Erro ao excluir integrante: " + error.message, "error");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro ao excluir integrante: ' + error.message,
+                        confirmButtonText: 'OK'
+                    });
                 }
             }
-        }
-
-        function showMessage(message, type) {
-            messageDiv.textContent = message;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
         }
     </script>
 </body>
