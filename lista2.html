@@ -6,7 +6,7 @@
   <title>Lista de Presença - Vôlei BNH</title>  
   <!-- SDK do OneSignal -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
+  <script type="module">
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     OneSignalDeferred.push(async function (OneSignal) {
@@ -2075,9 +2075,9 @@ body {
         });
       }
     }
-  </script>
 
-  <script type="module">
+
+
   async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
     try {
       const paymentsRef = ref(database, 'payments');
