@@ -2814,12 +2814,21 @@ body {
         </div>
       `;
 
-      Swal.fire({
-        html: quadraHTML,
-        showCloseButton: true,
-        showConfirmButton: true,
-        width: 'auto'
+       Swal.fire({
+  html: quadraHTML,
+  showCloseButton: true,
+  showConfirmButton: true,
+  width: 'auto', // 👈 isso precisa estar aqui, fora do didOpen
+  didOpen: () => {
+    const botao = document.getElementById('confirmPlayer');
+    if (botao) {
+      botao.style.display = 'block'; // 👀 Exibe o botão se estava oculto
+      botao.addEventListener('click', async () => {
+        await confirmPlayer(); // ✅ Chama sua função corretamente
       });
+    }
+  }
+});
     }
   </script>
 
