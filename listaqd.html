@@ -2783,7 +2783,8 @@ body {
   const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F1751670265975_7059197-redonda-midia-icone-exclamacao-em-fundo-branco-vetor.jpg?alt=media&token=8af2f172-0d64-4e5b-833d-cb28c8f17cbb';
 
   // Ordenar jogadores em ordem decrescente
-  const sortedPlayers = sortPlayers([...confirmedPlayers]).reverse();
+ // const sortedPlayers = sortPlayers([...confirmedPlayers]).reverse();
+  const sortedPlayers = sortPlayers([...confirmedPlayers]);
 
   // Definir posições na quadra (12 titulares + 4 reservas)
   const playerPositions = [
