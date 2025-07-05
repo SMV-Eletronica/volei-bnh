@@ -2060,6 +2060,7 @@ body {
                   timer: 1500,
                   showConfirmButton: false
                 });
+                abrirQuadra();
               } catch (error) {
                 console.error('Erro ao copiar PIX:', error);
                 await Swal.fire({
@@ -2420,8 +2421,9 @@ body {
           await Swal.fire({
             icon: 'warning',
             title: 'Presença Já Confirmada',
-            text: 'Este jogador já confirmou sua presença.',
+            text: 'Você já confirmou sua presença.',
           });
+          abrirQuadra();
           return;
         }
 
@@ -2517,6 +2519,7 @@ body {
           addPlayerBtn.disabled = true;
           autocompleteSuggestions.style.display = 'none';
         }
+        abrirQuadra();
       } catch (error) {
         console.error('Erro ao confirmar jogador:', error);
         await Swal.fire({
