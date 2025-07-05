@@ -1132,14 +1132,14 @@ body {
     <div id="game-list" class="tab-content active">
       <div id="content" class="section">
         <div class="section-title">
-          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados 
-          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Abrir Lista / Configurar</button></h2>
+          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados </h2>
+          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Abrir Lista / Configurar</button>
         </div>
         <div class="game-selector">
           <h3>Selecione um Jogo</h3>
           <select id="gameSelect" class="game-select"></select>
         </div>
-        <button onclick="abrirQuadra()">Abrir Quadra</button>
+        
         <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
         <div class="game-list">
           <h3>Lista do Dia: 
@@ -1841,7 +1841,7 @@ body {
         }
       });
 
-      confirmPlayerBtn.addEventListener('click', () => confirmPlayer());
+      confirmPlayerBtn.addEventListener('click', () => abrirQuadra());
       setupGuestControls();
     }
 
@@ -2744,68 +2744,80 @@ body {
       }
     }
 
-    function updateGameList() {
-      const isAdmin = adminEmails.includes(emailLogado);
-      confirmedPlayersDiv.innerHTML = confirmedPlayers.length === 0
-        ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
-        : confirmedPlayers.map((player, index) => `
-          <div class="player-item">
-            <div class="player-info">
-              <span class="player-counter">${index + 1}.</span>
-              <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
-              <div>
-                <br>
-                <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
-                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
-                <br>
-                <span class="player-status status-${player.paymentStatus}">
-                  ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
-                </span>
-                ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
-                  ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                  </span>` : ''}
-              </div>
-            </div>
-            <div>
-              ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
-                <button class="player-approve" onclick="approvePlayer('${player.id}', true, true)">PAGO</button>
-                <button class="player-approve-debt" onclick="approvePlayer('${player.id}', true, false)">DEVENDO</button>
-              ` : ''}
-              ${(isAdmin || player.id === window.currentUserPlayer?.id || player.invitedById === window.currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', true)">Remover</button>` : ''}
-            </div>
-          </div>
-        `).join('');
+   function updateGameList() {
+  const isAdmin = adminEmails.includes(emailLogado);
+  
+  // Verificar se o jogador logado está na lista de presença
+  const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) ||
+                        waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
+  
+  // Atualizar o texto do botão confirmPlayer
+  if (confirmPlayerBtn) {
+    confirmPlayerBtn.innerHTML = isPlayerInList 
+      ? '<i class="fas fa-eye"></i> Ver Quadra'
+      : '<i class="fas fa-check"></i> Confirmar Presença';
+  }
 
-      waitlistPlayersDiv.innerHTML = waitlistPlayers.length === 0
-        ? '<div style="color: var(--muted); padding: 10px;">Ninguém na lista de espera.</div>'
-        : waitlistPlayers.map((player, index) => `
-          <div class="player-item">
-            <div class="player-info">
-              <span class="player-counter">${index + 1}.</span>
-              <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
-              <div>
-                <br>
-                <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
-                ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
-                <br>
-                <span class="player-status status-${player.paymentStatus}">
-                  ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
-                </span>
-                ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
-                  ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                  </span>` : ''}
-              </div>
-            </div>
-            <div>
-              ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
-                <button class="player-approve" onclick="approvePlayer('${player.id}', false, true)">PAGO</button>
-                <button class="player-approve-debt" onclick="approvePlayer('${player.id}', false, false)">DEVENDO</button>
-              ` : ''}
-              ${(isAdmin || player.id === window.currentUserPlayer?.id || player.invitedById === window.currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
-            </div>
+  confirmedPlayersDiv.innerHTML = confirmedPlayers.length === 0
+    ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
+    : confirmedPlayers.map((player, index) => `
+      <div class="player-item">
+        <div class="player-info">
+          <span class="player-counter">${index + 1}.</span>
+          <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+          <div>
+            <br>
+            <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+            ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
+            <br>
+            <span class="player-status status-${player.paymentStatus}">
+              ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
+            </span>
+            ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
+              ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
+              </span>` : ''}
           </div>
-        `).join('');
-    }
+        </div>
+        <div>
+          ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
+            <button class="player-approve" onclick="approvePlayer('${player.id}', true, true)">PAGO</button>
+            <button class="player-approve-debt" onclick="approvePlayer('${player.id}', true, false)">DEVENDO</button>
+          ` : ''}
+          ${(isAdmin || player.id === window.currentUserPlayer?.id || player.invitedById === window.currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', true)">Remover</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+  waitlistPlayersDiv.innerHTML = waitlistPlayers.length === 0
+    ? '<div style="color: var(--muted); padding: 10px;">Ninguém na lista de espera.</div>'
+    : waitlistPlayers.map((player, index) => `
+      <div class="player-item">
+        <div class="player-info">
+          <span class="player-counter">${index + 1}.</span>
+          <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+          <div>
+            <br>
+            <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+            ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
+            <br>
+            <span class="player-status status-${player.paymentStatus}">
+              ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
+            </span>
+            ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
+              ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
+              </span>` : ''}
+          </div>
+        </div>
+        <div>
+          ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
+            <button class="player-approve" onclick="approvePlayer('${player.id}', false, true)">PAGO</button>
+            <button class="player-approve-debt" onclick="approvePlayer('${player.id}', false, false)">DEVENDO</button>
+          ` : ''}
+          ${(isAdmin || player.id === window.currentUserPlayer?.id || player.invitedById === window.currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+}
 
     function mostrarPopup(popupId) {
       document.getElementById(popupId).style.display = 'block';
@@ -2830,7 +2842,7 @@ body {
 
 
 
-  function abrirQuadra() {
+ function abrirQuadra() {
   const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F1751670265975_7059197-redonda-midia-icone-exclamacao-em-fundo-branco-vetor.jpg?alt=media&token=8af2f172-0d64-4e5b-833d-cb28c8f17cbb';
 
   // Ordenar jogadores
@@ -2870,10 +2882,16 @@ body {
     `;
   }).join('');
 
+  // Verificar se o jogador logado está na lista de presença
+  const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) ||
+                        waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
+
   // HTML da quadra com data dinâmica
   const gameDateTime = currentGameData
-    ? DateTime.fromISO(`${currentGameData.date}T${currentGameData.time}`, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy')
-    : DateTime.now().setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy');
+    ? DateTime.fromISO(`${currentGameData.date}T${currentGameData.time}`, { zone: 'America/Sao_Paulo' })
+        .toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' })
+    : DateTime.now().setZone('America/Sao_Paulo')
+        .toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' });
 
   const quadraHTML = `
     <h3>Quadra Virtual</h3>
@@ -2883,11 +2901,11 @@ body {
       <div class="linha-3m-baixo"></div>
       ${playersHTML}
     </div>
-    <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer;">
+    <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">
       Confirmar Presença ✅
     </button>
     <div class="info">
-      <p><strong>Data:</strong> ${gameDateTime}</p>
+      <p><strong>Jogo:</strong> ${gameDateTime}</p>
       <p><strong>Presenças:</strong> Titulares na quadra, reservas ao lado</p>
     </div>
   `;
@@ -2895,14 +2913,16 @@ body {
   Swal.fire({
     html: quadraHTML,
     showCloseButton: true,
-    showConfirmButton: false,
+    showConfirmButton: true,
+    confirmButtonText: 'OK',
+    showCancelButton: false,
     width: 'auto',
     didOpen: () => {
       let currentPopup = null;
 
       // Adicionar evento de clique para o botão Confirmar Presença
       const botao = document.getElementById('btn-confirmar');
-      if (botao) {
+      if (botao && !isPlayerInList) {
         botao.addEventListener('click', async (e) => {
           e.stopPropagation();
           try {
