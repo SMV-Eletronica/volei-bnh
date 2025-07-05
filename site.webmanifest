@@ -6,9 +6,7 @@
   "start_url": "/volei-bnh/index.html",
   "display": "standalone",
   "display_override": [
-    "standalone",
-    "fullscreen",
-    "minimal-ui",
+    "standalone",    
     "window-controls-overlay"
   ],
   "orientation": "portrait",
