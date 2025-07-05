@@ -1097,6 +1097,7 @@ body {
           <h3>Selecione um Jogo</h3>
           <select id="gameSelect" class="game-select"></select>
         </div>
+        <button onclick="abrirQuadra()">Abrir Quadra</button>
         <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
         <div class="game-list">
           <h3>Lista do Dia: 
@@ -1124,7 +1125,7 @@ body {
             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
           </div>
           <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Lista</button>
-        <button onclick="abrirQuadra()">Abrir Quadra</button>
+        
         </div>
       </div>
     </div>
@@ -2775,64 +2776,86 @@ body {
     window.mostrarPopup = mostrarPopup;
     window.fecharPopup = fecharPopup;
     window.confirmPlayer = confirmPlayer;
-  </script>
-
-  <script>
+     window.abrirQuadra = abrirQuadra;
+  
    
-    function abrirQuadra() {
-      const quadraHTML = `
-        <h3>Quadra Virtual</h3>
-        <div class="quadra-container">
-          <div class="linha-meio"></div>
-          <div class="linha-3m-cima"></div>
-          <div class="linha-3m-baixo"></div>
+   function abrirQuadra() {
+  const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F1751670265975_7059197-redonda-midia-icone-exclamacao-em-fundo-branco-vetor.jpg?alt=media&token=8af2f172-0d64-4e5b-833d-cb28c8f17cbb';
 
-          <!-- Titulares e Reservas -->
-          <div class="player" style="top: 12%; left: 15%;"><img src="URL_JOGADOR_1" /></div>
-          <div class="player" style="top: 12%; left: 50%;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Lucas_Saatkamp_Rio_2016.jpg" /></div>
-          <div class="player" style="top: 12%; left: 85%;"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f8/Bruno_Mossa_De_Rezende_%28Legavolley_2019%29.jpg" /></div>
-          <div class="player" style="top: 42%; left: 15%;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/2016_Summer_Olympics%2C_Brazil_v_Italy%2C_21_August_2016_Final_02_%28cropped%29.jpg/250px.jpg" /></div>
-          <div class="player" style="top: 42%; left: 50%;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Prime_Minister_Keir_Starmer_visits_Ukraine_%2854508511872%29_%28cropped%29.jpg/500px.jpg" /></div>
-          <div class="player" style="top: 42%; left: 85%;"><img src="https://i.postimg.cc/Xq4hkrWw/marcio.jpg" /></div>
-          <div class="player" style="top: 58%; left: 15%;"><img src="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F1751670638635_7158753-icone-de-exclamacao-para-apresentacao-de-simbolo-de-site-gratis-vetor.jpg?alt=media&token=70acc684-c332-4471-80fa-65c75b88794e" /></div>
-          <div class="player" style="top: 58%; left: 50%;"><img src="URL_JOGADOR_6" /></div>
-          <div class="player" style="top: 58%; left: 85%;"><img src="URL_JOGADOR_7" /></div>
-          <div class="player" style="top: 88%; left: 15%;"><img src="URL_JOGADOR_8" /></div>
-          <div class="player" style="top: 88%; left: 50%;"><img src="URL_JOGADOR_7" /></div>
-          <div class="player" style="top: 88%; left: 85%;"><img src="URL_JOGADOR_8" /></div>
+  // Ordenar jogadores em ordem decrescente
+  const sortedPlayers = sortPlayers([...confirmedPlayers]).reverse();
 
-          <!-- Reservas -->
-          <div class="player" style="top: 22%; left: 120%;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Lucas_Saatkamp_Rio_2016.jpg" /></div>
-          <div class="player" style="top: 32%; left: 120%;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Lucas_Saatkamp_Rio_2016.jpg" /></div>
-          <div class="player" style="top: 67%; left: 120%;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Lucas_Saatkamp_Rio_2016.jpg" /></div>
-          <div class="player" style="top: 77%; left: 120%;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Lucas_Saatkamp_Rio_2016.jpg" /></div>
-        </div>
+  // Definir posições na quadra (12 titulares + 4 reservas)
+  const playerPositions = [
+    { top: '12%', left: '15%' }, // Titular 1
+    { top: '12%', left: '50%' }, // Titular 2
+    { top: '12%', left: '85%' }, // Titular 3
+    { top: '42%', left: '15%' }, // Titular 4
+    { top: '42%', left: '50%' }, // Titular 5
+    { top: '42%', left: '85%' }, // Titular 6
+    { top: '58%', left: '15%' }, // Titular 7
+    { top: '58%', left: '50%' }, // Titular 8
+    { top: '58%', left: '85%' }, // Titular 9
+    { top: '88%', left: '15%' }, // Titular 10
+    { top: '88%', left: '50%' }, // Titular 11
+    { top: '88%', left: '85%' }, // Titular 12
+    { top: '22%', left: '120%' }, // Reserva 1
+    { top: '32%', left: '120%' }, // Reserva 2
+    { top: '67%', left: '120%' }, // Reserva 3
+    { top: '77%', left: '120%' }  // Reserva 4
+  ];
 
-        <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer;">
-          Confirmar Presença ✅
-        </button>
+  // Gerar HTML para os jogadores
+  const playersHTML = playerPositions.map((position, index) => {
+    const player = sortedPlayers[index];
+    const imageUrl = player ? player.imageUrl || defaultImg : defaultImg;
+    const playerName = player ? player.name : '';
+    return `
+      <div class="player" style="top: ${position.top}; left: ${position.left};" title="${playerName}">
+        <img src="${imageUrl}" alt="${playerName}" onerror="this.onerror=null;this.src='${defaultImg}'"/>
+      </div>
+    `;
+  }).join('');
 
-        <div class="info">
-          <p><strong>Data:</strong> 04/07/2025</p>
-          <p><strong>Presenças:</strong> Titulares na quadra, reservas ao lado</p>
-        </div>
-      `;
+  // HTML da quadra com data dinâmica
+  const gameDateTime = currentGameData
+    ? DateTime.fromISO(`${currentGameData.date}T${currentGameData.time}`, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy')
+    : DateTime.now().setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy');
 
-      Swal.fire({
-        html: quadraHTML,
-        showCloseButton: true,
-        showConfirmButton: false,
-        width: 'auto',
-        didOpen: () => {
-          const botao = document.getElementById('btn-confirmar');
-          if (botao) {
-            botao.addEventListener('click', async () => {
-              await confirmPlayer();
-            });
-          }
-        }
-      });
+  const quadraHTML = `
+    <h3>Quadra Virtual</h3>
+    <div class="quadra-container">
+      <div class="linha-meio"></div>
+      <div class="linha-3m-cima"></div>
+      <div class="linha-3m-baixo"></div>
+      ${playersHTML}
+    </div>
+    <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer;">
+      Confirmar Presença ✅
+    </button>
+    <div class="info">
+      <p><strong>Data:</strong> ${gameDateTime}</p>
+      <p><strong>Presenças:</strong> Titulares na quadra, reservas ao lado</p>
+    </div>
+  `;
+
+  Swal.fire({
+    html: quadraHTML,
+    showCloseButton: true,
+    showConfirmButton: false,
+    width: 'auto',
+    didOpen: () => {
+      const botao = document.getElementById('btn-confirmar');
+      if (botao) {
+        botao.addEventListener('click', async () => {
+          await confirmPlayer();
+        });
+      }
     }
+  });
+}
+
+
   </script>
   
   <!--
