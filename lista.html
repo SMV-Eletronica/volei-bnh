@@ -2824,7 +2824,7 @@ body {
           <div>
             <br>
             <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
-            ${player.category === 'CONVIDADO' ? `<br><span>Convidado por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
+            ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
             <br>
             <span class="player-status status-${player.paymentStatus}">
               ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
