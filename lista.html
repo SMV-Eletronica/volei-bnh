@@ -1337,7 +1337,7 @@ body {
           title: 'Acesso Negado',
           text: 'Você precisa estar logado para acessar esta página.',
         });
-        window.location.href = 'index.html';
+        window.location.href = 'loginvl.html';
       } else {
         emailLogado = user.email;
         isAdmin = adminEmails.includes(emailLogado);
@@ -1380,7 +1380,7 @@ body {
             timer: 1500,
             showConfirmButton: false,
           });
-          window.location.assign('index.html');
+          window.location.assign('loginvl.html');
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
           await Swal.fire({
