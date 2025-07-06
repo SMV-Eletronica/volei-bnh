@@ -216,7 +216,7 @@
                     text: 'Por favor, faça login para acessar o sistema.',
                     confirmButtonText: 'OK'
                 }).then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = 'loginvl.html';
                 });
             } else {
                 console.log('Usuário autenticado:', user.email);
@@ -233,7 +233,7 @@
                     text: 'Logout realizado com sucesso!',
                     confirmButtonText: 'OK'
                 }).then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = 'loginvl.html';
                 });
             }).catch((error) => {
                 console.error('Erro ao sair:', error.code, error.message);
