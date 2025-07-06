@@ -638,10 +638,11 @@ body {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-    width: 250px;
-    height: 50px;
-    padding: 10px 20px;
+    
+    padding: 8px;
     border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
 }
 
 #confirmPlayer:hover {
@@ -826,8 +827,11 @@ body {
       overflow: visible; /* Garante que elementos fora não sejam cortados, se necessário */
       margin: 0 auto;
     }
-
-    .linha-meio,
+    .linha-meio0,
+    .linha-meio1,
+    .linha-meio2,
+    .linha-meio3,
+    .linha-meio4,
     .linha-3m-cima,
     .linha-3m-baixo {
       position: absolute;
@@ -836,7 +840,28 @@ body {
       background-color: #FFFFFF;
     }
 
-    .linha-meio { top: 50%; }
+    .linha-meio0 { top: 48%; 
+    background-color: transparent;
+  border-bottom: 2px solid #FFFFFF;
+    }
+    .linha-meio1 { top: 49%; 
+    background-color: transparent;
+  border-bottom: 3px dashed #FFFFFF;
+    }
+    .linha-meio2 { top: 50%;
+    background-color: transparent;
+  border-bottom: 3px dashed #FFFFFF;
+    }
+    .linha-meio3 { top: 51%;
+    background-color: transparent;
+  border-bottom: 3px dashed #FFFFFF;
+    }
+  .linha-meio4 { top: 51%; 
+    background-color: transparent;
+  border-bottom: 2px solid #FFFFFF;
+    }
+
+
     .linha-3m-cima { top: calc(50% - 70px); }
     .linha-3m-baixo { top: calc(50% + 70px); }
 
@@ -1166,7 +1191,7 @@ body {
           <select id="gameSelect" class="game-select"></select>
         </div>
         
-        <button id="confirmPlayer" style="display: none;"><i class="fas fa-check"></i> Confirmar Presença</button>
+        <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Confirmar Presença</button>
         <div class="game-list">
           <h3>Lista do Dia: 
             <span class="lampada" onclick="mostrarPopup('meupopup1')">ℹ️</span>    
@@ -2781,7 +2806,7 @@ body {
   if (confirmPlayerBtn) {
     confirmPlayerBtn.innerHTML = isPlayerInList 
       ? '<i class="fas fa-eye"></i> Ver Quadra'
-      : '<i class="fas fa-check"></i> Confirmar Presença';
+      : '<i class="fas fa-sign-in"></i> Confirmar Presença';
   }
 
   confirmedPlayersDiv.innerHTML = confirmedPlayers.length === 0
@@ -2870,7 +2895,7 @@ body {
 
  function abrirQuadra() {
   // Verificação de segurança
-     if (!currentGameId) {
+  if (!currentGameId) {
     Swal.fire({
       icon: 'info',
       title: 'Nenhum Jogo Selecionado',
@@ -2878,7 +2903,7 @@ body {
     });
     return;
   }
-   
+
   const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fexclama.jpg?alt=media&token=51fef838-cac2-4021-8021-2dc7edc76f49';
 
   // Ordenar jogadores
@@ -2887,30 +2912,44 @@ body {
   // Definir posições na quadra (12 titulares + 4 reservas)
   const playerPositions = [
     { top: '18%', left: '15%' }, // Titular 1
-    { top: '10%', left: '50%' }, // Titular 2
+    { top: '82%', left: '85%' }, // Titular 12
     { top: '18%', left: '82%' }, // Titular 3
-    { top: '42%', left: '15%' }, // Titular 4
-    { top: '42%', left: '50%' }, // Titular 5
-    { top: '42%', left: '85%' }, // Titular 6
-    { top: '58%', left: '15%' }, // Titular 7
-    { top: '58%', left: '50%' }, // Titular 8
-    { top: '58%', left: '85%' }, // Titular 9
     { top: '82%', left: '15%' }, // Titular 10
     { top: '90%', left: '50%' }, // Titular 11
-    { top: '82%', left: '85%' }, // Titular 12
-    { top: '22%', left: '120%' }, // Reserva 1
-    { top: '32%', left: '120%' }, // Reserva 2
-    { top: '67%', left: '120%' }, // Reserva 3
-    { top: '77%', left: '120%' }  // Reserva 4
+    { top: '10%', left: '50%' }, // Titular 2
+    { top: '62%', left: '15%' }, // Titular 7
+    { top: '39%', left: '85%' }, // Titular 6
+    { top: '60%', left: '50%' }, // Titular 8
+    { top: '39%', left: '15%' }, // Titular 4    
+    { top: '62%', left: '85%' }, // Titular 9   
+    { top: '41%', left: '50%' }, // Titular 5   
+   
+
+    { top: '12%', left: '120%' }, // Reserva 1
+    { top: '60%', left: '-20%' }, // Reserva 5
+    { top: '22%', left: '120%' }, // Reserva 2
+    { top: '70%', left: '-20%' }, // Reserva 6
+    { top: '32%', left: '120%' }, // Reserva 3
+    { top: '80%', left: '-20%' }, // Reserva 7
+    { top: '42%', left: '120%' }, // Reserva 4
+    { top: '90%', left: '-20%' }, // Reserva 8
+
+    
+    
+    
+    
   ];
 
-  // Gerar HTML para os jogadores
+  // Gerar HTML para os jogadores, ignorando posições vazias
   const playersHTML = playerPositions.map((position, index) => {
     const player = sortedPlayers[index];
-    const imageUrl = player ? player.imageUrl || defaultImg : defaultImg;
-    const playerName = player ? player.name : 'Vazio';
-    const playerPosition = player ? player.position : 'Posição não definida';
-    const playerId = player ? player.id : '';
+    if (!player) {
+      return ''; // Não gerar HTML para posições vazias
+    }
+    const imageUrl = player.imageUrl || defaultImg;
+    const playerName = player.name || 'Vazio';
+    const playerPosition = player.position || 'Posição não definida';
+    const playerId = player.id || '';
     return `
       <div class="player" style="top: ${position.top}; left: ${position.left};" data-player-id="${playerId}" data-posicao="${playerPosition}" data-index="${index}" title="${playerName}">
         <img src="${imageUrl}" alt="${playerName}" onerror="this.src='${defaultImg}'"/>
@@ -2932,7 +2971,11 @@ body {
   const quadraHTML = `
     <h3>Quadra Virtual</h3>
     <div class="quadra-container">
-      <div class="linha-meio"></div>
+        <div class="linha-meio0"></div>
+      <div class="linha-meio1"></div>
+      <div class="linha-meio2"></div>
+      <div class="linha-meio3"></div>
+      <div class="linha-meio4"></div>
       <div class="linha-3m-cima"></div>
       <div class="linha-3m-baixo"></div>
       ${playersHTML}
@@ -2942,7 +2985,7 @@ body {
     </button>
     <div class="info">
       <p><strong>Jogo dia:</strong> ${gameDateTime}</p>
-      <p><strong>Presenças:</strong> A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p>
+      <p><strong>Presenças:</strong> ${playerLimit} A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p>
     </div>
   `;
 
