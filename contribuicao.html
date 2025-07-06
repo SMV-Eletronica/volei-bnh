@@ -255,8 +255,8 @@
         onAuthStateChanged(auth, async (user) => {
             console.log('onAuthStateChanged triggered');
             if (!user) {
-                console.log('No user is logged in. Redirecting to index.html');
-                window.location.href = 'index.html';
+                console.log('No user is logged in. Redirecting to loginvl.html');
+                window.location.href = 'loginvl.html';
                 return;
             }
 
@@ -323,7 +323,7 @@
                     timer: 3500,
                     showConfirmButton: false,
                 });
-                window.location.href = 'index.html';
+                window.location.href = 'loginvl.html';
             } catch (error) {
                 console.error('Error signing out:', error);
                 await Swal.fire({
