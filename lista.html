@@ -842,15 +842,26 @@ body {
 
     
 
-    .player img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border: 2px solid #27ae60;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-    }
+   .player {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  animation: pulse 1.5s infinite; /* Animação movida para cá */
+}
 
+.player img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid #27ae60;
+  border-radius: 50%;
+}
      .info {
       margin-top: 16px;
       font-size: 0.9rem;
@@ -891,17 +902,6 @@ body {
   border-color: #2c3e50 transparent transparent transparent;
 }
 
-.player {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  overflow: hidden;
-  position: absolute;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
 
 .player:hover {
   transform: translate(-50%, -50%) scale(1.1);
@@ -2942,7 +2942,7 @@ body {
     </button>
     <div class="info">
       <p><strong>Jogo:</strong> ${gameDateTime}</p>
-      <p><strong>Presenças:</strong> Titulares na quadra, reservas ao lado</p>
+      <p><strong>Presenças:</strong> Titulares na quadra, reservas ao lado    ff</p>
     </div>
   `;
 
