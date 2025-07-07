@@ -2350,7 +2350,13 @@ body {
 
         await updateFirebaseLists();
         updateGameList();
+        
+ const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+  const statusText = isPaid ? 'aprovado (pago)' : 'aprovado com débito';
+  const message = `${player.name} foi ${statusText} para o jogo ${formattedDate}.`;
+  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
 
+        
         await Swal.fire({
           icon: 'success',
           title: 'Sucesso',
@@ -2780,7 +2786,8 @@ body {
         waitlistPlayers = sortPlayers(waitlistPlayers);
 
         await updateFirebaseLists();
-        updateGameList();       
+        updateGameList();      
+        
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
         const message = `${player.name} foi removido da lista do jogo ${formattedDate}.`;
         await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
