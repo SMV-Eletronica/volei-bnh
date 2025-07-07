@@ -1351,47 +1351,59 @@ body {
     });
 
     const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', async () => {
-        console.log('Botão de logout clicado');
-        if (!auth) {
-          console.error('Objeto auth não está definido');
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Erro interno de autenticação.',
-          });
-          return;
-        }
-        try {
-          // Remove external_id e aliases do OneSignal
-          await OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.logout();
-            console.log('OneSignal logout realizado com sucesso.');
-          });
-          
-          await signOut(auth);
-          console.log('Logout bem-sucedido');
-          await Swal.fire({
-            icon: 'success',
-            title: 'Logout',
-            text: 'Você saiu com sucesso.',
-            timer: 1500,
-            showConfirmButton: false,
-          });
-          window.location.assign('loginvl.html');
-        } catch (error) {
-          console.error('Erro ao fazer logout:', error);
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Não foi possível fazer logout. Tente novamente.',
-          });
-        }
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async () => {
+    console.log('Botão de logout clicado');
+    // Exibir popup de loading
+    Swal.fire({
+      title: 'Saindo...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    if (!auth) {
+      console.error('Objeto auth não está definido');
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Erro interno de autenticação.',
       });
-    } else {
-      console.error('Elemento com ID "logoutBtn" não encontrado');
+      return;
     }
+
+    try {
+      // Remove external_id e aliases do OneSignal
+      await OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.logout();
+        console.log('OneSignal logout realizado com sucesso.');
+      });
+
+      await signOut(auth);
+      console.log('Logout bem-sucedido');
+      await Swal.fire({
+        icon: 'success',
+        title: 'Logout',
+        text: 'Você saiu com sucesso.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      window.location.assign('loginvl.html');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Não foi possível fazer logout. Tente novamente.',
+      });
+    }
+  });
+} else {
+  console.error('Elemento com ID "logoutBtn" não encontrado');
+}
 
     async function loadCurrentUserPlayer() {
       try {
