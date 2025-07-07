@@ -3,93 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-  <title>Lista de Presença - Vôlei BNH</title>  
-
- <!-- SDK do OneSignal -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <title>Lista de Presença - Vôlei BNH</title>    
   
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      try {
-        await OneSignal.init({
-          appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-          allowLocalhostAsSecureOrigin: true
-        });
-        console.log('OneSignal inicializado com sucesso.');
-        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          if (event.current.optedIn && window.currentUserPlayer?.id) {
-            await OneSignal.login(window.currentUserPlayer.id);
-            console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
-            await OneSignal.User.addAliases({
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-            console.log('Aliases adicionados com sucesso:', {
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao configurar OneSignal:', error);
-      }
-    });
-    async function sendPushNotification(message, imageUrl = null) {
-      try {
-        const payload = {
-          app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-          headings: { en: "🏐 Vôlei BNH - Atualização" },
-          contents: { en: message },
-          included_segments: ["All"],
-          url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
-        };
-        if (imageUrl) {
-          if (imageUrl.match(/\.(jpg|jpeg|png)$/i) && imageUrl.startsWith('https://')) {
-            payload.big_picture = imageUrl;
-            payload.ios_attachments = { id: imageUrl };
-            payload.chrome_web_image = imageUrl;
-          } else {
-            console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
-            payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-            payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
-            payload.chrome_web_image = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-          }
-        } else {
-          payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-          payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
-          payload.chrome_web_image = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-        }
-        console.log('Enviando notificação com payload:', payload);
-        const response = await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
-          },
-          body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        console.log('Resposta da API do OneSignal:', data);
-        console.log('Status HTTP:', response.status);
-        if (!response.ok) {
-          console.error('Erro na API do OneSignal:', data.errors || data);
-          Swal.fire({
-            icon: 'warning',
-            title: 'Aviso',
-            text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao enviar notificação:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao enviar notificação: ' + error.message,
-        });
-      }
-    }
-  </script>
 
   <!-- Favicon padrão para navegadores -->
   <link rel="icon" type="image/png" sizes="16x16" href="windows11/Square44x44Logo.altform-unplated_targetsize-16.png">
@@ -2186,9 +2101,15 @@ body {
         await updateFirebaseLists();
         updateGameList();
 
+        
+
+
          const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-    const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+         const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
+         const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
+         await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+
+        
 
         
         guestNameInput.value = '';
@@ -3187,32 +3108,165 @@ body {
   });
 }
   </script>
-  
-  <!--
+   <!-- SDK do OneSignal -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-    function mostrarToast(mensagem) {
-      const toast = document.createElement("div");
-      toast.innerText = mensagem;
-      toast.style.position = "fixed";
-      toast.style.bottom = "20px";
-      toast.style.left = "50%";
-      toast.style.transform = "translateX(-50%)";
-      toast.style.background = "#3498db";
-      toast.style.color = "#fff";
-      toast.style.padding = "12px 20px";
-      toast.style.borderRadius = "8px";
-      toast.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-      toast.style.zIndex = "9999";
-      document.body.appendChild(toast);
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      try {
+        await OneSignal.init({
+          appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+          allowLocalhostAsSecureOrigin: true
+        });
+        console.log('OneSignal inicializado com sucesso.');
+        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
+          if (event.current.optedIn && window.currentUserPlayer?.id) {
+            await OneSignal.login(window.currentUserPlayer.id);
+            console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
+            await OneSignal.User.addAliases({
+              firebase_id: window.currentUserPlayer.id,
+              crm_user_id: `crm_${window.currentUserPlayer.id}`
+            });
+            console.log('Aliases adicionados com sucesso:', {
+              firebase_id: window.currentUserPlayer.id,
+              crm_user_id: `crm_${window.currentUserPlayer.id}`
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao configurar OneSignal:', error);
+      }
+    });
 
-      setTimeout(() => toast.remove(), 4000);
+async function sendPushNotification(message, imageUrl = null, playerId = null) {
+  try {
+    const now = Date.now(); // usado para gerar um ID único
+    const uniqueId = `push_${playerId || 'anon'}_${now}`;
+
+    const payload = {
+      app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+      headings: { en: "🏐 Vôlei BNH - Atualização" },
+      contents: { en: message },
+      included_segments: ["All"],
+      url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
+      collapse_id: uniqueId,
+      ios_thread_id: uniqueId
+    };
+
+    const defaultImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+
+    if (imageUrl && imageUrl.startsWith('https://') &&
+        (imageUrl.match(/\.(jpg|jpeg|png)$/i) || imageUrl.includes('firebasestorage.googleapis.com'))) {
+      payload.big_picture = imageUrl;
+      payload.ios_attachments = { id: imageUrl };
+      payload.chrome_web_image = imageUrl;
+    } else {
+      console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
+      payload.big_picture = defaultImage;
+      payload.ios_attachments = { id: defaultImage };
+      payload.chrome_web_image = defaultImage;
     }
 
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      mostrarToast("Show! Agora o Vôlei-BNH tá na sua tela inicial 🏐🔥 Bora partir pro jogo!");
+    console.log('Enviando notificação com payload:', payload);
+
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    console.log('Resposta da API do OneSignal:', data);
+    console.log('Status HTTP:', response.status);
+
+    if (!response.ok) {
+      console.error('Erro na API do OneSignal:', data.errors || data);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Aviso',
+        text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
+      });
     }
-  </script> 
-  
-  -->
+  } catch (error) {
+    console.error('Erro ao enviar notificação:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro ao enviar notificação: ' + error.message,
+    });
+  }
+}
+
+
+
+
+    
+    async function sendPushNotification2(message, imageUrl = null) {
+      try {
+        const payload = {
+          app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+          headings: { en: "🏐 Vôlei BNH - Atualização" },
+          contents: { en: message },
+          included_segments: ["All"],
+          
+          url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
+        };
+        if (imageUrl) {
+          if (
+  imageUrl.startsWith('https://') &&
+  (
+    imageUrl.match(/\.(jpg|jpeg|png)$/i) || 
+    imageUrl.includes('firebasestorage.googleapis.com')
+  )
+) {
+  payload.big_picture = imageUrl;
+  payload.ios_attachments = { id: imageUrl };
+  payload.chrome_web_image = imageUrl;
+} else {
+  console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
+  const fallbackImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+  payload.big_picture = fallbackImage;
+  payload.ios_attachments = { id: fallbackImage };
+  payload.chrome_web_image = fallbackImage;
+}
+
+        } else {
+          payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+          payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
+          payload.chrome_web_image = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+        }
+        console.log('Enviando notificação com payload:', payload);
+        const response = await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        console.log('Resposta da API do OneSignal:', data);
+        console.log('Status HTTP:', response.status);
+        if (!response.ok) {
+          console.error('Erro na API do OneSignal:', data.errors || data);
+          Swal.fire({
+            icon: 'warning',
+            title: 'Aviso',
+            text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao enviar notificação: ' + error.message,
+        });
+      }
+    }
+  </script>
 </body>
 </html>
