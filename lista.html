@@ -9,32 +9,42 @@
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   
   <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      try {
-        await OneSignal.init({
-          appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-          allowLocalhostAsSecureOrigin: true
+   // Modifique o código de inicialização do OneSignal
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function (OneSignal) {
+  try {
+    await OneSignal.init({
+      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+      allowLocalhostAsSecureOrigin: true
+    });
+    console.log('OneSignal inicializado com sucesso.');
+    
+    // Adicione esta verificação imediatamente após a inicialização
+    if (window.currentUserPlayer?.id) {
+      await OneSignal.login(window.currentUserPlayer.id);
+      console.log(`External User ID configurado imediatamente: ${window.currentUserPlayer.id}`);
+      await OneSignal.User.addAliases({
+        firebase_id: window.currentUserPlayer.id,
+        crm_user_id: `crm_${window.currentUserPlayer.id}`
+      });
+    }
+
+    OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
+      if (event.current.optedIn && window.currentUserPlayer?.id) {
+        await OneSignal.login(window.currentUserPlayer.id);
+        console.log(`External User ID atualizado: ${window.currentUserPlayer.id}`);
+        await OneSignal.User.addAliases({
+          firebase_id: window.currentUserPlayer.id,
+          crm_user_id: `crm_${window.currentUserPlayer.id}`
         });
-        console.log('OneSignal inicializado com sucesso.');
-        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          if (event.current.optedIn && window.currentUserPlayer?.id) {
-            await OneSignal.login(window.currentUserPlayer.id);
-            console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
-            await OneSignal.User.addAliases({
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-            console.log('Aliases adicionados com sucesso:', {
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao configurar OneSignal:', error);
       }
     });
+  } catch (error) {
+    console.error('Erro ao configurar OneSignal:', error);
+  }
+});
+
+    
     async function sendPushNotification(message, imageUrl = null) {
       try {
         const payload = {
@@ -1478,68 +1488,54 @@ body {
       console.error('Elemento com ID "logoutBtn" não encontrado');
     }
 
-   async function loadCurrentUserPlayer() {
-  try {
-    const playersRef = ref(database, 'players');
-    const snapshot = await get(playersRef);
-    if (snapshot.exists()) {
-      allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
-        id,
-        ...player
-      }));
-      window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
-      if (!window.currentUserPlayer) {
+    async function loadCurrentUserPlayer() {
+      try {
+        const playersRef = ref(database, 'players');
+        const snapshot = await get(playersRef);
+        if (snapshot.exists()) {
+          allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+            id,
+            ...player
+          }));
+          window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+          if (!window.currentUserPlayer) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: 'Nenhum jogador associado a este email. Contate o administrador.',
+            });
+            confirmPlayerBtn.disabled = true;
+            guestControls.style.display = 'none';
+          } else {
+            confirmPlayerBtn.style.display = 'inline-block';
+            guestControls.style.display = 'flex';
+          }
+          isAdmin = isAdmin || window.currentUserPlayer?.category === 'ADMIN';
+          updateButtonVisibility();
+          return window.currentUserPlayer;
+        } else {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Nenhum jogador encontrado no sistema.',
+          });
+          confirmPlayerBtn.disabled = true;
+          guestControls.style.display = 'none';
+          return null;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogador:', error);
         await Swal.fire({
           icon: 'error',
           title: 'Erro',
-          text: 'Nenhum jogador associado a este email. Contate o administrador.',
+          text: 'Erro ao carregar seus dados.',
         });
         confirmPlayerBtn.disabled = true;
         guestControls.style.display = 'none';
-      } else {
-        confirmPlayerBtn.style.display = 'inline-block';
-        guestControls.style.display = 'flex';
-        // Associar o usuário ao OneSignal após carregar os dados
-        await OneSignalDeferred.push(async function(OneSignal) {
-          if (window.currentUserPlayer.id) {
-            await OneSignal.login(window.currentUserPlayer.id);
-            console.log(`External User ID configurado após login: ${window.currentUserPlayer.id}`);
-            await OneSignal.User.addAliases({
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-            console.log('Aliases adicionados com sucesso após login:', {
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-          }
-        });
+        return null;
       }
-      isAdmin = isAdmin || window.currentUserPlayer?.category === 'ADMIN';
-      updateButtonVisibility();
-      return window.currentUserPlayer;
-    } else {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Nenhum jogador encontrado no sistema.',
-      });
-      confirmPlayerBtn.disabled = true;
-      guestControls.style.display = 'none';
-      return null;
     }
-  } catch (error) {
-    console.error('Erro ao carregar dados do jogador:', error);
-    await Swal.fire({
-      icon: 'error',
-      title: 'Erro',
-      text: 'Erro ao carregar seus dados.',
-    });
-    confirmPlayerBtn.disabled = true;
-    guestControls.style.display = 'none';
-    return null;
-  }
-}
+
     async function loadGuestFee() {
       try {
         const settingsRef = ref(database, 'settings/guestFee');
