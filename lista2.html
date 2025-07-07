@@ -2515,70 +2515,7 @@ body {
       waitlistPlayers = sortPlayers(waitlistPlayers);
     }
 
-  async function updateFirebaseLists() {
-      if (!currentGameId) return;
-
-      const gameListRef = ref(database, `activeGames/${currentGameId}`);
-      try {
-        const confirmedData = {};
-        confirmedPlayers.forEach(player => {
-          confirmedData[player.id] = {
-            name: player.name,
-            category: player.category,
-            position: player.position,
-            timestamp: player.timestamp,
-            paymentStatus: player.paymentStatus,
-            imageUrl: player.imageUrl,
-            invitedById: player.invitedById || null,
-            invitedByName: player.invitedByName || null,
-            status: player.status || null,
-            additionalInfo: player.additionalInfo || null,
-            createdAt: player.createdAt || null,
-            date: player.date || null,
-            month: player.month || null,
-            paymentType: player.paymentType || null,
-            value: player.value || null
-          };
-        });
-
-        const waitlistData = {};
-        waitlistPlayers.forEach(player => {
-          waitlistData[player.id] = {
-            name: player.name,
-            category: player.category,
-            position: player.position,
-            timestamp: player.timestamp,
-            paymentStatus: player.paymentStatus,
-            imageUrl: player.imageUrl,
-            invitedById: player.invitedById || null,
-            invitedByName: player.invitedByName || null,
-            status: player.status || null,
-            additionalInfo: player.additionalInfo || null,
-            createdAt: player.createdAt || null,
-            date: player.date || null,
-            month: player.month || null,
-            paymentType: player.paymentType || null,
-            value: player.value || null
-          };
-        });
-
-        await set(gameListRef, {
-          ...currentGameData,
-          confirmed: confirmedData,
-          waitlist: waitlistData,
-          playerLimit
-        });
-        console.log('Listas atualizadas no Firebase com sucesso');
-      } catch (error) {
-        console.error('Erro ao atualizar listas no Firebase:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao atualizar listas no servidor.',
-        });
-      }
-    }
-
+ 
 
     
     async function confirmPlayer(targetPlayerId = null) {
@@ -2860,6 +2797,73 @@ body {
       }
     }
 
+
+     async function updateFirebaseLists() {
+      if (!currentGameId) return;
+
+      const gameListRef = ref(database, `activeGames/${currentGameId}`);
+      try {
+        const confirmedData = {};
+        confirmedPlayers.forEach(player => {
+          confirmedData[player.id] = {
+            name: player.name,
+            category: player.category,
+            position: player.position,
+            timestamp: player.timestamp,
+            paymentStatus: player.paymentStatus,
+            imageUrl: player.imageUrl,
+            invitedById: player.invitedById || null,
+            invitedByName: player.invitedByName || null,
+            status: player.status || null,
+            additionalInfo: player.additionalInfo || null,
+            createdAt: player.createdAt || null,
+            date: player.date || null,
+            month: player.month || null,
+            paymentType: player.paymentType || null,
+            value: player.value || null
+          };
+        });
+
+        const waitlistData = {};
+        waitlistPlayers.forEach(player => {
+          waitlistData[player.id] = {
+            name: player.name,
+            category: player.category,
+            position: player.position,
+            timestamp: player.timestamp,
+            paymentStatus: player.paymentStatus,
+            imageUrl: player.imageUrl,
+            invitedById: player.invitedById || null,
+            invitedByName: player.invitedByName || null,
+            status: player.status || null,
+            additionalInfo: player.additionalInfo || null,
+            createdAt: player.createdAt || null,
+            date: player.date || null,
+            month: player.month || null,
+            paymentType: player.paymentType || null,
+            value: player.value || null
+          };
+        });
+
+        await set(gameListRef, {
+          ...currentGameData,
+          confirmed: confirmedData,
+          waitlist: waitlistData,
+          playerLimit
+        });
+        console.log('Listas atualizadas no Firebase com sucesso');
+      } catch (error) {
+        console.error('Erro ao atualizar listas no Firebase:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao atualizar listas no servidor.',
+        });
+      }
+    }
+
+
+    
   
    function updateGameList() {
   const isAdmin = adminEmails.includes(emailLogado);
