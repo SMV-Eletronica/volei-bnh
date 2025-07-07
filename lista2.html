@@ -2696,9 +2696,9 @@ body {
 
 
 // ADICIONE AQUI A NOTIFICAÇÃO PUSH
-    const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-    const message = `${playerObj.name} confirmou presença no jogo de ${formattedDate}!`;
-    await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+   const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+  const message = `${player.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
+  await sendPushNotification(message, player.imageUrl);
       
         
 
