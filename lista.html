@@ -18,7 +18,9 @@ OneSignalDeferred.push(async function (OneSignal) {
       allowLocalhostAsSecureOrigin: true
     });
     console.log('OneSignal inicializado com sucesso.');
-    
+     if (window.currentUserPlayer?.id) {
+      await checkAndRequestNotificationPermission();
+    }
     // Adicione esta verificação imediatamente após a inicialização
     if (window.currentUserPlayer?.id) {
       await OneSignal.login(window.currentUserPlayer.id);
@@ -1499,6 +1501,7 @@ body {
           }));
           
           window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+          await checkAndRequestNotificationPermission();
        
     if (window.currentUserPlayer) {
       // Disparar associação com OneSignal
@@ -1555,6 +1558,39 @@ body {
         return null;
       }
     }
+
+
+    async function checkAndRequestNotificationPermission() {
+  try {
+    // Verifica o status atual primeiro
+    if (Notification.permission === 'granted') {
+      console.log('Permissão já concedida');
+      if (window.currentUserPlayer?.id) {
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.login(window.currentUserPlayer.id);
+          console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
+        });
+      }
+      return true;
+    }
+    
+    // Se não tiver permissão, solicita
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      OneSignalDeferred.push(async function(OneSignal) {
+        if (window.currentUserPlayer?.id) {
+          await OneSignal.login(window.currentUserPlayer.id);
+          console.log(`External User ID configurado após permissão: ${window.currentUserPlayer.id}`);
+        }
+      });
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Erro ao verificar permissões:', error);
+    return false;
+  }
+}
     
     async function loadGuestFee() {
       try {
