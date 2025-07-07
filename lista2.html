@@ -1789,6 +1789,11 @@ body {
                   await updateFirebaseLists();
                   updateGameList();
                   updatePlayerLimitDisplay(isAdmin);
+
+                  const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+                  const message = `Limite de participantes do jogo ${formattedDate} alterado para ${newLimit}.`;
+                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+                  
                   Swal.close();
                 }
               });
@@ -1854,6 +1859,11 @@ body {
                   gameTime = newTime;
                   updateGameDateDisplay();
                   await loadActiveGames();
+
+                  const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+                  const message = `Horário do jogo ${formattedDate} alterado para ${newTime}.`;
+                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+                  
                   await Swal.fire({
                     icon: 'success',
                     title: 'Sucesso',
@@ -1914,6 +1924,11 @@ body {
           }
           
           await set(gameRef, null);
+
+          const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+          const message = `Lista do jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} finalizada.`;
+          await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+          
           
           await Swal.fire({
             icon: 'success',
@@ -1953,6 +1968,7 @@ body {
               time: game.time,
               playerLimit: game.playerLimit || 16,
               createdAt: game.createdAt
+              
             });
           });
 
