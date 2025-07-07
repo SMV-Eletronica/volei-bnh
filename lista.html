@@ -3123,32 +3123,58 @@ if (logoutBtn) {
    <!-- SDK do OneSignal -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      try {
-        await OneSignal.init({
-          appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-          allowLocalhostAsSecureOrigin: true
-        });
-        console.log('OneSignal inicializado com sucesso.');
-        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          if (event.current.optedIn && window.currentUserPlayer?.id) {
-            await OneSignal.login(window.currentUserPlayer.id);
-            console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
-            await OneSignal.User.addAliases({
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
-            console.log('Aliases adicionados com sucesso:', {
-              firebase_id: window.currentUserPlayer.id,
-              crm_user_id: `crm_${window.currentUserPlayer.id}`
-            });
+   window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function (OneSignal) {
+  try {
+    await OneSignal.init({
+      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+      allowLocalhostAsSecureOrigin: true
+    });
+    console.log('OneSignal inicializado com sucesso.');
+
+    OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
+      if (event.current.optedIn && window.currentUserPlayer?.id) {
+        try {
+          // Primeiro faz login com o ID do usuário
+          await OneSignal.login(window.currentUserPlayer.id);
+          console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
+          
+          // Verifica se os aliases já existem antes de adicionar
+          const currentAliases = await OneSignal.User.getAliases();
+          const firebaseId = window.currentUserPlayer.id;
+          const crmUserId = `crm_${window.currentUserPlayer.id}`;
+          
+          if (!currentAliases || currentAliases.firebase_id !== firebaseId || currentAliases.crm_user_id !== crmUserId) {
+            try {
+              await OneSignal.User.addAliases({
+                firebase_id: firebaseId,
+                crm_user_id: crmUserId
+              });
+              console.log('Aliases adicionados com sucesso:', {
+                firebase_id: firebaseId,
+                crm_user_id: crmUserId
+              });
+            } catch (aliasError) {
+              console.warn('Erro ao adicionar aliases, tentando atualizar:', aliasError);
+              // Se falhar ao adicionar, tenta atualizar
+              await OneSignal.User.updateAliases({
+                firebase_id: firebaseId,
+                crm_user_id: crmUserId
+              });
+              console.log('Aliases atualizados com sucesso');
+            }
+          } else {
+            console.log('Aliases já estão configurados corretamente');
           }
-        });
-      } catch (error) {
-        console.error('Erro ao configurar OneSignal:', error);
+        } catch (error) {
+          console.error('Erro ao configurar usuário no OneSignal:', error);
+        }
       }
     });
+  } catch (error) {
+    console.error('Erro ao configurar OneSignal:', error);
+  }
+});
 
 async function sendPushNotification(message, imageUrl = null, playerId = null) {
   try {
