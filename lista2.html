@@ -2695,10 +2695,7 @@ body {
         updateGameList();
 
 
-// ADICIONE AQUI A NOTIFICAÇÃO PUSH
-   const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-  const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-   await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+
       
         
 
@@ -2852,6 +2849,7 @@ body {
 
         await updateFirebaseLists();
         updateGameList();
+        
       } catch (error) {
         console.error('Erro ao remover jogador:', error);
         await Swal.fire({
@@ -3075,7 +3073,10 @@ body {
           try {
             await confirmPlayer();
             
-              
+           // ADICIONE AQUI A NOTIFICAÇÃO PUSH
+   const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+  const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
+   await sendPushNotification(message, playerObj.imageUrl || defaultImage);   
 
   
           } catch (error) {
