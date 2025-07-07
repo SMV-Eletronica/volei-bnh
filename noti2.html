@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Notificações Push - Vôlei BNH</title>
+  
+  <!-- SDK do OneSignal -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  
+  <!-- SweetAlert2 para alertas -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Ícone da página -->
+  <link rel="icon" type="image/png" sizes="32x32" href="https://smv-eletronica.github.io/volei-bnh/windows11/Square44x44Logo.altform-unplated_targetsize-32.png">
+  
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .header {
+      background-color: #2c3e50;
+      color: white;
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.8em;
+      margin: 0;
+    }
+
+    .container {
+      background-color: white;
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+
+    .send-btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .lista-btn {
+      background-color: #27ae60;
+    }
+
+    .lista-btn:hover {
+      background-color: #219653;
+    }
+
+    .send-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .send-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #777;
+      font-size: 0.9em;
+    }
+
+    .footer a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><i class="fas fa-volleyball-ball"></i> Teste de Notificações - Vôlei BNH</h1>
+  </div>
+
+  <div class="container">
+    <!-- Botão para enviar "Lista aberta!" -->
+    <button id="sendListaBtn" class="send-btn lista-btn">
+      <i class="fas fa-list-check"></i> Enviar "Lista aberta!"
+    </button>
+    
+    <div class="form-group">
+      <label for="messageInput">Mensagem da Notificação:</label>
+      <input type="text" id="messageInput" placeholder="Digite a mensagem da notificação" required>
+    </div>
+    <div class="form-group">
+      <label for="imageUrlInput">URL da Imagem (opcional):</label>
+      <input type="url" id="imageUrlInput" placeholder="https://exemplo.com/imagem.jpg">
+    </div>
+    <button id="sendNotificationBtn" class="send-btn">
+      <i class="fas fa-paper-plane"></i> Enviar Notificação Personalizada
+    </button>
+  </div>
+
+  <footer class="footer">
+    © 2025 Marcio Vasques - Todos os direitos reservados<br>
+    Powered by <a href="https://onesignal.com" target="_blank">OneSignal</a>
+  </footer>
+
+  <script type="module">
+    import { sendPushNotification } from './pushNotifications.js';
+
+    const sendNotificationBtn = document.getElementById('sendNotificationBtn');
+    const sendListaBtn = document.getElementById('sendListaBtn');
+    const messageInput = document.getElementById('messageInput');
+    const imageUrlInput = document.getElementById('imageUrlInput');
+
+    // Desativa o botão se o campo de mensagem estiver vazio
+    messageInput.addEventListener('input', () => {
+      sendNotificationBtn.disabled = !messageInput.value.trim();
+    });
+
+    // Evento de clique para enviar a notificação personalizada
+    sendNotificationBtn.addEventListener('click', async () => {
+      const message = messageInput.value.trim();
+      const imageUrl = imageUrlInput.value.trim() || null;
+
+      if (!message) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Por favor, insira uma mensagem para a notificação.',
+        });
+        return;
+      }
+
+      try {
+        sendNotificationBtn.disabled = true;
+        await sendPushNotification(message, imageUrl);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Sucesso',
+          text: 'Notificação enviada com sucesso!',
+        });
+        messageInput.value = '';
+        imageUrlInput.value = '';
+        sendNotificationBtn.disabled = false;
+      } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Falha ao enviar a notificação. Tente novamente.',
+        });
+        sendNotificationBtn.disabled = false;
+      }
+    });
+
+    // Evento de clique para enviar "Lista aberta!"
+    sendListaBtn.addEventListener('click', async () => {
+      try {
+        sendListaBtn.disabled = true;
+        await sendPushNotification("Lista aberta!", null);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Sucesso',
+          text: 'Notificação "Lista aberta!" enviada com sucesso!',
+        });
+        sendListaBtn.disabled = false;
+      } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Falha ao enviar a notificação. Tente novamente.',
+        });
+        sendListaBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
