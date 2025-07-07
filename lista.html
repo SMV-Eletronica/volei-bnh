@@ -3141,6 +3141,8 @@ body {
           headings: { en: "🏐 Vôlei BNH - Atualização" },
           contents: { en: message },
           included_segments: ["All"],
+          collapse_id: `delete_${playerId}_${Date.now()}`, // Garante que não substitua
+  ios_thread_id: `delete_${playerId}_${Date.now()}`, // Para iOS
           url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
         };
         if (imageUrl) {
