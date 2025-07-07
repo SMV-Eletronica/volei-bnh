@@ -2781,7 +2781,9 @@ body {
 
         await updateFirebaseLists();
         updateGameList();       
-        
+        const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+  const message = `${playerName} foi removido da lista do jogo ${formattedDate}.`;
+  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
         
       } catch (error) {
         console.error('Erro ao remover jogador:', error);
