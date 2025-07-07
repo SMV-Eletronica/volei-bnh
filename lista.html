@@ -8,6 +8,7 @@
  <!-- SDK do OneSignal -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   
+  
 
   <!-- Favicon padrão para navegadores -->
   <link rel="icon" type="image/png" sizes="16x16" href="windows11/Square44x44Logo.altform-unplated_targetsize-16.png">
@@ -1405,28 +1406,7 @@ body {
             id,
             ...player
           }));
-          
           window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
-          await checkAndRequestNotificationPermission();
-       
-    if (window.currentUserPlayer) {
-      // Disparar associação com OneSignal
-      OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          await OneSignal.login(window.currentUserPlayer.id);
-          console.log(`External User ID configurado após login: ${window.currentUserPlayer.id}`);
-          await OneSignal.User.addAliases({
-            firebase_id: window.currentUserPlayer.id,
-            crm_user_id: `crm_${window.currentUserPlayer.id}`
-          });
-        } catch (error) {
-          console.error('Erro ao associar usuário ao OneSignal:', error);
-        }
-      });
-    }
-
-
-
           if (!window.currentUserPlayer) {
             await Swal.fire({
               icon: 'error',
@@ -1465,39 +1445,6 @@ body {
       }
     }
 
-
-    async function checkAndRequestNotificationPermission() {
-  try {
-    // Verifica o status atual primeiro
-    if (Notification.permission === 'granted') {
-      console.log('Permissão já concedida');
-      if (window.currentUserPlayer?.id) {
-        OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.login(window.currentUserPlayer.id);
-          console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
-        });
-      }
-      return true;
-    }
-    
-    // Se não tiver permissão, solicita
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      OneSignalDeferred.push(async function(OneSignal) {
-        if (window.currentUserPlayer?.id) {
-          await OneSignal.login(window.currentUserPlayer.id);
-          console.log(`External User ID configurado após permissão: ${window.currentUserPlayer.id}`);
-        }
-      });
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error('Erro ao verificar permissões:', error);
-    return false;
-  }
-}
-    
     async function loadGuestFee() {
       try {
         const settingsRef = ref(database, 'settings/guestFee');
@@ -3159,44 +3106,34 @@ body {
   });
 }
   </script>
-
-    <script>
-   // Modifique o código de inicialização do OneSignal
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function (OneSignal) {
-  try {
-    await OneSignal.init({
-      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-      allowLocalhostAsSecureOrigin: true
-    });
-    console.log('OneSignal inicializado com sucesso.');
-    
-    // Adicione esta verificação imediatamente após a inicialização
-    if (window.currentUserPlayer?.id) {
-      await OneSignal.login(window.currentUserPlayer.id);
-      console.log(`External User ID configurado imediatamente: ${window.currentUserPlayer.id}`);
-      await OneSignal.User.addAliases({
-        firebase_id: window.currentUserPlayer.id,
-        crm_user_id: `crm_${window.currentUserPlayer.id}`
-      });
-    }
-
-    OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-      if (event.current.optedIn && window.currentUserPlayer?.id) {
-        await OneSignal.login(window.currentUserPlayer.id);
-        console.log(`External User ID atualizado: ${window.currentUserPlayer.id}`);
-        await OneSignal.User.addAliases({
-          firebase_id: window.currentUserPlayer.id,
-          crm_user_id: `crm_${window.currentUserPlayer.id}`
+  
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      try {
+        await OneSignal.init({
+          appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+          allowLocalhostAsSecureOrigin: true
         });
+        console.log('OneSignal inicializado com sucesso.');
+        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
+          if (event.current.optedIn && window.currentUserPlayer?.id) {
+            await OneSignal.login(window.currentUserPlayer.id);
+            console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
+            await OneSignal.User.addAliases({
+              firebase_id: window.currentUserPlayer.id,
+              crm_user_id: `crm_${window.currentUserPlayer.id}`
+            });
+            console.log('Aliases adicionados com sucesso:', {
+              firebase_id: window.currentUserPlayer.id,
+              crm_user_id: `crm_${window.currentUserPlayer.id}`
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao configurar OneSignal:', error);
       }
     });
-  } catch (error) {
-    console.error('Erro ao configurar OneSignal:', error);
-  }
-});
-
-    
     async function sendPushNotification(message, imageUrl = null) {
       try {
         const payload = {
@@ -3252,33 +3189,5 @@ OneSignalDeferred.push(async function (OneSignal) {
       }
     }
   </script>
-
-  
-  <!--
-  <script>
-    function mostrarToast(mensagem) {
-      const toast = document.createElement("div");
-      toast.innerText = mensagem;
-      toast.style.position = "fixed";
-      toast.style.bottom = "20px";
-      toast.style.left = "50%";
-      toast.style.transform = "translateX(-50%)";
-      toast.style.background = "#3498db";
-      toast.style.color = "#fff";
-      toast.style.padding = "12px 20px";
-      toast.style.borderRadius = "8px";
-      toast.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-      toast.style.zIndex = "9999";
-      document.body.appendChild(toast);
-
-      setTimeout(() => toast.remove(), 4000);
-    }
-
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      mostrarToast("Show! Agora o Vôlei-BNH tá na sua tela inicial 🏐🔥 Bora partir pro jogo!");
-    }
-  </script> 
-  
-  -->
 </body>
 </html>
