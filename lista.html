@@ -3125,52 +3125,80 @@ if (logoutBtn) {
   <script>
  window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
-  console.log('[OneSignal] Iniciando configuração...'); // ✅ Novo log
+  console.log('[OneSignal] Iniciando configuração...');
   
   try {
-    console.log('[OneSignal] Tentando inicializar SDK...');
+    // 1. Inicialização do SDK
+    console.log('[OneSignal] Inicializando SDK...');
     await OneSignal.init({
       appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-      allowLocalhostAsSecureOrigin: true
+      allowLocalhostAsSecureOrigin: true,
+      serviceWorkerParam: { scope: '/' }
     });
     console.log('[OneSignal] SDK inicializado com sucesso!');
 
-    // Verifica se o usuário está logado no seu sistema
-    if (!window.currentUserPlayer?.id) {
-      console.warn('[OneSignal] Nenhum usuário logado no sistema');
+    // 2. Verificar se há usuário logado
+    if (!window.currentUserPlayer || typeof window.currentUserPlayer.id !== 'string') {
+      console.warn('[OneSignal] Usuário ou ID inválido - pulando configuração');
+      return;
+    }
+    
+    const userId = window.currentUserPlayer.id;
+    console.log(`[OneSignal] Configurando para usuário: ${userId}`);
+
+    // 3. Configuração do External User ID (login)
+    console.log('[OneSignal] Configurando External User ID...');
+    await OneSignal.login(userId);
+    console.log('[OneSignal] External User ID configurado!');
+    
+    // Verificar se o login foi bem-sucedido
+    const externalUserId = await OneSignal.getUserId();
+    if (externalUserId !== userId) {
+      console.warn('[OneSignal] Login não refletiu o userId esperado');
       return;
     }
 
-    console.log('[OneSignal] Usuário local:', window.currentUserPlayer.id);
+    // 4. Configuração de aliases
+    const aliases = {
+      firebase_id: userId,
+      crm_user_id: `crm_${userId}`
+    };
     
-    // Configuração básica do usuário
+    console.log('[OneSignal] Configurando aliases:', aliases);
     try {
-      console.log('[OneSignal] Tentando login no OneSignal...');
-      await OneSignal.login(window.currentUserPlayer.id);
-      console.log('[OneSignal] Login realizado com sucesso!');
-      
-      // Configuração simplificada de aliases
-      console.log('[OneSignal] Configurando aliases...');
-      await OneSignal.User.addAlias('firebase_id', window.currentUserPlayer.id);
-      await OneSignal.User.addAlias('crm_user_id', `crm_${window.currentUserPlayer.id}`);
-      console.log('[OneSignal] Aliases configurados!');
-      
-    } catch (error) {
-      console.error('[OneSignal] Erro na configuração:', error);
+      await OneSignal.User.addAliases(aliases);
+      console.log('[OneSignal] Aliases configurados com sucesso!');
+    } catch (aliasError) {
+      console.warn('[OneSignal] Erro ao adicionar aliases:', aliasError);
+      if (aliasError.status === 409) {
+        console.warn('[OneSignal] Conflito detectado, tentando resolver...');
+        try {
+          await OneSignal.User.removeAlias('firebase_id');
+          await OneSignal.User.removeAlias('crm_user_id');
+          await OneSignal.User.addAliases(aliases);
+          console.log('[OneSignal] Aliases reconfigurados após conflito!');
+        } catch (retryError) {
+          console.error('[OneSignal] Erro ao resolver conflito:', retryError);
+        }
+      }
     }
 
-    // Verificação do estado atual
-    const externalUserId = await OneSignal.getExternalUserId();
-    console.log('[OneSignal] External User ID atual:', externalUserId);
-    
-    const isPushEnabled = await OneSignal.Notifications.isPushSupported();
-    console.log('[OneSignal] Push suportado?:', isPushEnabled);
+    // 5. Verificação do estado final
+    console.log('[OneSignal] Verificando estado final...');
+    console.log('[OneSignal] ID do usuário OneSignal:', externalUserId);
     
     const permission = await OneSignal.Notifications.permission;
-    console.log('[OneSignal] Permissão atual:', permission);
+    console.log('[OneSignal] Permissão para notificações:', permission);
+    
+    if (!permission) {
+      console.warn('[OneSignal] Permissões de notificação não concedidas');
+      await OneSignal.Notifications.requestPermission();
+    }
+    
+    console.log('[OneSignal] Configuração concluída!');
 
   } catch (error) {
-    console.error('[OneSignal] Erro fatal na inicialização:', error);
+    console.error(`[OneSignal] ERRO durante a inicialização: ${error.message} (Código: ${error.code || 'N/A'})`, error);
   }
 });
 
