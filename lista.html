@@ -3144,16 +3144,24 @@ body {
           url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
         };
         if (imageUrl) {
-          if (imageUrl.match(/\.(jpg|jpeg|png)$/i) && imageUrl.startsWith('https://')) {
-            payload.big_picture = imageUrl;
-            payload.ios_attachments = { id: imageUrl };
-            payload.chrome_web_image = imageUrl;
-          } else {
-            console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
-            payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-            payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
-            payload.chrome_web_image = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-          }
+          if (
+  imageUrl.startsWith('https://') &&
+  (
+    imageUrl.match(/\.(jpg|jpeg|png)$/i) || 
+    imageUrl.includes('firebasestorage.googleapis.com')
+  )
+) {
+  payload.big_picture = imageUrl;
+  payload.ios_attachments = { id: imageUrl };
+  payload.chrome_web_image = imageUrl;
+} else {
+  console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
+  const fallbackImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+  payload.big_picture = fallbackImage;
+  payload.ios_attachments = { id: fallbackImage };
+  payload.chrome_web_image = fallbackImage;
+}
+
         } else {
           payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
           payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
