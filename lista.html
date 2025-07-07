@@ -2105,9 +2105,15 @@ body {
         await updateFirebaseLists();
         updateGameList();
 
+        
+
+
          const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-    const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+         const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
+         const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
+         await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+
+        
 
         
         guestNameInput.value = '';
