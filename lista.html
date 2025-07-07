@@ -3123,56 +3123,54 @@ if (logoutBtn) {
    <!-- SDK do OneSignal -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-   window.OneSignalDeferred = window.OneSignalDeferred || [];
+ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
+  console.log('[OneSignal] Iniciando configuração...'); // ✅ Novo log
+  
   try {
+    console.log('[OneSignal] Tentando inicializar SDK...');
     await OneSignal.init({
       appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
       allowLocalhostAsSecureOrigin: true
     });
-    console.log('OneSignal inicializado com sucesso.');
+    console.log('[OneSignal] SDK inicializado com sucesso!');
 
-    // Configura o External User ID (login) se o usuário estiver logado
-    if (window.currentUserPlayer?.id) {
-      try {
-        await OneSignal.login(window.currentUserPlayer.id);
-        console.log(`External User ID configurado: ${window.currentUserPlayer.id}`);
-        
-        // Adiciona aliases (apenas tentativa, sem verificação prévia)
-        await OneSignal.User.addAlias('firebase_id', window.currentUserPlayer.id);
-        await OneSignal.User.addAlias('crm_user_id', `crm_${window.currentUserPlayer.id}`);
-        console.log('Aliases adicionados com sucesso');
-      } catch (error) {
-        console.error('Erro ao configurar aliases:', error);
-        // Se der erro 409 (conflito), podemos tentar atualizar em vez de adicionar
-        if (error.status === 409) {
-          try {
-            await OneSignal.User.removeAlias('firebase_id');
-            await OneSignal.User.removeAlias('crm_user_id');
-            await OneSignal.User.addAlias('firebase_id', window.currentUserPlayer.id);
-            await OneSignal.User.addAlias('crm_user_id', `crm_${window.currentUserPlayer.id}`);
-            console.log('Aliases atualizados com sucesso após conflito');
-          } catch (updateError) {
-            console.error('Erro ao atualizar aliases:', updateError);
-          }
-        }
-      }
+    // Verifica se o usuário está logado no seu sistema
+    if (!window.currentUserPlayer?.id) {
+      console.warn('[OneSignal] Nenhum usuário logado no sistema');
+      return;
     }
 
-    // Monitora mudanças na assinatura de push
-    OneSignal.Notifications.addEventListener('permissionChange', async (event) => {
-      if (event.to === 'granted' && window.currentUserPlayer?.id) {
-        try {
-          await OneSignal.login(window.currentUserPlayer.id);
-          console.log('External User ID reconfigurado após mudança de permissão');
-        } catch (error) {
-          console.error('Erro ao reconfigurar External User ID:', error);
-        }
-      }
-    });
+    console.log('[OneSignal] Usuário local:', window.currentUserPlayer.id);
+    
+    // Configuração básica do usuário
+    try {
+      console.log('[OneSignal] Tentando login no OneSignal...');
+      await OneSignal.login(window.currentUserPlayer.id);
+      console.log('[OneSignal] Login realizado com sucesso!');
+      
+      // Configuração simplificada de aliases
+      console.log('[OneSignal] Configurando aliases...');
+      await OneSignal.User.addAlias('firebase_id', window.currentUserPlayer.id);
+      await OneSignal.User.addAlias('crm_user_id', `crm_${window.currentUserPlayer.id}`);
+      console.log('[OneSignal] Aliases configurados!');
+      
+    } catch (error) {
+      console.error('[OneSignal] Erro na configuração:', error);
+    }
+
+    // Verificação do estado atual
+    const externalUserId = await OneSignal.getExternalUserId();
+    console.log('[OneSignal] External User ID atual:', externalUserId);
+    
+    const isPushEnabled = await OneSignal.Notifications.isPushSupported();
+    console.log('[OneSignal] Push suportado?:', isPushEnabled);
+    
+    const permission = await OneSignal.Notifications.permission;
+    console.log('[OneSignal] Permissão atual:', permission);
 
   } catch (error) {
-    console.error('Erro ao configurar OneSignal:', error);
+    console.error('[OneSignal] Erro fatal na inicialização:', error);
   }
 });
 
