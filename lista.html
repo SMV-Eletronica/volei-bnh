@@ -3170,9 +3170,7 @@ OneSignalDeferred.push(async function (OneSignal) {
       allowLocalhostAsSecureOrigin: true
     });
     console.log('OneSignal inicializado com sucesso.');
-     if (window.currentUserPlayer?.id) {
-      await checkAndRequestNotificationPermission();
-    }
+    
     // Adicione esta verificação imediatamente após a inicialização
     if (window.currentUserPlayer?.id) {
       await OneSignal.login(window.currentUserPlayer.id);
