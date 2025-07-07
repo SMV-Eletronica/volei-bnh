@@ -1316,11 +1316,7 @@ body {
 
     const contentDiv = document.getElementById('content');
     const confirmPlayerBtn = document.getElementById('confirmPlayer');
-    if (confirmPlayerBtn) {
-        confirmPlayerBtn.addEventListener('click', () => confirmPlayer());
-    } else {
-        console.error('Elemento com ID "confirmPlayer" não encontrado no DOM');
-    }
+    
     const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
     const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
     const adminSearchContainer = document.getElementById('adminSearchContainer');
