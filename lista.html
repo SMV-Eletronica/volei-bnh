@@ -1497,7 +1497,27 @@ body {
             id,
             ...player
           }));
+          
           window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+           window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+    if (window.currentUserPlayer) {
+      // Disparar associação com OneSignal
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.login(window.currentUserPlayer.id);
+          console.log(`External User ID configurado após login: ${window.currentUserPlayer.id}`);
+          await OneSignal.User.addAliases({
+            firebase_id: window.currentUserPlayer.id,
+            crm_user_id: `crm_${window.currentUserPlayer.id}`
+          });
+        } catch (error) {
+          console.error('Erro ao associar usuário ao OneSignal:', error);
+        }
+      });
+    }
+
+
+
           if (!window.currentUserPlayer) {
             await Swal.fire({
               icon: 'error',
@@ -1535,6 +1555,10 @@ body {
         return null;
       }
     }
+    } catch (error) {
+    // ... tratamento de erro existente ...
+  }
+}
 
     async function loadGuestFee() {
       try {
