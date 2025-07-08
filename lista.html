@@ -2007,7 +2007,10 @@ if (logoutBtn) {
     function setupGuestControls() {
       addGuestBtn.addEventListener('click', addGuest);
     }
-      // Exibir popup de loading
+    
+    async function addGuest() {
+
+        // Exibir popup de loading
     Swal.fire({
       title: 'Adicionando...',
       text: 'Por favor, aguarde.',
@@ -2018,7 +2021,7 @@ if (logoutBtn) {
       }
     });
      // Exibir popup de loading
-    async function addGuest() {
+      
       if (!window.currentUserPlayer) {
         await Swal.fire({
           icon: 'error',
