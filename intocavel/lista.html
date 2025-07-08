@@ -1360,6 +1360,18 @@ body {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
         console.log('Botão de logout clicado');
+
+        // Exibir popup de loading
+    Swal.fire({
+      title: 'Saindo...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+        
         if (!auth) {
           console.error('Objeto auth não está definido');
           await Swal.fire({
