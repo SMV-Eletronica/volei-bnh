@@ -1381,12 +1381,7 @@ body {
           });
           return;
         }
-        try {
-          // Remove external_id e aliases do OneSignal
-          await OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.logout();
-            console.log('OneSignal logout realizado com sucesso.');
-          });
+       
           
           await signOut(auth);
           console.log('Logout bem-sucedido');
