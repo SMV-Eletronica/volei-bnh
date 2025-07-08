@@ -498,6 +498,7 @@ body {
 }
 
 .player-photo {
+     aspect-ratio: 1 / 1;
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -570,6 +571,7 @@ body {
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
+   
 }
 
 .admin-guest-settings input {
@@ -585,6 +587,8 @@ body {
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 14px;
+    width: 300px;
+    height: 40px;
 }
 
 .guest-controls button, .admin-guest-settings button {
@@ -595,6 +599,8 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
+     width: 300px;
+     height: 40px;
 }
 
 .guest-controls button:hover, .admin-guest-settings button:hover {
@@ -607,7 +613,8 @@ body {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-    
+    width: 300px;
+    height: 40px;
     padding: 8px;
     border-radius: 4px;
     font-weight: bold;
@@ -732,6 +739,7 @@ body {
 
 .github-link {
     color: #333; /* Cinza escuro do GitHub */
+    font-size: 12px;
 }
 
 .github-link:hover {
@@ -740,13 +748,18 @@ body {
 
 .firebase-link {
     color: #FF9900; /* Laranja do Firebase */
+    font-size: 12px;
 }
 
 .firebase-link:hover {
     color: #FF6600; /* Um tom mais forte ao passar o mouse */
+
 }
 
-
+.onesignal-link {
+    color: #b71c1c;
+    font-size: 12px;
+}
 
 
     .swal2-popup {
@@ -1144,7 +1157,7 @@ body {
           <select id="gameSelect" class="game-select"></select>
         </div>
         
-        <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Confirmar Presença</button>
+        
         <div class="game-list">
           <h3>Lista do Dia: 
             <span class="lampada" onclick="mostrarPopup('meupopup1')">ℹ️</span>    
@@ -1160,17 +1173,24 @@ body {
           </h3>
           <div id="waitlistPlayers"></div>
         </div>
+
         <div class="game-controls">
-          <div class="guest-controls" id="adminSearchContainer" style="display: none;">
-            <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
-            <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
-            <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
+            <div class="guest-controls">
+            <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Confirmar Presença</button>          
           </div>
           <div class="guest-controls" id="guestControls" style="display: none;">
-            <input type="text" id="guestNameInput" placeholder="Nome do Convidado">
-            <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
+             <input type="text" id="guestNameInput" placeholder="Nome do Convidado">
+             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
           </div>
+
+          <div class="guest-controls" id="adminSearchContainer" style="display: none;">
+             <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
+              <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+              <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
+          </div>
+
           <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Lista</button>
+         
         
         </div>
       </div>
@@ -1189,7 +1209,7 @@ body {
     </div>
 
     <footer class="footer">
-      © 2025 Marcio Vasques - Todos os direitos reservados<br>
+      © 2025 SMV Eletrônica- Todos os direitos reservados<br>
       <div class="footer-links">
         Powered by:
         <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
@@ -1198,6 +1218,10 @@ body {
         <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
           <i class="fas fa-fire"></i> Firebase
         </a>        
+        <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
+        <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
+        OneSignal      
+    </a>
       </div>
     </footer>
   </div>
@@ -1226,13 +1250,13 @@ body {
     const { DateTime } = luxon;
     luxon.Settings.defaultLocale = 'pt-BR';
     const customWeekdays = {
-      1: 'segunda',
-      2: 'terça',
-      3: 'quarta',
-      4: 'quinta',
-      5: 'sexta',
-      6: 'sábado',
-      7: 'domingo'
+      1: 'Segunda',
+      2: 'Terça',
+      3: 'Quarta',
+      4: 'Quinta',
+      5: 'Sexta',
+      6: 'Sábado',
+      7: 'Domingo'
     };
 
     const contentDiv = document.getElementById('content');
@@ -2149,7 +2173,9 @@ if (logoutBtn) {
                   timer: 1500,
                   showConfirmButton: false
                 });
+
                 abrirQuadra();
+
               } catch (error) {
                 console.error('Erro ao copiar PIX:', error);
                 await Swal.fire({
@@ -2521,7 +2547,9 @@ if (logoutBtn) {
             title: 'Presença Já Confirmada',
             text: 'Você já confirmou sua presença.',
           });
+
           abrirQuadra();
+
           return;
         }
 
@@ -2621,7 +2649,9 @@ if (logoutBtn) {
           addPlayerBtn.disabled = true;
           autocompleteSuggestions.style.display = 'none';
         }
+
         abrirQuadra();
+
       } catch (error) {
         console.error('Erro ao confirmar jogador:', error);
         await Swal.fire({
@@ -2902,7 +2932,7 @@ if (logoutBtn) {
     window.mostrarPopup = mostrarPopup;
     window.fecharPopup = fecharPopup;
     window.confirmPlayer = confirmPlayer;
-     window.abrirQuadra = abrirQuadra;
+    window.abrirQuadra = abrirQuadra;
     
   
    
@@ -3002,8 +3032,8 @@ if (logoutBtn) {
       Confirmar Presença ✅
     </button>
     <div class="info">
-      <p><strong>Jogo dia:</strong> ${gameDateTime}</p>
-      <p><strong>Presenças:</strong> ${playerLimit} A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p>
+      <p><strong>Jogo do dia:</strong> ${gameDateTime}<br><strong>Lista limitada a ${playerLimit} jogadores</strong></p>
+      <p><strong> </strong> A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p>
     </div>
   `;
 
@@ -3023,8 +3053,7 @@ if (logoutBtn) {
         botao.addEventListener('click', async (e) => {
           e.stopPropagation();
           try {
-            await confirmPlayer();
-            
+            await confirmPlayer();          
         
 
   
@@ -3264,5 +3293,8 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       }
     }
   </script>
+
+  
+
 </body>
 </html>
