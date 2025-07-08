@@ -476,33 +476,33 @@
 
   "screenshots": [
     {
-      "src": "/volei-bnh/screenshot-desktop.png",
+      "src": "/volei-bnh/screenshots/screenshot-desktop.png",
       "sizes": "1366x720",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
-      "src": "/volei-bnh/screenshot-mobile1.png",
+      "src": "/volei-bnh/screenshots/screenshot-mobile1.png",
       "sizes": "720x1600",
       "type": "image/png"
     },
     {
-      "src": "/volei-bnh/screenshot-mobile2.png",
+      "src": "/volei-bnh/screenshots/screenshot-mobile2.png",
       "sizes": "720x1600",
       "type": "image/png"
     },
     {
-      "src": "/volei-bnh/screenshot-mobile3.png",
+      "src": "/volei-bnh/screenshots/screenshot-mobile3.png",
       "sizes": "720x1600",
       "type": "image/png"
     },
     {
-      "src": "/volei-bnh/screenshot-mobile4.png",
+      "src": "/volei-bnh/screenshots/screenshot-mobile4.png",
       "sizes": "720x1600",
       "type": "image/png"
     },
     {
-      "src": "/volei-bnh/screenshot-mobile5.png",
+      "src": "/volei-bnh/screenshots/screenshot-mobile5.png",
       "sizes": "720x1600",
       "type": "image/png"
     }
