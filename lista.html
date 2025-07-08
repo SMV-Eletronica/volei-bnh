@@ -2139,6 +2139,8 @@ if (logoutBtn) {
 
         
         guestNameInput.value = '';
+        // Fechar o loading
+    Swal.close();
         await Swal.fire({
           icon: 'success',
           title: 'Sucesso',
