@@ -2004,30 +2004,9 @@ if (logoutBtn) {
       });
     }
 
-function setupGuestControls() {
-      addGuestBtn.addEventListener('click', async () => {
-  // Exibe popup de carregamento imediatamente
-  Swal.fire({
-    title: 'Adicionando...',
-    text: 'Por favor, aguarde.',
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    didOpen: () => {
-      Swal.showLoading();
+    function setupGuestControls() {
+      addGuestBtn.addEventListener('click', addGuest);
     }
-  });
-
-  // Pequeno delay para garantir que o popup carregue
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  // Executa a função principal
-  await addGuest();
-
-  // Fecha o loading (caso a função não feche)
-  Swal.close();
-});
-
-}
     
     async function addGuest() {     
       
