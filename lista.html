@@ -1692,7 +1692,7 @@ if (logoutBtn) {
 
                   const formattedDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
                   const message = `Novo jogo criado para ${formattedDate} às ${time}!`;
-                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [administradores]);
                   
                   await loadActiveGames();
                   Swal.close();
