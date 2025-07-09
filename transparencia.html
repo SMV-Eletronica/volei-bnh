@@ -844,7 +844,7 @@
                                 const monthName = getMonthName(month);
                                 const option = document.createElement('option');
                                 option.value = `${year}/${month}/${paymentId}`;
-                                option.textContent = `${monthName}/${year} - R$ ${parseFloat(payment.value).toFixed(2)} (${payment.paymentType || 'Não informado'})`;
+                                option.textContent = `${monthName}/${year} - R$ ${parseFloat(payment.value).toFixed(2)} (${payment.additionalInfo || 'Não informado'})`;
                                 paymentSelect.appendChild(option);
                                 hasPayments = true;
                             }
