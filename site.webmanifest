@@ -1,7 +1,7 @@
 {
   "name": "Vôlei-BNH",
   "short_name": "Vôlei-BNH",
-  "description": "Aplicativo de gestão de treinos e partidas do Vôlei BNH",
+  "description": "Aplicativo de Gestão e Jogos do Vôlei BNH",
   "id": "/volei-bnh",  
   "start_url": "/volei-bnh/loginvl.html",
   "display": "standalone",
