@@ -2763,7 +2763,7 @@ if (logoutBtn) {
         
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
         const message = `${player.name} foi removido da lista do jogo ${formattedDate}.`;
-        await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+        await sendPushNotification3(message, window.currentUserPlayer?.imageUrl || defaultImage, [administradores]);
         
       } catch (error) {
         console.error('Erro ao remover jogador:', error);
@@ -3235,10 +3235,10 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
           app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
           headings: { en: "🏐 Vôlei BNH - Atualização" },
           contents: { en: message },
-          included_segments: ["All"],
-          
+          included_segments: ["All"],          
           url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
         };
+        
         if (imageUrl) {
           if (
   imageUrl.startsWith('https://') &&
@@ -3292,9 +3292,47 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
         });
       }
     }
-  </script>
-
   
 
+  async function sendPushNotification3(message, imageUrl, tags = []) {
+    const payload = {
+      app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+      headings: { en: "🏐 Vôlei BNH - Administração" },
+      contents: { en: message },
+      url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
+      big_picture: imageUrl,
+    };
+
+    if (tags.length === 0) {
+      // Envia para todos
+      payload.included_segments = ["All"];
+    } else {
+      // Envia somente para quem tiver pelo menos uma das tags
+      payload.filters = [];
+      tags.forEach((tag, index) => {
+        if (index > 0) payload.filters.push({ operator: "OR" });
+        payload.filters.push({
+          field: "tag",
+          key: tag,
+          relation: "=",
+          value: "true"
+        });
+      });
+    }
+
+    await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+      },
+      body: JSON.stringify(payload)
+    });
+  }
+
+
+
+
+</script>
 </body>
 </html>
