@@ -2763,7 +2763,7 @@ if (logoutBtn) {
         
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
         const message = `${player.name} foi removido da lista do jogo ${formattedDate}.`;
-        await sendPushNotification3(message, window.currentUserPlayer?.imageUrl || defaultImage, [administradores]);
+        await sendPushNotification3(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
         
       } catch (error) {
         console.error('Erro ao remover jogador:', error);
