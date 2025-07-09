@@ -7,13 +7,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="transparencia.css?v=1.0">
+    <link rel="stylesheet" href="transparencia.css?v=1.2">
     <style>
         .upload-comprovante {
             margin-top: 20px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            display: none; /* Initially hidden */
         }
         .payment-select {
             padding: 8px;
@@ -32,6 +33,12 @@
         }
         .upload-btn:hover {
             background-color: #357ae8;
+        }
+        .pending-comprovante-icon {
+            color: #f39c12;
+            margin-left: 8px;
+            cursor: pointer;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -180,7 +187,7 @@
                         <div id="noPendingStatus" class="no-pending" style="display: none;">
                             Integrante em dia com as Contribuições!
                         </div>
-                        <div class="upload-comprovante">
+                        <div id="uploadComprovanteSection" class="upload-comprovante">
                             <h3>Enviar Comprovante de Pagamento</h3>
                             <select id="paymentSelect" class="payment-select">
                                 <option value="">Selecione um pagamento pendente</option>
@@ -254,7 +261,11 @@
         const searchInput = document.getElementById('searchInput');
         const pendingStatus = document.getElementById('pendingStatus');
         const noPendingStatus = document.getElementById('noPendingStatus');
+        const uploadComprovanteSection = document.getElementById('uploadComprovanteSection');
         const uploadComprovanteBtn = document.getElementById('uploadComprovanteBtn');
+        const paymentSelect = document.getElementById('paymentSelect');
+        const comprovanteInput = document.getElementById('comprovanteInput');
+        const uploadMessage = document.getElementById('uploadMessage');
 
         let players = [];
         let currentPlayerIndex = 0;
@@ -390,7 +401,6 @@
                 let filteredIncome = 0;
                 let filteredReceivables = 0;
                 let filteredExpenses = 0;
-                console.log('Processing payments data:', paymentsData);
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
@@ -430,7 +440,6 @@
                         }
                     }
                 }
-                console.log('Processing expenses data:', expenses);
                 for (const expenseId in expenses) {
                     const expense = expenses[expenseId];
                     if (!expense.month || expense.value === undefined) continue;
@@ -500,6 +509,29 @@
             }
         }
 
+        function renderFinancialData(monthlyData) {
+            const selectedYear = yearFilter.value;
+            const selectedMonth = monthFilter.value;
+            const sortedMonths = Object.keys(monthlyData).sort().reverse();
+            financialData.innerHTML = '';
+            for (const monthKey of sortedMonths) {
+                const data = monthlyData[monthKey];
+                if (selectedYear !== 'all' && data.year !== selectedYear) continue;
+                if (selectedMonth !== 'all' && data.month !== selectedMonth) continue;
+                const balance = data.income - data.expenses;
+                const balanceClass = balance >= 0 ? 'status-pago' : 'status-inadimplente';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.monthName} ${data.year}</td>
+                    <td>R$ ${data.income.toFixed(2)}</td>
+                    <td>R$ ${data.receivables.toFixed(2)}</td>
+                    <td>R$ ${data.expenses.toFixed(2)}</td>
+                    <td class="${balanceClass}">R$ ${balance.toFixed(2)}</td>
+                `;
+                financialData.appendChild(row);
+            }
+        }
+
         async function loadDefaulters() {
             const paymentsRef = ref(database, 'payments');
             const playersRef = ref(database, 'players');
@@ -513,7 +545,6 @@
                 const defaulters = {};
                 const selectedYear = yearFilter.value;
                 const selectedMonth = monthFilter.value;
-                console.log('Processing defaulters from payments:', paymentsData);
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
@@ -527,10 +558,14 @@
                                     defaulters[payment.playerId] = {
                                         name: payment.playerName,
                                         months: [],
-                                        photo: players[payment.playerId]?.imageUrl || null
+                                        photo: players[payment.playerId]?.imageUrl || null,
+                                        hasPendingComprovante: false
                                     };
                                 }
                                 defaulters[payment.playerId].months.push(payment.month);
+                                if (payment.comprovanteStatus === 'pendente') {
+                                    defaulters[payment.playerId].hasPendingComprovante = true;
+                                }
                             }
                         }
                     }
@@ -566,7 +601,7 @@
                         `<img src="${defaulter.photo}" class="defaulter-photo" alt="${defaulter.name}">` : 
                         '<div class="defaulter-photo" style="background:#eee;"></div>'}
                     <div class="defaulter-info">
-                        <div class="defaulter-name">${defaulter.name}</div>
+                        <div class="defaulter-name">${defaulter.name}${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}</div>
                         <div class="defaulter-months">${formattedMonths}</div>
                     </div>
                 `;
@@ -582,7 +617,6 @@
             try {
                 const snapshot = await get(paymentsRef);
                 const paymentsData = snapshot.val() || {};
-                console.log('Processing defaulter details for player:', playerId, paymentsData);
                 const defaulterPayments = [];
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
@@ -590,7 +624,7 @@
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
                             if (payment.playerId === playerId && !payment.date && payment.value > 0) {
-                                defaulterPayments.push(payment);
+                                defaulterPayments.push({ id: paymentId, year, month, ...payment });
                             }
                         }
                     }
@@ -599,13 +633,21 @@
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;"> Tipo / Descrição</th></tr></thead><tbody>';
+                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo / Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
-                        const [year, month] = payment.month.split('-');
+                        const [year, month] = [payment.year, payment.month];
                         const formattedMonth = `${getMonthName(month)}/${year}`;
                         const paymentType = payment.paymentType || 'Não informado';
-                        const guestName = payment.guestName || '-';
-                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${paymentType} / ${guestName}</td></tr>`;
+                        const guestName = payment.additionalInfo || '-';
+                        const comprovanteStatus = payment.comprovanteStatus ? 
+                            (payment.comprovanteStatus === 'pendente' ? 'Pendente' : 
+                             payment.comprovanteStatus === 'aprovado' ? 'Aprovado' : 
+                             `Rejeitado (${payment.comprovanteRejectReason || '-'})`) : 
+                            'Nenhum comprovante';
+                        const comprovanteLink = payment.comprovanteURL ? 
+                            `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a>` : 
+                            '-';
+                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${paymentType} / ${guestName}</td><td style="border: 1px solid #ddd; padding: 8px;">${comprovanteLink} (${comprovanteStatus})</td></tr>`;
                     });
                     detailsHtml += '</tbody></table>';
                 }
@@ -785,15 +827,12 @@
         }
 
         async function loadPendingPaymentsSelect(playerId) {
-            const paymentSelect = document.getElementById('paymentSelect');
             paymentSelect.innerHTML = '<option value="">Selecione um pagamento pendente</option>';
-            
             try {
                 const paymentsRef = ref(database, 'payments');
                 const snapshot = await get(paymentsRef);
                 const paymentsData = snapshot.val() || {};
                 let hasPayments = false;
-
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
@@ -811,12 +850,11 @@
                         }
                     }
                 }
-
                 if (!hasPayments) {
                     paymentSelect.innerHTML = '<option value="">Nenhum pagamento pendente</option>';
-                    document.getElementById('uploadComprovanteBtn').disabled = true;
+                    uploadComprovanteBtn.disabled = true;
                 } else {
-                    document.getElementById('uploadComprovanteBtn').disabled = false;
+                    uploadComprovanteBtn.disabled = false;
                 }
             } catch (error) {
                 console.error("Erro ao carregar pagamentos pendentes:", error);
@@ -829,12 +867,8 @@
         }
 
         async function uploadComprovante() {
-            const paymentSelect = document.getElementById('paymentSelect');
-            const comprovanteInput = document.getElementById('comprovanteInput');
-            const uploadMessage = document.getElementById('uploadMessage');
-            const file = comprovanteInput.files[0];
             const paymentPath = paymentSelect.value;
-
+            const file = comprovanteInput.files[0];
             if (!paymentPath) {
                 Swal.fire({
                     icon: 'error',
@@ -843,7 +877,6 @@
                 });
                 return;
             }
-
             if (!file) {
                 Swal.fire({
                     icon: 'error',
@@ -852,7 +885,6 @@
                 });
                 return;
             }
-
             const maxSize = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSize) {
                 Swal.fire({
@@ -862,7 +894,6 @@
                 });
                 return;
             }
-
             const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
             if (!validTypes.includes(file.type)) {
                 Swal.fire({
@@ -872,33 +903,50 @@
                 });
                 return;
             }
-
             try {
                 const [year, month, paymentId] = paymentPath.split('/');
-                const storagePath = `comprovantes/${currentUserPlayer.id}/${year}/${month}/${paymentId}_${Date.now()}_${file.name}`;
+                const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+                const paymentSnapshot = await get(paymentRef);
+                if (!paymentSnapshot.exists()) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não encontrado.',
+                    });
+                    return;
+                }
+                const payment = paymentSnapshot.val();
+                if (!payment.playerId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não possui playerId associado.',
+                    });
+                    return;
+                }
+                // Usa o playerId do pagamento (dono da pendência), mesmo para administradores
+                const storagePath = `comprovantes/${payment.playerId}/${year}/${month}/${paymentId}_${Date.now()}_${file.name}`;
                 const fileRef = storageRef(storage, storagePath);
-
                 await uploadBytes(fileRef, file);
                 const downloadURL = await getDownloadURL(fileRef);
-
-                const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-                await update(paymentRef, {
+                const updateData = {
                     comprovanteURL: downloadURL,
                     comprovanteStatus: 'pendente',
                     comprovanteUploadedAt: new Date().toISOString()
-                });
-
+                };
+                await update(paymentRef, updateData);
                 uploadMessage.style.display = 'block';
-                uploadMessage.textContent = 'Comprovante enviado com sucesso! Aguardando aprovação.';
+                uploadMessage.textContent = payment.comprovanteURL ? 'Comprovante substituído com sucesso! Aguardando aprovação.' : 'Comprovante enviado com sucesso! Aguardando aprovação.';
                 uploadMessage.style.color = '#28a745';
                 comprovanteInput.value = '';
-                await loadPlayerPayments(currentUserPlayer.id);
-                await loadPendingPaymentsSelect(currentUserPlayer.id);
-
+                paymentSelect.value = '';
+                await loadPlayerPayments(currentPlayerIndex < filteredPlayers.length ? filteredPlayers[currentPlayerIndex].id : payment.playerId);
+                await loadPendingPaymentsSelect(currentPlayerIndex < filteredPlayers.length ? filteredPlayers[currentPlayerIndex].id : payment.playerId);
+                await loadDefaulters(); // Recarrega a lista de inadimplentes para atualizar ícones
                 Swal.fire({
                     icon: 'success',
                     title: 'Sucesso',
-                    text: 'Comprovante enviado com sucesso!',
+                    text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
                 });
             } catch (error) {
                 console.error("Erro ao enviar comprovante:", error);
@@ -931,6 +979,8 @@
             }
             loadPlayerPayments(player.id);
             loadPendingPaymentsSelect(player.id);
+            // Show upload section only for the logged-in user's playerId or admins
+            uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'block' : 'none';
             prevPlayerBtn.disabled = filteredPlayers.length <= 1;
             nextPlayerBtn.disabled = filteredPlayers.length <= 1;
         }
@@ -945,7 +995,6 @@
                 ]);
                 let playerPayments = [];
                 const paymentsData = paymentsSnapshot.val() || {};
-                console.log('Processing payments for player:', playerId, paymentsData);
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
@@ -996,6 +1045,20 @@
                 const isExcluded = payment.isDeleted;
                 const [year, month] = payment.month.split('-');
                 const monthName = getMonthName(month);
+                let comprovanteStatusText = payment.comprovanteStatus || 'Pendente';
+                let comprovanteStatusClass = '';
+                if (payment.comprovanteStatus) {
+                    if (payment.comprovanteStatus === 'pendente') {
+                        comprovanteStatusText = 'Pendente';
+                        comprovanteStatusClass = 'pending';
+                    } else if (payment.comprovanteStatus === 'aprovado') {
+                        comprovanteStatusText = 'Aprovado';
+                        comprovanteStatusClass = 'approved';
+                    } else if (payment.comprovanteStatus === 'rejeitado') {
+                        comprovanteStatusText = `Rejeitado (${payment.comprovanteRejectReason || '-'})`;
+                        comprovanteStatusClass = 'rejected';
+                    }
+                }
                 const paymentEl = document.createElement('div');
                 paymentEl.className = `status-item ${isExcluded ? 'excluded' : 'active'}`;
                 paymentEl.innerHTML = `
@@ -1027,7 +1090,7 @@
                         <span class="status-label">Comprovante:</span>
                         <span class="status-value">
                             ${payment.comprovanteURL ? 
-                                `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a> (${payment.comprovanteStatus || 'Pendente'})` : 
+                                `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a> <span class="${comprovanteStatusClass}">(${comprovanteStatusText})</span>` : 
                                 'Nenhum comprovante enviado'}
                         </span>
                     </div>
@@ -1074,6 +1137,7 @@
                 paymentsList.innerHTML = "";
                 pendingStatus.style.display = "none";
                 noPendingStatus.style.display = "none";
+                uploadComprovanteSection.style.display = "none";
             }
         });
 
