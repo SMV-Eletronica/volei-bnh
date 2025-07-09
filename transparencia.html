@@ -34,6 +34,13 @@
         .upload-btn:hover {
             background-color: #357ae8;
         }
+
+        .conteinerbtncomprovante{
+             padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;        
+        }
+        
         .pending-comprovante-icon {
             color: #f39c12;
             margin-left: 8px;
@@ -193,7 +200,7 @@
                                 <option value="">Selecione um pagamento pendente</option>
                             </select>
                             <input type="file" id="comprovanteInput" accept="image/*,.pdf" />
-                            <div>
+                            <div class="conteinerbtncomprovante">
                             <button id="uploadComprovanteBtn" class="upload-btn">Enviar Comprovante</button>
                                 </div>
                             <p id="uploadMessage" style="display: none; color: #333;"></p>
