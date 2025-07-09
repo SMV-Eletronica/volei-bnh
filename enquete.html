@@ -102,33 +102,31 @@
         }
 
         
-      .container {
-    
-    margin: 20px auto; /* Centraliza o container */
-    padding: 0 20px; /* Espaçamento interno */
-    width: 100%; /* Ocupa 100% da largura até o max-width */
-}
+        .container {
+            max-width: 100%;
+            margin: 20px auto;
+           /* padding: 0 20px; */
+        }
 
-.section {
-    background-color: white;
-    border-radius: 5px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    width: 100%; /* Ocupa toda a largura do container */
-}
+        .section {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
 
-/* Remova o max-width do .section-title */
-.section-title {
-    margin-top: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    color: var(--text);
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    gap: 10px;
-}
+        .section-title {
+            margin-top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            color: var(--text);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            gap: 10px;
+        }
+
         .new-poll-controls {
             background-color: #f8f9fa;
             padding: 15px;
@@ -497,12 +495,6 @@
         
 
         @media (max-width: 768px) {
-
-            .container {
-    max-width: 1200px; /* Definir uma largura máxima fixa */
-   
-}
-            
             .poll-item {
                 flex-direction: column;
                 align-items: flex-start;
