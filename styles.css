@@ -46,7 +46,65 @@ body {
         margin: 0;
         text-align: center;
     }
-    
+
+
+   .footer {
+    text-align: center;
+   padding: 3px;
+   /* background: var(--text);*/
+    color: rgb(170, 170, 170);
+    font-size: 14px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.footer a {
+   /* color: var(--primary);*/
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+/*
+.footer a:hover {
+    color: var(--success);
+}
+    */
+
+.footer i {
+    margin-right: 5px;
+}
+
+.github-link {
+    color: #333; /* Cinza escuro do GitHub */
+}
+
+.github-link:hover {
+    color: #000; /* Preto ao passar o mouse */
+}
+
+.firebase-link {
+    color: #FF9900; /* Laranja do Firebase */
+}
+
+.firebase-link:hover {
+    color: #FF6600; /* Um tom mais forte ao passar o mouse */
+}
+
+.onesignal-link {
+    color: #b71c1c;
+    font-size: 12px;
+}   
+        
+
+
+
     .container {
         max-width: 100%;
        
