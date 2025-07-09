@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="transparencia.css?v=1.2">
+    <link rel="stylesheet" href="transparencia.css?v=1.3">
     <style>
         .upload-comprovante {
             margin-top: 20px;
@@ -550,7 +550,7 @@
                         const payments = paymentsData[year][month];
                         const normalizedMonth = month.padStart(2, '0');
                         if (selectedYear !== 'all' && year !== selectedYear) continue;
-                        if (selectedMonth !== 'all' && normalizedMonth !== selectedMonth) continue;
+                        if (selectedMonth !== 'all' && normalizedMonth === selectedMonth) continue;
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
                             if (!payment.date && payment.value > 0) {
@@ -624,7 +624,7 @@
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
                             if (payment.playerId === playerId && !payment.date && payment.value > 0) {
-                                defaulterPayments.push({ id: paymentId, year, month, ...payment });
+                                defaulterPayments.push({ id: paymentId, ...payment });
                             }
                         }
                     }
@@ -635,8 +635,9 @@
                 } else {
                     detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo / Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
-                        const [year, month] = [payment.year, payment.month];
-                        const formattedMonth = `${getMonthName(month)}/${year}`;
+                        const monthYear = payment.month && payment.month.includes('-') ? payment.month.split('-') : [null, null];
+                        const [year, month] = monthYear;
+                        const formattedMonth = month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência';
                         const paymentType = payment.paymentType || 'Não informado';
                         const guestName = payment.additionalInfo || '-';
                         const comprovanteStatus = payment.comprovanteStatus ? 
@@ -1148,7 +1149,7 @@
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
             ];
-            return months[parseInt(monthNumber) - 1];
+            return months[parseInt(monthNumber) - 1] || 'Desconhecido';
         }
 
         function formatDate(dateString) {
