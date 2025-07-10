@@ -569,7 +569,7 @@
                         const payments = paymentsData[year][month];
                         const normalizedMonth = month.padStart(2, '0');
                         if (selectedYear !== 'all' && year !== selectedYear) continue;
-                        if (selectedMonth !== 'all' && normalizedMonth === selectedMonth) continue;
+                        if (selectedMonth !== 'all' && normalizedMonth !== selectedMonth) continue;
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
                             if (!payment.date && payment.value > 0) {
