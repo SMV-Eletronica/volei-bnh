@@ -782,7 +782,7 @@
                 
                 // Se houver arquivo, faz o upload
                 if (receiptFile) {
-                    const filePath = `despesas/${newExpenseRef.key}_${receiptFile.name}`;
+                    const filePath = `comprovantes/despesas/${newExpenseRef.key}_${receiptFile.name}`;
                     const fileRef = storageRef(storage, filePath);
                     
                     await uploadBytes(fileRef, receiptFile);
