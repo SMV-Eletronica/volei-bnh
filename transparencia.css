@@ -19,20 +19,180 @@
             --text: #2c3e50;
             --muted: #7f8c8d;
         }
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #34495e;
+    margin-bottom: 10px;
+}
+
+.sidebar-user-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 2px solid #3498db;
+}
+
+.sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-user-name {
+    color: #ecf0f1;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.sidebar-user-position {
+    color: #bdc3c7;
+    font-size: 14px;
+    margin-top: 2px;
+}
+        
         .header h2 {
             margin: 0;
+            color: rgb(255, 255, 255);
+            font-size: 1.5em;
+            background-color: #2c3e50;
+        }
+
+         .header {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #2c3e50;
+            border-bottom: 1px solid white;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+         .upload-comprovante {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+        }
+        .payment-select {
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .upload-btn {
+            padding: 8px 12px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .upload-btn:hover {
+            background-color: #357ae8;
+        }
+        .conteinerbtncomprovante {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .pending-comprovante-icon {
+            color: #f39c12;
+            margin-left: 8px;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        .onesignal-link {
+            color: #b71c1c;
+            font-size: 12px;
+        }
+        /* Estilos para o header */
+        .sidebar .menu { 
+
+            color: #3498db;
+            font-weight: bold;
+        }
+       
+        .header h2 i {
+            color: #3498db;
+            margin-right: 5px;
+        }
+        /* Estilos para o menu lateral */
+        .sidebar {
+            position: fixed;
+            
+            left: -250px;
+            width: 250px;
+            height: 550px;
+            background-color: #2c3e50;
+            color: white;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000;
+            padding-top: 60px;
+            border-radius: 10px;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .sidebar-menu button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-menu button i {
+            margin-right: 10px;
+        }
+        .sidebar-menu button:hover {
+            background-color: #34495e;
+        }
+        .menu-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1100;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
             color: white;
         }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 900;
+            display: none;
+        }
+        .overlay.active {
+            display: block;
+        }
+        /* Ajuste do container principal */
+        .container {
+            margin-left: 0;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        
 
 
         .swal2-popup {
@@ -76,6 +236,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9rem;
+       
             box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
         }
         .logout-btn:hover {
@@ -468,8 +629,6 @@
             justify-content: center;
             gap: 8px;
             padding: 10px;
-            width: 300px;
-           flex-direction: column;
         }
         .enquete-btn {
             background-color: rgba(255, 255, 255, 0.1);
@@ -554,11 +713,12 @@
                 grid-template-columns: 1fr;
             }
         }
+   
 
+  
         .defaulter-item {
             cursor: pointer;
         }
-
         /* Estilo para o popup do SweetAlert2 */
         .swal-wide {
             width: 90% !important;
@@ -568,11 +728,3 @@
             padding: 15px !important;
             text-align: center !important;
         }
-
- @media (min-width: 992px) {
-        .container {
-            max-width: 1200px;
-        }
-    
-   
-

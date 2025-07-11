@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+
+  <!-- Marcio Vasques -->
+
+
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <title>Lista de Presença - Vôlei BNH</title>    
+  
+
+  <!-- Favicon padrão para navegadores -->
+  <link rel="icon" type="image/png" sizes="16x16" href="windows11/Square44x44Logo.altform-unplated_targetsize-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="windows11/Square44x44Logo.altform-unplated_targetsize-32.png">
+
+  <!-- Ícones maiores para Android -->
+  <link rel="icon" type="image/png" sizes="192x192" href="android/android-launchericon-192-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="android/android-launchericon-512-512.png">
+
+  <!-- Ícone para iOS (Safari) -->
+  <link rel="apple-touch-icon" href="ios/192.png">
+
+  <!-- Fontes e scripts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <link rel="stylesheet" href="lista.css">
+
+ <style>
+    /* Estilos para o header */
+    .header {
+      text-align: center;
+      padding: 10px 0;
+      background-color: #2c3e50;
+      border-bottom: 1px solid #ccc;
+      position: relative;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 1.5em;
+      color: #fff;
+      background-color: #2c3e50;
+    }
+    .header h2 i {
+      color: #3498db;
+      margin-right: 5px;
+    }
+    /* Estilos para o menu lateral */
+    .sidebar {
+      position: fixed;
+      
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background-color: #2c3e50;
+      color: white;
+      transition: left 0.3s ease-in-out;
+      z-index: 1000;
+      padding-top: 60px;
+    }
+    .sidebar.active {
+      left: 0;
+    }
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+    .sidebar-menu button {
+      background: none;
+      border: none;
+      color: white;
+      padding: 15px;
+      text-align: left;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .sidebar-menu button i {
+      margin-right: 10px;
+    }
+    .sidebar-menu button:hover {
+      background-color: #34495e;
+    }
+    .menu-toggle {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1100;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #3498db;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 900;
+      display: none;
+    }
+    .overlay.active {
+      display: block;
+    }
+
+    
+    /* Ajuste do container principal */
+    .container {
+      margin-left: 0;
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    .user-profile {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #34495e;
+    margin-bottom: 10px;
+}
+
+.sidebar-user-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 2px solid #3498db;
+}
+
+.sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-user-name {
+    color: #ecf0f1;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.sidebar-user-position {
+    color: #bdc3c7;
+    font-size: 12px;
+    margin-top: 2px;
+}
+    
+  </style>
+</head>
+<body>
+
+
+
+
+   <div class="header">
+    <button class="menu-toggle" id="menuToggle">
+      <i class="fas fa-bars"></i>
+    </button>
+    <center><h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2></center>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-menu">
+        <!-- Adicione este container para foto, nome e posição -->
+        <div class="user-profile">
+            <img id="sidebarUserPhoto" class="sidebar-user-photo" src="" alt="Foto do usuário">
+            <div class="sidebar-user-info">
+                <div id="sidebarUserName" class="sidebar-user-name"></div>
+                <div id="sidebarUserPosition" class="sidebar-user-position"></div>
+                <div id="userEmail" class="sidebar-user-position"></div>
+            </div>
+        </div>
+
+      <button id="loginBtn" class="sidebar-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> Dashboard</button>
+      <button id="transparenciaBtn" class="sidebar-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+      <button class="sidebar-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+      <button id="logoutBtn" class="sidebar-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+      
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  
+  <div class="container">
+    <div id="game-list" class="tab-content active">
+      <div id="content" class="section">
+        <div class="section-title">
+          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados </h2>
+          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Abrir Lista / Configurar</button>
+        </div>
+        <div class="game-selector">
+          <h3>Selecione um Jogo</h3>
+          <select id="gameSelect" class="game-select"></select>
+        </div>
+        
+        
+        <div class="game-list">
+          <h3>Lista do Dia: 
+            <span class="lampada" onclick="mostrarPopup('meupopup1')">ℹ️</span>    
+          </h3>
+          <div class="game-info">
+            <span id="gameDate"></span> - <span id="gameTime"></span>
+          </div>
+          <div id="confirmedPlayers"></div>
+        </div>
+        <div class="waitlist">
+          <h3>Lista de Espera:
+            <span class="lampada" onclick="mostrarPopup('meupopup2')">ℹ️</span> 
+          </h3>
+          <div id="waitlistPlayers"></div>
+        </div>
+
+        <div class="game-controls">
+            <div class="guest-controls">
+            <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
+          </div>
+          <div class="guest-controls" id="guestControls" style="display: none;">
+             <input type="text" id="guestNameInput" placeholder="Nome do Convidado">
+             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
+          </div>
+
+          <div class="guest-controls" id="adminSearchContainer" style="display: none;">
+             <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
+              <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+              <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
+          </div>
+
+          <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Lista</button>
+         
+        
+        </div>
+      </div>
+    </div>
+ 
+    <div id="meupopup1" class="popup">
+      ℹ️
+      <p>A lista é preenchida de acordo com a seguinte hierarquia: Mensal, Diária e Convidado. Dentro de cada categoria, a ordem é definida pelo momento da confirmação. 😊</p>
+      <button onclick="fecharPopup('meupopup1')">Fechar</button>
+    </div>
+   
+    <div id="meupopup2" class="popup">
+      ℹ️
+      <p>A lista de espera é preenchida quando o limite de participantes é atingido, seguindo a mesma hierarquia. Caso um integrante saia da <strong>Lista do Dia</strong>, o primeiro da <strong>Lista de Espera</strong> sobe automaticamente. 😊</p>
+      <button onclick="fecharPopup('meupopup2')">Fechar</button>
+    </div>
+
+    <footer class="footer">
+      © 2025 SMV Eletrônica- Todos os direitos reservados<br>
+      <div class="footer-links">
+        Powered by:
+        <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
+          <i class="fab fa-github"></i> GitHub
+        </a>
+        <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
+          <i class="fas fa-fire"></i> Firebase
+        </a>        
+        <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
+        <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
+        OneSignal      
+    </a>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, get, set, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+      authDomain: "volei-25301.firebaseapp.com",
+      databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+      projectId: "volei-25301",
+      storageBucket: "volei-25301.firebasestorage.app",
+      messagingSenderId: "1007197261034",
+      appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+      measurementId: "G-CYMLX0SJJQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+    console.log('Objeto auth inicializado:', auth);
+
+    const { DateTime } = luxon;
+    luxon.Settings.defaultLocale = 'pt-BR';
+    const customWeekdays = {
+      1: 'Segunda',
+      2: 'Terça',
+      3: 'Quarta',
+      4: 'Quinta',
+      5: 'Sexta',
+      6: 'Sábado',
+      7: 'Domingo'
+    };
+
+    const contentDiv = document.getElementById('content');
+    const confirmPlayerBtn = document.getElementById('confirmPlayer');
+    
+    const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
+    const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
+    const adminSearchContainer = document.getElementById('adminSearchContainer');
+    const playerSearch = document.getElementById('playerSearch');
+    const autocompleteSuggestions = document.getElementById('autocompleteSuggestions');
+    const addPlayerBtn = document.getElementById('addPlayerBtn');
+    const finalizeGameBtn = document.getElementById('finalizeGameBtn');
+    const gameDateSpan = document.getElementById('gameDate');
+    const gameTimeSpan = document.getElementById('gameTime');
+    const guestControls = document.getElementById('guestControls');
+    const guestNameInput = document.getElementById('guestNameInput');
+    const addGuestBtn = document.getElementById('addGuestBtn');
+    const adminSettingsBtn = document.getElementById('adminSettingsBtn');
+
+    const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+    let playerLimit = 16;
+    let confirmedPlayers = [];
+    let waitlistPlayers = [];
+    window.currentUserPlayer = null; // Tornar global para o OneSignal
+    let emailLogado = null;
+    
+    let allPlayers = [];
+    let selectedPlayerId = null;
+    let currentGameDate = null;
+    let guestFee = 5;
+    let gameTime = "19:00";
+    let isAdmin = false;
+    let activeGames = [];
+    let currentGameId = null;
+    let currentGameData = null;
+
+     // Função para abrir/fechar o menu lateral
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Event listeners para o menu
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+    const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
+    const categoryPriority = {
+      'MENSAL': 3,
+      'DIARIA': 2,
+      'CONVIDADO': 1
+    };
+    const defaultImage = 'https://i.postimg.cc/Y0t3mgr8/volei.jpg';
+
+    function formatDateToISO(date) {
+      return DateTime.fromJSDate(date, { zone: 'America/Sao_Paulo' }).toISODate();
+    }
+
+    function formatDateToBR(dateStr) {
+      return DateTime.fromISO(dateStr, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
+    }
+
+    function getBrazilTimestamp() {
+      return DateTime.now().setZone('America/Sao_Paulo').toMillis();
+    }
+
+    function getBrazilDateTimeISO() {
+      return DateTime.now().setZone('America/Sao_Paulo').toISO();
+    }
+
+    function getBrazilMonthYear() {
+      return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
+    }
+
+    function updateGameDateDisplay() {
+      if (currentGameData) {
+        const gameDateTime = DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' });
+        const formattedDate = formatDateToBR(currentGameData.date);
+        const dayNumber = gameDateTime.weekday;
+        const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+        gameDateSpan.textContent = `${formattedDate} (${dayOfWeek})`;
+        gameTimeSpan.textContent = currentGameData.time;
+      } else {
+        const today = DateTime.now().setZone('America/Sao_Paulo');
+        const formattedDate = formatDateToBR(formatDateToISO(new Date()));
+        const dayNumber = today.weekday;
+        const dayOfWeek = customWeekdays[dayNumber] || today.toFormat('EEEE');
+        gameDateSpan.textContent = `${formattedDate} (${dayOfWeek})`;
+        gameTimeSpan.textContent = gameTime;
+      }
+    }
+
+    function sortPlayers(players) {
+      return players.sort((a, b) => {
+        const priorityA = categoryPriority[a.category] || 0;
+        const priorityB = categoryPriority[b.category] || 0;
+        if (priorityA !== priorityB) return priorityB - priorityA;
+        return a.timestamp - b.timestamp;
+      });
+    }
+
+    function updateButtonVisibility() {
+      const transparenciaBtn = document.getElementById('transparenciaBtn');
+      const loginBtn = document.getElementById('loginBtn');
+      
+      if (isAdmin) {
+        loginBtn.style.display = 'inline-block';
+      } else {
+        transparenciaBtn.style.display = 'inline-block';
+        loginBtn.style.display = 'none';
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      console.log('onAuthStateChanged disparado, usuário:', user);
+      if (!user) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acesso Negado',
+          text: 'Você precisa estar logado para acessar esta página.',
+        });
+        window.location.href = 'loginvl.html';
+      } else {
+        emailLogado = user.email;
+       
+        isAdmin = adminEmails.includes(emailLogado);
+        await loadCurrentUserPlayer();
+        document.getElementById('userEmail').textContent = `${user.email}`;
+        console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
+        updateButtonVisibility();
+        await loadGuestFee();
+        await initializeGameList();
+        setupAdminFeatures();
+      }
+    });
+
+  const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async () => {
+    console.log('Botão de logout clicado');
+
+    // Exibir popup de loading
+    Swal.fire({
+      title: 'Saindo...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      if (!auth) {
+        console.error('Objeto auth não está definido');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro interno de autenticação.',
+        });
+        return;
+      }
+
+      await signOut(auth);
+      console.log('Logout bem-sucedido');
+      await Swal.fire({
+        icon: 'success',
+        title: 'Logout',
+        text: 'Você saiu com sucesso.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      window.location.assign('loginvl.html');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Não foi possível fazer logout. Tente novamente.',
+      });
+    }
+  });
+} else {
+  console.error('Elemento com ID "logoutBtn" não encontrado');
+}
+
+    async function loadCurrentUserPlayer() {
+      try {
+        const playersRef = ref(database, 'players');
+        const snapshot = await get(playersRef);
+        if (snapshot.exists()) {
+          allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+            id,
+            ...player
+          }));
+          window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+
+
+           // Atualiza a foto, nome e posição no sidebar
+            const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+            const sidebarUserName = document.getElementById('sidebarUserName');
+            const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+
+            if (window.currentUserPlayer?.imageUrl) {
+                sidebarUserPhoto.src = window.currentUserPlayer.imageUrl;
+                sidebarUserPhoto.style.display = "block";
+            } else {
+                sidebarUserPhoto.style.display = "none";
+            }
+
+            sidebarUserName.textContent = window.currentUserPlayer?.name || "Usuário";
+            sidebarUserPosition.textContent = window.currentUserPlayer?.position || "Posição não definida";
+
+
+          if (!window.currentUserPlayer) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: 'Nenhum jogador associado a este email. Contate o administrador.',
+            });
+            confirmPlayerBtn.disabled = true;
+            guestControls.style.display = 'none';
+          } else {
+            confirmPlayerBtn.style.display = 'inline-block';
+            guestControls.style.display = 'flex';
+          }
+          isAdmin = isAdmin || window.currentUserPlayer?.category === 'ADMIN';
+          updateButtonVisibility();
+          return window.currentUserPlayer;
+        } else {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Nenhum jogador encontrado no sistema.',
+          });
+          confirmPlayerBtn.disabled = true;
+          guestControls.style.display = 'none';
+          return null;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogador:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao carregar seus dados.',
+        });
+        confirmPlayerBtn.disabled = true;
+        guestControls.style.display = 'none';
+        return null;
+      }
+    }
+      
+
+
+
+
+
+    async function loadGuestFee() {
+      try {
+        const settingsRef = ref(database, 'settings/guestFee');
+        const snapshot = await get(settingsRef);
+        if (snapshot.exists()) {
+          const value = parseFloat(snapshot.val());
+          if (!isNaN(value) && value >= 0) {
+            guestFee = value;
+            console.log(`Taxa de convidado carregada: R$${guestFee}`);
+          } else {
+            console.warn(`Valor inválido em settings/guestFee: ${snapshot.val()}. Usando padrão (5).`);
+            guestFee = 5;
+          }
+        } else {
+          console.log('Nó settings/guestFee não existe. Usando padrão (5).');
+          guestFee = 5;
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar taxa de convidado, usando valor padrão (5):', error.message);
+        guestFee = 5;
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Aviso',
+          text: 'Erro ao carregar taxa de convidado. Usando valor padrão (R$5).',
+        });
+      }
+    }
+
+    function setupAdminFeatures() {
+      console.log('Iniciando setupAdminFeatures, isAdmin:', isAdmin);
+      updateButtonVisibility();
+      const adminSettingsBtn = document.getElementById('adminSettingsBtn');
+      
+      if (!adminSettingsBtn) {
+        console.error('Elemento adminSettingsBtn não encontrado no DOM');
+        return;
+      }
+      
+      if (isAdmin) {
+        console.log('Configurando interface para admin');
+        adminSettingsBtn.style.display = 'inline-block';
+        adminSearchContainer.style.display = 'flex';
+        finalizeGameBtn.style.display = 'inline-block';
+        
+        adminSettingsBtn.addEventListener('click', () => {
+          console.log('Botão adminSettingsBtn clicado');
+          Swal.fire({
+            title: 'Configurar Jogos',
+            html: `
+            <div class="organiza">
+              <div class="modal-section">
+                <label for="modalActionSelect">Ação:</label>
+                <select id="modalActionSelect" class="game-select">
+                  <option value="createGame">Criar Novo Jogo</option>
+                  <option value="updateLimit">Alterar Participantes</option>
+                  <option value="updateFee">Alterar Taxa</option>
+                  <option value="updateTime">Alterar Horário</option>
+                </select>
+              </div>
+              <div class="modal-section" id="gameSelectSection">
+                <label for="modalGameSelect">Selecione um Jogo</label>
+                <select id="modalGameSelect" class="game-select">
+                  <option value="">Selecione um jogo</option>
+                </select>
+              </div>
+              <div id="createGameFields" class="modal-section" style="display: none;">
+                <h4>Criar Novo Jogo</h4>
+                <div class="organiza2">
+                  <label for="modalNewGameDate">Data:</label>
+                  <input type="date" id="modalNewGameDate">
+                </div>
+                <div class="organiza2">
+                  <label for="modalNewGameTime">Horário:</label>
+                  <input type="time" id="modalNewGameTime" value="19:00">
+                </div>
+                <div class="organiza2">
+                  <label for="modalNewGameLimit">Nº de Participantes:</label>
+                  <input type="number" id="modalNewGameLimit" min="1" value="16">
+                  <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+                </div>
+              </div>
+              <div id="updateLimitFields" class="modal-section" style="display: none;">
+                <h4>Alterar Nº de Participantes</h4>
+                <div class="organiza2">
+                  <label for="modalPlayerLimitInput">Participantes</label>
+                  <input type="number" id="modalPlayerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                  <button id="modalConfirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
+                </div>
+              </div>
+              <div id="updateFeeFields" class="modal-section" style="display: none;">
+                <h4>Alterar Taxa de Convidado</h4>
+                <div class="organiza2">
+                  <label for="modalGuestFeeInput">Taxa (R$)</label>
+                  <input type="number" id="modalGuestFeeInput" step="0.01" min="0" value="${guestFee.toFixed(2)}">
+                  <button id="modalSaveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
+                </div>
+              </div>
+              <div id="updateTimeFields" class="modal-section" style="display: none;">
+                <h4>Alterar Horário do Jogo</h4>
+                <div class="organiza2">
+                  <label for="modalGameTimeInput">Horário</label>
+                  <input type="time" id="modalGameTimeInput" value="${gameTime}">
+                  <button id="modalUpdateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
+                </div>
+              </div>
+            </div>
+            `,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            didOpen: async () => {
+              console.log('Modal SweetAlert2 aberto');
+              
+              const modalGameSelect = document.getElementById('modalGameSelect');
+              modalGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
+              if (activeGames.length === 0) {
+                modalGameSelect.innerHTML = '<option value="">Nenhum jogo agendado</option>';
+              } else {
+                activeGames.forEach(game => {
+                  const option = document.createElement('option');
+                  option.value = game.id;
+                  const gameDateTime = DateTime.fromISO(`${game.date}T${game.time}`, { zone: 'America/Sao_Paulo' });
+                  const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
+                  const formattedTime = gameDateTime.toFormat('HH:mm');
+                  const dayNumber = gameDateTime.weekday;
+                  const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+                  option.textContent = `${formattedDate} - ${formattedTime} (${dayOfWeek})`;
+                  if (game.id === currentGameId) {
+                    option.selected = true;
+                  }
+                  modalGameSelect.appendChild(option);
+                });
+              }
+
+              modalGameSelect.addEventListener('change', async () => {
+                console.log('modalGameSelect alterado, novo valor:', modalGameSelect.value);
+                currentGameId = modalGameSelect.value;
+                await loadGameData(currentGameId);
+                document.getElementById('gameSelect').value = currentGameId;
+              });
+
+              const modalActionSelect = document.getElementById('modalActionSelect');
+              const createGameFields = document.getElementById('createGameFields');
+              const updateLimitFields = document.getElementById('updateLimitFields');
+              const updateFeeFields = document.getElementById('updateFeeFields');
+              const updateTimeFields = document.getElementById('updateTimeFields');
+              const gameSelectSection = document.getElementById('gameSelectSection');
+
+              modalActionSelect.addEventListener('change', () => {
+                createGameFields.style.display = modalActionSelect.value === 'createGame' ? 'block' : 'none';
+                updateLimitFields.style.display = modalActionSelect.value === 'updateLimit' ? 'block' : 'none';
+                updateFeeFields.style.display = modalActionSelect.value === 'updateFee' ? 'block' : 'none';
+                updateTimeFields.style.display = modalActionSelect.value === 'updateTime' ? 'block' : 'none';
+                gameSelectSection.style.display = modalActionSelect.value === 'createGame' ? 'none' : 'block';
+              });
+
+              modalActionSelect.value = 'createGame';
+              createGameFields.style.display = 'block';
+              gameSelectSection.style.display = 'none';
+
+              const modalCreateGameBtn = document.getElementById('modalCreateGameBtn');
+              modalCreateGameBtn.addEventListener('click', async () => {
+                console.log('Botão modalCreateGameBtn clicado');
+                const newGameDateInput = document.getElementById('modalNewGameDate');
+                const newGameTimeInput = document.getElementById('modalNewGameTime');
+                const newGameLimitInput = document.getElementById('modalNewGameLimit');
+                
+                if (!newGameDateInput || !newGameTimeInput || !newGameLimitInput) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro Interno',
+                    text: 'Campos do formulário não encontrados. Tente novamente.',
+                  });
+                  return;
+                }
+
+                const date = newGameDateInput.value;
+                const time = newGameTimeInput.value;
+                const limit = parseInt(newGameLimitInput.value);
+                
+                if (!date || !time || isNaN(limit) || limit < 1) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Dados Inválidos',
+                    text: 'Preencha todos os campos corretamente.',
+                  });
+                  return;
+                }
+                
+                try {
+                  const gameId = `game_${Date.now()}`;
+                  const gameRef = ref(database, `activeGames/${gameId}`);
+                  
+                  await set(gameRef, {
+                    date,
+                    time,
+                    playerLimit: limit,
+                    confirmed: {},
+                    waitlist: {},
+                    createdAt: getBrazilDateTimeISO()
+                  });
+                  
+                  newGameDateInput.value = '';
+                  newGameTimeInput.value = '19:00';
+                  newGameLimitInput.value = '16';
+                  
+                  await Swal.fire({
+                    icon: 'success',
+                    title: 'Jogo Criado',
+                    text: 'Novo jogo criado com sucesso!',
+                  });
+
+                  const formattedDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
+                  const message = `Novo jogo criado para ${formattedDate} às ${time}!`;
+                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+                  
+                  await loadActiveGames();
+                  Swal.close();
+                } catch (error) {
+                  console.error('Erro ao criar jogo:', error);
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível criar o jogo.',
+                  });
+                }
+              });
+
+              const modalConfirmLimitBtn = document.getElementById('modalConfirmLimitBtn');
+              modalConfirmLimitBtn.addEventListener('click', async () => {
+                console.log('Botão modalConfirmLimitBtn clicado');
+                const playerLimitInput = document.getElementById('modalPlayerLimitInput');
+                const inputValue = playerLimitInput.value.trim();
+                const newLimit = parseInt(inputValue);
+
+                if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Número Inválido',
+                    text: 'Por favor, insira um número inteiro válido.',
+                  });
+                  playerLimitInput.value = playerLimit;
+                  return;
+                }
+                if (newLimit < 1) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Limite Inválido',
+                    text: 'O limite deve ser pelo menos 1.',
+                  });
+                  playerLimitInput.value = playerLimit;
+                  return;
+                }
+                if (newLimit !== playerLimit) {
+                  playerLimit = newLimit;
+                  await adjustConfirmedPlayers();
+                  await updateFirebaseLists();
+                  updateGameList();
+                  updatePlayerLimitDisplay(isAdmin);
+
+                  const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+                  const message = `Limite de participantes do jogo ${formattedDate} alterado para ${newLimit}.`;
+                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+                  
+                  Swal.close();
+                }
+              });
+
+              const modalSaveGuestFeeBtn = document.getElementById('modalSaveGuestFeeBtn');
+              modalSaveGuestFeeBtn.addEventListener('click', async () => {
+                console.log('Botão modalSaveGuestFeeBtn clicado');
+                const newFee = parseFloat(document.getElementById('modalGuestFeeInput').value);
+                if (isNaN(newFee) || newFee < 0) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Valor Inválido',
+                    text: 'Por favor, insira um valor válido.',
+                  });
+                  return;
+                }
+                try {
+                  await set(ref(database, 'settings/guestFee'), newFee);
+                  guestFee = newFee;
+                  await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Taxa de convidado atualizada com sucesso.',
+                  });
+                  Swal.close();
+                } catch (error) {
+                  console.error('Erro ao salvar taxa:', error);
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao salvar taxa. Verifique suas permissões.',
+                  });
+                }
+              });
+
+              const modalUpdateGameTimeBtn = document.getElementById('modalUpdateGameTimeBtn');
+              modalUpdateGameTimeBtn.addEventListener('click', async () => {
+                console.log('Botão modalUpdateGameTimeBtn clicado');
+                if (!currentGameId) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Nenhum Jogo Selecionado',
+                    text: 'Por favor, selecione um jogo para alterar o horário.',
+                  });
+                  return;
+                }
+                const newTime = document.getElementById('modalGameTimeInput').value;
+                if (!newTime) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Horário Inválido',
+                    text: 'Por favor, selecione um horário válido.',
+                  });
+                  return;
+                }
+                try {
+                  const gameRef = ref(database, `activeGames/${currentGameId}`);
+                  await set(gameRef, {
+                    ...currentGameData,
+                    time: newTime
+                  });
+                  currentGameData.time = newTime;
+                  gameTime = newTime;
+                  updateGameDateDisplay();
+                  await loadActiveGames();
+
+                  const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+                  const message = `Horário do jogo ${formattedDate} alterado para ${newTime}.`;
+                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+                  
+                  await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Horário do jogo atualizado com sucesso.',
+                  });
+                  Swal.close();
+                } catch (error) {
+                  console.error('Erro ao atualizar horário:', error);
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao atualizar horário. Verifique suas permissões.',
+                  });
+                }
+              });
+            }
+          });
+        });
+        setupPlayerSearch();
+        setupGuestControls();
+      } else {
+        console.log('Configurando interface para não-admin');
+        adminSettingsBtn.style.display = 'none';
+        adminSearchContainer.style.display = 'none';
+        finalizeGameBtn.style.display = 'none';
+        updatePlayerLimitDisplay(isAdmin);
+      }
+      
+      guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
+    }
+
+    async function initializeGameList() {
+      console.log('Iniciando initializeGameList');
+      await loadActiveGames();
+      
+      finalizeGameBtn.addEventListener('click', async () => {
+        console.log('Botão finalizeGameBtn clicado');
+        if (!currentGameId) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Selecione um jogo ativo para finalizar.',
+          });
+          return;
+        }
+        
+        try {
+          const gameRef = ref(database, `activeGames/${currentGameId}`);
+          const snapshot = await get(gameRef);
+          
+          if (!snapshot.exists()) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Jogo Não Encontrado',
+              text: 'O jogo selecionado não foi encontrado.',
+            });
+            return;
+          }
+          
+          await set(gameRef, null);
+
+          const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+          const message = `Lista do jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} finalizada.`;
+          await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+          
+          
+          await Swal.fire({
+            icon: 'success',
+            title: 'Lista Finalizada',
+            text: 'A Lista foi Finalizada.',
+          });
+          
+          currentGameId = null;
+          await loadActiveGames();
+        } catch (error) {
+          console.error('Erro ao finalizar jogo:', error);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Não foi possível finalizar o jogo.',
+          });
+        }
+      });
+
+      confirmPlayerBtn.addEventListener('click', () => abrirQuadra());
+      setupGuestControls();
+    }
+
+    async function loadActiveGames() {
+      console.log('Iniciando loadActiveGames()');
+      try {
+        const activeGamesRef = ref(database, 'activeGames');
+        const snapshot = await get(activeGamesRef);
+        activeGames = [];
+        console.log('Snapshot recebido:', snapshot.exists());
+
+        if (snapshot.exists()) {
+          Object.entries(snapshot.val()).forEach(([id, game]) => {
+            activeGames.push({
+              id,
+              date: game.date,
+              time: game.time,
+              playerLimit: game.playerLimit || 16,
+              createdAt: game.createdAt
+              
+            });
+          });
+
+          activeGames.sort((a, b) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateA - dateB;
+          });
+          console.log('Jogos ativos ordenados:', activeGames);
+        }
+
+        const gameSelect = document.getElementById('gameSelect');
+        if (!gameSelect) {
+          console.error('Elemento gameSelect não encontrado no DOM');
+          return;
+        }
+        gameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
+
+        if (activeGames.length === 0) {
+          gameSelect.innerHTML = '<option value="">Nenhum jogo agendado</option>';
+          console.log('Nenhum jogo agendado');
+        } else {
+          activeGames.forEach(game => {
+            const option = document.createElement('option');
+            option.value = game.id;
+            const gameDateTime = DateTime.fromISO(`${game.date}T${game.time}`, { zone: 'America/Sao_Paulo' });
+            const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
+            const formattedTime = gameDateTime.toFormat('HH:mm');
+            const dayNumber = gameDateTime.weekday;
+            const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+            option.textContent = `${formattedDate} - ${formattedTime} (${dayOfWeek})`;
+            if (game.id === currentGameId) {
+              option.selected = true;
+            }
+            gameSelect.appendChild(option);
+          });
+          console.log('Opções adicionadas ao gameSelect:', gameSelect.innerHTML);
+        }
+
+        gameSelect.addEventListener('change', async () => {
+          console.log('GameSelect alterado, novo valor:', gameSelect.value);
+          currentGameId = gameSelect.value;
+          await loadGameData(currentGameId);
+        });
+
+        if (activeGames.length > 0 && !currentGameId) {
+          currentGameId = activeGames[0].id;
+          gameSelect.value = currentGameId;
+          console.log('Jogo padrão selecionado:', currentGameId);
+          await loadGameData(currentGameId);
+        } else if (!activeGames.some(game => game.id === currentGameId)) {
+          currentGameId = null;
+          console.log('Nenhum jogo correspondente, carregando dados padrão');
+          await loadGameData('current');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar jogos ativos:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível carregar os jogos ativos.',
+        });
+      }
+    }
+
+    function setupPlayerSearch() {
+      playerSearch.addEventListener('input', () => {
+        const query = playerSearch.value.trim().toLowerCase();
+        autocompleteSuggestions.innerHTML = '';
+        selectedPlayerId = null;
+        addPlayerBtn.disabled = true;
+
+        if (query.length > 0) {
+          const suggestions = allPlayers
+            .filter(player => player.name?.toLowerCase().includes(query))
+            .slice(0, 5);
+          if (suggestions.length > 0) {
+            suggestions.forEach(player => {
+              const div = document.createElement('div');
+              div.className = 'autocomplete-suggestion';
+              div.textContent = `${player.name} (${player.category || 'CONVIDADO'})`;
+              div.addEventListener('click', () => {
+                playerSearch.value = player.name;
+                selectedPlayerId = player.id;
+                addPlayerBtn.disabled = false;
+                autocompleteSuggestions.style.display = 'none';
+              });
+              autocompleteSuggestions.appendChild(div);
+            });
+            autocompleteSuggestions.style.display = 'block';
+          } else {
+            autocompleteSuggestions.style.display = 'none';
+          }
+        } else {
+          autocompleteSuggestions.style.display = 'none';
+        }
+      });
+
+      playerSearch.addEventListener('blur', () => {
+        setTimeout(() => {
+          autocompleteSuggestions.style.display = 'none';
+        }, 200);
+      });
+
+      addPlayerBtn.addEventListener('click', () => {
+        if (selectedPlayerId) {
+          confirmPlayer(selectedPlayerId);
+        }
+      });
+    }
+
+    function setupGuestControls() {
+      addGuestBtn.addEventListener('click', addGuest);
+    }
+    
+    async function addGuest() {     
+      
+      if (!window.currentUserPlayer) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Você precisa estar registrado como jogador para adicionar convidados.',
+        });
+        return;
+      }
+      if (!currentGameId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Selecione um jogo ativo para adicionar convidados.',
+        });
+        return;
+      }
+      const guestName = guestNameInput.value.trim();
+      if (!guestName) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Nome Inválido',
+          text: 'Por favor, insira o nome do convidado.',
+        });
+        return;
+      }
+      if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
+          waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Convidado Já Adicionado',
+          text: 'Este convidado já foi adicionado para este jogo.',
+        });
+        return;
+      }
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Confirmar Convidado',
+        html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
+        showCancelButton: true,
+        confirmButtonText: 'Estou Ciente',
+        cancelButtonText: 'Cancelar',
+      });
+      if (!result.isConfirmed) {
+        guestNameInput.value = '';
+        return;
+      }
+      try {
+        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const guestObj = {
+          id: guestId,
+          name: guestName,
+          category: 'CONVIDADO',
+          position: '-',
+          timestamp: getBrazilTimestamp(),
+          paymentStatus: 'inadimplente',
+          imageUrl: defaultImage,
+          invitedById: window.currentUserPlayer.id,
+          invitedByName: window.currentUserPlayer.name,
+          status: 'pending',
+          additionalInfo: guestName,
+          createdAt: getBrazilDateTimeISO(),
+          date: null,
+          month: getBrazilMonthYear(),
+          paymentType: 'CONVIDADO',
+          value: parseFloat(guestFee.toFixed(2))
+        };
+        console.log(`Adicionando convidado com taxa: R$${guestObj.value}, ID: ${guestId}`);
+        
+        // Criar registro de pagamento para o convidado
+        const [year, month] = getBrazilMonthYear().split('-');
+        const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
+        const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+        await set(paymentRef, {
+          additionalInfo: guestName,
+          createdAt: getBrazilDateTimeISO(),
+          month: getBrazilMonthYear(),
+          paymentType: 'CONVIDADO',
+          playerId: window.currentUserPlayer.id,
+          playerName: window.currentUserPlayer.name,
+          value: parseFloat(guestFee.toFixed(2)),
+          gameId: currentGameId,
+          date: null,
+          paymentStatus: 'inadimplente',
+          guestId: guestId,
+          guestName: guestName
+         
+        });
+
+        if (confirmedPlayers.length < playerLimit) {
+          confirmedPlayers.push(guestObj);
+        } else {
+          const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
+          if ((categoryPriority[guestObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
+            confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
+            waitlistPlayers.push(lowestPriorityPlayer);
+            confirmedPlayers.push(guestObj);
+          } else {
+            waitlistPlayers.push(guestObj);
+          }
+        }
+        confirmedPlayers = sortPlayers(confirmedPlayers);
+        waitlistPlayers = sortPlayers(waitlistPlayers);
+        await updateFirebaseLists();
+        updateGameList();
+
+        
+
+
+         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+         const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
+         const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
+         await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+
+        
+
+        
+        guestNameInput.value = '';
+         
+        await Swal.fire({
+          icon: 'success',
+          title: 'Sucesso',
+          html: `
+            Convidado adicionado, efetue o pagamento e comunique aos ADMs para aprovação e registro da contribuição.<br><br>
+            PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+            <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
+          `,
+          showConfirmButton: false,
+          didOpen: () => {
+            const copyPixBtn = document.getElementById('copyPixBtn');
+            copyPixBtn.addEventListener('click', async () => {
+              try {
+                await navigator.clipboard.writeText('fabioluiztx@outlook.com');
+                await Swal.fire({
+                  icon: 'success',
+                  title: 'Copiado!',
+                  text: 'Endereço PIX copiado para a área de transferência.',
+                  timer: 1500,
+                  showConfirmButton: false
+                });
+
+                abrirQuadra();
+
+              } catch (error) {
+                console.error('Erro ao copiar PIX:', error);
+                await Swal.fire({
+                  icon: 'error',
+                  title: 'Erro',
+                  text: 'Não foi possível copiar o endereço PIX.',
+                });
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao adicionar convidado:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao adicionar convidado.',
+        });
+      }
+    }
+
+    async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
+      try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        if (!snapshot.exists()) {
+          return null;
+        }
+        const years = snapshot.val() || {};
+        let matchingPayment = null;
+        for (const year in years) {
+          for (const month in years[year]) {
+            const payments = years[year][month] || {};
+            const playerPayments = Object.entries(payments)
+              .map(([id, payment]) => ({
+                paymentId: id,
+                ...payment
+              }))
+              .filter(p => 
+                p.playerId === playerId && 
+                p.gameId === gameId && 
+                p.paymentType === paymentType && 
+                p.additionalInfo === additionalInfo
+              );
+            if (playerPayments.length > 0) {
+              matchingPayment = playerPayments[0];
+              matchingPayment.year = year;
+              matchingPayment.month = month;
+              break;
+            }
+          }
+          if (matchingPayment) break;
+        }
+        return matchingPayment;
+      } catch (error) {
+        console.error('Erro ao buscar pagamento existente:', error);
+        return null;
+      }
+    }
+
+    async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
+      if (!isAdmin) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Permissão Negada',
+          text: 'Você não tem permissão para aprovar jogadores.',
+        });
+        return;
+      }
+      if (!currentGameId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Selecione um jogo ativo para aprovar jogadores.',
+        });
+        return;
+      }
+      try {
+        const player = fromConfirmed
+          ? confirmedPlayers.find(p => p.id === playerId)
+          : waitlistPlayers.find(p => p.id === playerId);
+        if (!player) {
+          await Swal.fire({
+            icon: 'warning',
+            title: 'Jogador Não Encontrado',
+            text: 'Jogador não encontrado.',
+          });
+          return;
+        }
+
+        if (player.status !== 'approved') {
+          player.status = 'approved';
+        }
+        player.paymentStatus = isPaid ? 'pago' : 'inadimplente';
+
+        let paymentValue = parseFloat(guestFee.toFixed(2));
+        if (isNaN(paymentValue) || paymentValue <= 0) {
+          console.warn(`Valor inválido para jogador ${player.name}: ${paymentValue}. Usando valor padrão: ${guestFee}`);
+          paymentValue = parseFloat(guestFee.toFixed(2));
+        }
+
+        const paymentData = {
+          additionalInfo: player.additionalInfo || player.name,
+          createdAt: player.createdAt || getBrazilDateTimeISO(),
+          month: player.month || getBrazilMonthYear(),
+          paymentType: player.paymentType || (player.category === 'CONVIDADO' ? 'CONVIDADO' : 'DIARIA'),
+          playerId: player.category === 'CONVIDADO' ? player.invitedById || player.id : player.id,
+          playerName: player.category === 'CONVIDADO' ? player.invitedByName || player.name : player.name,
+          value: paymentValue,
+          gameId: currentGameId,
+          date: isPaid ? (player.date || formatDateToISO(new Date())) : null,
+          paymentStatus: player.paymentStatus,
+          guestId: player.category === 'CONVIDADO' ? player.id : null,
+          guestName: player.category === 'CONVIDADO' ? player.name : null
+        };
+
+        const existingPayment = await findExistingPayment(
+          paymentData.playerId,
+          currentGameId,
+          paymentData.paymentType,
+          paymentData.additionalInfo
+        );
+
+        const [year, month] = (paymentData.month || getBrazilMonthYear()).split('-');
+
+        if (existingPayment) {
+          console.log(`Atualizando pagamento existente para ${player.name}, ID: ${existingPayment.paymentId}`);
+          const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+          await update(paymentRef, {
+            paymentStatus: player.paymentStatus,
+            date: paymentData.date,
+            value: paymentValue,
+            updatedAt: getBrazilDateTimeISO()
+          });
+        } else {
+          console.log(`Criando novo pagamento para ${player.name}`);
+          const paymentId = `payment_${player.id}_${currentGameId}_${paymentData.paymentType}_${Date.now()}`;
+          const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+          await set(paymentRef, paymentData);
+        }
+
+        await updateFirebaseLists();
+        updateGameList();
+        
+ const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+  const statusText = isPaid ? 'aprovado (pago)' : 'aprovado com débito';
+  const message = `${player.name} foi ${statusText} para o jogo ${formattedDate}.`;
+  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+
+        
+        await Swal.fire({
+          icon: 'success',
+          title: 'Sucesso',
+          text: `Jogador marcado como ${isPaid ? 'pago' : 'devendo'} e registro atualizado.`,
+        });
+      } catch (error) {
+        console.error('Erro ao aprovar jogador:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao processar aprovação.',
+        });
+      }
+    }
+
+    async function loadGameData(gameId) {
+      console.log('Iniciando loadGameData, gameId:', gameId);
+      try {
+        if (!gameId || gameId === 'current') {
+          confirmedPlayers = [];
+          waitlistPlayers = [];
+          playerLimit = 16;
+          currentGameData = null;
+          updateGameDateDisplay();
+          updateGameList();
+          updatePlayerLimitDisplay(isAdmin);
+          return;
+        }
+
+        const gameRef = ref(database, `activeGames/${gameId}`);
+        const snapshot = await get(gameRef);
+        
+        if (!snapshot.exists()) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Jogo Não Encontrado',
+            text: 'O jogo selecionado não foi encontrado.',
+          });
+          confirmedPlayers = [];
+          waitlistPlayers = [];
+          playerLimit = 16;
+          currentGameData = null;
+          updateGameDateDisplay();
+          updateGameList();
+          updatePlayerLimitDisplay(isAdmin);
+          return;
+        }
+        
+        const gameData = snapshot.val();
+        currentGameData = gameData;
+        currentGameDate = gameData.date;
+        gameTime = gameData.time;
+        playerLimit = gameData.playerLimit || 16;
+        
+        updateGameDateDisplay();
+        confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
+          const playerData = allPlayers.find(p => p.id === id) || {};
+          const category = playerData.category || player.category || 'CONVIDADO';
+          return {
+            id,
+            name: player.name || '-',
+            category: ['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category) ? category : 'CONVIDADO',
+            position: player.position || '-',
+            timestamp: player.timestamp || getBrazilTimestamp(),
+            paymentStatus: player.paymentStatus || 'inadimplente',
+            imageUrl: player.imageUrl || defaultImage,
+            invitedById: player.invitedById || null,
+            invitedByName: player.invitedByName || null,
+            status: player.status || null,
+            additionalInfo: player.additionalInfo || null,
+            createdAt: player.createdAt || null,
+            date: player.date || null,
+            month: player.month || null,
+            paymentType: player.paymentType || null,
+            value: player.value || null
+          };
+        });
+
+        waitlistPlayers = Object.entries(gameData.waitlist || {}).map(([id, player]) => {
+          const playerData = allPlayers.find(p => p.id === id) || {};
+          const category = playerData.category || player.category || 'CONVIDADO';
+          return {
+            id,
+            name: player.name || '-',
+            category: ['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category) ? category : 'CONVIDADO',
+            position: player.position || '-',
+            timestamp: player.timestamp || getBrazilTimestamp(),
+            paymentStatus: player.paymentStatus || 'inadimplente',
+            imageUrl: player.imageUrl || defaultImage,
+            invitedById: player.invitedById || null,
+            invitedByName: player.invitedByName || null,
+            status: player.status || null,
+            additionalInfo: player.additionalInfo || null,
+            createdAt: player.createdAt || null,
+            date: player.date || null,
+            month: player.month || null,
+            paymentType: player.paymentType || null,
+            value: player.value || null
+          };
+        });
+
+        for (let player of confirmedPlayers) {
+          if (player.category !== 'CONVIDADO' && player.category !== 'DIARIA') {
+            player.paymentStatus = await checkPaymentStatus(player.id);
+          }
+        }
+        for (let player of waitlistPlayers) {
+          if (player.category !== 'CONVIDADO' && player.category !== 'DIARIA') {
+            player.paymentStatus = await checkPaymentStatus(player.id);
+          }
+        }
+
+        confirmedPlayers = sortPlayers(confirmedPlayers);
+        waitlistPlayers = sortPlayers(waitlistPlayers);
+
+        confirmPlayerBtn.disabled = false;
+        addPlayerBtn.disabled = !selectedPlayerId;
+        playerSearch.disabled = false;
+        finalizeGameBtn.disabled = false;
+        addGuestBtn.disabled = false;
+        guestNameInput.disabled = false;
+
+        updatePlayerLimitDisplay(isAdmin);
+        updateGameList();
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogo:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao carregar dados.',
+        });
+      }
+    }
+
+    function updatePlayerLimitDisplay(isAdmin) {
+      console.log('Atualizando playerLimitDisplay, isAdmin:', isAdmin);
+      let playerLimitContainer = document.getElementById('playerLimitContainer');
+      if (!playerLimitContainer) {
+        playerLimitContainer = document.createElement('div');
+        playerLimitContainer.id = 'playerLimitContainer';
+        confirmedPlayersDiv.parentNode.insertBefore(playerLimitContainer, confirmedPlayersDiv);
+      }
+      playerLimitContainer.innerHTML = `<span>Nº de Participantes: ${playerLimit}</span>`;
+    }
+
+    async function adjustConfirmedPlayers() {
+      if (confirmedPlayers.length > playerLimit) {
+        const playersToMove = sortPlayers([...confirmedPlayers]).slice(playerLimit);
+        confirmedPlayers = confirmedPlayers.filter(p => !playersToMove.some(m => m.id === p.id));
+        waitlistPlayers.push(...playersToMove);
+      } else if (confirmedPlayers.length < playerLimit && waitlistPlayers.length > 0) {
+        const slotsAvailable = playerLimit - confirmedPlayers.length;
+        const playersToPromote = sortPlayers([...waitlistPlayers]).slice(0, slotsAvailable);
+        waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.some(m => m.id === p.id));
+        confirmedPlayers.push(...playersToPromote);
+      }
+      confirmedPlayers = sortPlayers(confirmedPlayers);
+      waitlistPlayers = sortPlayers(waitlistPlayers);
+    }
+
+ 
+
+    
+    async function confirmPlayer(targetPlayerId = null) {
+      if (!currentGameId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Jogos Programados',
+          text: 'Selecione um jogo ativo para confirmar presença ou aguarde a abertura da Lista.',
+        });
+        return;
+      }
+
+      const isAdmin = adminEmails.includes(emailLogado);
+      const playerId = isAdmin && targetPlayerId ? targetPlayerId : window.currentUserPlayer?.id;
+
+      if (!playerId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Nenhum jogador selecionado ou associado a este email.',
+        });
+        return;
+      }
+
+      try {
+        const playerRef = ref(database, `players/${playerId}`);
+        const playerSnapshot = await get(playerRef);
+        if (!playerSnapshot.exists()) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Jogador Não Encontrado',
+            text: 'Jogador não encontrado.',
+          });
+          return;
+        }
+
+        const playerData = playerSnapshot.val();
+        const playerObj = {
+          id: playerId,
+          name: playerData.name || '-',
+          category: playerData.category || 'CONVIDADO',
+          position: playerData.position || '-',
+          timestamp: getBrazilTimestamp(),
+          paymentStatus: playerData.category === 'DIARIA' ? 'inadimplente' : await checkPaymentStatus(playerId),
+          imageUrl: playerData.imageUrl || defaultImage,
+          status: playerData.category === 'CONVIDADO' || playerData.category === 'DIARIA' ? 'pending' : null,
+          additionalInfo: playerData.name || null,
+          createdAt: getBrazilDateTimeISO(),
+          date: null,
+          month: getBrazilMonthYear(),
+          paymentType: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? playerData.category : null,
+          value: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? parseFloat(guestFee.toFixed(2)) : null
+        };
+
+        if (confirmedPlayers.some(p => p.id === playerId) || waitlistPlayers.some(p => p.id === playerId)) {
+          await Swal.fire({
+            icon: 'warning',
+            title: 'Presença Já Confirmada',
+            text: 'Você já confirmou sua presença.',
+          });
+
+          abrirQuadra();
+
+          return;
+        }
+
+        if (playerObj.category === 'DIARIA') {
+          const result = await Swal.fire({
+            icon: 'question',
+            title: 'Confirmar Presença',
+            html: `<strong>${playerObj.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
+            showCancelButton: true,
+            confirmButtonText: 'Estou Ciente',
+            cancelButtonText: 'Cancelar',
+          });
+          if (!result.isConfirmed) {
+            return;
+          }
+        }
+
+        if (playerObj.category === 'DIARIA') {
+          const [year, month] = getBrazilMonthYear().split('-');
+          const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
+          const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+          await set(paymentRef, {
+            additionalInfo: playerObj.name,
+            createdAt: getBrazilDateTimeISO(),
+            month: getBrazilMonthYear(),
+            paymentType: 'DIARIA',
+            playerId: playerId,
+            playerName: playerObj.name,
+            value: parseFloat(guestFee.toFixed(2)),
+            gameId: currentGameId,
+            date: null,
+            paymentStatus: 'inadimplente'
+          });
+        }
+
+        if (confirmedPlayers.length < playerLimit) {
+          confirmedPlayers.push(playerObj);
+        } else {
+          const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
+          if ((categoryPriority[playerObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
+            confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
+            waitlistPlayers.push(lowestPriorityPlayer);
+            confirmedPlayers.push(playerObj);
+          } else {
+            waitlistPlayers.push(playerObj);
+          }
+        }
+
+        confirmedPlayers = sortPlayers(confirmedPlayers);
+        waitlistPlayers = sortPlayers(waitlistPlayers);
+
+        await updateFirebaseLists();
+        updateGameList();
+
+         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+  const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
+  await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+
+        if (playerObj.category === 'DIARIA') {
+          await Swal.fire({
+            icon: 'success',
+            title: 'Sucesso',
+            html: `
+              Confirmação lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição e disponibilidade de Vaga.<br><br>
+              PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+              <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
+            `,
+            showConfirmButton: false,
+            didOpen: () => {
+              const copyPixBtn = document.getElementById('copyPixBtn');
+              copyPixBtn.addEventListener('click', async () => {
+                try {
+                  await navigator.clipboard.writeText('fabioluiztx@outlook.com');
+                  await Swal.fire({
+                    icon: 'success',
+                    title: 'Copiado!',
+                    text: 'Endereço PIX copiado para a área de transferência.',
+                    timer: 1500,
+                    showConfirmButton: false
+                  });
+                } catch (error) {
+                  console.error('Erro ao copiar PIX:', error);
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível copiar o endereço PIX.',
+                  });
+                }
+              });
+            }
+          });
+        }
+
+        if (isAdmin && targetPlayerId) {
+          playerSearch.value = '';
+          selectedPlayerId = null;
+          addPlayerBtn.disabled = true;
+          autocompleteSuggestions.style.display = 'none';
+        }
+
+        abrirQuadra();
+
+      } catch (error) {
+        console.error('Erro ao confirmar jogador:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao processar confirmação.',
+        });
+      }
+    }
+
+    async function checkPaymentStatus(playerId) {
+      try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        const payments = snapshot.val() || {};
+
+        let playerPayments = [];
+        for (const year in payments) {
+          for (const month in payments[year]) {
+            const monthPayments = payments[year][month] || {};
+            playerPayments.push(
+              ...Object.values(monthPayments).filter(p => p && p.playerId === playerId)
+            );
+          }
+        }
+
+        if (playerPayments.length === 0) {
+          return 'inadimplente';
+        }
+
+        const hasPending = playerPayments.some(p => !p.date && p.value > 0);
+
+        return hasPending ? 'inadimplente' : 'pago';
+      } catch (error) {
+        console.error('Erro ao verificar status de pagamento:', error);
+        return 'inadimplente';
+      }
+    }
+
+    async function removePlayer(playerId, fromConfirmed = true) {
+      if (!currentGameId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Selecione um jogo ativo para remover jogadores.',
+        });
+        return;
+      }
+
+      const player = fromConfirmed
+        ? confirmedPlayers.find(p => p.id === playerId)
+        : waitlistPlayers.find(p => p.id === playerId);
+
+      if (!player) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Jogador Não Encontrado',
+          text: 'Jogador ou convidado não encontrado.',
+        });
+        return;
+      }
+
+      if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Permissão Negada',
+          text: 'Você só pode remover sua própria presença ou seus convidados.',
+        });
+        return;
+      }
+
+      try {
+        if (fromConfirmed) {
+          confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
+          await adjustConfirmedPlayers();
+        } else {
+          waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
+        }
+
+        if (player.category === 'CONVIDADO') {
+          const existingPayment = await findExistingPayment(
+            player.invitedById || window.currentUserPlayer.id,
+            currentGameId,
+            'CONVIDADO',
+            player.name
+          );
+          if (existingPayment) {
+            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+            await remove(paymentRef);
+          }
+        } else if (player.category === 'DIARIA') {
+          const existingPayment = await findExistingPayment(
+            playerId,
+            currentGameId,
+            'DIARIA',
+            player.name
+          );
+          if (existingPayment) {
+            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+            await remove(paymentRef);
+          }
+        }
+
+        confirmedPlayers = sortPlayers(confirmedPlayers);
+        waitlistPlayers = sortPlayers(waitlistPlayers);
+
+        await updateFirebaseLists();
+        updateGameList();      
+        
+        const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+        const message = `${player.name} foi removido da lista do jogo ${formattedDate}.`;
+        await sendPushNotification3(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
+        
+      } catch (error) {
+        console.error('Erro ao remover jogador:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao remover presença.',
+        });
+      }
+    }
+
+
+     async function updateFirebaseLists() {
+      if (!currentGameId) return;
+
+      const gameListRef = ref(database, `activeGames/${currentGameId}`);
+      try {
+        const confirmedData = {};
+        confirmedPlayers.forEach(player => {
+          confirmedData[player.id] = {
+            name: player.name,
+            category: player.category,
+            position: player.position,
+            timestamp: player.timestamp,
+            paymentStatus: player.paymentStatus,
+            imageUrl: player.imageUrl,
+            invitedById: player.invitedById || null,
+            invitedByName: player.invitedByName || null,
+            status: player.status || null,
+            additionalInfo: player.additionalInfo || null,
+            createdAt: player.createdAt || null,
+            date: player.date || null,
+            month: player.month || null,
+            paymentType: player.paymentType || null,
+            value: player.value || null
+          };
+        });
+
+        const waitlistData = {};
+        waitlistPlayers.forEach(player => {
+          waitlistData[player.id] = {
+            name: player.name,
+            category: player.category,
+            position: player.position,
+            timestamp: player.timestamp,
+            paymentStatus: player.paymentStatus,
+            imageUrl: player.imageUrl,
+            invitedById: player.invitedById || null,
+            invitedByName: player.invitedByName || null,
+            status: player.status || null,
+            additionalInfo: player.additionalInfo || null,
+            createdAt: player.createdAt || null,
+            date: player.date || null,
+            month: player.month || null,
+            paymentType: player.paymentType || null,
+            value: player.value || null
+          };
+        });
+
+        await set(gameListRef, {
+          ...currentGameData,
+          confirmed: confirmedData,
+          waitlist: waitlistData,
+          playerLimit
+        });
+        console.log('Listas atualizadas no Firebase com sucesso');
+      } catch (error) {
+        console.error('Erro ao atualizar listas no Firebase:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao atualizar listas no servidor.',
+        });
+      }
+    }
+
+
+    
+  
+   function updateGameList() {
+  const isAdmin = adminEmails.includes(emailLogado);
+  
+  // Verificar se o jogador logado está na lista de presença
+  const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) ||
+                        waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
+  
+  // Atualizar o texto do botão confirmPlayer
+  if (confirmPlayerBtn) {
+    confirmPlayerBtn.innerHTML = isPlayerInList 
+      ? '<i class="fas fa-eye"></i> Ver Quadra'
+      : '<i class="fas fa-sign-in"></i> Entrar em Quadra';
+  }
+
+  confirmedPlayersDiv.innerHTML = confirmedPlayers.length === 0
+    ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
+    : confirmedPlayers.map((player, index) => `
+      <div class="player-item">
+        <div class="player-info">
+          <span class="player-counter">${index + 1}.</span>
+          <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+          <div>
+            <br>
+            <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+            ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
+            <br>
+            <div class="player-status status-aprovado">Pagamento e Autorização<br></div>
+            <span class="player-status status-${player.paymentStatus}">
+              
+              ${player.paymentStatus === 'pago' ? 'Pago' : 'Em aberto'}
+            </span>
+            ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
+              ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
+              </span>` : ''}
+          </div>
+        </div>
+        <div>
+          ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
+            <button class="player-approve" onclick="approvePlayer('${player.id}', true, true)">PAGO</button>
+            <button class="player-approve-debt" onclick="approvePlayer('${player.id}', true, false)">DEVENDO</button>
+          ` : ''}
+          ${(isAdmin || player.id === window.currentUserPlayer?.id || player.invitedById === window.currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', true)">Remover</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+  waitlistPlayersDiv.innerHTML = waitlistPlayers.length === 0
+    ? '<div style="color: var(--muted); padding: 10px;">Ninguém na lista de espera.</div>'
+    : waitlistPlayers.map((player, index) => `
+      <div class="player-item">
+        <div class="player-info">
+          <span class="player-counter">${index + 1}.</span>
+          <img src="${player.imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+          <div>
+            <br>
+            <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+            ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
+            <br>
+            <span class="player-status status-${player.paymentStatus}">
+              ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
+            </span>
+            ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
+              ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
+              </span>` : ''}
+          </div>
+        </div>
+        <div>
+          ${isAdmin && (player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `
+            <button class="player-approve" onclick="approvePlayer('${player.id}', false, true)">PAGO</button>
+            <button class="player-approve-debt" onclick="approvePlayer('${player.id}', false, false)">DEVENDO</button>
+          ` : ''}
+          ${(isAdmin || player.id === window.currentUserPlayer?.id || player.invitedById === window.currentUserPlayer?.id) ? `<button class="player-action" onclick="removePlayer('${player.id}', false)">Remover</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+}
+
+    function mostrarPopup(popupId) {
+      document.getElementById(popupId).style.display = 'block';
+    }
+
+    function fecharPopup(popupId) {
+      document.getElementById(popupId).style.display = 'none';
+    }
+
+    // Expor funções globais para uso nos botões inline
+    window.approvePlayer = approvePlayer;
+    window.removePlayer = removePlayer;
+    window.mostrarPopup = mostrarPopup;
+    window.fecharPopup = fecharPopup;
+    window.confirmPlayer = confirmPlayer;
+    window.abrirQuadra = abrirQuadra;
+    
+  
+   
+
+
+
+
+
+ function abrirQuadra() {
+  // Verificação de segurança
+  if (!currentGameId) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Nenhum Jogo Selecionado',
+      text: 'Selecione um jogo para visualizar a quadra.',
+    });
+    return;
+  }
+
+  const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fexclama.jpg?alt=media&token=51fef838-cac2-4021-8021-2dc7edc76f49';
+
+  // Ordenar jogadores
+  const sortedPlayers = sortPlayers([...confirmedPlayers]);
+
+  // Definir posições na quadra (12 titulares + 4 reservas)
+  const playerPositions = [
+    { top: '18%', left: '15%' }, // Titular 1
+    { top: '82%', left: '85%' }, // Titular 12
+    { top: '18%', left: '82%' }, // Titular 3
+    { top: '82%', left: '15%' }, // Titular 10
+    { top: '90%', left: '50%' }, // Titular 11
+    { top: '10%', left: '50%' }, // Titular 2
+    { top: '62%', left: '15%' }, // Titular 7
+    { top: '39%', left: '85%' }, // Titular 6
+    { top: '60%', left: '50%' }, // Titular 8
+    { top: '39%', left: '15%' }, // Titular 4    
+    { top: '62%', left: '85%' }, // Titular 9   
+    { top: '41%', left: '50%' }, // Titular 5   
+   
+
+    { top: '12%', left: '120%' }, // Reserva 1
+    { top: '60%', left: '-20%' }, // Reserva 5
+    { top: '22%', left: '120%' }, // Reserva 2
+    { top: '70%', left: '-20%' }, // Reserva 6
+    { top: '32%', left: '120%' }, // Reserva 3
+    { top: '80%', left: '-20%' }, // Reserva 7
+    { top: '42%', left: '120%' }, // Reserva 4
+    { top: '90%', left: '-20%' }, // Reserva 8
+
+    
+    
+    
+    
+  ];
+
+  // Gerar HTML para os jogadores, ignorando posições vazias
+  const playersHTML = playerPositions.map((position, index) => {
+    const player = sortedPlayers[index];
+    if (!player) {
+      return ''; // Não gerar HTML para posições vazias
+    }
+    const imageUrl = player.imageUrl || defaultImg;
+    const playerName = player.name || 'Vazio';
+    const playerPosition = player.position || 'Posição não definida';
+    const playerId = player.id || '';
+    return `
+      <div class="player" style="top: ${position.top}; left: ${position.left};" data-player-id="${playerId}" data-posicao="${playerPosition}" data-index="${index}" title="${playerName}">
+        <img src="${imageUrl}" alt="${playerName}" onerror="this.src='${defaultImg}'"/>
+      </div>
+    `;
+  }).join('');
+
+  // Verificar se o jogador logado está na lista de presença
+  const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) ||
+                        waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
+
+  // HTML da quadra com data dinâmica
+  const gameDateTime = currentGameData
+    ? DateTime.fromISO(`${currentGameData.date}T${currentGameData.time}`, { zone: 'America/Sao_Paulo' })
+        .toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' })
+    : DateTime.now().setZone('America/Sao_Paulo')
+        .toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' });
+
+  const quadraHTML = `
+    <h3>Quadra Virtual</h3>
+    <div class="quadra-container">
+        <div class="linha-meio0"></div>
+      <div class="linha-meio1"></div>
+      <div class="linha-meio2"></div>
+      <div class="linha-meio3"></div>
+      <div class="linha-meio4"></div>
+      <div class="linha-3m-cima"></div>
+      <div class="linha-3m-baixo"></div>
+      ${playersHTML}
+    </div>
+    <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">
+      Confirmar Presença ✅
+    </button>
+    <div class="info">
+      <p><strong>Jogo do dia:</strong> ${gameDateTime}<br><strong>Lista limitada a ${playerLimit} jogadores</strong></p>
+      <p><strong> </strong> A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p>
+    </div>
+  `;
+
+  Swal.fire({
+    html: quadraHTML,
+    showCloseButton: true,
+    showConfirmButton: true,
+    confirmButtonText: 'OK',
+    showCancelButton: false,
+    width: 'auto',
+    didOpen: () => {
+      let currentPopup = null;
+
+      // Adicionar evento de clique para o botão Confirmar Presença
+      const botao = document.getElementById('btn-confirmar');
+      if (botao && !isPlayerInList) {
+        botao.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            await confirmPlayer();          
+        
+
+  
+          } catch (error) {
+            console.error('Erro ao confirmar jogador:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: 'Não foi possível confirmar a presença. Verifique o console para mais detalhes.',
+            });
+          }
+        });
+      }
+
+      // Adicionar evento de clique para os jogadores
+      const jogadores = document.querySelectorAll('.player');
+      jogadores.forEach((jogador) => {
+        jogador.addEventListener('click', (e) => {
+          e.stopPropagation(); // Evita que o clique no jogador feche o modal
+
+          // Remover popup anterior, se existir
+          if (currentPopup) {
+            currentPopup.remove();
+            currentPopup = null;
+          }
+
+          const playerId = jogador.dataset.playerId;
+          if (!playerId) {
+            Swal.fire({
+              icon: 'info',
+              title: 'Posição Vazia',
+              text: 'Nenhum jogador está ocupando esta posição na quadra.',
+              confirmButtonText: 'OK',
+            });
+            return;
+          }
+
+          const nome = jogador.getAttribute('title');
+          const posicao = jogador.dataset.posicao || 'Posição não definida';
+          const index = jogador.dataset.index;
+          const position = playerPositions[index];
+
+          // Criar o popup
+          const popup = document.createElement('div');
+          popup.className = 'marker-popup';
+          popup.innerHTML = `<strong>${nome}</strong><br><span>${posicao}</span>`;
+
+          const arrow = document.createElement('div');
+          arrow.className = 'marker-arrow';
+          popup.appendChild(arrow);
+
+          // Adicionar ao swal2-container para evitar restrições de overflow
+          const swalContainer = document.querySelector('.swal2-container');
+          swalContainer.appendChild(popup);
+
+          // Calcular posição com base em playerPositions
+          const quadraContainer = document.querySelector('.quadra-container');
+          const containerRect = quadraContainer.getBoundingClientRect();
+          const playerTopPercent = parseFloat(position.top); // Ex.: '12%' -> 12
+          const playerLeftPercent = parseFloat(position.left); // Ex.: '15%' -> 15
+          const topPixels = (playerTopPercent / 100) * containerRect.height; // Converter % para pixels
+          const leftPixels = (playerLeftPercent / 100) * containerRect.width; // Converter % para pixels
+          const popupHeight = 70; // Aproximado, ajuste conforme necessário
+
+          // Posicionar o popup acima do jogador
+          popup.style.top = `${containerRect.top + topPixels - popupHeight - 2}px`; // 10px de margem
+          popup.style.left = `${containerRect.left + leftPixels}px`; // Centralizado no jogador
+
+          currentPopup = popup;
+
+          // Remover após 3 segundos
+          setTimeout(() => {
+            if (currentPopup) {
+              currentPopup.remove();
+              currentPopup = null;
+            }
+          }, 6000);
+        });
+      });
+
+      // Fechar popup ao clicar fora
+      document.querySelector('.swal2-container').addEventListener('click', (e) => {
+        if (currentPopup && !e.target.closest('.player')) {
+          currentPopup.remove();
+          currentPopup = null;
+        }
+      });
+    },
+    willClose: () => {
+      // Limpar eventos
+      const container = document.querySelector('.swal2-container');
+      if (container) {
+        container.removeEventListener('click', () => {});
+      }
+    },
+  });
+}
+  </script>
+   <!-- SDK do OneSignal -->
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+    });
+  });
+
+
+async function sendPushNotification(message, imageUrl = null, playerId = null) {
+  try {
+    const now = Date.now(); // usado para gerar um ID único
+    const uniqueId = `push_${playerId || 'anon'}_${now}`;
+
+    const payload = {
+      app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+      headings: { en: "🏐 Vôlei BNH - Atualização" },
+      contents: { en: message },
+      included_segments: ["All"],
+      url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
+      collapse_id: uniqueId,
+      ios_thread_id: uniqueId
+    };
+
+    const defaultImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+
+    if (imageUrl && imageUrl.startsWith('https://') &&
+        (imageUrl.match(/\.(jpg|jpeg|png)$/i) || imageUrl.includes('firebasestorage.googleapis.com'))) {
+      payload.big_picture = imageUrl;
+      payload.ios_attachments = { id: imageUrl };
+      payload.chrome_web_image = imageUrl;
+    } else {
+      console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
+      payload.big_picture = defaultImage;
+      payload.ios_attachments = { id: defaultImage };
+      payload.chrome_web_image = defaultImage;
+    }
+
+    console.log('Enviando notificação com payload:', payload);
+
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    console.log('Resposta da API do OneSignal:', data);
+    console.log('Status HTTP:', response.status);
+
+    if (!response.ok) {
+      console.error('Erro na API do OneSignal:', data.errors || data);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Aviso',
+        text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao enviar notificação:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro ao enviar notificação: ' + error.message,
+    });
+  }
+}
+
+
+
+
+    
+    async function sendPushNotification2(message, imageUrl = null) {
+      try {
+        const payload = {
+          app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+          headings: { en: "🏐 Vôlei BNH - Atualização" },
+          contents: { en: message },
+          included_segments: ["All"],          
+          url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
+        };
+        
+        if (imageUrl) {
+          if (
+  imageUrl.startsWith('https://') &&
+  (
+    imageUrl.match(/\.(jpg|jpeg|png)$/i) || 
+    imageUrl.includes('firebasestorage.googleapis.com')
+  )
+) {
+  payload.big_picture = imageUrl;
+  payload.ios_attachments = { id: imageUrl };
+  payload.chrome_web_image = imageUrl;
+} else {
+  console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
+  const fallbackImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+  payload.big_picture = fallbackImage;
+  payload.ios_attachments = { id: fallbackImage };
+  payload.chrome_web_image = fallbackImage;
+}
+
+        } else {
+          payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+          payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
+          payload.chrome_web_image = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
+        }
+        console.log('Enviando notificação com payload:', payload);
+        const response = await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        console.log('Resposta da API do OneSignal:', data);
+        console.log('Status HTTP:', response.status);
+        if (!response.ok) {
+          console.error('Erro na API do OneSignal:', data.errors || data);
+          Swal.fire({
+            icon: 'warning',
+            title: 'Aviso',
+            text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao enviar notificação: ' + error.message,
+        });
+      }
+    }
+  
+
+  async function sendPushNotification3(message, imageUrl, tags = []) {
+    const payload = {
+      app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+      headings: { en: "🏐 Vôlei BNH - Administração" },
+      contents: { en: message },
+      url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
+      big_picture: imageUrl,
+    };
+
+    if (tags.length === 0) {
+      // Envia para todos
+      payload.included_segments = ["All"];
+    } else {
+      // Envia somente para quem tiver pelo menos uma das tags
+      payload.filters = [];
+      tags.forEach((tag, index) => {
+        if (index > 0) payload.filters.push({ operator: "OR" });
+        payload.filters.push({
+          field: "tag",
+          key: tag,
+          relation: "=",
+          value: "true"
+        });
+      });
+    }
+
+    await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
+      },
+      body: JSON.stringify(payload)
+    });
+  }
+
+
+
+
+</script>
+</body>
+</html>
