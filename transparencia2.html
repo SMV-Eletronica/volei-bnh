@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="transparencia.css?v=1.8">
+    <style>
+        /* Estilos para os comprovantes */
+        .comprovante-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #2196F3;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .comprovante-link:hover {
+            text-decoration: underline;
+        }
+        .comprovante-icon {
+            font-size: 14px;
+        }
+        
+        /* Estilos existentes mantidos */
+        .defaulter-item {
+            cursor: pointer;
+        }
+        .swal-wide {
+            width: 90% !important;
+            max-width: 600px !important;
+        }
+        .swal-content {
+            padding: 15px !important;
+            text-align: center !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <center><h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2></center>        
+    </div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <div class="user-profile">
+                <img id="sidebarUserPhoto" class="sidebar-user-photo" src="" alt="Foto do usuário">
+                <div class="sidebar-user-info">
+                    <div id="sidebarUserName" class="sidebar-user-name"></div>
+                    <div id="sidebarUserPosition" class="sidebar-user-position"></div>
+                    <div id="userEmail" class="sidebar-user-position"></div>
+                </div>
+            </div>
+            <button id="loginBtn" class="sidebar-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> Administração</button>
+            <button id="transparenciaBtn" class="sidebar-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+            <button class="sidebar-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+            <button id="listaBtn" class="sidebar-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+            <button id="logoutBtn" class="sidebar-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="container">
+        <br>
+        <div class="tabs">
+            <div class="tab active" data-tab="report"><i class="fas fa-file-alt"></i> Caixa</div>
+            <div class="tab" data-tab="expenses"><i class="fas fa-receipt"></i> Despesas</div>
+            <div class="tab" data-tab="profile"><i class="fas fa-users"></i> Integrantes</div>
+        </div>
+        
+        <div id="report" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-chart-pie"></i> Resumo Financeiro</h2>
+                <div class="filter-controls">
+                    <div>
+                        <label for="yearFilter">Ano:</label>
+                        <select id="yearFilter">
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="monthFilter">Mês:</label>
+                        <select id="monthFilter">
+                            <option value="all">Todos</option>
+                            <option value="01">Janeiro</option>
+                            <option value="02">Fevereiro</option>
+                            <option value="03">Março</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Maio</option>
+                            <option value="06">Junho</option>
+                            <option value="07">Julho</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="cashSummary" class="cash-summary">
+                    <h3>Resumo do Caixa</h3>
+                    <div class="cash-summary-grid">
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Total Receita Recebida</div>
+                            <div id="totalIncome" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Total Receitas a Receber</div>
+                            <div id="totalReceivables" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Total Despesas</div>
+                            <div id="totalExpenses" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Saldo Atual</div>
+                            <div id="currentBalance" class="cash-summary-value">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="financialSummary">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mês/Ano</th>
+                                <th>Receitas Recebidas (R$)</th>
+                                <th>Receitas a Receber (R$)</th>
+                                <th>Despesas (R$)</th>
+                                <th>Saldo (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financialData">
+                        </tbody>
+                    </table>
+                </div>
+                <br>
+                <div class="defaulters-section">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Integrantes Pendentes</h3>
+                    <div id="defaultersList" class="defaulters-list">
+                        <div class="no-defaulters">Carregando informações...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="expenses" class="tab-content">
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-history"></i> Controle de Despesas</h2>
+                <div id="recentExpenses" class="expenses-list">
+                    <div class="expenses-section">
+                        <h3 class="section-title"><i class="fas fa-money-bill-wave"></i> Ativas</h3>
+                        <div id="activeExpenses" class="expenses-list"></div>
+                    </div>
+                    <div class="expenses-section">
+                        <h3 class="section-title"><i class="fas fa-trash"></i> Canceladas</h3>
+                        <div id="deletedExpenses" class="expenses-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="profile" class="tab-content">
+            <div class="section">
+                <br>
+                <div class="search-container">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar integrante...">
+                </div>
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <button id="prevPlayer" class="nav-arrow" aria-label="Jogador anterior">←</button>
+                        <img id="profilePhoto" class="profile-photo" src="" alt="Foto do integrante">
+                        <button id="nextPlayer" class="nav-arrow" aria-label="Próximo jogador">→</button>
+                    </div>
+                    <div class="profile-details">
+                        <h2 id="profileName" class="profile-name">Carregando...</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <div class="info-label">Posição</div>
+                                <div id="playerPosition" class="info-value">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Categoria</div>
+                                <div id="playerCategory" class="info-value">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Contato</div>
+                                <div id="playerContact" class="info-value">-</div>
+                            </div>
+                        </div>
+                        <div class="payment-status">
+                            <h3 class="status-title">Status das Contribuições</h3>
+                            <div id="paymentsList"></div>
+                        </div>
+                        <div id="pendingStatus" class="pending-alert" style="display: none;">
+                            Este integrante possui pendências!
+                        </div>
+                        <div id="noPendingStatus" class="no-pending" style="display: none;">
+                            Integrante em dia com as Contribuições!
+                        </div>
+                        <div id="uploadComprovanteSection" class="upload-comprovante">
+                            <h3>Enviar Comprovante de Pagamento</h3>
+                            <select id="paymentSelect" class="payment-select">
+                                <option value="">Selecione um pagamento pendente</option>
+                            </select>
+                            <input type="file" id="comprovanteInput" accept="image/*,.pdf" />
+                            <div class="conteinerbtncomprovante">
+                                <button id="uploadComprovanteBtn" class="upload-btn">Enviar Comprovante</button>
+                            </div>
+                            <p id="uploadMessage" style="display: none; color: #333;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            © 2025 SMV Eletrônica- Todos os direitos reservados<br>
+            <div class="footer-links">
+                Powered by:
+                <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
+                    <i class="fas fa-fire"></i> Firebase
+                </a>
+                <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
+                    <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
+                    OneSignal
+                </a>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+
+        // Elementos do DOM
+        const yearFilter = document.getElementById('yearFilter');
+        const monthFilter = document.getElementById('monthFilter');
+        const financialData = document.getElementById('financialData');
+        const defaultersList = document.getElementById('defaultersList');
+        const activeExpenses = document.getElementById('activeExpenses');
+        const deletedExpensesElement = document.getElementById('deletedExpenses');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const totalIncomeElement = document.getElementById('totalIncome');
+        const totalReceivablesElement = document.getElementById('totalReceivables');
+        const totalExpensesElement = document.getElementById('totalExpenses');
+        const currentBalanceElement = document.getElementById('currentBalance');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const profilePhoto = document.getElementById('profilePhoto');
+        const profileName = document.getElementById('profileName');
+        const playerPosition = document.getElementById('playerPosition');
+        const playerCategory = document.getElementById('playerCategory');
+        const playerContact = document.getElementById('playerContact');
+        const paymentsList = document.getElementById('paymentsList');
+        const prevPlayerBtn = document.getElementById('prevPlayer');
+        const nextPlayerBtn = document.getElementById('nextPlayer');
+        const searchInput = document.getElementById('searchInput');
+        const pendingStatus = document.getElementById('pendingStatus');
+        const noPendingStatus = document.getElementById('noPendingStatus');
+        const uploadComprovanteSection = document.getElementById('uploadComprovanteSection');
+        const uploadComprovanteBtn = document.getElementById('uploadComprovanteBtn');
+        const paymentSelect = document.getElementById('paymentSelect');
+        const comprovanteInput = document.getElementById('comprovanteInput');
+        const uploadMessage = document.getElementById('uploadMessage');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        // Variáveis globais
+        let players = [];
+        let currentPlayerIndex = 0;
+        let filteredPlayers = [];
+        let emailLogado = null;
+        let isAdmin = false;
+        let currentUserPlayer = null;
+        let allPlayers = [];
+        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
+
+        // Função para abrir/fechar o menu lateral
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Event listeners para o menu
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        function updateButtonVisibility(user) {
+            if (user) {
+                logoutBtn.style.display = 'block';
+                loginBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            } else {
+                logoutBtn.style.display = 'none';
+                loginBtn.style.display = 'inline-block';
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                updateButtonVisibility(null);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Acesso Negado',
+                    text: 'Você precisa estar logado para acessar esta página.',
+                });
+                window.location.href = 'loginvl.html';
+            } else {
+                emailLogado = user.email;
+                isAdmin = adminEmails.includes(emailLogado);
+                const player = await loadCurrentUserPlayer();
+                
+                // Atualiza a foto e o nome no sidebar
+                const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+                const sidebarUserName = document.getElementById('sidebarUserName');
+                
+                if (currentUserPlayer?.imageUrl) {
+                    sidebarUserPhoto.src = currentUserPlayer.imageUrl;
+                    sidebarUserPhoto.style.display = "block";
+                } else {
+                    sidebarUserPhoto.style.display = "none";
+                }
+                
+                sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
+                
+                document.getElementById('userEmail').textContent = `${user.email}`;
+                updateButtonVisibility(user);
+                await loadCurrentUserPlayer();
+                loadFinancialData();
+                loadDefaulters();
+                loadRecentExpenses();
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Logout',
+                    text: 'Você saiu com sucesso.',
+                    timer: 500,
+                    showConfirmButton: false,
+                });
+                window.location.href = 'loginvl.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível fazer logout. Tente novamente.',
+                });
+            }
+        });
+
+        loginBtn.addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        async function loadCurrentUserPlayer() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                if (snapshot.exists()) {
+                    allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+                        id,
+                        ...player
+                    }));
+                    currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+
+                    // Atualiza sidebar
+                    const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+                    const sidebarUserName = document.getElementById('sidebarUserName');
+                    const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+
+                    if (currentUserPlayer?.imageUrl) {
+                        sidebarUserPhoto.src = currentUserPlayer.imageUrl;
+                        sidebarUserPhoto.style.display = "block";
+                    } else {
+                        sidebarUserPhoto.style.display = "none";
+                    }
+
+                    sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
+                    sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do jogador:', error);
+            }
+        }
+       
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'profile') {
+                    loadPlayers();
+                }
+            });
+        });
+
+        async function loadFinancialData() {
+            const currentSelectedYear = yearFilter.value;
+            const currentSelectedMonth = monthFilter.value;
+            yearFilter.disabled = true;
+            const paymentsRef = ref(database, 'payments');
+            const expensesRef = ref(database, 'expenses');
+            
+            try {
+                const [paymentsSnapshot, expensesSnapshot] = await Promise.all([
+                    get(paymentsRef),
+                    get(expensesRef)
+                ]);
+                
+                const paymentsData = paymentsSnapshot.val() || {};
+                const expenses = expensesSnapshot.val() || {};
+                const monthlyData = {};
+                const years = new Set();
+                
+                let filteredIncome = 0;
+                let filteredReceivables = 0;
+                let filteredExpenses = 0;
+                
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        const normalizedMonth = month.padStart(2, '0');
+                        years.add(year);
+                        
+                        const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
+                        const matchesMonth = currentSelectedMonth === 'all' || normalizedMonth === currentSelectedMonth;
+                        
+                        if (!matchesYear || !matchesMonth) continue;
+                        
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            if (!payment.month || payment.value === undefined) continue;
+                            
+                            const [paymentYear, paymentMonth] = payment.month.split('-');
+                            const monthKey = `${paymentYear}-${paymentMonth}`;
+                            const monthName = getMonthName(paymentMonth);
+                            
+                            if (!monthlyData[monthKey]) {
+                                monthlyData[monthKey] = {
+                                    monthName,
+                                    year: paymentYear,
+                                    month: paymentMonth,
+                                    income: 0,
+                                    receivables: 0,
+                                    expenses: 0,
+                                    paymentsCount: 0,
+                                    lateCount: 0
+                                };
+                            }
+                            
+                            const paymentValue = parseFloat(payment.value) || 0;
+                            
+                            if (payment.date) {
+                                monthlyData[monthKey].income += paymentValue;
+                                filteredIncome += paymentValue;
+                            } else {
+                                monthlyData[monthKey].receivables += paymentValue;
+                                monthlyData[monthKey].lateCount++;
+                                filteredReceivables += paymentValue;
+                            }
+                            
+                            monthlyData[monthKey].paymentsCount++;
+                        }
+                    }
+                }
+                
+                for (const expenseId in expenses) {
+                    const expense = expenses[expenseId];
+                    if (!expense.month || expense.value === undefined) continue;
+                    
+                    const [year, month] = expense.month.split('-');
+                    years.add(year);
+                    
+                    const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
+                    const matchesMonth = currentSelectedMonth === 'all' || month === currentSelectedMonth;
+                    
+                    if (!matchesYear || !matchesMonth) continue;
+                    
+                    const monthKey = `${year}-${month}`;
+                    
+                    if (!monthlyData[monthKey]) {
+                        const monthName = getMonthName(month);
+                        monthlyData[monthKey] = {
+                            monthName,
+                            year,
+                            month,
+                            income: 0,
+                            receivables: 0,
+                            expenses: 0,
+                            paymentsCount: 0,
+                            lateCount: 0
+                        };
+                    }
+                    
+                    const expenseValue = parseFloat(expense.value) || 0;
+                    monthlyData[monthKey].expenses += expenseValue;
+                    filteredExpenses += expenseValue;
+                }
+                
+                updateYearFilterOptions(Array.from(years).sort().reverse());
+                updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses);
+                renderFinancialData(monthlyData);
+                
+            } catch (error) {
+                console.error("Error loading financial data:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar dados financeiros.',
+                });
+            } finally {
+                yearFilter.disabled = false;
+            }
+        }
+
+        function updateYearFilterOptions(years) {
+            const currentSelectedYear = yearFilter.value;
+    
+            yearFilter.innerHTML = '<option value="all">Todos</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+    
+            if (currentSelectedYear !== 'all' && years.includes(currentSelectedYear)) {
+                yearFilter.value = currentSelectedYear;
+            } else {
+                yearFilter.value = 'all';
+            }
+        }
+
+        function updateCashSummary(income, receivables, expenses) {
+            const balance = income - expenses;
+            
+            totalIncomeElement.textContent = `R$ ${income.toFixed(2)}`;
+            totalReceivablesElement.textContent = `R$ ${receivables.toFixed(2)}`;
+            totalExpensesElement.textContent = `R$ ${expenses.toFixed(2)}`;
+            
+            currentBalanceElement.textContent = `R$ ${Math.abs(balance).toFixed(2)}`;
+            currentBalanceElement.className = `cash-summary-value ${balance >= 0 ? 'positive' : 'negative'}`;
+            
+            if (balance < 0) {
+                currentBalanceElement.textContent = `-R$ ${Math.abs(balance).toFixed(2)}`;
+            }
+        }
+
+        async function loadDefaulters() {
+            const paymentsRef = ref(database, 'payments');
+            const playersRef = ref(database, 'players');
+            
+            try {
+                const [paymentsSnapshot, playersSnapshot] = await Promise.all([
+                    get(paymentsRef),
+                    get(playersRef)
+                ]);
+                
+                const paymentsData = paymentsSnapshot.val() || {};
+                const players = playersSnapshot.val() || {};
+                const defaulters = {};
+                const selectedYear = yearFilter.value;
+                const selectedMonth = monthFilter.value;
+                
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        const normalizedMonth = month.padStart(2, '0');
+                        
+                        if (selectedYear !== 'all' && year !== selectedYear) continue;
+                        if (selectedMonth !== 'all' && normalizedMonth !== selectedMonth) continue;
+                        
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            if (!payment.date && payment.value > 0) {
+                                if (!defaulters[payment.playerId]) {
+                                    defaulters[payment.playerId] = {
+                                        name: payment.playerName,
+                                        months: [],
+                                        photo: players[payment.playerId]?.imageUrl || null,
+                                        hasPendingComprovante: false
+                                    };
+                                }
+                                defaulters[payment.playerId].months.push(payment.month);
+                                if (payment.comprovanteStatus === 'pendente') {
+                                    defaulters[payment.playerId].hasPendingComprovante = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                renderDefaultersList(defaulters);
+            } catch (error) {
+                console.error("Error loading defaulters:", error);
+                defaultersList.innerHTML = '<div class="no-defaulters">Erro ao carregar inadimplentes</div>';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar inadimplentes.',
+                });
+            }
+        }
+
+        function renderDefaultersList(defaulters) {
+            defaultersList.innerHTML = '';
+            
+            if (Object.keys(defaulters).length === 0) {
+                defaultersList.innerHTML = '<div class="no-defaulters">Nenhum integrante inadimplente no período selecionado</div>';
+                return;
+            }
+            
+            Object.entries(defaulters).forEach(([playerId, defaulter]) => {
+                const defaulterEl = document.createElement('div');
+                defaulterEl.className = 'defaulter-item';
+                defaulterEl.style.cursor = 'pointer';
+                
+                const formattedMonths = defaulter.months.map(month => {
+                    const [year, monthNum] = month.split('-');
+                    return `${getMonthName(monthNum)}/${year}`;
+                }).join(', ');
+                
+                defaulterEl.innerHTML = `
+                    ${defaulter.photo ? 
+                        `<img src="${defaulter.photo}" class="defaulter-photo" alt="${defaulter.name}">` : 
+                        '<div class="defaulter-photo" style="background:#eee;"></div>'}
+                    <div class="defaulter-info">
+                        <div class="defaulter-name">${defaulter.name}${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}</div>
+                        <div class="defaulter-months">${formattedMonths}</div>
+                    </div>
+                `;
+                
+                defaulterEl.addEventListener('click', () => {
+                    showDefaulterDetails(playerId, defaulter.name);
+                });
+                
+                defaultersList.appendChild(defaulterEl);
+            });
+        }
+
+        async function showDefaulterDetails(playerId, playerName) {
+            const paymentsRef = ref(database, 'payments');
+            try {
+                const snapshot = await get(paymentsRef);
+                const paymentsData = snapshot.val() || {};
+                const defaulterPayments = [];
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            if (payment.playerId === playerId && !payment.date && payment.value > 0) {
+                                defaulterPayments.push({ id: paymentId, ...payment });
+                            }
+                        }
+                    }
+                }
+                
+                let detailsHtml = `<h3 style="margin-top: 0;">Pendências - ${playerName}</h3>`;
+                if (defaulterPayments.length === 0) {
+                    detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
+                } else {
+                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo / Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
+                    defaulterPayments.forEach(payment => {
+                        const monthYear = payment.month && payment.month.includes('-') ? payment.month.split('-') : [null, null];
+                        const [year, month] = monthYear;
+                        const formattedMonth = month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência';
+                        const paymentType = payment.paymentType || 'Não informado';
+                        const guestName = payment.additionalInfo || '-';
+                        const comprovanteStatus = payment.comprovanteStatus ? 
+                            (payment.comprovanteStatus === 'pendente' ? 'Pendente' : 
+                             payment.comprovanteStatus === 'aprovado' ? 'Aprovado' : 
+                             `Rejeitado (${payment.comprovanteRejectReason || '-'})`) : 
+                            'Nenhum comprovante';
+                        const comprovanteLink = payment.comprovanteURL ? 
+                            `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a>` : 
+                            '-';
+                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${paymentType} / ${guestName}</td><td style="border: 1px solid #ddd; padding: 8px;">${comprovanteLink} (${comprovanteStatus})</td></tr>`;
+                    });
+                    detailsHtml += '</tbody></table>';
+                }
+                
+                Swal.fire({
+                    title: '',
+                    html: detailsHtml,
+                    icon: defaulterPayments.length > 0 ? 'warning' : 'info',
+                    confirmButtonText: 'Fechar',
+                    customClass: {
+                        popup: 'swal-wide',
+                        htmlContainer: 'swal-content'
+                    },
+                    width: '90%',
+                    showCloseButton: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
+                
+            } catch (error) {
+                console.error("Error loading defaulter details:", error);
+                Swal.fire({
+                    title: 'Erro',
+                    html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
+                    icon: 'error',
+                    confirmButtonText: 'Fechar',
+                    customClass: {
+                        popup: 'swal-wide',
+                        htmlContainer: 'swal-content'
+                    },
+                    width: '90%',
+                    showCloseButton: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
+            }
+        }
+
+        async function loadRecentExpenses() {
+            const expensesRef = ref(database, 'expenses');
+            const deletedExpensesRef = ref(database, 'deletedExpenses');
+            
+            try {
+                const [expensesSnapshot, deletedExpensesSnapshot] = await Promise.all([
+                    get(expensesRef),
+                    get(deletedExpensesRef)
+                ]);
+                
+                const activeExpensesData = [];
+                const deletedExpensesArray = [];
+                const expensesData = expensesSnapshot.val() || {};
+                const deletedExpensesData = deletedExpensesSnapshot.val() || {};
+                
+                Object.entries(expensesData).forEach(([key, expense]) => {
+                    activeExpensesData.push({
+                        id: key,
+                        ...expense,
+                        isDeleted: false
+                    });
+                });
+                
+                Object.entries(deletedExpensesData).forEach(([key, expense]) => {
+                    deletedExpensesArray.push({
+                        id: key,
+                        ...expense,
+                        isDeleted: true
+                    });
+                });
+                
+                activeExpensesData.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+                deletedExpensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+                
+                renderRecentExpenses(activeExpensesData.slice(0, 10), deletedExpensesArray.slice(0, 10));
+            } catch (error) {
+                console.error("Error loading recent expenses:", error);
+                if (activeExpenses && activeExpenses instanceof HTMLElement) {
+                    activeExpenses.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas</div>';
+                }
+                if (deletedExpensesElement && deletedExpensesElement instanceof HTMLElement) {
+                    deletedExpensesElement.innerHTML = '<div class="no-defaulters">Erro ao carregar despesas excluídas</div>';
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar despesas.',
+                });
+            }
+        }
+
+        function renderRecentExpenses(activeExpensesData, deletedExpensesArray) {
+            if (!activeExpenses || !(activeExpenses instanceof HTMLElement)) {
+                console.error("Elemento 'activeExpenses' não encontrado ou não é um elemento DOM válido.");
+                return;
+            }
+            if (!deletedExpensesElement || !(deletedExpensesElement instanceof HTMLElement)) {
+                console.error("Elemento 'deletedExpenses' não encontrado ou não é um elemento DOM válido.");
+                return;
+            }
+
+            activeExpenses.innerHTML = '';
+            deletedExpensesElement.innerHTML = '';
+
+            if (activeExpensesData.length === 0) {
+                activeExpenses.innerHTML = '<div class="no-defaulters">Nenhuma despesa registrada</div>';
+            } else {
+                for (const expense of activeExpensesData) {
+                    const [year, month] = expense.month.split('-');
+                    const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                    const createdBy = expense.createdByName || 'Não informado';
+                    
+                    // Verifica se há comprovante
+                    let comprovanteHtml = '';
+                    if (expense.receiptUrl) {
+                        const isPDF = expense.receiptName?.toLowerCase().endsWith('.pdf');
+                        comprovanteHtml = `
+                            <div>
+                                <a href="${expense.receiptUrl}" target="_blank" class="comprovante-link">
+                                    <i class="${isPDF ? 'fas fa-file-pdf' : 'fas fa-file-image'} comprovante-icon"></i>
+                                    Visualizar comprovante
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    const expenseEl = document.createElement('div');
+                    expenseEl.className = 'expense-item';
+                    expenseEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
+                            <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                        </div>
+                        <div style="color: #666; margin-bottom: 5px;">
+                            ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                        </div>
+                        <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
+                        <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
+                        ${comprovanteHtml}
+                    `;
+                    activeExpenses.appendChild(expenseEl);
+                }
+            }
+
+            if (deletedExpensesArray.length === 0) {
+                deletedExpensesElement.innerHTML = '<div class="no-defaulters">Nenhuma despesa cancelada</div>';
+            } else {
+                for (const expense of deletedExpensesArray) {
+                    const [year, month] = expense.month.split('-');
+                    const expenseDate = expense.date ? formatDate(expense.date) : formatDate(expense.createdAt);
+                    const createdBy = expense.createdByName || 'Não informado';
+                    const deletedBy = expense.deletedByName || 'Não informado';
+                    const deletedAt = expense.deletedAt ? formatDate(expense.deletedAt) : 'Não informado';
+                    const deletionReason = expense.deletionReason || 'Não informado';
+                    
+                    // Verifica se há comprovante para despesas canceladas
+                    let comprovanteHtml = '';
+                    if (expense.receiptUrl) {
+                        const isPDF = expense.receiptName?.toLowerCase().endsWith('.pdf');
+                        comprovanteHtml = `
+                            <div>
+                                <a href="${expense.receiptUrl}" target="_blank" class="comprovante-link">
+                                    <i class="${isPDF ? 'fas fa-file-pdf' : 'fas fa-file-image'} comprovante-icon"></i>
+                                    Visualizar comprovante
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    const expenseEl = document.createElement('div');
+                    expenseEl.className = 'expenseDel-item';
+                    expenseEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
+                            <span class="expenseDel-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                        </div>
+                        <div style="color: #666; margin-bottom: 5px;">
+                            ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                        </div>
+                        <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
+                        <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
+                        ${comprovanteHtml}
+                        <div style="margin-bottom: 5px; color: #e74c3c;">
+                            Cancelada por: ${deletedBy} em ${deletedAt}<br>
+                            Justificativa: ${deletionReason}
+                        </div>
+                    `;
+                    deletedExpensesElement.appendChild(expenseEl);
+                }
+            }
+        }
+
+        async function loadPlayers() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                if (snapshot.exists()) {
+                    players = Object.entries(snapshot.val()).map(([id, player]) => ({ id, ...player }));
+                    players.sort((a, b) => a.name.localeCompare(b.name));
+                    filteredPlayers = [...players];
+                    if (filteredPlayers.length > 0) {
+                        currentPlayerIndex = 0;
+                        showPlayer(currentPlayerIndex);
+                    } else {
+                        profileName.textContent = "Nenhum integrante cadastrado";
+                    }
+                } else {
+                    profileName.textContent = "Nenhum integrante cadastrado";
+                }
+            } catch (error) {
+                console.error("Error loading players:", error);
+                profileName.textContent = "Erro ao carregar dados";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar jogadores.',
+                });
+            }
+        }
+
+        async function loadPendingPaymentsSelect(playerId) {
+            paymentSelect.innerHTML = '<option value="">Selecione um pagamento pendente</option>';
+            try {
+                const paymentsRef = ref(database, 'payments');
+                const snapshot = await get(paymentsRef);
+                const paymentsData = snapshot.val() || {};
+                let hasPayments = false;
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            if (payment.playerId === playerId && !payment.date && payment.value > 0) {
+                                const [year, month] = payment.month.split('-');
+                                const monthName = getMonthName(month);
+                                const option = document.createElement('option');
+                                option.value = `${year}/${month}/${paymentId}`;
+                                option.textContent = `${monthName}/${year} - R$ ${parseFloat(payment.value).toFixed(2)} (${payment.additionalInfo || 'Não informado'})`;
+                                paymentSelect.appendChild(option);
+                                hasPayments = true;
+                            }
+                        }
+                    }
+                }
+                if (!hasPayments) {
+                    paymentSelect.innerHTML = '<option value="">Nenhum pagamento pendente</option>';
+                    uploadComprovanteBtn.disabled = true;
+                } else {
+                    uploadComprovanteBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar pagamentos pendentes:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar pagamentos pendentes.',
+                });
+            }
+        }
+
+        async function uploadComprovante() {
+            const paymentPath = paymentSelect.value;
+            const file = comprovanteInput.files[0];
+            if (!paymentPath) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Selecione um pagamento pendente.',
+                });
+                return;
+            }
+            if (!file) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Selecione um arquivo (imagem ou PDF).',
+                });
+                return;
+            }
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'O arquivo deve ter no máximo 5MB.',
+                });
+                return;
+            }
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Por favor, selecione uma imagem ou PDF.',
+                });
+                return;
+            }
+            try {
+                const [year, month, paymentId] = paymentPath.split('/');
+                const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+                const paymentSnapshot = await get(paymentRef);
+                if (!paymentSnapshot.exists()) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não encontrado.',
+                    });
+                    return;
+                }
+                const payment = paymentSnapshot.val();
+                if (!payment.playerId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Pagamento não possui playerId associado.',
+                    });
+                    return;
+                }
+                const storagePath = `comprovantes/${payment.playerId}/${year}/${month}/${paymentId}_${Date.now()}_${file.name}`;
+                const fileRef = storageRef(storage, storagePath);
+                await uploadBytes(fileRef, file);
+                const downloadURL = await getDownloadURL(fileRef);
+                const updateData = {
+                    comprovanteURL: downloadURL,
+                    comprovanteStatus: 'pendente',
+                    comprovanteUploadedAt: new Date().toISOString()
+                };
+                await update(paymentRef, updateData);
+                uploadMessage.style.display = 'block';
+                uploadMessage.textContent = payment.comprovanteURL ? 'Comprovante substituído com sucesso! Aguardando aprovação.' : 'Comprovante enviado com sucesso! Aguardando aprovação.';
+                uploadMessage.style.color = '#28a745';
+                comprovanteInput.value = '';
+                paymentSelect.value = '';
+                await loadPlayerPayments(currentPlayerIndex < filteredPlayers.length ? filteredPlayers[currentPlayerIndex].id : payment.playerId);
+                await loadPendingPaymentsSelect(currentPlayerIndex < filteredPlayers.length ? filteredPlayers[currentPlayerIndex].id : payment.playerId);
+                await loadDefaulters();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
+                });
+            } catch (error) {
+                console.error("Erro ao enviar comprovante:", error);
+                uploadMessage.style.display = 'block';
+                uploadMessage.textContent = 'Erro ao enviar comprovante.';
+                uploadMessage.style.color = '#e74c3c';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao enviar comprovante: ' + error.message,
+                });
+            }
+        }
+
+        function showPlayer(index) {
+            if (filteredPlayers.length === 0) return;
+            if (index < 0) index = filteredPlayers.length - 1;
+            if (index >= filteredPlayers.length) index = 0;
+            currentPlayerIndex = index;
+            const player = filteredPlayers[index];
+            profileName.textContent = player.name || "-";
+            playerPosition.textContent = player.position || "-";
+            playerCategory.textContent = player.category || "-";
+            playerContact.textContent = player.contact || "-";
+            if (player.imageUrl) {
+                profilePhoto.src = player.imageUrl;
+                profilePhoto.style.display = "block";
+            } else {
+                profilePhoto.style.display = "none";
+            }
+            loadPlayerPayments(player.id);
+            loadPendingPaymentsSelect(player.id);
+            uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'block' : 'none';
+            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
+            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+        }
+
+        async function loadPlayerPayments(playerId) {
+            try {
+                const paymentsRef = ref(database, 'payments');
+                const deletedPaymentsRef = ref(database, 'deletedPayments');
+                const [paymentsSnapshot, deletedPaymentsSnapshot] = await Promise.all([
+                    get(paymentsRef),
+                    get(deletedPaymentsRef)
+                ]);
+                let playerPayments = [];
+                const paymentsData = paymentsSnapshot.val() || {};
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            if (payment.playerId === playerId) {
+                                playerPayments.push({ id: paymentId, ...payment, isDeleted: false });
+                            }
+                        }
+                    }
+                }
+                const deletedPayments = deletedPaymentsSnapshot.val() || {};
+                for (const deletedPaymentId in deletedPayments) {
+                    const payment = deletedPayments[deletedPaymentId];
+                    if (payment.playerId === playerId) {
+                        playerPayments.push({ id: deletedPaymentId, ...payment, isDeleted: true });
+                    }
+                }
+                playerPayments.sort((a, b) => b.month.localeCompare(a.month));
+                renderPayments(playerPayments);
+                const hasPending = playerPayments.some(p => !p.isDeleted && !p.date && p.value > 0);
+                if (hasPending) {
+                    pendingStatus.style.display = "block";
+                    noPendingStatus.style.display = "none";
+                } else {
+                    pendingStatus.style.display = "none";
+                    noPendingStatus.style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error loading payments:", error);
+                paymentsList.innerHTML = "<div>Erro ao carregar pagamentos</div>";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar pagamentos do jogador.',
+                });
+            }
+        }
+
+        function renderPayments(payments) {
+            paymentsList.innerHTML = '';
+            if (payments.length === 0) {
+                paymentsList.innerHTML = "<div>Nenhum pagamento registrado</div>";
+                return;
+            }
+            for (const payment of payments) {
+                const isPaid = payment.date && payment.value > 0 && !payment.isDeleted;
+                const isExcluded = payment.isDeleted;
+                const [year, month] = payment.month.split('-');
+                const monthName = getMonthName(month);
+                let comprovanteStatusText = payment.comprovanteStatus || 'Pendente';
+                let comprovanteStatusClass = '';
+                if (payment.comprovanteStatus) {
+                    if (payment.comprovanteStatus === 'pendente') {
+                        comprovanteStatusText = 'Pendente';
+                        comprovanteStatusClass = 'pending';
+                    } else if (payment.comprovanteStatus === 'aprovado') {
+                        comprovanteStatusText = 'Aprovado';
+                        comprovanteStatusClass = 'approved';
+                    } else if (payment.comprovanteStatus === 'rejeitado') {
+                        comprovanteStatusText = `Rejeitado (${payment.comprovanteRejectReason || '-'})`;
+                        comprovanteStatusClass = 'rejected';
+                    }
+                }
+                const paymentEl = document.createElement('div');
+                paymentEl.className = `status-item ${isExcluded ? 'excluded' : 'active'}`;
+                paymentEl.innerHTML = `
+                    <div>
+                        <span class="status-label">Referente ao Caixa:</span>
+                        <span class="status-value">${monthName}/${year}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Tipo de Pagamento:</span>
+                        <span class="status-value">${payment.paymentType || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Descrição:</span>
+                        <span class="status-value">${payment.additionalInfo || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data do Pagamento:</span>
+                        <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Valor:</span>
+                        <span class="status-value ${isPaid ? 'paid' : isExcluded ? 'unpaid' : 'unpaid'}">
+                            ${isExcluded ? `R$ ${parseFloat(payment.value).toFixed(2)} (Excluído)` : 
+                            isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 
+                            `R$ ${parseFloat(payment.value).toFixed(2)} (Pendente)`}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="status-label">Comprovante:</span>
+                        <span class="status-value">
+                            ${payment.comprovanteURL ? 
+                                `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a> <span class="${comprovanteStatusClass}">(${comprovanteStatusText})</span>` : 
+                                'Nenhum comprovante enviado'}
+                        </span>
+                    </div>
+                    ${isExcluded ? `
+                    <div>
+                        <span class="status-label">Motivo da Exclusão:</span>
+                        <span class="status-value">${payment.deleteReason || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Data da Exclusão:</span>
+                        <span class="status-value">${payment.deletedAt ? formatDate(payment.deletedAt) : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="status-label">Cancelada por:</span>
+                        <span class="status-value">${payment.deletedBy || '-'}</span>
+                    </div>` : ''}
+                `;
+                paymentsList.appendChild(paymentEl);
+            }
+        }
+
+        prevPlayerBtn.addEventListener('click', () => {
+            showPlayer(currentPlayerIndex - 1);
+        });
+
+        nextPlayerBtn.addEventListener('click', () => {
+            showPlayer(currentPlayerIndex + 1);
+        });
+
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            if (searchTerm === '') {
+                filteredPlayers = [...players];
+            } else {
+                filteredPlayers = players.filter(player => 
+                    player.name.toLowerCase().includes(searchTerm)
+                );
+            }
+            if (filteredPlayers.length > 0) {
+                currentPlayerIndex = 0;
+                showPlayer(currentPlayerIndex);
+            } else {
+                profileName.textContent = "Nenhum integrante encontrado";
+                paymentsList.innerHTML = "";
+                pendingStatus.style.display = "none";
+                noPendingStatus.style.display = "none";
+                uploadComprovanteSection.style.display = "none";
+            }
+        });
+
+        uploadComprovanteBtn.addEventListener('click', uploadComprovante);
+
+        function getMonthName(monthNumber) {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return months[parseInt(monthNumber) - 1] || 'Desconhecido';
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            const offset = date.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(date.getTime() + offset);
+            return adjustedDate.toLocaleDateString('pt-BR');
+        }
+        
+        function expenseCategoryName(category) {
+            return category || 'Sem categoria';
+        }
+
+        yearFilter.addEventListener('change', () => {
+            loadFinancialData();
+            loadDefaulters();
+        });
+        
+        monthFilter.addEventListener('change', () => {
+            loadFinancialData();
+            loadDefaulters();
+        });
+    </script>
+</body>
+</html>
