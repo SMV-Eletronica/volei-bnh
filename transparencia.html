@@ -8,36 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="transparencia.css?v=1.8">
-    <style>
-        /* Estilos para os comprovantes */
-        .comprovante-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #2196F3;
-            text-decoration: none;
-            margin-top: 5px;
-        }
-        .comprovante-link:hover {
-            text-decoration: underline;
-        }
-        .comprovante-icon {
-            font-size: 14px;
-        }
-        
-        /* Estilos existentes mantidos */
-        .defaulter-item {
-            cursor: pointer;
-        }
-        .swal-wide {
-            width: 90% !important;
-            max-width: 600px !important;
-        }
-        .swal-content {
-            padding: 15px !important;
-            text-align: center !important;
-        }
-    </style>
+  
 </head>
 <body>
     <div class="header">
@@ -123,8 +94,8 @@
                         </div>
                     </div>
                 </div>
-                <div id="financialSummary">
-                    <table>
+                <div id="financialSummary" style="overflow-x: auto;">
+                    <table >
                         <thead>
                             <tr>
                                 <th>Mês/Ano</th>
@@ -217,7 +188,7 @@
                 </div>
             </div>
         </div>
-        
+        </div>
         <footer class="footer">
             © 2025 SMV Eletrônica- Todos os direitos reservados<br>
             <div class="footer-links">
@@ -234,7 +205,7 @@
                 </a>
             </div>
         </footer>
-    </div>
+    
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module">
@@ -533,10 +504,7 @@
                 
                 updateYearFilterOptions(Array.from(years).sort().reverse());
                 updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses);
-
-                
-               /* renderFinancialData(monthlyData);*/
-                
+                renderFinancialData(monthlyData);
                 
             } catch (error) {
                 console.error("Error loading financial data:", error);
@@ -549,6 +517,60 @@
                 yearFilter.disabled = false;
             }
         }
+
+        function renderFinancialData(monthlyData) {
+    financialData.innerHTML = '';
+    
+    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+        const [yearA, monthA] = a.split('-');
+        const [yearB, monthB] = b.split('-');
+        return yearB - yearA || monthB - monthA;
+    });
+    
+    let totalIncome = 0;
+    let totalReceivables = 0;
+    let totalExpenses = 0;
+    let totalBalance = 0;
+    
+    sortedMonths.forEach(monthKey => {
+        const data = monthlyData[monthKey];
+        const row = document.createElement('tr');
+        
+        const balance = data.income - data.expenses;
+        
+        totalIncome += data.income;
+        totalReceivables += data.receivables;
+        totalExpenses += data.expenses;
+        totalBalance += balance;
+        
+        row.innerHTML = `
+            <td>${data.monthName}/${data.year}</td>
+            <td>R$ ${data.income.toFixed(2)}</td>
+            <td>R$ ${data.receivables.toFixed(2)}</td>
+            <td>R$ ${data.expenses.toFixed(2)}</td>
+            <td class="${balance >= 0 ? 'positive' : 'negative'}">
+                ${balance < 0 ? '-' : ''}R$ ${Math.abs(balance).toFixed(2)}
+            </td>
+        `;
+        
+        financialData.appendChild(row);
+    });
+    
+    // Add totals row
+    const totalsRow = document.createElement('tr');
+    totalsRow.className = 'totals-row';
+    totalsRow.innerHTML = `
+        <td><strong>TOTAIS</strong></td>
+        <td><strong>R$ ${totalIncome.toFixed(2)}</strong></td>
+        <td><strong>R$ ${totalReceivables.toFixed(2)}</strong></td>
+        <td><strong>R$ ${totalExpenses.toFixed(2)}</strong></td>
+        <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
+            <strong>${totalBalance < 0 ? '-' : ''}R$ ${Math.abs(totalBalance).toFixed(2)}</strong>
+        </td>
+    `;
+    
+    financialData.appendChild(totalsRow);
+}
 
         function updateYearFilterOptions(years) {
             const currentSelectedYear = yearFilter.value;
@@ -697,7 +719,7 @@
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tipo / Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
+                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
                         const monthYear = payment.month && payment.month.includes('-') ? payment.month.split('-') : [null, null];
                         const [year, month] = monthYear;
@@ -712,7 +734,7 @@
                         const comprovanteLink = payment.comprovanteURL ? 
                             `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a>` : 
                             '-';
-                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${paymentType} / ${guestName}</td><td style="border: 1px solid #ddd; padding: 8px;">${comprovanteLink} (${comprovanteStatus})</td></tr>`;
+                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${guestName}</td><td style="border: 1px solid #ddd; padding: 8px;">${comprovanteLink} (${comprovanteStatus})</td></tr>`;
                     });
                     detailsHtml += '</tbody></table>';
                 }
