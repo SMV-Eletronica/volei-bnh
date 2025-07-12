@@ -533,7 +533,10 @@
                 
                 updateYearFilterOptions(Array.from(years).sort().reverse());
                 updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses);
-                renderFinancialData(monthlyData);
+
+                
+               /* renderFinancialData(monthlyData);*/
+                
                 
             } catch (error) {
                 console.error("Error loading financial data:", error);
