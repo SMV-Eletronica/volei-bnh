@@ -226,7 +226,7 @@ body {
 
 .game-controls span {
     background-color: #f9f9f9;
-    min-width: 60px;
+    min-width: ;
     text-align: left;
 }
 
@@ -472,8 +472,8 @@ body {
 
 .player-photo {
     aspect-ratio: 1 / 1;
-    width: 60px;
-    height: 60px;
+    width: ;
+    height: ;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -911,7 +911,7 @@ body {
     color: white;
     transition: left 0.3s ease-in-out;
     z-index: 1000;
-    padding-top: 60px;
+    padding-top: ;
     border-radius: 10px;
 }
 
