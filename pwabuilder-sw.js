@@ -13,9 +13,17 @@ self.addEventListener("message", (event) => {
 // Instalação do Service Worker (cache offline)
 self.addEventListener('install', async (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.add(offlineFallbackPage))
-    );
+    caches.open(CACHE).then((cache) => {
+      return cache.addAll([
+        offlineFallbackPage,
+        'lista.html',
+        'transparência.html',
+        'enquete.html'
+      ]);
+    })
+  );
 });
+
 
 // Ativa navigationPreload para performance
 if (workbox.navigationPreload.isSupported()) {
