@@ -36,48 +36,53 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #3498db, #2c3e50);
+            background: linear-gradient(145deg, #2c3e50, #3498db);
         }
 
         .offline-box {
             background-color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .logo {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             color: #3498db;
         }
 
         .logo i {
-            font-size: 4rem;
+            font-size: 4.5rem;
             margin-bottom: 0.5rem;
-            animation: pulse 2s infinite;
+            animation: spin 8s linear infinite;
         }
 
         .logo h1 {
-            font-size: 1.6rem;
-            margin-bottom: 0.3rem;
+            font-size: 1.7rem;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .logo p {
             color: #666;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            font-style: italic;
         }
 
         .offline-message {
-            margin: 1.2rem 0;
-            font-size: 1rem;
+            margin: 1.5rem 0;
+            font-size: 1.1rem;
             color: #444;
-            background-color: #ffebee;
             padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #ef9a9a;
+            border-left: 4px solid #c62828;
+            background-color: #f9f9f9;
+            border-radius: 5px;
         }
 
         .offline-message i {
@@ -85,66 +90,63 @@
             margin-right: 0.5rem;
         }
 
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
         button {
-            flex: 1;
-            padding: 10px;
+            width: 100%;
+            padding: 12px;
             background-color: #3498db;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         button:hover {
             background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         button i {
-            margin-right: 0.4rem;
+            margin-right: 0.5rem;
         }
 
         .footer {
-            margin-top: 1.2rem;
+            margin-top: 1.5rem;
             font-size: 0.85rem;
             color: #777;
+            font-weight: 500;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 500px) {
             .offline-box {
-                padding: 1.2rem;
+                padding: 1.5rem;
                 margin: 0 1rem;
             }
 
             .logo i {
-                font-size: 3rem;
+                font-size: 3.5rem;
             }
 
             .logo h1 {
-                font-size: 1.4rem;
+                font-size: 1.5rem;
             }
 
             .offline-message {
-                font-size: 0.9rem;
+                font-size: 1rem;
             }
 
-            .button-group {
-                flex-direction: column;
-                gap: 0.8rem;
+            button {
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -155,25 +157,20 @@
             <div class="logo">
                 <i class="fas fa-volleyball-ball"></i>
                 <h1>Vôlei-BNH</h1>
-                <p>"Onde cada saque é um desafio e cada ponto uma conquista!”</p>
+                <p>"Cada saque, uma nova chance!"</p>
             </div>
 
             <div class="offline-message">
-                <p><i class="fas fa-wifi"></i>Oops! Parece que você está offline.</p>
-                <p>Conecte-se à internet para continuar jogando!</p>
+                <p><i class="fas fa-wifi"></i> Sem conexão!</p>
+                <p>Volte para a quadra conectando-se à internet.</p>
             </div>
 
-            <div class="button-group">
-                <button onclick="window.location.reload()">
-                    <i class="fas fa-redo"></i> Tentar Novamente
-                </button>
-                <button onclick="window.location.href='/'">
-                    <i class="fas fa-home"></i> Voltar ao Início
-                </button>
-            </div>
+            <button onclick="window.location.reload()">
+                <i class="fas fa-redo"></i> Tentar Novamente
+            </button>
 
             <div class="footer">
-                <p>Vôlei-BNH - Sempre juntos, mesmo offline!</p>
+                <p>Vôlei-BNH - A paixão que nos une!</p>
             </div>
         </div>
     </div>
