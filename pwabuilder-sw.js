@@ -17,7 +17,7 @@ self.addEventListener('install', async (event) => {
       return cache.addAll([
         offlineFallbackPage,
         'lista.html',
-        'transparência.html',
+        'transparencia.html',
         'enquete.html'
       ]);
     })
