@@ -27,9 +27,7 @@ self.addEventListener('install', async (event) => {
         'android/android-launchericon-192-192.png',
         'android/android-launchericon-512-512.png',
         'ios/192.png',
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-        'icon-192x192.png' // Para notificações push
-        
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'        
       ]);
     })
   );
