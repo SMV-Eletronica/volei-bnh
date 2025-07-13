@@ -200,37 +200,17 @@
         }
 
         // Função para atualizar visibilidade dos botões
-       function updateButtonVisibility() {
-    // Sempre esconde o botão se estiver offline
-    if (!navigator.onLine) {
-        loginBtn.style.display = 'none';
-        return;
-    }
-    
-    // Se estiver online, mostra apenas para admins
-    if (isAdmin) {
-        loginBtn.style.display = 'inline-block';
-        newPollControls.style.display = 'block';
-    } else {
-        loginBtn.style.display = 'none';
-        newPollControls.style.display = 'none';
-    }
-    
-    // Botão de transparência sempre visível (se existir)
-    if (transparenciaBtn) {
-        transparenciaBtn.style.display = 'inline-block';
-    }
-}
-// Verifica o estado offline e atualiza os botões
-window.addEventListener('offline', () => {
-    if (loginBtn) loginBtn.style.display = 'none';
-    if (newPollControls) newPollControls.style.display = 'none';
-});
+        function updateButtonVisibility() {
+            if (isAdmin) {
+                loginBtn.style.display = 'inline-block';
+                newPollControls.style.display = 'block';
+            } else {
+                transparenciaBtn.style.display = 'inline-block';
+                loginBtn.style.display = 'none';
+                newPollControls.style.display = 'none';
+            }
+        }
 
-// Opcional: Atualiza quando volta a ficar online
-window.addEventListener('online', updateButtonVisibility);
-
-        
         // Função para alternar abas
         function switchTab(tabName) {
             activeTab = tabName;
