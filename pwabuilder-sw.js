@@ -16,12 +16,8 @@ self.addEventListener('install', async (event) => {
     caches.open(CACHE).then((cache) => {
       return cache.addAll([
         offlineFallbackPage,
-       '/windows11/Square44x44Logo.altform-unplated_targetsize-16.png',
-       '/windows11/Square44x44Logo.altform-unplated_targetsize-32.png',
-       '/android/android-launchericon-192-192.png',
-       '/android/android-launchericon-512-512.png',
-       '/ios/192.png',
-       'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+        'lista.html',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
       ]);
     })
   );
