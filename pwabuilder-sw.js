@@ -26,8 +26,7 @@ self.addEventListener('install', async (event) => {
     caches.open(CACHE).then((cache) => {
       // Adiciona os recursos essenciais ao cache
       return cache.addAll([
-        offlineFallbackPage,          // Página offline
-        'lista.html',                // Página da aplicação
+        offlineFallbackPage,          // Página offline        
         // CSS do Font Awesome
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
       ]);
