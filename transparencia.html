@@ -573,23 +573,27 @@
     financialData.appendChild(totalsRow);
 }
 
-        function updateYearFilterOptions(years) {
-            const currentSelectedYear = yearFilter.value;
+       function updateYearFilterOptions(years) {
+    const currentYear = new Date().getFullYear().toString();
+    yearFilter.innerHTML = '<option value="all">Todos</option>';
     
-            yearFilter.innerHTML = '<option value="all">Todos</option>';
-            years.forEach(year => {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                yearFilter.appendChild(option);
-            });
-    
-            if (currentSelectedYear !== 'all' && years.includes(currentSelectedYear)) {
-                yearFilter.value = currentSelectedYear;
-            } else {
-                yearFilter.value = 'all';
-            }
-        }
+    years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+    });
+
+    // Define o ano corrente como selecionado por padrão, se existir na lista
+    if (years.includes(currentYear)) {
+        yearFilter.value = currentYear;
+    } else if (years.length > 0) {
+        // Se o ano corrente não estiver na lista, seleciona o ano mais recente
+        yearFilter.value = years[0];
+    } else {
+        yearFilter.value = 'all';
+    }
+}
 
         function updateCashSummary(income, receivables, expenses) {
             const balance = income - expenses;
