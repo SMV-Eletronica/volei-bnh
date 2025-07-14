@@ -720,7 +720,7 @@
                 if (defaulterPayments.length === 0) {
                     detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
                 } else {
-                    detailsHtml += '<table style="overflow-x: auto; width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
+                    detailsHtml += '<div style="overflow-x: auto;" ><table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
                     defaulterPayments.forEach(payment => {
                         const monthYear = payment.month && payment.month.includes('-') ? payment.month.split('-') : [null, null];
                         const [year, month] = monthYear;
@@ -737,7 +737,7 @@
                             '-';
                         detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${guestName}</td><td style="border: 1px solid #ddd; padding: 8px;">${comprovanteLink} (${comprovanteStatus})</td></tr>`;
                     });
-                    detailsHtml += '</tbody></table>';
+                    detailsHtml += '</tbody></table></div>';
                 }
                 
                 Swal.fire({
