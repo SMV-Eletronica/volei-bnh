@@ -1990,14 +1990,7 @@ async function loadCurrentUserPlayer() {
     window.abrirQuadra = abrirQuadra;
     
   
-   
-
-
-
-
-
- function abrirQuadra() {
-  // Verificação de segurança
+   async function abrirQuadra() {
   if (!currentGameId) {
     Swal.fire({
       icon: 'info',
@@ -2008,63 +2001,52 @@ async function loadCurrentUserPlayer() {
   }
 
   const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fexclama.jpg?alt=media&token=51fef838-cac2-4021-8021-2dc7edc76f49';
-
-  // Ordenar jogadores
   const sortedPlayers = sortPlayers([...confirmedPlayers]);
 
-  // Definir posições na quadra (12 titulares + 4 reservas)
   const playerPositions = [
-    { top: '18%', left: '15%' }, // Titular 1
-    { top: '82%', left: '85%' }, // Titular 12
-    { top: '18%', left: '82%' }, // Titular 3
-    { top: '82%', left: '15%' }, // Titular 10
-    { top: '90%', left: '50%' }, // Titular 11
-    { top: '10%', left: '50%' }, // Titular 2
-    { top: '62%', left: '15%' }, // Titular 7
-    { top: '39%', left: '85%' }, // Titular 6
-    { top: '60%', left: '50%' }, // Titular 8
-    { top: '39%', left: '15%' }, // Titular 4    
-    { top: '62%', left: '85%' }, // Titular 9   
-    { top: '41%', left: '50%' }, // Titular 5   
-   
-
-    { top: '12%', left: '120%' }, // Reserva 1
-    { top: '60%', left: '-20%' }, // Reserva 5
-    { top: '22%', left: '120%' }, // Reserva 2
-    { top: '70%', left: '-20%' }, // Reserva 6
-    { top: '32%', left: '120%' }, // Reserva 3
-    { top: '80%', left: '-20%' }, // Reserva 7
-    { top: '42%', left: '120%' }, // Reserva 4
-    { top: '90%', left: '-20%' }, // Reserva 8
-
-    
-    
-    
-    
+    { top: '18%', left: '15%' },
+    { top: '82%', left: '85%' },
+    { top: '18%', left: '82%' },
+    { top: '82%', left: '15%' },
+    { top: '90%', left: '50%' },
+    { top: '10%', left: '50%' },
+    { top: '62%', left: '15%' },
+    { top: '39%', left: '85%' },
+    { top: '60%', left: '50%' },
+    { top: '39%', left: '15%' },
+    { top: '62%', left: '85%' },
+    { top: '41%', left: '50%' },
+    { top: '12%', left: '120%' },
+    { top: '60%', left: '-20%' },
+    { top: '22%', left: '120%' },
+    { top: '70%', left: '-20%' },
+    { top: '32%', left: '120%' },
+    { top: '80%', left: '-20%' },
+    { top: '42%', left: '120%' },
+    { top: '90%', left: '-20%' },
   ];
 
-  // Gerar HTML para os jogadores, ignorando posições vazias
-  const playersHTML = playerPositions.map((position, index) => {
-    const player = sortedPlayers[index];
-    if (!player) {
-      return ''; // Não gerar HTML para posições vazias
-    }
-    const imageUrl = player.imageUrl || defaultImg;
-    const playerName = player.name || 'Vazio';
-    const playerPosition = player.position || 'Posição não definida';
-    const playerId = player.id || '';
-    return `
-      <div class="player" style="top: ${position.top}; left: ${position.left};" data-player-id="${playerId}" data-posicao="${playerPosition}" data-index="${index}" title="${playerName}">
-        <img src="${imageUrl}" alt="${playerName}" onerror="this.src='${defaultImg}'"/>
-      </div>
-    `;
-  }).join('');
+  const playersHTML = await Promise.all(
+    playerPositions.map(async (position, index) => {
+      const player = sortedPlayers[index];
+      if (!player) {
+        return '';
+      }
+      const imageUrl = await preloadImage(player.imageUrl || defaultImg);
+      const playerName = player.name || 'Vazio';
+      const playerPosition = player.position || 'Posição não definida';
+      const playerId = player.id || '';
+      return `
+        <div class="player" style="top: ${position.top}; left: ${position.left};" data-player-id="${playerId}" data-posicao="${playerPosition}" data-index="${index}" title="${playerName}">
+          <img src="${imageUrl}" alt="${playerName}" onerror="this.src='${defaultImg}'"/>
+        </div>
+      `;
+    })
+  );
 
-  // Verificar se o jogador logado está na lista de presença
   const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) ||
                         waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
 
-  // HTML da quadra com data dinâmica
   const gameDateTime = currentGameData
     ? DateTime.fromISO(`${currentGameData.date}T${currentGameData.time}`, { zone: 'America/Sao_Paulo' })
         .toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' })
@@ -2081,7 +2063,7 @@ async function loadCurrentUserPlayer() {
       <div class="linha-meio4"></div>
       <div class="linha-3m-cima"></div>
       <div class="linha-3m-baixo"></div>
-      ${playersHTML}
+      ${playersHTML.join('')}
     </div>
     <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">
       Confirmar Presença ✅
@@ -2102,16 +2084,12 @@ async function loadCurrentUserPlayer() {
     didOpen: () => {
       let currentPopup = null;
 
-      // Adicionar evento de clique para o botão Confirmar Presença
       const botao = document.getElementById('btn-confirmar');
       if (botao && !isPlayerInList) {
         botao.addEventListener('click', async (e) => {
           e.stopPropagation();
           try {
-            await confirmPlayer();          
-        
-
-  
+            await confirmPlayer();
           } catch (error) {
             console.error('Erro ao confirmar jogador:', error);
             Swal.fire({
@@ -2123,13 +2101,11 @@ async function loadCurrentUserPlayer() {
         });
       }
 
-      // Adicionar evento de clique para os jogadores
       const jogadores = document.querySelectorAll('.player');
       jogadores.forEach((jogador) => {
         jogador.addEventListener('click', (e) => {
-          e.stopPropagation(); // Evita que o clique no jogador feche o modal
+          e.stopPropagation();
 
-          // Remover popup anterior, se existir
           if (currentPopup) {
             currentPopup.remove();
             currentPopup = null;
@@ -2151,7 +2127,6 @@ async function loadCurrentUserPlayer() {
           const index = jogador.dataset.index;
           const position = playerPositions[index];
 
-          // Criar o popup
           const popup = document.createElement('div');
           popup.className = 'marker-popup';
           popup.innerHTML = `<strong>${nome}</strong><br><span>${posicao}</span>`;
@@ -2160,26 +2135,22 @@ async function loadCurrentUserPlayer() {
           arrow.className = 'marker-arrow';
           popup.appendChild(arrow);
 
-          // Adicionar ao swal2-container para evitar restrições de overflow
           const swalContainer = document.querySelector('.swal2-container');
           swalContainer.appendChild(popup);
 
-          // Calcular posição com base em playerPositions
           const quadraContainer = document.querySelector('.quadra-container');
           const containerRect = quadraContainer.getBoundingClientRect();
-          const playerTopPercent = parseFloat(position.top); // Ex.: '12%' -> 12
-          const playerLeftPercent = parseFloat(position.left); // Ex.: '15%' -> 15
-          const topPixels = (playerTopPercent / 100) * containerRect.height; // Converter % para pixels
-          const leftPixels = (playerLeftPercent / 100) * containerRect.width; // Converter % para pixels
-          const popupHeight = 70; // Aproximado, ajuste conforme necessário
+          const playerTopPercent = parseFloat(position.top);
+          const playerLeftPercent = parseFloat(position.left);
+          const topPixels = (playerTopPercent / 100) * containerRect.height;
+          const leftPixels = (playerLeftPercent / 100) * containerRect.width;
+          const popupHeight = 70;
 
-          // Posicionar o popup acima do jogador
-          popup.style.top = `${containerRect.top + topPixels - popupHeight - 2}px`; // 10px de margem
-          popup.style.left = `${containerRect.left + leftPixels}px`; // Centralizado no jogador
+          popup.style.top = `${containerRect.top + topPixels - popupHeight - 2}px`;
+          popup.style.left = `${containerRect.left + leftPixels}px`;
 
           currentPopup = popup;
 
-          // Remover após 3 segundos
           setTimeout(() => {
             if (currentPopup) {
               currentPopup.remove();
@@ -2189,7 +2160,6 @@ async function loadCurrentUserPlayer() {
         });
       });
 
-      // Fechar popup ao clicar fora
       document.querySelector('.swal2-container').addEventListener('click', (e) => {
         if (currentPopup && !e.target.closest('.player')) {
           currentPopup.remove();
@@ -2198,7 +2168,6 @@ async function loadCurrentUserPlayer() {
       });
     },
     willClose: () => {
-      // Limpar eventos
       const container = document.querySelector('.swal2-container');
       if (container) {
         container.removeEventListener('click', () => {});
@@ -2206,7 +2175,10 @@ async function loadCurrentUserPlayer() {
     },
   });
 }
-  </script>
+</script>
+
+
+
    <!-- SDK do OneSignal -->
  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
