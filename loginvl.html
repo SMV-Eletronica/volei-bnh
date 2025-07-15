@@ -36,6 +36,11 @@
             line-height: 1.6;
         }
 
+         @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .login-container {
             display: flex;
             justify-content: center;
@@ -62,6 +67,7 @@
         .logo i {
             font-size: 3.5rem;
             margin-bottom: 0.5rem;
+            animation: spin 8s linear infinite;
         }
 
         .logo h1 {
@@ -72,6 +78,7 @@
         .logo p {
             color: #666;
             font-size: 0.9rem;
+            font-style: italic;
         }
 
         .form-group {
@@ -140,6 +147,8 @@
             margin-top: 1.5rem;
             font-size: 0.9rem;
             color: #777;
+            font-weight: 500;
+          font-style: italic;
         }
 
         .signup-link {
