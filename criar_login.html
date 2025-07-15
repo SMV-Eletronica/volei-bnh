@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Vôlei-BNH</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+        }
+
+        .login-box {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 1.5rem;
+            color: #3498db;
+        }
+
+        .logo i {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            animation: spin 8s linear infinite;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .footer {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #777;
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        .text-danger {
+            color: #f44336;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: block;
+        }
+
+        @media (max-width: 500px) {
+            .login-box {
+                padding: 1.5rem;
+                margin: 0 1rem;
+            }
+
+            .logo i {
+                font-size: 2.5rem;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo">
+                <i class="fas fa-volleyball-ball"></i>
+                <h1>Vôlei-BNH</h1>
+                <p>Crie sua conta para acessar o sistema</p>
+            </div>
+
+            <form id="createAccountForm">
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" required placeholder="Digite o e-mail usado no pré-cadastro">
+                    <small class="text-danger" id="emailError" style="display:none;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" required placeholder="Crie uma senha segura">
+                    <small class="text-danger" id="passwordError" style="display:none;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Senha:</label>
+                    <input type="password" id="confirmPassword" required placeholder="Confirme sua senha">
+                    <small class="text-danger" id="confirmPasswordError" style="display:none;"></small>
+                </div>
+
+                <button type="submit" id="createAccountBtn">
+                    <i class="fas fa-user-plus"></i> Criar Conta
+                </button>
+            </form>
+
+            <div class="footer">
+                <p>Você deve ter feito um pré-cadastro para criar uma conta.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getDatabase,
+            ref,
+            query,
+            orderByChild,
+            equalTo,
+            get,
+            update
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // DOM elements
+        const form = document.getElementById('createAccountForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const createAccountBtn = document.getElementById('createAccountBtn');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+        // Preenche o e-mail da URL se existir
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('email')) {
+            emailInput.value = urlParams.get('email');
+        }
+
+        // Verifica se usuário já está logado
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = 'lista.html';
+            }
+        });
+
+        // Validação do formulário
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset errors
+            emailError.style.display = 'none';
+            passwordError.style.display = 'none';
+            confirmPasswordError.style.display = 'none';
+            
+            // Get values
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Validações
+            let isValid = true;
+            
+            if (!email) {
+                emailError.textContent = 'Por favor, insira um e-mail válido';
+                emailError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (password.length < 6) {
+                passwordError.textContent = 'A senha deve ter no mínimo 6 caracteres';
+                passwordError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (password !== confirmPassword) {
+                confirmPasswordError.textContent = 'As senhas não coincidem';
+                confirmPasswordError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            // Verifica se existe pré-cadastro com este e-mail
+            try {
+                createAccountBtn.disabled = true;
+                createAccountBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+                
+                // Busca pré-cadastro no banco de dados
+                const playersRef = ref(database, 'players');
+                const queryByEmail = query(playersRef, orderByChild('email'), equalTo(email));
+                const snapshot = await get(queryByEmail);
+                
+                if (!snapshot.exists()) {
+                    throw new Error('Nenhum pré-cadastro encontrado com este e-mail. Faça o pré-cadastro primeiro.');
+                }
+                
+                // Cria a conta de autenticação
+                createAccountBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando conta...';
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Atualiza o pré-cadastro com o userId
+                const playerId = Object.keys(snapshot.val())[0];
+                await update(ref(database, `players/${playerId}`), {
+                    userId: user.uid,
+                    pendingAccount: null
+                });
+                
+                // Sucesso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Conta criada com sucesso!',
+                    text: 'Você será redirecionado para o sistema.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = 'lista.html';
+                });
+                
+            } catch (error) {
+                console.error('Erro ao criar conta:', error);
+                
+                let errorMessage = 'Erro ao criar conta';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Este e-mail já está em uso. Faça login ou use outro e-mail.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'A senha deve ter no mínimo 6 caracteres';
+                } else if (error.message.includes('pré-cadastro')) {
+                    errorMessage = error.message;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: errorMessage,
+                    confirmButtonText: 'OK'
+                });
+            } finally {
+                createAccountBtn.disabled = false;
+                createAccountBtn.innerHTML = '<i class="fas fa-user-plus"></i> Criar Conta';
+            }
+        });
+    </script>
+</body>
+</html>
