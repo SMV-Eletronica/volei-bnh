@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pré-Cadastro - Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=2.0">
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        input[type="tel"], input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .image-preview {
+            max-width: 150px;
+            max-height: 150px;
+            margin-top: 10px;
+            display: none;
+        }
+        .upload-btn {
+            margin-top: 5px;
+            padding: 8px 12px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .alert {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            border-radius: 4px;
+            border-left: 4px solid #4285f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH - Pré-Cadastro</h2></center>
+        <div class="button-container">
+            <button onclick="window.location.href='dashboard.html'" style="display: none;"><i class="fas fa-user-plus"></i> Cadastro</button>            
+            <button onclick="window.location.href='mensalidade.html'" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
+            <button onclick="window.location.href='financeiro8.html'" style="display: none;"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>    
+            <button onclick="window.location.href='lista.html'" style="display: none;"><i class="fas fa-list"></i> Jogos</button>            
+            <button id="logoutBtn" class="logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>  
+    </div>
+   
+    <div class="container">
+        <div class="alert">
+            📢 Pré-cadastro aberto temporariamente. Após preencher seus dados, você será direcionado para criar sua conta.
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-user-edit"></i> Pré-Cadastro de Integrante</h2>
+            
+            <form id="playerForm">
+                <div class="form-group">
+                    <label for="name">Nome Completo:</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" required>
+                    <small>Este será usado para criar sua conta depois</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageFile">Foto (Opcional):</label>
+                    <input type="file" id="imageFile" accept="image/*">
+                    <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
+                </div>
+                
+                <div class="form-group">
+                    <label for="position">Posição Principal:</label>
+                    <select id="position" required>
+                        <option value="">Selecione uma posição</option>
+                        <option value="Levantador">Levantador</option>
+                        <option value="Ponteiro">Ponteiro</option>
+                        <option value="Oposto">Oposto</option>
+                        <option value="Central">Central</option>
+                        <option value="Líbero">Líbero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact">Telefone (com DDD):</label>
+                    <input type="tel" id="contact" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" placeholder="(99) 99999-9999" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Categoria:</label>
+                    <select id="category" required>
+                        <option value="">Selecione uma categoria</option>                        
+                        <option value="MENSAL">MENSAL</option>
+                        <option value="DIARIA">DIARIA</option>
+                    </select>
+                </div>
+                
+                <input type="hidden" id="playerId">
+                
+                <button type="submit" id="saveBtn" style="background-color: #4285f4;"><i class="fas fa-save"></i> Enviar Pré-Cadastro</button>                
+                <button type="button" id="clearBtn" style="display: none; background-color: #ff5722;"><i class="fas fa-soap"></i> Limpar</button>
+                <button type="button" id="deleteBtn" style="display: none; background-color: #f44336;"><i class="fas fa-trash"></i> Excluir</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+      © 2025 SMV Eletrônica- Todos os direitos reservados<br>
+      <div class="footer-links">
+        Powered by:
+        <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
+          <i class="fab fa-github"></i> GitHub
+        </a>
+        <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
+          <i class="fas fa-fire"></i> Firebase
+        </a>        
+        <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
+        <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
+        OneSignal      
+        </a>
+      </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const storage = getStorage(app);
+
+        const playerForm = document.getElementById('playerForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const imageFileInput = document.getElementById('imageFile');
+        const positionInput = document.getElementById('position');
+        const contactInput = document.getElementById('contact');
+        const categoryInput = document.getElementById('category');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // Formatação do telefone
+        contactInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                value = '(' + value;
+            }
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ') ' + value.substring(3);
+            }
+            if (value.length > 10) {
+                value = value.substring(0, 10) + '-' + value.substring(10, 14);
+            }
+            e.target.value = value;
+        });
+
+        // Pré-visualização da imagem
+        imageFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'A imagem deve ter no máximo 5MB.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Por favor, selecione um arquivo de imagem.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        });
+
+        // Envio do formulário
+        playerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const file = imageFileInput.files[0];
+                let imageUrl = null;
+
+                // Upload da imagem (se existir)
+                if (file) {
+                    const storagePath = `players/${Date.now()}_${file.name}`;
+                    const fileRef = storageRef(storage, storagePath);
+                    await uploadBytes(fileRef, file);
+                    imageUrl = await getDownloadURL(fileRef);
+                }
+
+                // Salva os dados do pré-cadastro
+                const playerData = {
+                    name: nameInput.value,
+                    email: emailInput.value.trim(),
+                    imageUrl: imageUrl,
+                    position: positionInput.value,
+                    contact: contactInput.value,
+                    category: categoryInput.value,
+                    pendingAccount: true,
+                    createdAt: new Date().toISOString()
+                };
+
+                const newPlayerRef = push(ref(database, 'players'));
+                await set(newPlayerRef, playerData);
+
+                // Redireciona para a página de criar conta
+                window.location.href = `criar_login.html?email=${encodeURIComponent(playerData.email)}`;
+
+            } catch (error) {
+                console.error("Erro no pré-cadastro:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Falha no pré-cadastro: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+
+        function clearForm() {
+            playerForm.reset();
+            imagePreview.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
