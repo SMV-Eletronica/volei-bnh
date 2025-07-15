@@ -618,10 +618,11 @@ button:hover {
         color: #4285f4;
         margin-bottom: 12px;
         font-size: 1.1rem;
+        text-align: center;
     }
 
  .admin-actions h3 {
-            color: #4285f4;
+           /* color: #4285f4; */
         margin-bottom: 12px;
         font-size: 1.1rem;
         }
@@ -871,7 +872,7 @@ button:hover {
             font-size: 1.5rem;
         }
      .admin-actions h3 {
-                      font-size: 1.5rem;
+                      font-size: 1.3rem;
      }
     
         .player-image {
