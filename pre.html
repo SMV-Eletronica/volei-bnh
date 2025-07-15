@@ -44,13 +44,13 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH - Pré-Cadastro</h2></center>
+    <div class="header"  style="border-radius: 10px; text-align: center; height: 60px; ">
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH</h2></center>
         <div class="button-container">
             <button onclick="window.location.href='dashboard.html'" style="display: none;"><i class="fas fa-user-plus"></i> Cadastro</button>            
             <button onclick="window.location.href='mensalidade.html'" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
             <button onclick="window.location.href='financeiro8.html'" style="display: none;"><i class="fas fa-chart-line"></i> Financeiro</button>
-            <button onclick="window.location.href='criar_login.html'"><i class="fas fa-users"></i> Pular Pré-Cadastro</button>    
+              
             <button onclick="window.location.href='lista.html'" style="display: none;"><i class="fas fa-list"></i> Jogos</button>            
             <button id="logoutBtn" class="logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>  
@@ -58,7 +58,7 @@
    
     <div class="container">
         <div class="alert">
-            📢 Pré-cadastro aberto temporariamente. Após preencher seus dados, você será direcionado para criar sua conta.
+            📢 Pré-cadastro aberto temporariamente. Após preencher seus dados, você será direcionado para criar sua Senha.
         </div>
         
         <div class="section">
@@ -66,19 +66,20 @@
             
             <form id="playerForm">
                 <div class="form-group">
-                    <label for="name">Nome Completo:</label>
+                    <label for="name">Nome e sobrenome:</label>
                     <input type="text" id="name" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">E-mail:</label>
                     <input type="email" id="email" required>
-                    <small>Este será usado para criar sua conta depois</small>
+                    <small>Este será usado para criar sua senha depois</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="imageFile">Foto (Opcional):</label>
-                    <input type="file" id="imageFile" accept="image/*">
+                    <label for="imageFile">Foto:</label>
+                    <!-- <input type="file" id="imageFile" accept="image/*"> -->
+                    <input type="file" id="imageFile" accept="image/*" required>
                     <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
                 </div>
                 
@@ -110,7 +111,7 @@
                 
                 <input type="hidden" id="playerId">
                 
-                <button type="submit" id="saveBtn" style="background-color: #4285f4;"><i class="fas fa-save"></i> Enviar Pré-Cadastro</button>                
+                <button type="submit" id="saveBtn" style="background-color: #4285f4; width: auto;"><i class="fas fa-save"></i> Cadastrar</button>                
                 <button type="button" id="clearBtn" style="display: none; background-color: #ff5722;"><i class="fas fa-soap"></i> Limpar</button>
                 <button type="button" id="deleteBtn" style="display: none; background-color: #f44336;"><i class="fas fa-trash"></i> Excluir</button>
             </form>
