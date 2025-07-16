@@ -1087,9 +1087,9 @@ async function loadCurrentUserPlayer() {
       }
       if (!currentGameId) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Selecione um jogo ativo para adicionar convidados.',
+          icon: 'info',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
         });
         return;
       }
@@ -1535,9 +1535,9 @@ async function loadCurrentUserPlayer() {
     async function confirmPlayer(targetPlayerId = null) {
       if (!currentGameId) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Jogos Programados',
-          text: 'Selecione um jogo ativo para confirmar presença ou aguarde a abertura da Lista.',
+          icon: 'info',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
         });
         return;
       }
@@ -1805,8 +1805,8 @@ async function loadCurrentUserPlayer() {
         updateGameList();      
         
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-        const message = `${player.name} foi removido da lista do jogo ${formattedDate}.`;
-        await sendPushNotification3(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
+        const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
+        await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
         
       } catch (error) {
         console.error('Erro ao remover jogador:', error);
@@ -1893,7 +1893,7 @@ async function loadCurrentUserPlayer() {
 
   if (confirmPlayerBtn) {
     confirmPlayerBtn.innerHTML = isPlayerInList 
-      ? '<i class="fas fa-eye"></i> Entrar em Quadra'
+      ? '<i class="fas fa-eye"></i> Ver Quadra'
       : '<i class="fas fa-sign-in"></i> Entrar em Quadra';
   }
 
@@ -1994,8 +1994,8 @@ async function loadCurrentUserPlayer() {
   if (!currentGameId) {
     Swal.fire({
       icon: 'info',
-      title: 'Nenhum Jogo Selecionado',
-      text: 'Selecione um jogo para visualizar a quadra.',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
     });
     return;
   }
