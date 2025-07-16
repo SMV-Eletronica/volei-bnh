@@ -11,6 +11,19 @@
   
 </head>
 <body>
+<!-- cria o loading-->
+<div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+  <div style="text-align: center; color: white;">
+    <div class="spinner" style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+    <p style="font-size: 18px;">Carregando lista de presença...</p>
+  </div>
+</div>
+<!--termina o código do loading-->
+
+
+
+
+
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -404,6 +417,11 @@
         });
 
         async function loadFinancialData() {
+
+            // Mostra loading
+                 document.getElementById('loading-overlay').style.display = 'flex';
+            // fim da chamada do loading
+
             const currentSelectedYear = yearFilter.value;
             const currentSelectedMonth = monthFilter.value;
             yearFilter.disabled = true;
@@ -519,6 +537,9 @@
                 });
             } finally {
                 yearFilter.disabled = false;
+                // Esconde loading
+                 document.getElementById('loading-overlay').style.display = 'none';
+                 // fim do loading
             }
         }
 
