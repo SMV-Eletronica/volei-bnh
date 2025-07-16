@@ -1735,88 +1735,110 @@ async function loadCurrentUserPlayer() {
     }
 
     async function removePlayer(playerId, fromConfirmed = true) {
-      if (!currentGameId) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Selecione um jogo ativo para remover jogadores.',
-        });
-        return;
+  if (!currentGameId) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Selecione um jogo ativo para remover jogadores.',
+    });
+    return;
+  }
+
+  const player = fromConfirmed
+    ? confirmedPlayers.find(p => p.id === playerId)
+    : waitlistPlayers.find(p => p.id === playerId);
+
+  if (!player) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Jogador Não Encontrado',
+      text: 'Jogador ou convidado não encontrado.',
+    });
+    return;
+  }
+
+  if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Permissão Negada',
+      text: 'Você só pode remover sua própria presença ou seus convidados.',
+    });
+    return;
+  }
+
+  // Adicionar popup de confirmação
+  const result = await Swal.fire({
+    icon: 'question',
+    title: 'Confirmar Remoção',
+    text: `Você tem certeza que deseja remover ${player.name} da lista?`,
+    showCancelButton: true,
+    confirmButtonText: 'Sim, remover',
+    cancelButtonText: 'Cancelar',
+  });
+
+  if (!result.isConfirmed) {
+    return; // Cancela a remoção se o usuário não confirmar
+  }
+
+  try {
+    if (fromConfirmed) {
+      confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
+      await adjustConfirmedPlayers();
+    } else {
+      waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
+    }
+
+    if (player.category === 'CONVIDADO') {
+      const existingPayment = await findExistingPayment(
+        player.invitedById || window.currentUserPlayer.id,
+        currentGameId,
+        'CONVIDADO',
+        player.name
+      );
+      if (existingPayment) {
+        const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+        await remove(paymentRef);
       }
-
-      const player = fromConfirmed
-        ? confirmedPlayers.find(p => p.id === playerId)
-        : waitlistPlayers.find(p => p.id === playerId);
-
-      if (!player) {
-        await Swal.fire({
-          icon: 'warning',
-          title: 'Jogador Não Encontrado',
-          text: 'Jogador ou convidado não encontrado.',
-        });
-        return;
-      }
-
-      if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Permissão Negada',
-          text: 'Você só pode remover sua própria presença ou seus convidados.',
-        });
-        return;
-      }
-
-      try {
-        if (fromConfirmed) {
-          confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
-          await adjustConfirmedPlayers();
-        } else {
-          waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
-        }
-
-        if (player.category === 'CONVIDADO') {
-          const existingPayment = await findExistingPayment(
-            player.invitedById || window.currentUserPlayer.id,
-            currentGameId,
-            'CONVIDADO',
-            player.name
-          );
-          if (existingPayment) {
-            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-            await remove(paymentRef);
-          }
-        } else if (player.category === 'DIARIA') {
-          const existingPayment = await findExistingPayment(
-            playerId,
-            currentGameId,
-            'DIARIA',
-            player.name
-          );
-          if (existingPayment) {
-            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-            await remove(paymentRef);
-          }
-        }
-
-        confirmedPlayers = sortPlayers(confirmedPlayers);
-        waitlistPlayers = sortPlayers(waitlistPlayers);
-
-        await updateFirebaseLists();
-        updateGameList();      
-        
-        const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-        const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
-        await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
-        
-      } catch (error) {
-        console.error('Erro ao remover jogador:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao remover presença.',
-        });
+    } else if (player.category === 'DIARIA') {
+      const existingPayment = await findExistingPayment(
+        playerId,
+        currentGameId,
+        'DIARIA',
+        player.name
+      );
+      if (existingPayment) {
+        const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+        await remove(paymentRef);
       }
     }
+
+    confirmedPlayers = sortPlayers(confirmedPlayers);
+    waitlistPlayers = sortPlayers(waitlistPlayers);
+
+    await updateFirebaseLists();
+    updateGameList();      
+
+    const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+    const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
+    
+    // Exibir mensagem de sucesso após a remoção
+    await Swal.fire({
+      icon: 'success',
+      title: 'Sucesso',
+      text: `${player.name} foi removido da lista com sucesso.`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (error) {
+    console.error('Erro ao remover jogador:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro ao remover presença.',
+    });
+  }
+}
 
 
      async function updateFirebaseLists() {
