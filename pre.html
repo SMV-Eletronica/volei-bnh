@@ -214,50 +214,82 @@
             }
         });
 
-        // Envio do formulário
-        playerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            try {
-                const file = imageFileInput.files[0];
-                let imageUrl = null;
+       // Envio do formulário
+playerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-                // Upload da imagem (se existir)
-                if (file) {
-                    const storagePath = `players/${Date.now()}_${file.name}`;
-                    const fileRef = storageRef(storage, storagePath);
-                    await uploadBytes(fileRef, file);
-                    imageUrl = await getDownloadURL(fileRef);
-                }
+    // Desativar o botão e exibir loading
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
 
-                // Salva os dados do pré-cadastro
-                const playerData = {
-                    name: nameInput.value,
-                    email: emailInput.value.trim(),
-                    imageUrl: imageUrl,
-                    position: positionInput.value,
-                    contact: contactInput.value,
-                    category: categoryInput.value,
-                    pendingAccount: true,
-                    createdAt: new Date().toISOString()
-                };
+    // Exibir SweetAlert2 com loading
+    Swal.fire({
+        title: 'Aguarde...',
+        text: 'Realizando o pré-cadastro...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
-                const newPlayerRef = push(ref(database, 'players'));
-                await set(newPlayerRef, playerData);
+    try {
+        const file = imageFileInput.files[0];
+        let imageUrl = null;
 
-                // Redireciona para a página de criar conta
-                window.location.href = `criar_login.html?email=${encodeURIComponent(playerData.email)}`;
+        // Upload da imagem (se existir)
+        if (file) {
+            const storagePath = `players/${Date.now()}_${file.name}`;
+            const fileRef = storageRef(storage, storagePath);
+            await uploadBytes(fileRef, file);
+            imageUrl = await getDownloadURL(fileRef);
+        }
 
-            } catch (error) {
-                console.error("Erro no pré-cadastro:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Falha no pré-cadastro: ' + error.message,
-                    confirmButtonText: 'OK'
-                });
-            }
+        // Salva os dados do pré-cadastro
+        const playerData = {
+            name: nameInput.value,
+            email: emailInput.value.trim(),
+            imageUrl: imageUrl,
+            position: positionInput.value,
+            contact: contactInput.value,
+            category: categoryInput.value,
+            pendingAccount: true,
+            createdAt: new Date().toISOString()
+        };
+
+        const newPlayerRef = push(ref(database, 'players'));
+        await set(newPlayerRef, playerData);
+
+        // Fechar o loading e exibir mensagem de sucesso
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Pré-cadastro realizado com sucesso! Redirecionando para criar senha...',
+            timer: 1500,
+            showConfirmButton: false
         });
+
+        // Redireciona para a página de criar conta
+        setTimeout(() => {
+            window.location.href = `criar_login.html?email=${encodeURIComponent(playerData.email)}`;
+        }, 1500);
+
+    } catch (error) {
+        console.error("Erro no pré-cadastro:", error);
+        // Fechar o loading e exibir mensagem de erro
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Falha no pré-cadastro: ' + error.message,
+            confirmButtonText: 'OK'
+        });
+    } finally {
+        // Reativar o botão independentemente do resultado
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
+    }
+});
 
         function clearForm() {
             playerForm.reset();
