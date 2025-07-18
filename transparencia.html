@@ -7,8 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="transparencia.css?v=1.9">
-  
+    <link rel="stylesheet" href="transparencia.css?v=1.5">
 </head>
 <body>
 <!-- cria o loading  -->
@@ -19,10 +18,6 @@
   </div>
 </div>
 <!--termina o código do loading-->
-
-
-
-
 
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
@@ -44,7 +39,6 @@
             <button id="transparenciaBtn" class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
             <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
             <button id="listaBtn" class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
-            
         </div>
         <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
     </div>
@@ -55,7 +49,7 @@
         <div class="tabs">
             <div class="tab active" data-tab="report"><i class="fas fa-file-alt"></i> Caixa</div>
             <div class="tab" data-tab="expenses"><i class="fas fa-receipt"></i> Despesas</div>
-            <div class="tab" data-tab="profile"><i class="fas fa-users"></i> Integrantes</div>
+            <div class="tab" data-tab="profile"><i class="fas fa-users"></i> Contribuições</div>
         </div>
         
         <div id="report" class="tab-content active">
@@ -108,9 +102,8 @@
                         </div>
                     </div>
                 </div>
-               <!-- <div id="financialSummary" style="overflow-x: auto;">-->
-                    <div id="financialSummary">
-                    <table >
+                <div id="financialSummary">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Mês/Ano</th>
@@ -120,10 +113,8 @@
                                 <th>Saldo (R$)</th>
                             </tr>
                         </thead>
-                        
                         <tbody id="financialData">
                         </tbody>
-                       
                     </table>
                 </div>
                 <br>
@@ -223,13 +214,12 @@
             </div>
         </footer>
     
-    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
@@ -417,9 +407,8 @@
         });
 
         async function loadFinancialData() {
-
             // Mostra loading
-                 document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-overlay').style.display = 'flex';
             // fim da chamada do loading
 
             const currentSelectedYear = yearFilter.value;
@@ -538,64 +527,64 @@
             } finally {
                 yearFilter.disabled = false;
                 // Esconde loading
-                 document.getElementById('loading-overlay').style.display = 'none';
-                 // fim do loading
+                document.getElementById('loading-overlay').style.display = 'none';
+                // fim do loading
             }
         }
 
         function renderFinancialData(monthlyData) {
-    financialData.innerHTML = '';
-    
-    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
-        const [yearA, monthA] = a.split('-');
-        const [yearB, monthB] = b.split('-');
-        return yearB - yearA || monthB - monthA;
-    });
-    
-    let totalIncome = 0;
-    let totalReceivables = 0;
-    let totalExpenses = 0;
-    let totalBalance = 0;
-    
-    sortedMonths.forEach(monthKey => {
-        const data = monthlyData[monthKey];
-        const row = document.createElement('tr');
-        
-        const balance = data.income - data.expenses;
-        
-        totalIncome += data.income;
-        totalReceivables += data.receivables;
-        totalExpenses += data.expenses;
-        totalBalance += balance;
-        
-        row.innerHTML = `
-            <td>${data.monthName}/${data.year}</td>
-            <td>R$ ${data.income.toFixed(2)}</td>
-            <td>R$ ${data.receivables.toFixed(2)}</td>
-            <td>R$ ${data.expenses.toFixed(2)}</td>
-            <td class="${balance >= 0 ? 'positive' : 'negative'}">
-                ${balance < 0 ? '-' : ''}R$ ${Math.abs(balance).toFixed(2)}
-            </td>
-        `;
-        
-        financialData.appendChild(row);
-    });
-    
-    // Add totals row
-    const totalsRow = document.createElement('tr');
-    totalsRow.className = 'totals-row';
-    totalsRow.innerHTML = `
-        <td><strong>TOTAIS</strong></td>
-        <td><strong>R$ ${totalIncome.toFixed(2)}</strong></td>
-        <td><strong>R$ ${totalReceivables.toFixed(2)}</strong></td>
-        <td><strong>R$ ${totalExpenses.toFixed(2)}</strong></td>
-        <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
-            <strong>${totalBalance < 0 ? '-' : ''}R$ ${Math.abs(totalBalance).toFixed(2)}</strong>
-        </td>
-    `;
-    
-    financialData.appendChild(totalsRow);
-}
+            financialData.innerHTML = '';
+            
+            const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+                const [yearA, monthA] = a.split('-');
+                const [yearB, monthB] = b.split('-');
+                return yearB - yearA || monthB - monthA;
+            });
+            
+            let totalIncome = 0;
+            let totalReceivables = 0;
+            let totalExpenses = 0;
+            let totalBalance = 0;
+            
+            sortedMonths.forEach(monthKey => {
+                const data = monthlyData[monthKey];
+                const row = document.createElement('tr');
+                
+                const balance = data.income - data.expenses;
+                
+                totalIncome += data.income;
+                totalReceivables += data.receivables;
+                totalExpenses += data.expenses;
+                totalBalance += balance;
+                
+                row.innerHTML = `
+                    <td>${data.monthName}/${data.year}</td>
+                    <td>R$ ${data.income.toFixed(2)}</td>
+                    <td>R$ ${data.receivables.toFixed(2)}</td>
+                    <td>R$ ${data.expenses.toFixed(2)}</td>
+                    <td class="${balance >= 0 ? 'positive' : 'negative'}">
+                        ${balance < 0 ? '-' : ''}R$ ${Math.abs(balance).toFixed(2)}
+                    </td>
+                `;
+                
+                financialData.appendChild(row);
+            });
+            
+            // Add totals row
+            const totalsRow = document.createElement('tr');
+            totalsRow.className = 'totals-row';
+            totalsRow.innerHTML = `
+                <td><strong>TOTAIS</strong></td>
+                <td><strong>R$ ${totalIncome.toFixed(2)}</strong></td>
+                <td><strong>R$ ${totalReceivables.toFixed(2)}</strong></td>
+                <td><strong>R$ ${totalExpenses.toFixed(2)}</strong></td>
+                <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
+                    <strong>${totalBalance < 0 ? '-' : ''}R$ ${Math.abs(totalBalance).toFixed(2)}</strong>
+                </td>
+            `;
+            
+            financialData.appendChild(totalsRow);
+        }
 
         function updateYearFilterOptions(years) {
             const currentSelectedYear = yearFilter.value;
@@ -722,81 +711,259 @@
             });
         }
 
-        async function showDefaulterDetails(playerId, playerName) {
-            const paymentsRef = ref(database, 'payments');
-            try {
-                const snapshot = await get(paymentsRef);
-                const paymentsData = snapshot.val() || {};
-                const defaulterPayments = [];
-                for (const year in paymentsData) {
-                    for (const month in paymentsData[year]) {
-                        const payments = paymentsData[year][month];
-                        for (const paymentId in payments) {
-                            const payment = payments[paymentId];
-                            if (payment.playerId === playerId && !payment.date && payment.value > 0) {
-                                defaulterPayments.push({ id: paymentId, ...payment });
-                            }
-                        }
+
+
+
+
+
+
+
+async function showDefaulterDetails(playerId, playerName) {
+    const paymentsRef = ref(database, 'payments');
+    try {
+        const snapshot = await get(paymentsRef);
+        const paymentsData = snapshot.val() || {};
+        const defaulterPayments = [];
+        
+        // 1. Coletar todas as pendências do jogador
+        for (const year in paymentsData) {
+            for (const month in paymentsData[year]) {
+                const monthPayments = paymentsData[year][month];
+                for (const paymentId in monthPayments) {
+                    const payment = monthPayments[paymentId];
+                    if (payment.playerId === playerId && !payment.date && payment.value > 0) {
+                        // Extrai mês e ano corretamente do campo payment.month
+                        const [paymentYear, paymentMonth] = payment.month.includes('-') 
+                            ? payment.month.split('-') 
+                            : [year, month.padStart(2, '0')];
+                            
+                        defaulterPayments.push({ 
+                            paymentId,
+                            year: paymentYear,
+                            month: paymentMonth,
+                            playerId: payment.playerId,
+                            value: payment.value,
+                            comprovanteURL: payment.comprovanteURL,
+                            comprovanteStatus: payment.comprovanteStatus,
+                            comprovanteUploadedAt: payment.comprovanteUploadedAt,
+                            additionalInfo: payment.additionalInfo || null,
+                            paymentType: payment.paymentType || null
+                        });
                     }
                 }
-                
-                let detailsHtml = `<h3 style="margin-top: 0;">Pendências - ${playerName}</h3>`;
-                if (defaulterPayments.length === 0) {
-                    detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
-                } else {
-                    detailsHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mês/Ano</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Valor (R$)</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Descrição</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Comprovante</th></tr></thead><tbody>';
-                    defaulterPayments.forEach(payment => {
-                        const monthYear = payment.month && payment.month.includes('-') ? payment.month.split('-') : [null, null];
-                        const [year, month] = monthYear;
-                        const formattedMonth = month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência';
-                        const paymentType = payment.paymentType || 'Não informado';
-                        const guestName = payment.additionalInfo || '-';
-                        const comprovanteStatus = payment.comprovanteStatus ? 
-                            (payment.comprovanteStatus === 'pendente' ? 'Pendente' : 
-                             payment.comprovanteStatus === 'aprovado' ? 'Aprovado' : 
-                             `Rejeitado (${payment.comprovanteRejectReason || '-'})`) : 
-                            'Nenhum comprovante';
-                        const comprovanteLink = payment.comprovanteURL ? 
-                            `<a href="${payment.comprovanteURL}" target="_blank">Ver Comprovante</a>` : 
-                            '-';
-                        detailsHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${formattedMonth}</td><td style="border: 1px solid #ddd; padding: 8px;">R$ ${parseFloat(payment.value).toFixed(2)}</td><td style="border: 1px solid #ddd; padding: 8px;">${guestName}</td><td style="border: 1px solid #ddd; padding: 8px;">${comprovanteLink} (${comprovanteStatus})</td></tr>`;
-                    });
-                    detailsHtml += '</tbody></table>';
-                }
-                
-                Swal.fire({
-                    title: '',
-                    html: detailsHtml,
-                    icon: defaulterPayments.length > 0 ? 'warning' : 'info',
-                    confirmButtonText: 'Fechar',
-                    customClass: {
-                        popup: 'swal-wide',
-                        htmlContainer: 'swal-content'
-                    },
-                    width: '90%',
-                    showCloseButton: true,
-                    allowOutsideClick: true,
-                    allowEscapeKey: true
-                });
-                
-            } catch (error) {
-                console.error("Error loading defaulter details:", error);
-                Swal.fire({
-                    title: 'Erro',
-                    html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
-                    icon: 'error',
-                    confirmButtonText: 'Fechar',
-                    customClass: {
-                        popup: 'swal-wide',
-                        htmlContainer: 'swal-content'
-                    },
-                    width: '90%',
-                    showCloseButton: true,
-                    allowOutsideClick: true,
-                    allowEscapeKey: true
-                });
             }
         }
+
+        // 2. Verificar permissões
+        const isCurrentUser = currentUserPlayer?.id === playerId;
+        const showUploadButtons = isAdmin || isCurrentUser;
+
+        // 3. Gerar HTML do popup
+        let detailsHtml = `<h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">Pendências - ${playerName}</h3>`;
+        
+        if (defaulterPayments.length === 0) {
+            detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
+        } else {
+            detailsHtml += `
+                <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Mês/Ano</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Valor (R$)</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Descrição</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Recibo</th>
+                            ${showUploadButtons ? '<th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ações</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            defaulterPayments.forEach(payment => {
+                const monthName = getMonthName(payment.month);
+                const formattedDate = `${monthName}/${payment.year}`;
+                const description = payment.additionalInfo || payment.paymentType || '-';
+                
+                // Status do comprovante com emojis
+                const comprovanteStatus = payment.comprovanteStatus 
+                    ? (payment.comprovanteStatus === 'pendente' 
+                        ? '🕒' 
+                        : payment.comprovanteStatus === 'aprovado' 
+                            ? '👍' 
+                            : `👎 (${payment.comprovanteRejectReason || 'Rejeitado'})`) 
+                    : '👎';
+                
+                // Link para ver comprovante
+                const comprovanteLink = payment.comprovanteURL 
+                    ? `<a href="${payment.comprovanteURL}" style="text-decoration: none;" target="_blank">Ver</a>` 
+                    : '';
+                
+                // Botão para enviar comprovante
+                const uploadButton = showUploadButtons ? `
+                    <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">
+                        <input type="file" id="comprovante-${payment.paymentId}" 
+                               style="display: none;" 
+                               accept="image/*,.pdf">
+                        <button onclick="document.getElementById('comprovante-${payment.paymentId}').click()"
+                                style="padding: 4px 8px; background: #4CAF50; color: white; 
+                                       border: none; border-radius: 4px; cursor: pointer;
+                                       font-size: 12px;">
+                            <i class="fas fa-upload"></i> Enviar
+                        </button>
+                        <span id="upload-status-${payment.paymentId}" style="margin-left: 4px; font-size: 10px;"></span>
+                    </td>
+                ` : '';
+                
+                // Adiciona linha na tabela com um identificador único
+                detailsHtml += `
+                    <tr id="payment-row-${payment.paymentId}">
+                        <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">${formattedDate}</td>
+                        <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">R$ ${payment.value.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">${description}</td>
+                        <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 2px; text-align: center;">
+                            ${comprovanteLink} ${comprovanteStatus}
+                        </td>
+                        ${uploadButton}
+                    </tr>
+                `;
+            });
+            
+            detailsHtml += `
+                    </tbody>
+                </table>
+                <div style="text-align: left; margin-top: 10px;">
+                    <p style="font-size: 12px;">
+                        <strong>Legenda:</strong><br>
+                        🕒 Enviado e aguardando aprovação<br>
+                        👍 Comprovante aprovado<br>
+                        👎 Comprovante rejeitado ou pendente
+                    </p>
+                </div>
+            `;
+        }
+        
+        // 4. Exibir popup
+        await Swal.fire({
+            title: '',
+            html: detailsHtml,
+            icon: defaulterPayments.length > 0 ? 'warning' : 'info',
+            confirmButtonText: 'Fechar',
+            customClass: {
+                popup: 'swal-wide',
+                htmlContainer: 'swal-content'
+            },
+            width: '90%',
+            showCloseButton: true,
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            didOpen: () => {
+                // Configurar listeners para upload
+                defaulterPayments.forEach(payment => {
+                    const input = document.getElementById(`comprovante-${payment.paymentId}`);
+                    if (input) {
+                        input.addEventListener('change', async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+
+                            const statusElement = document.getElementById(`upload-status-${payment.paymentId}`);
+                            statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                            statusElement.style.color = '#333';
+
+                            try {
+                                // Validações
+                                if (file.size > 5 * 1024 * 1024) throw new Error("Máximo 5MB");
+                                if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
+                                    throw new Error("Apenas imagens/PDF");
+                                }
+
+                                // 1. Primeiro deleta o comprovante antigo se existir
+                                if (payment.comprovanteURL) {
+                                    try {
+                                        // Extrai o caminho do Storage da URL
+                                        const urlParts = payment.comprovanteURL.split('/comprovantes%2F');
+                                        if (urlParts.length > 1) {
+                                            const oldFilePath = decodeURIComponent(urlParts[1].split('?')[0]).replace(/%2F/g, '/');
+                                            const oldFileRef = storageRef(storage, `comprovantes/${oldFilePath}`);
+                                            await deleteObject(oldFileRef);
+                                            console.log('Comprovante anterior deletado com sucesso');
+                                        }
+                                    } catch (deleteError) {
+                                        console.warn('Não foi possível deletar o comprovante anterior:', deleteError);
+                                        // Não interrompe o processo se falhar ao deletar
+                                    }
+                                }
+
+                                // 2. Faz upload do novo comprovante
+                                const storagePath = `comprovantes/${playerId}/${payment.year}/${payment.month}/${payment.paymentId}_${Date.now()}_${file.name}`;
+                                const fileRef = storageRef(storage, storagePath);
+                                await uploadBytes(fileRef, file);
+                                const downloadURL = await getDownloadURL(fileRef);
+
+                                // 3. Atualiza no Realtime Database
+                                await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
+                                    comprovanteURL: downloadURL,
+                                    comprovanteStatus: 'pendente',
+                                    comprovanteUploadedAt: new Date().toISOString()
+                                });
+
+                                // 4. Atualiza a linha da tabela no popup
+                                const comprovanteCell = document.getElementById(`comprovante-cell-${payment.paymentId}`);
+                                if (comprovanteCell) {
+                                    comprovanteCell.innerHTML = `
+                                        <a href="${downloadURL}" style="text-decoration: none;" target="_blank">Ver</a> 🕒
+                                    `;
+                                }
+
+                                statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
+                                await Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sucesso',
+                                    text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+
+                                await loadDefaulters();
+                            } catch (error) {
+                                statusElement.innerHTML = `<i class="fas fa-times" style="color:red"></i> ${error.message}`;
+                                await Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: 'Erro ao enviar comprovante: ' + error.message,
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error loading defaulter details:", error);
+        Swal.fire({
+            title: 'Erro',
+            html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
+            icon: 'error',
+            confirmButtonText: 'Fechar',
+            customClass: {
+                popup: 'swal-wide',
+                htmlContainer: 'swal-content'
+            },
+            width: '90%',
+            showCloseButton: true,
+            allowOutsideClick: true,
+            allowEscapeKey: true
+        });
+    }
+}
+
+
+
+
+
+
+
+
+
 
         async function loadRecentExpenses() {
             const expensesRef = ref(database, 'expenses');
@@ -1187,7 +1354,7 @@
         function renderPayments(payments) {
             paymentsList.innerHTML = '';
             if (payments.length === 0) {
-                paymentsList.innerHTML = "<div>Nenhum pagamento registrado</div>";
+                paymentsList.innerHTML = "<div>Nenhuma Contribuição registrada</div>";
                 return;
             }
             for (const payment of payments) {
@@ -1292,11 +1459,11 @@
         });
 
         uploadComprovanteBtn.addEventListener('click', uploadComprovante);
-        /* os numeros abaixo podem ser alterados para os respectivos meses*/
+
         function getMonthName(monthNumber) {
             const months = [
-                '01', '02', '03', '04', '05', '06',
-                '07', '08', '09', '10', '11', '12'
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
             ];
             return months[parseInt(monthNumber) - 1] || 'Desconhecido';
         }
