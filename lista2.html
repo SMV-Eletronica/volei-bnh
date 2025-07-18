@@ -75,7 +75,7 @@
     <div id="game-list" class="tab-content active">
       <div id="content" class="section">
         <div class="section-title">
-          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados </h2>
+          <h3><i class="fas fa-volleyball-ball"></i> Jogos Programados </h3>
           <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Abrir Lista / Configurar</button>
         </div>
         <div class="game-selector">
@@ -105,7 +105,7 @@
             <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
           <div class="guest-controls" id="guestControls" style="display: none;">
-             <input type="text" id="guestNameInput" placeholder="Nome do Convidado">
+             <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
              <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
           </div>
 
@@ -114,6 +114,10 @@
               <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
               <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
           </div>
+
+           <div class="admin-controls" id="adminNotificationControls" style="display: block;">
+      <label><input type="checkbox" id="disablePushNotifications"> Desativar Notificações Push</label>
+    </div>
 
           <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Lista</button>
          
@@ -186,8 +190,7 @@
     };
 
     const contentDiv = document.getElementById('content');
-    const confirmPlayerBtn = document.getElementById('confirmPlayer');
-    
+    const confirmPlayerBtn = document.getElementById('confirmPlayer');    
     const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
     const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
     const adminSearchContainer = document.getElementById('adminSearchContainer');
@@ -205,6 +208,9 @@
     const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
+
+        const adminNotificationControls = document.getElementById('adminNotificationControls');
+    const disablePushNotificationsCheckbox = document.getElementById('disablePushNotifications');
 
     let playerLimit = 16;
     let confirmedPlayers = [];
@@ -238,7 +244,7 @@
       'DIARIA': 2,
       'CONVIDADO': 1
     };
-    const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante.jpg?alt=media&token=bfd55152-1181-4f83-b027-12c1deb82429';
+    const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
 
     function formatDateToISO(date) {
       return DateTime.fromJSDate(date, { zone: 'America/Sao_Paulo' }).toISODate();
@@ -293,9 +299,11 @@
       
       if (isAdmin) {
         loginBtn.style.display = 'inline-block';
+        adminNotificationControls.style.display = 'block';
       } else {
         transparenciaBtn.style.display = 'inline-block';
         loginBtn.style.display = 'none';
+        adminNotificationControls.style.display = 'none';
       }
     }
 
@@ -1087,9 +1095,9 @@ async function loadCurrentUserPlayer() {
       }
       if (!currentGameId) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Selecione um jogo ativo para adicionar convidados.',
+          icon: 'info',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
         });
         return;
       }
@@ -1535,9 +1543,9 @@ async function loadCurrentUserPlayer() {
     async function confirmPlayer(targetPlayerId = null) {
       if (!currentGameId) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Jogos Programados',
-          text: 'Selecione um jogo ativo para confirmar presença ou aguarde a abertura da Lista.',
+          icon: 'info',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
         });
         return;
       }
@@ -1735,88 +1743,110 @@ async function loadCurrentUserPlayer() {
     }
 
     async function removePlayer(playerId, fromConfirmed = true) {
-      if (!currentGameId) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Selecione um jogo ativo para remover jogadores.',
-        });
-        return;
+  if (!currentGameId) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Selecione um jogo ativo para remover jogadores.',
+    });
+    return;
+  }
+
+  const player = fromConfirmed
+    ? confirmedPlayers.find(p => p.id === playerId)
+    : waitlistPlayers.find(p => p.id === playerId);
+
+  if (!player) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Jogador Não Encontrado',
+      text: 'Jogador ou convidado não encontrado.',
+    });
+    return;
+  }
+
+  if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Permissão Negada',
+      text: 'Você só pode remover sua própria presença ou seus convidados.',
+    });
+    return;
+  }
+
+  // Adicionar popup de confirmação
+  const result = await Swal.fire({
+    icon: 'question',
+    title: 'Confirmar Remoção',
+    text: `Você tem certeza que deseja remover ${player.name} da lista?`,
+    showCancelButton: true,
+    confirmButtonText: 'Sim, remover',
+    cancelButtonText: 'Cancelar',
+  });
+
+  if (!result.isConfirmed) {
+    return; // Cancela a remoção se o usuário não confirmar
+  }
+
+  try {
+    if (fromConfirmed) {
+      confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
+      await adjustConfirmedPlayers();
+    } else {
+      waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
+    }
+
+    if (player.category === 'CONVIDADO') {
+      const existingPayment = await findExistingPayment(
+        player.invitedById || window.currentUserPlayer.id,
+        currentGameId,
+        'CONVIDADO',
+        player.name
+      );
+      if (existingPayment) {
+        const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+        await remove(paymentRef);
       }
-
-      const player = fromConfirmed
-        ? confirmedPlayers.find(p => p.id === playerId)
-        : waitlistPlayers.find(p => p.id === playerId);
-
-      if (!player) {
-        await Swal.fire({
-          icon: 'warning',
-          title: 'Jogador Não Encontrado',
-          text: 'Jogador ou convidado não encontrado.',
-        });
-        return;
-      }
-
-      if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Permissão Negada',
-          text: 'Você só pode remover sua própria presença ou seus convidados.',
-        });
-        return;
-      }
-
-      try {
-        if (fromConfirmed) {
-          confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
-          await adjustConfirmedPlayers();
-        } else {
-          waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
-        }
-
-        if (player.category === 'CONVIDADO') {
-          const existingPayment = await findExistingPayment(
-            player.invitedById || window.currentUserPlayer.id,
-            currentGameId,
-            'CONVIDADO',
-            player.name
-          );
-          if (existingPayment) {
-            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-            await remove(paymentRef);
-          }
-        } else if (player.category === 'DIARIA') {
-          const existingPayment = await findExistingPayment(
-            playerId,
-            currentGameId,
-            'DIARIA',
-            player.name
-          );
-          if (existingPayment) {
-            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-            await remove(paymentRef);
-          }
-        }
-
-        confirmedPlayers = sortPlayers(confirmedPlayers);
-        waitlistPlayers = sortPlayers(waitlistPlayers);
-
-        await updateFirebaseLists();
-        updateGameList();      
-        
-        const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-        const message = `${player.name} foi removido da lista do jogo ${formattedDate}.`;
-        await sendPushNotification3(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
-        
-      } catch (error) {
-        console.error('Erro ao remover jogador:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao remover presença.',
-        });
+    } else if (player.category === 'DIARIA') {
+      const existingPayment = await findExistingPayment(
+        playerId,
+        currentGameId,
+        'DIARIA',
+        player.name
+      );
+      if (existingPayment) {
+        const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+        await remove(paymentRef);
       }
     }
+
+    confirmedPlayers = sortPlayers(confirmedPlayers);
+    waitlistPlayers = sortPlayers(waitlistPlayers);
+
+    await updateFirebaseLists();
+    updateGameList();      
+
+    const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+    const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
+    
+    // Exibir mensagem de sucesso após a remoção
+    await Swal.fire({
+      icon: 'success',
+      title: 'Sucesso',
+      text: `${player.name} foi removido da lista com sucesso.`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (error) {
+    console.error('Erro ao remover jogador:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro ao remover presença.',
+    });
+  }
+}
 
 
      async function updateFirebaseLists() {
@@ -1994,8 +2024,8 @@ async function loadCurrentUserPlayer() {
   if (!currentGameId) {
     Swal.fire({
       icon: 'info',
-      title: 'Nenhum Jogo Selecionado',
-      text: 'Selecione um jogo para visualizar a quadra.',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
     });
     return;
   }
@@ -2191,6 +2221,12 @@ async function loadCurrentUserPlayer() {
 
 
 async function sendPushNotification(message, imageUrl = null, playerId = null) {
+
+  if (disablePushNotificationsCheckbox.checked) {
+        console.log('Notificações push desativadas pelo administrador.');
+        return;
+      }
+      
   try {
     const now = Date.now(); // usado para gerar um ID único
     const uniqueId = `push_${playerId || 'anon'}_${now}`;
