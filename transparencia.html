@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="transparencia.css?v=1.6">
+    <link rel="stylesheet" href="transparencia.css?v=1.7">
 </head>
 <body>
 <!-- cria o loading  -->
@@ -768,10 +768,10 @@ async function showDefaulterDetails(playerId, playerName) {
                 <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Mês/Ano</th>
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Valor (R$)</th>
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Descrição</th>
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Recibo</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ref.</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">(R$)</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Descr.</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Comprov.</th>
                             ${showUploadButtons ? '<th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ações</th>' : ''}
                         </tr>
                     </thead>
@@ -786,7 +786,7 @@ async function showDefaulterDetails(playerId, playerName) {
                 // Status do comprovante com emojis
                 const comprovanteStatus = payment.comprovanteStatus 
                     ? (payment.comprovanteStatus === 'pendente' 
-                        ? '🕒' 
+                        ? '' 
                         : payment.comprovanteStatus === 'aprovado' 
                             ? '👍' 
                             : `👎 (${payment.comprovanteRejectReason || 'Rejeitado'})`) 
@@ -794,7 +794,7 @@ async function showDefaulterDetails(playerId, playerName) {
                 
                 // Link para ver comprovante
                 const comprovanteLink = payment.comprovanteURL 
-                    ? `<a href="${payment.comprovanteURL}" style="text-decoration: none;" target="_blank">Ver</a>` 
+                    ? `<a href="${payment.comprovanteURL}" style="text-decoration: none;" target="_blank">🕒 Ver</a>` 
                     : '';
                 
                 // Botão para enviar comprovante
@@ -816,10 +816,10 @@ async function showDefaulterDetails(playerId, playerName) {
                 // Adiciona linha na tabela com um identificador único
                 detailsHtml += `
                     <tr id="payment-row-${payment.paymentId}">
-                        <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">${formattedDate}</td>
-                        <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">R$ ${payment.value.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">${description}</td>
-                        <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 2px; text-align: center;">
+                        <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">${formattedDate}</td>
+                        <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">R$ ${payment.value.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">${description}</td>
+                        <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">
                             ${comprovanteLink} ${comprovanteStatus}
                         </td>
                         ${uploadButton}
@@ -831,11 +831,10 @@ async function showDefaulterDetails(playerId, playerName) {
                     </tbody>
                 </table>
                 <div style="text-align: left; margin-top: 10px;">
-                    <p style="font-size: 12px;">
-                        <strong>Legenda:</strong><br>
-                        🕒 Enviado e aguardando aprovação<br>
-                        👍 Comprovante aprovado<br>
-                        👎 Comprovante rejeitado ou pendente
+                    <p style="font-size: 14px;">
+                        <strong>Legenda:</strong><br><br>
+                        🕒 Enviado e aguardando aprovação.<br>                        
+                        👎 Comprovante pendente.
                     </p>
                 </div>
             `;
@@ -1462,8 +1461,8 @@ async function showDefaulterDetails(playerId, playerName) {
 
         function getMonthName(monthNumber) {
             const months = [
-                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                '01', '02', '03', '04', '05', '06',
+                '07', '08', '09', '10', '11', '12'
             ];
             return months[parseInt(monthNumber) - 1] || 'Desconhecido';
         }
