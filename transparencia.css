@@ -396,6 +396,7 @@ body {
     gap: 20px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    flex-direction: row;
 }
 
 .filter-controls div {
@@ -886,7 +887,7 @@ table tr:hover {
 
  
     .filter-controls {
-        flex-direction: column;
+        flex-direction: row;
         gap: 10px;
     }
     
