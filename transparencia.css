@@ -813,7 +813,7 @@ table tr:hover {
 .swal2-popup {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border-radius: 8px;
-    padding: 20px;
+    padding: 2px;
     width: 90%;
     max-width: 500px;
 }
@@ -841,7 +841,7 @@ table tr:hover {
 }
 
 .swal-wide {
-    width: 90% !important;
+    width: 99% !important;
     max-width: 600px !important;
 }
 
