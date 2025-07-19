@@ -41,7 +41,7 @@ OneSignalDeferred.push(async function(OneSignal) {
  * @param {array} segments - Segmentos de usuários (padrão: ["Admins"])
  * @returns {Promise<object>} Resposta da API
  */
-async function sendPushNotification(title, message, imageUrl = null, data = null, segments = ["Admins"]) {
+async function sendPushNotification(title, message, imageUrl = null, data = null, segments = ["Administradores"]) {
   try {
     const payload = {
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
@@ -118,7 +118,7 @@ async function sendReceiptNotification(playerName, monthYear, value, playerId, p
     actionUrl: `https://smv-eletronica.github.io/volei-bnh/transparencia.html?playerId=${playerId}`
   };
 
-  return sendPushNotification(title, message, null, customData, ["Admins"]);
+  return sendPushNotification(title, message, null, customData, ["Administradores"]);
 }
 
 export { sendPushNotification, sendReceiptNotification };
