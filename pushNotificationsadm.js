@@ -106,7 +106,7 @@ async function sendReceiptNotification(playerName, monthYear, value, playerId, p
     `Jogador: ${playerName}\n` +
     `Valor: R$ ${value.toFixed(2)}\n` +
     `Período: ${monthYear}\n` +
-    `Status: Pendente de análise`;
+    `Status: Pendente de aprovação`;
 
   const customData = {
     playerId,
