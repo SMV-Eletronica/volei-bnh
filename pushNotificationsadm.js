@@ -53,6 +53,13 @@ async function sendPushNotification(title, message, imageUrl = null, data = null
       chrome_web_icon: "https://smv-eletronica.github.io/volei-bnh/ios/256.png",
       small_icon: "ic_stat_onesignal_default",
       ios_sound: "notification.wav",
+       // Desabilita agrupamento:
+      android_group: null,
+      thread_id: null,
+      
+      // Força notificação única:
+      collapse_id: `notif_${Date.now()}`,
+      
       android_sound: "notification"
     };
 
