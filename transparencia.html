@@ -226,6 +226,9 @@
         import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        // Se só precisar da função de comprovantes
+        //import { sendReceiptNotification } from './pushNotificationsadm.js';
+        import { sendPushNotification, sendReceiptNotification } from './pushNotificationsadm.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
@@ -917,6 +920,37 @@ async function showDefaulterDetails(playerId, playerName) {
                                         <a href="${downloadURL}" style="text-decoration: none;" target="_blank">Ver</a> 🕒
                                     `;
                                 }
+
+
+
+                                  // 5. Enviar notificação APENAS PARA ADMINISTRADORES
+                                const currentPlayer = currentUserPlayer || { name: playerName };
+                                const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
+                                 // Adicione este log para verificar o valor
+                                console.log('Valor de window.isAdmin: kkk', window.isAdmin);
+                                
+                                await sendPushNotification(
+                                    "📄 Novo comprovante recebido",
+                                    `De: ${currentPlayer.name}\n` +
+                                    `Valor: R$ ${payment.value.toFixed(2)}\n` +
+                                    `Referente: ${monthYear}\n` +
+                                    `Status: 🕒 Pendente de análise`,
+                                    null, // Sem imagem
+                                    {
+                                        playerId: playerId,
+                                        paymentId: payment.paymentId,
+                                        playerName: currentPlayer.name,
+                                        monthYear: monthYear,
+                                        value: payment.value.toFixed(2),
+                                        type: "new_receipt",
+                                        actionUrl: window.location.href
+                                    },
+                                    ["administradores"] // Segmento específico
+                                );
+
+
+
+                                
 
                                 statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
                                 await Swal.fire({
