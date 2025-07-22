@@ -1318,29 +1318,45 @@ async function showDefaulterDetails(playerId, playerName) {
             }
         }
 
-        function showPlayer(index) {
-            if (filteredPlayers.length === 0) return;
-            if (index < 0) index = filteredPlayers.length - 1;
-            if (index >= filteredPlayers.length) index = 0;
-            currentPlayerIndex = index;
-            const player = filteredPlayers[index];
-            profileName.textContent = player.name || "-";
-            playerPosition.textContent = player.position || "-";
-            playerCategory.textContent = player.category || "-";
-            playerContact.textContent = player.contact || "-";
-            if (player.imageUrl) {
-                profilePhoto.src = player.imageUrl;
-                profilePhoto.style.display = "block";
-            } else {
-                profilePhoto.style.display = "none";
-            }
-            loadPlayerPayments(player.id);
-            loadPendingPaymentsSelect(player.id);
-            /*o primeiro none abaixo oculta a opção de upload na aba integrantes*/
-            uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
-            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
-            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+    
+function showPlayer(index) {
+    if (filteredPlayers.length === 0) return;
+    if (index < 0) index = filteredPlayers.length - 1;
+    if (index >= filteredPlayers.length) index = 0;
+    currentPlayerIndex = index;
+    const player = filteredPlayers[index];
+    profileName.textContent = player.name || "-";
+    playerPosition.textContent = player.position || "-";
+    playerCategory.textContent = player.category || "-";
+    
+    // Formatar o número de telefone para o WhatsApp
+    let contact = player.contact || "-";
+    if (contact !== "-") {
+        // Remove parênteses, espaços e hífens
+        let cleanedContact = contact.replace(/[\(\)\-\s]/g, '');
+        // Adiciona o código do país +55 se não estiver presente
+        if (!cleanedContact.startsWith('+55')) {
+            cleanedContact = `+55${cleanedContact}`;
         }
+        // Cria o link do WhatsApp com o ícone
+        playerContact.innerHTML = `<a href="https://wa.me/${cleanedContact}" target="_blank"><img src="whatsapp-icone.png" alt="WhatsApp" class="whatsapp-icon"> ${contact}</a>`;
+    } else {
+        playerContact.textContent = "-";
+    }
+
+    if (player.imageUrl) {
+        profilePhoto.src = player.imageUrl;
+        profilePhoto.style.display = "block";
+    } else {
+        profilePhoto.style.display = "none";
+    }
+    loadPlayerPayments(player.id);
+    loadPendingPaymentsSelect(player.id);
+    uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
+    prevPlayerBtn.disabled = filteredPlayers.length <= 1;
+    nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+}
+
 
         async function loadPlayerPayments(playerId) {
             try {
