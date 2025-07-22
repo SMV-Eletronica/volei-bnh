@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria de Memórias - Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-16x16.png?alt=media&token=c23063f2-841d-400a-b32c-3a3f5f65349e">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-32x32.png?alt=media&token=429944a6-1937-4d1a-be29-d6537b029286">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Fapple-touch-icon.png?alt=media&token=9ac93b48-1110-449e-b155-8930b20c9d31">
+    <link rel="manifest" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Fsite.webmanifest?alt=media&token=18b7607a-4ecb-402a-a9f4-5f532b2a632a">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <link rel="stylesheet" href="lista.css"> <style>
+        /* Estilos específicos para a página de galeria */
+        .gallery-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .gallery-section h3 {
+            color: #6f42c1; /* Uma cor vibrante para a galeria */
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .gallery-section h3 i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Miniaturas um pouco maiores */
+            gap: 15px; /* Espaçamento entre as imagens */
+            padding: 10px;
+        }
+        .gallery-item {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* Proporção 1:1 para miniaturas quadradas */
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #eee; /* Fundo enquanto carrega */
+        }
+        .gallery-item img, .gallery-item video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Recorta para preencher o espaço */
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+        .gallery-item img:hover, .gallery-item video:hover {
+            transform: scale(1.05);
+        }
+        /* Estilo para a miniatura do YouTube */
+        .gallery-item.youtube-video {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+        }
+        .gallery-item.youtube-video img {
+            object-fit: contain; /* Para não cortar a miniatura do YouTube */
+            position: static; /* Ajusta a posição da imagem dentro do flex container */
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+        .gallery-item.youtube-video .youtube-play-icon {
+            position: absolute;
+            font-size: 3em;
+            color: rgba(255, 0, 0, 0.9);
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            pointer-events: none; /* Permite clicar no elemento abaixo */
+            z-index: 5;
+        }
+
+        .gallery-item .delete-photo-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(220, 53, 69, 0.8); /* Vermelho translúcido */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            opacity: 0; /* Esconde por padrão */
+            transition: opacity 0.2s ease-in-out;
+            z-index: 10; /* Garante que o botão esteja acima da imagem */
+        }
+        .gallery-item:hover .delete-photo-btn {
+            opacity: 1; /* Mostra no hover */
+        }
+        .no-items-message {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 20px;
+            grid-column: 1 / -1; /* Ocupa todas as colunas da grid */
+        }
+        .upload-button-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .upload-button-container .upload-photo-btn {
+            background-color: #28a745; /* Verde para upload */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.2s;
+            margin-right: 10px; /* Espaço entre os botões */
+        }
+         .upload-button-container .upload-youtube-btn {
+            background-color: #dc3545; /* Vermelho para YouTube */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.2s;
+        }
+        .upload-button-container .upload-photo-btn:hover {
+            background-color: #218838;
+        }
+        .upload-button-container .upload-youtube-btn:hover {
+            background-color: #c82333;
+        }
+        /* Estilo para o iframe do YouTube no SweetAlert2 */
+        .swal2-content iframe {
+            max-width: 100%;
+            height: auto; /* A altura será ajustada automaticamente */
+            aspect-ratio: 16 / 9; /* Mantém a proporção de 16:9 */
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <center><h2><i class="fas fa-images"></i> Galeria de Memórias</h2></center>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <div class="user-profile">
+                <img id="sidebarUserPhoto" class="sidebar-user-photo" src="" alt="Foto do usuário">
+                <div class="sidebar-user-info">
+                    <div id="sidebarUserName" class="sidebar-user-name"></div>
+                    <div id="sidebarUserPosition" class="sidebar-user-position"></div>
+                    <div id="userEmail" class="sidebar-user-position"></div>
+                </div>
+            </div>
+            <button id="adminBtn" class="logout-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> Administração</button>
+            <button id="transparenciaBtn" class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+            <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+            <button id="listaBtn" class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+            <button class="logout-btn" onclick="window.location.href='history.html'"><i class="fas fa-history"></i> Histórico</button>
+            <button class="logout-btn" onclick="window.location.href='challenges.html'"><i class="fas fa-trophy"></i> Desafios</button>
+            <button class="logout-btn" onclick="window.location.href='gallery.html'"><i class="fas fa-images"></i> Galeria</button> </div>
+        <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="container">
+        <div class="gallery-section">
+            <h3><i class="fas fa-camera"></i> Nossas Memórias em Imagens e Vídeos</h3>
+            <div id="galleryGrid" class="gallery-grid">
+                <p class="no-items-message" id="noGalleryItems">Nenhuma foto ou vídeo na galeria ainda. Que tal ser o primeiro a enviar?</p>
+            </div>
+            <div class="upload-button-container">
+                <button id="uploadPhotoBtn" class="upload-photo-btn admin-only" style="display: none;"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo Local</button>
+                <button id="uploadYoutubeBtn" class="upload-youtube-btn admin-only" style="display: none;"><i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        © 2025 SMV Eletrônica- Todos os direitos reservados<br>
+        <div class="footer-links">
+            Powered by:
+            <a href="https://github.com/SMV-Eletronica" target="_blank" class="github-link">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+            <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
+                <i class="fas fa-fire"></i> Firebase
+            </a>
+            <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
+                <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
+                OneSignal
+            </a>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get, update, push, set, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+
+        // Your Firebase config - USE YOUR ACTUAL CONFIG HERE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app); // Initialize Firebase Storage
+        const { DateTime } = luxon;
+        luxon.Settings.defaultLocale = 'pt-BR';
+
+        // DOM Elements
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+        const sidebarUserName = document.getElementById('sidebarUserName');
+        const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+        const userEmailDisplay = document.getElementById('userEmail');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const adminBtn = document.getElementById('adminBtn');
+        const transparenciaBtn = document.getElementById('transparenciaBtn');
+
+        const galleryGrid = document.getElementById('galleryGrid');
+        const noGalleryItems = document.getElementById('noGalleryItems');
+        const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+        const uploadYoutubeBtn = document.getElementById('uploadYoutubeBtn'); // Novo botão
+
+        // Global state
+        let emailLogado = null;
+        let isAdmin = false;
+        window.currentUserPlayer = null;
+        let allPlayersData = {};
+        const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
+
+        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
+
+        // --- Utility Functions ---
+        function getBrazilDateTimeISO() {
+            return DateTime.local().setZone('America/Sao_Paulo').toISO();
+        }
+
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        // --- IndexedDB for image caching --- (Keep this for player photos in sidebar)
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('VoleiBNHImages', 1);
+                request.onupgradeneeded = event => {
+                    const db = event.target.result;
+                    db.createObjectStore('images', { keyPath: 'url' });
+                };
+                request.onsuccess = event => {
+                    resolve(event.target.result);
+                };
+                request.onerror = event => {
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        async function saveImageToDB(url, blob) {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(['images'], 'readwrite');
+                const store = transaction.objectStore('images');
+                store.put({ url, blob });
+            } catch (error) {
+                console.error('Erro ao salvar imagem no IndexedDB:', error);
+            }
+        }
+
+        async function getImageFromDB(url) {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+                return new Promise((resolve, reject) => {
+                    const request = store.get(url);
+                    request.onsuccess = () => {
+                        resolve(request.result ? request.result.blob : null);
+                    };
+                    request.onerror = () => {
+                        reject(request.error);
+                    };
+                });
+            } catch (error) {
+                console.error('Erro ao recuperar imagem do IndexedDB:', error);
+                return null;
+            }
+        }
+
+        async function preloadImage(imageUrl) {
+            if (!imageUrl) return defaultImage;
+            const cachedBlob = await getImageFromDB(imageUrl);
+            if (cachedBlob) {
+                return URL.createObjectURL(cachedBlob);
+            }
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                await saveImageToDB(imageUrl, blob);
+                return URL.createObjectURL(blob);
+            } catch (error) {
+                console.warn(`Erro ao carregar imagem ${imageUrl}:`, error);
+                return defaultImage;
+            }
+        }
+
+        // --- Sidebar Toggles ---
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // --- Authentication and User Loading ---
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Acesso Negado',
+                    text: 'Você precisa estar logado para acessar esta página.',
+                });
+                window.location.href = 'loginvl.html';
+            } else {
+                emailLogado = user.email;
+                isAdmin = adminEmails.includes(emailLogado);
+                userEmailDisplay.textContent = user.email;
+                await loadAllPlayers();
+                await loadCurrentUserPlayer();
+                updateSidebarVisibility();
+                loadGallery(); // Load gallery content
+            }
+        });
+
+        async function loadAllPlayers() {
+            try {
+                const playersRef = ref(database, 'players');
+                const snapshot = await get(playersRef);
+                if (snapshot.exists()) {
+                    allPlayersData = snapshot.val();
+                } else {
+                    allPlayersData = {};
+                }
+            } catch (error) {
+                console.error('Erro ao carregar todos os jogadores:', error);
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível carregar os dados dos jogadores.' });
+            }
+        }
+
+        async function loadCurrentUserPlayer() {
+            try {
+                if (Object.keys(allPlayersData).length === 0) {
+                    await loadAllPlayers();
+                }
+                const allPlayersArray = Object.entries(allPlayersData).map(([id, player]) => ({ id, ...player }));
+                window.currentUserPlayer = allPlayersArray.find(player => player.email === emailLogado);
+
+                if (window.currentUserPlayer?.imageUrl) {
+                    sidebarUserPhoto.src = await preloadImage(window.currentUserPlayer.imageUrl);
+                    sidebarUserPhoto.style.display = 'block';
+                } else {
+                    sidebarUserPhoto.src = defaultImage;
+                    sidebarUserPhoto.style.display = 'block';
+                }
+
+                sidebarUserName.textContent = window.currentUserPlayer?.name || 'Usuário';
+                sidebarUserPosition.textContent = window.currentUserPlayer?.position || 'Posição não definida';
+
+                if (!window.currentUserPlayer) {
+                    await Swal.fire({ icon: 'error', title: 'Erro', text: 'Nenhum jogador associado a este email. Contate o administrador.' });
+                }
+                isAdmin = isAdmin || window.currentUserPlayer?.category === 'ADMIN';
+            } catch (error) {
+                console.error('Erro ao carregar dados do jogador logado:', error);
+                await Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao carregar seus dados.' });
+                window.currentUserPlayer = null;
+            }
+        }
+
+        function updateSidebarVisibility() {
+            if (isAdmin) {
+                adminBtn.style.display = 'inline-block';
+                uploadPhotoBtn.style.display = 'inline-block';
+                uploadYoutubeBtn.style.display = 'inline-block'; // Mostra o novo botão
+                document.querySelectorAll('.admin-only').forEach(btn => btn.style.display = 'inline-block'); // Garante que todos os botões admin-only apareçam
+            } else {
+                adminBtn.style.display = 'none';
+                uploadPhotoBtn.style.display = 'none';
+                uploadYoutubeBtn.style.display = 'none'; // Esconde o novo botão
+                document.querySelectorAll('.admin-only').forEach(btn => btn.style.display = 'none');
+            }
+            transparenciaBtn.style.display = 'inline-block';
+            document.getElementById('listaBtn').style.display = 'inline-block';
+            document.querySelector('button[onclick*="history.html"]').style.display = 'inline-block';
+            document.querySelector('button[onclick*="challenges.html"]').style.display = 'inline-block';
+            document.querySelector('button[onclick*="gallery.html"]').style.display = 'inline-block'; // Novo botão
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                Swal.fire({ title: 'Saindo...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
+                try {
+                    await signOut(auth);
+                    await Swal.fire({ icon: 'success', title: 'Logout', text: 'Você saiu com sucesso.', timer: 1500, showConfirmButton: false, });
+                    window.location.assign('loginvl.html');
+                } catch (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível fazer logout. Tente novamente.', });
+                }
+            });
+        }
+
+        // --- Gallery Logic ---
+        function loadGallery() {
+            const galleryRef = ref(database, 'gallery');
+            onValue(galleryRef, (snapshot) => {
+                const items = snapshot.val() || {};
+                const galleryItemsHtml = [];
+
+                // Convert object to array and sort by uploadedAt (most recent first)
+                const sortedItems = Object.entries(items).map(([id, item]) => ({ id, ...item }))
+                                        .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+
+
+                for (const item of sortedItems) {
+                    let mediaHtml = '';
+                    let itemClass = '';
+
+                    if (item.type === 'youtube_video' && item.youtubeId) {
+                        const thumbnailUrl = `https://img.youtube.com/vi/${item.youtubeId}/mqdefault.jpg`; // miniatura de média qualidade
+                        mediaHtml = `
+                            <img src="${thumbnailUrl}" alt="${item.caption || 'Vídeo do YouTube'}">
+                            <i class="fab fa-youtube youtube-play-icon"></i>
+                        `;
+                        itemClass = 'youtube-video';
+                    } else if (item.type === 'image' && item.url) {
+                        mediaHtml = `<img src="${item.url}" alt="${item.caption || 'Foto da Galeria'}">`;
+                        itemClass = 'image';
+                    } else if (item.type === 'video' && item.url) { // Para vídeos carregados para o Firebase Storage
+                         mediaHtml = `<video src="${item.url}" alt="${item.caption || 'Vídeo Local'}" preload="metadata"></video>`; // preload="metadata" para carregar a miniatura
+                         itemClass = 'local-video';
+                    }
+                    // Adicione mais tipos se necessário (ex: "other_video_platform")
+
+                    galleryItemsHtml.push(`
+                        <div class="gallery-item ${itemClass}" data-id="${item.id}" data-type="${item.type || 'unknown'}" data-url="${item.url || ''}" data-youtube-id="${item.youtubeId || ''}">
+                            ${mediaHtml}
+                            ${isAdmin ? `<button class="delete-photo-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    `);
+                }
+
+                galleryGrid.innerHTML = galleryItemsHtml.join('');
+                noGalleryItems.style.display = galleryItemsHtml.length === 0 ? 'block' : 'none';
+
+                // Add event listeners for full view/play
+                galleryGrid.querySelectorAll('.gallery-item').forEach(itemElement => {
+                    itemElement.addEventListener('click', (e) => {
+                        // Certifique-se de que o clique não veio do botão de exclusão
+                        if (!e.target.classList.contains('delete-photo-btn') && !e.target.closest('.delete-photo-btn')) {
+                            const type = itemElement.dataset.type;
+                            const url = itemElement.dataset.url;
+                            const youtubeId = itemElement.dataset.youtubeId;
+
+                            if (type === 'image') {
+                                showFullMedia(url, 'image');
+                            } else if (type === 'youtube_video') {
+                                showFullMedia(youtubeId, 'youtube_video');
+                            } else if (type === 'video') { // Para vídeos carregados localmente (Firebase Storage)
+                                showFullMedia(url, 'local_video');
+                            }
+                        }
+                    });
+                });
+
+                // Add event listeners for delete button if admin
+                if (isAdmin) {
+                    galleryGrid.querySelectorAll('.delete-photo-btn').forEach(button => {
+                        button.addEventListener('click', (e) => deletePhoto(e.target.dataset.id || e.target.closest('button').dataset.id));
+                    });
+                }
+            }, (error) => {
+                console.error("Erro ao carregar galeria:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível carregar a galeria.',
+                });
+            });
+        }
+
+        async function showFullMedia(mediaIdentifier, mediaType) {
+            let htmlContent = '';
+            let title = 'Visualizando Mídia';
+
+            if (mediaType === 'image') {
+                htmlContent = `<img src="${mediaIdentifier}" style="max-width: 100%; max-height: 80vh;">`;
+                title = 'Visualizando Imagem';
+            } else if (mediaType === 'youtube_video') {
+                htmlContent = `
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;">
+                        <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                                src="https://www.youtube.com/embed/${mediaIdentifier}?autoplay=1"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                `;
+                title = 'Assistindo Vídeo do YouTube';
+            } else if (mediaType === 'local_video') {
+                htmlContent = `<video src="${mediaIdentifier}" controls style="max-width: 100%; max-height: 80vh;"></video>`;
+                title = 'Assistindo Vídeo Local';
+            }
+
+            Swal.fire({
+                title: title,
+                html: htmlContent,
+                showConfirmButton: false,
+                showCloseButton: true,
+                background: 'rgba(0,0,0,0.8)',
+                backdrop: true,
+                grow: 'fullscreen',
+                customClass: {
+                    container: 'swal2-container-full-media',
+                    popup: 'swal2-popup-full-media',
+                    closeButton: 'swal2-close-button-full-media'
+                },
+                didOpen: () => {
+                    // Opcional: Focar no iframe do YouTube para autoplay funcionar melhor
+                    const iframe = Swal.getHtmlContainer().querySelector('iframe');
+                    if (iframe) {
+                        iframe.focus();
+                    }
+                },
+                willClose: () => {
+                    // Pausar o vídeo do YouTube ao fechar o modal
+                    const iframe = Swal.getHtmlContainer().querySelector('iframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    }
+                }
+            });
+        }
+
+        uploadPhotoBtn.addEventListener('click', async () => {
+            if (!isAdmin) {
+                Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
+                return;
+            }
+
+            const { value: file } = await Swal.fire({
+                title: 'Selecionar Foto ou Vídeo Local',
+                input: 'file',
+                inputAttributes: {
+                    'accept': 'image/*,video/*', // Aceita imagens e vídeos
+                    'aria-label': 'Upload da sua mídia'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Enviar Arquivo',
+                preConfirm: (fileInput) => {
+                    if (!fileInput) {
+                        Swal.showValidationMessage('Por favor, selecione uma imagem ou vídeo.');
+                    }
+                    return fileInput;
+                }
+            });
+
+            if (file) {
+                Swal.fire({
+                    title: 'Enviando arquivo...',
+                    text: 'Por favor, aguarde.',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                try {
+                    const storagePath = `gallery/${file.name}`;
+                    const storageRefPath = storageRef(storage, storagePath);
+                    await uploadBytes(storageRefPath, file);
+                    const downloadURL = await getDownloadURL(storageRefPath);
+
+                    const mediaId = push(ref(database, 'gallery')).key;
+                    await set(ref(database, `gallery/${mediaId}`), {
+                        url: downloadURL,
+                        caption: file.name, // Pode ser editado depois
+                        uploadedBy: window.currentUserPlayer.id,
+                        uploadedAt: getBrazilDateTimeISO(),
+                        type: file.type.startsWith('image/') ? 'image' : 'video' // Assumimos que é vídeo se não for imagem
+                    });
+                    Swal.fire('Sucesso!', 'Arquivo enviado para a galeria!', 'success');
+                } catch (error) {
+                    console.error('Erro ao enviar arquivo:', error);
+                    Swal.fire('Erro', 'Não foi possível enviar o arquivo. Tente novamente.', 'error');
+                }
+            }
+        });
+
+        uploadYoutubeBtn.addEventListener('click', async () => {
+            if (!isAdmin) {
+                Swal.fire('Erro', 'Você não tem permissão para adicionar vídeos do YouTube.', 'error');
+                return;
+            }
+
+            const { value: youtubeUrl } = await Swal.fire({
+                title: 'Adicionar Vídeo do YouTube',
+                input: 'text',
+                inputLabel: 'URL do vídeo do YouTube:',
+                inputPlaceholder: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                showCancelButton: true,
+                confirmButtonText: 'Adicionar Vídeo',
+                inputValidator: (value) => {
+                    const id = getYouTubeId(value);
+                    if (!id) {
+                        return 'Por favor, insira um URL válido do YouTube.';
+                    }
+                    return null;
+                }
+            });
+
+            if (youtubeUrl) {
+                Swal.fire({
+                    title: 'Adicionando vídeo...',
+                    text: 'Por favor, aguarde.',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                try {
+                    const youtubeId = getYouTubeId(youtubeUrl);
+                    const mediaId = push(ref(database, 'gallery')).key;
+                    await set(ref(database, `gallery/${mediaId}`), {
+                        youtubeId: youtubeId,
+                        caption: 'Vídeo do YouTube', // Pode ser editado depois
+                        uploadedBy: window.currentUserPlayer.id,
+                        uploadedAt: getBrazilDateTimeISO(),
+                        type: 'youtube_video'
+                    });
+                    Swal.fire('Sucesso!', 'Vídeo do YouTube adicionado à galeria!', 'success');
+                } catch (error) {
+                    console.error('Erro ao adicionar vídeo do YouTube:', error);
+                    Swal.fire('Erro', 'Não foi possível adicionar o vídeo. Tente novamente.', 'error');
+                }
+            }
+        });
+
+
+        async function deletePhoto(photoId) {
+            const { isConfirmed } = await Swal.fire({
+                title: 'Remover Arquivo?',
+                text: 'Tem certeza que deseja remover este item da galeria? Esta ação é irreversível.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, Remover!'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const itemRef = ref(database, `gallery/${photoId}`);
+                    const snapshot = await get(itemRef);
+                    const itemData = snapshot.val();
+
+                    if (itemData && itemData.type !== 'youtube_video' && itemData.url) { // Só tenta excluir do Storage se não for YouTube
+                        const fileToDeleteRef = storageRef(storage, itemData.url);
+                        try {
+                            await deleteObject(fileToDeleteRef);
+                            console.log('Arquivo removido do Firebase Storage.');
+                        } catch (storageError) {
+                            if (storageError.code === 'storage/object-not-found') {
+                                console.warn('Arquivo não encontrado no Storage, mas removendo do Realtime Database.');
+                            } else {
+                                console.error('Erro ao remover arquivo do Storage:', storageError);
+                            }
+                        }
+                    }
+
+                    await remove(itemRef); // Remove do Realtime Database
+                    Swal.fire('Removido!', 'Item removido com sucesso da galeria.', 'success');
+                } catch (error) {
+                    console.error('Erro ao remover item da galeria:', error);
+                    Swal.fire('Erro', 'Não foi possível remover o item. Tente novamente.', 'error');
+                }
+            }
+        }
+
+        // --- OneSignal Integration ---
+        async function sendNotification(playerIds, title, message) {
+            try {
+                if (playerIds.length === 0) return;
+
+                await fetch('https://onesignal.com/api/v1/notifications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'Authorization': 'Basic NWEyM2I4YjgtYjc0MC00YjVlLWFkZDItZDI1YzEwMjhmMGEy', // Substitua pela sua REST API Key do OneSignal
+                    },
+                    body: JSON.stringify({
+                        app_id: '1e5e3158-b635-43ea-981f-7f551b75317e', // Substitua pelo seu App ID do OneSignal
+                        include_player_ids: playerIds,
+                        headings: { en: title, 'pt-BR': title },
+                        contents: { en: message, 'pt-BR': message },
+                        data: { type: 'gallery_update' }
+                    })
+                });
+                console.log('Notificação enviada com sucesso.');
+            } catch (error) {
+                console.error('Erro ao enviar notificação:', error);
+            }
+        }
+
+        // OneSignal Initialization
+        window.OneSignal = window.OneSignal || [];
+        OneSignal.push(function() {
+            OneSignal.init({
+                appId: "1e5e3158-b635-43ea-981f-7f551b75317e", // Seu OneSignal App ID
+                safari_web_id: "web.onesignal.auto.5a2e6333-8a38-4e56-9d58-b77ffb6b911c", // Seu Safari Web ID
+                notifyButton: { enable: true },
+                serviceWorkerUpdaterPath: 'OneSignalSDKUpdaterWorker.js',
+                serviceWorkerPath: 'OneSignalSDKWorker.js',
+            });
+
+            // Adicionar o OneSignal User ID ao perfil do jogador no Firebase
+            OneSignal.getUserId().then(function(userId) {
+                if (userId && window.currentUserPlayer && auth.currentUser) {
+                    const playerRef = ref(database, `players/${window.currentUserPlayer.id}`);
+                    update(playerRef, { oneSignalUserId: userId })
+                        .then(() => console.log('OneSignal User ID salvo no Firebase'))
+                        .catch(error => console.error('Erro ao salvar OneSignal User ID:', error));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
