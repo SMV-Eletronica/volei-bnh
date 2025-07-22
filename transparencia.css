@@ -97,6 +97,22 @@ body {
 }
 
 
+.profile-info .info-value a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-info .info-value a:hover {
+    text-decoration: underline;
+}
+.whatsapp-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+   
+}
 
 /* Menu lateral */
 .sidebar {
