@@ -654,6 +654,8 @@ body {
     transition: background-color 0.2s;
     display: flex;
     align-items: center;
+     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
 }
 
 .sidebar-menu button i {
