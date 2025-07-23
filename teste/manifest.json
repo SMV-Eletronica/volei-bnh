@@ -2,19 +2,19 @@
     "name": "Vôlei BNH",
     "short_name": "Vôlei BNH",
     "description": "Aplicativo de teste para PWA do Vôlei BNH",
-    "start_url": "/index.html",
+    "start_url": "index.html",
     "display": "standalone",
     "theme_color": "#3498db",
     "background_color": "#ffffff",
     "icons": [
         {
-            "src": "/androidbola-chrome-192x192.png",
+            "src": "androidbola-chrome-192x192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/android-chrome-512x512.png",
+            "src": "android-chrome-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
