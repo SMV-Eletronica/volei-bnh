@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste PWA - Vôlei BNH</title>
+    <!-- Referência ao manifest.json -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- Ícone para iOS -->
+    <link rel="apple-touch-icon" sizes="512x512" href="/minha-splash-512x512.png">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #3498db;
+        }
+        p {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste PWA - Vôlei BNH</h1>
+    <p>Este é um teste para verificar a splash screen e o ícone do PWA.</p>
+    <p>Adicione à tela inicial para testar!</p>
+
+    <script>
+        // Registrar o service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
