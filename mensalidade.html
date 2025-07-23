@@ -1024,54 +1024,54 @@
             }
         }
 
-        async function deletePayment(paymentId, reason, deletedBy, year, month) {
-            const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
-            try {
-                const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
-                const snapshot = await get(paymentRef);
-                
-                if (!snapshot.exists()) {
-                    await Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: 'Pagamento não encontrado.',
-                        timer: 3500,
-                        showConfirmButton: false,
-                    });
-                    return;
-                }
-
-                const deletedPaymentRef = push(ref(database, 'deletedPayments'));
-                await set(deletedPaymentRef, {
-                    ...paymentData,
-                    deleteReason: reason,
-                    deletedBy: deletedBy,
-                    deletedAt: new Date().toISOString()
-                });
-                await remove(paymentRef);
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso',
-                    text: 'Pagamento excluído com sucesso!',
-                    timer: 3500,
-                    showConfirmButton: false,
-                });
-                
-                if (editingPaymentIdInput.value === paymentId) {
-                    resetForm();
-                }
-                loadPayments(playerIdInput.value);
-            } catch (error) {
-                console.error("Error deleting payment:", error);
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao excluir pagamento: ' + error.message,
-                    timer: 1500,
-                    showConfirmButton: false,
-                });
-            }
+      async function deletePayment(paymentId, reason, deletedBy, year, month) {
+    const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
+    try {
+        const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
+        const snapshot = await get(paymentRef);
+        
+        if (!snapshot.exists()) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Pagamento não encontrado.',
+                timer: 3500,
+                showConfirmButton: false,
+            });
+            return;
         }
+
+        const deletedPaymentRef = push(ref(database, 'deletedPayments'));
+        await set(deletedPaymentRef, {
+            ...snapshot.val(), // Usar snapshot.val() em vez de paymentData
+            deleteReason: reason,
+            deletedBy: deletedBy,
+            deletedAt: new Date().toISOString()
+        });
+        await remove(paymentRef);
+        await Swal.fire({
+            icon: 'success',
+            title: 'Sucesso',
+            text: 'Pagamento excluído com sucesso!',
+            timer: 3500,
+            showConfirmButton: false,
+        });
+        
+        if (editingPaymentIdInput.value === paymentId) {
+            resetForm();
+        }
+        loadPayments(playerIdInput.value);
+    } catch (error) {
+        console.error("Error deleting payment:", error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Erro ao excluir pagamento: ' + error.message,
+            timer: 1500,
+            showConfirmButton: false,
+        });
+    }
+}
 
         function formatDate(dateString) {
             if (!dateString) return '-';
