@@ -39,11 +39,11 @@ body {
 }
 
 
- #meuBotao {
-      display: none;
+ #convidadobtn {
+      
       margin-top: 20px;
       padding: 10px 20px;
-      background-color: #008CBA;
+      background-color: #c22b3f;
       color: white;
       border: none;
       border-radius: 4px;
@@ -52,7 +52,7 @@ body {
     #aviso {
       color: red;
     }
-    
+
     #addGuestBtn, #guestNameInput{
 
         display: none;
