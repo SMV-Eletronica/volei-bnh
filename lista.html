@@ -105,6 +105,8 @@
             <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
           <div class="guest-controls" id="guestControls" style="display: none;">
+            <!-- <p id="aviso">A lista para convidados ativa após 16:00.</p>-->
+             <button id="convidadobtn"><i class="fas fa-exclamation-circle"></i> Convidados após 16:00 </button>
              <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
              <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
           </div>
@@ -1142,8 +1144,8 @@ async function loadCurrentUserPlayer() {
         return;
       }
       const result = await Swal.fire({
-        icon: 'question',
-        title: 'Confirmar Convidado',
+        icon: 'warning',
+        title: 'Atenção',
         html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
         showCancelButton: true,
         confirmButtonText: 'Estou Ciente',
@@ -1628,8 +1630,8 @@ async function loadCurrentUserPlayer() {
 
         if (playerObj.category === 'DIARIA') {
           const result = await Swal.fire({
-            icon: 'question',
-            title: 'Confirmar Presença',
+            icon: 'warning',
+            title: 'Atenção',
             html: `<strong>${playerObj.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
             showCancelButton: true,
             confirmButtonText: 'Estou Ciente',
@@ -2056,26 +2058,41 @@ async function loadCurrentUserPlayer() {
   const sortedPlayers = sortPlayers([...confirmedPlayers]);
 
   const playerPositions = [
+
+
+  { top: '41%', left: '50%' },
+    { top: '60%', left: '50%' },
     { top: '18%', left: '15%' },
     { top: '82%', left: '85%' },
     { top: '18%', left: '82%' },
     { top: '82%', left: '15%' },
-    { top: '90%', left: '50%' },
+    { top: '90%', left: '50%' },    
     { top: '10%', left: '50%' },
-    { top: '62%', left: '15%' },
-    { top: '39%', left: '85%' },
-    { top: '60%', left: '50%' },
-    { top: '39%', left: '15%' },
-    { top: '62%', left: '85%' },
-    { top: '41%', left: '50%' },
+    
+     { top: '2%', left: '120%' },
+    { top: '50%', left: '-20%' },
     { top: '12%', left: '120%' },
     { top: '60%', left: '-20%' },
+   
+   
     { top: '22%', left: '120%' },
     { top: '70%', left: '-20%' },
     { top: '32%', left: '120%' },
     { top: '80%', left: '-20%' },
+    
+
     { top: '42%', left: '120%' },
     { top: '90%', left: '-20%' },
+    { top: '52%', left: '120%' },
+    { top: '100%', left: '-20%' },
+
+
+    
+
+
+    
+
+   
   ];
 
   const playersHTML = await Promise.all(
@@ -2249,7 +2266,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
 
     const payload = {
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-      headings: { en: "🏐 Vôlei BNH - Atualização" },
+      headings: { en: "🏐 Vôlei BNH - Informações" },
       contents: { en: message },
       included_segments: ["All"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
@@ -2409,6 +2426,23 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
     });
   }
 
+
+
+    const horaAlvo =16;
+    const minutoAlvo =00;
+
+    const agora = new Date();
+    const horaAtual = agora.getHours();
+    const minutoAtual = agora.getMinutes();
+
+    // Verifica se já passou do horário alvo
+    if (horaAtual > horaAlvo || (horaAtual === horaAlvo && minutoAtual >= minutoAlvo)) {
+      document.getElementById('addGuestBtn').style.display = 'inline-block';
+      document.getElementById('guestNameInput').style.display = 'inline-block';
+     /* document.getElementById('aviso').style.display = 'none';*/
+      document.getElementById('convidadobtn').style.display = 'none';
+    }
+  
 
 
 
