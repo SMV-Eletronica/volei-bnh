@@ -411,7 +411,7 @@ div:where(.swal2-icon).swal2-info {
     cursor: pointer;
     margin-right: 8px;
     font-size: 0.9rem;
-    width: 120px;
+    width: 140px;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
 }
 
