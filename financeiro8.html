@@ -52,7 +52,7 @@
         <div class="button-container">
             <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
             <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
-            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-file-invoice-dollar"></i> Despesas</button>
             <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>   
             <button onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>     
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
@@ -63,11 +63,11 @@
         <div id="userEmail"></div>
         <br>
         <div class="tabs">
-            <div class="tab active" data-tab="report"><i class="fas fa-file-alt"></i> Relatório Financeiro</div>
-            <div class="tab" data-tab="expenses"><i class="fas fa-receipt"></i> Despesas</div>
+            <div class="tab active" data-tab="expenses"><i class="fas fa-receipt"></i> Despesas</div>
+            <div class="tab" data-tab="report"><i class="fas fa-file-alt"></i> Relatório Financeiro</div>
         </div>
         
-        <div id="report" class="tab-content active">
+        <div id="report" class="tab-content">
             <div class="section">
                 <h2 class="section-title"><i class="fas fa-chart-pie"></i> Resumo Financeiro </h2>
                 
@@ -145,7 +145,7 @@
             </div>
         </div>
         
-        <div id="expenses" class="tab-content">
+        <div id="expenses" class="tab-content active">
             <div class="section">
                 <h2 class="section-title"><i class="fas fa-plus-circle"></i> Registrar Nova Despesa</h2>
                 
