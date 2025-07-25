@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="lista.css?v=2.1">
+<link rel="stylesheet" href="lista.css?v=2.2">
 
 
  <style>
@@ -105,8 +105,8 @@
             <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
           <div class="guest-controls" id="guestControls" style="display: none;">
-             <p id="aviso">A lista para convidados ativa após 16:00.</p>
-             <button id="meubotao2">Convidados após 16:00 </button>
+            <!-- <p id="aviso">A lista para convidados ativa após 16:00.</p>-->
+             <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados após 16:00 </button>
              <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
              <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
           </div>
@@ -326,35 +326,86 @@ function createDashboardButton() {
     }
 
    
-
-    onAuthStateChanged(auth, async (user) => {
-      console.log('onAuthStateChanged disparado, usuário:', user);
-      if (!user) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Acesso Negado',
-          text: 'Você precisa estar logado para acessar esta página.',
-        });
-        window.location.href = 'loginvl.html';
-      } else {
-        emailLogado = user.email;
-       
-        isAdmin = adminEmails.includes(emailLogado);
-        await loadCurrentUserPlayer();
-        document.getElementById('userEmail').textContent = `${user.email}`;
-        console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
-
-         // Se for admin, crie o botão Dashboard aqui
-        if (isAdmin) {
-            createDashboardButton();
-        }
-        await loadGuestFee();
-        await initializeGameList();
-        setupAdminFeatures();
-      }
+onAuthStateChanged(auth, async (user) => {
+  console.log('onAuthStateChanged disparado, usuário:', user);
+  if (!user) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Acesso Negado',
+      text: 'Você precisa estar logado para acessar esta página.',
     });
+    window.location.href = 'loginvl.html';
+  } else {
+    emailLogado = user.email;
+    isAdmin = adminEmails.includes(emailLogado);
+    await loadCurrentUserPlayer();
 
-  const logoutBtn = document.getElementById('logoutBtn');
+    // Registrar acesso à página com verificação de intervalo
+    if (window.currentUserPlayer?.name) {
+      const userId = window.currentUserPlayer.id;
+      const userName = window.currentUserPlayer.name;
+      const [year, month] = getBrazilMonthYear().split('-');
+      const now = DateTime.now().setZone('America/Sao_Paulo');
+      const tenMinutesAgo = now.minus({ minutes: 10 });
+
+      // Verificar no localStorage para otimizar consultas
+      const lastAccessKey = `lastAccess_${userId}`;
+      const lastAccess = localStorage.getItem(lastAccessKey);
+      if (lastAccess && DateTime.fromISO(lastAccess) >= tenMinutesAgo) {
+        console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 10 minutos (localStorage).`);
+      } else {
+        // Consultar Firebase apenas se necessário
+        const activitiesRef = ref(database, `userActivity/${year}/${month}`);
+        try {
+          const snapshot = await get(activitiesRef);
+          let lastActivity = null;
+          if (snapshot.exists()) {
+            const activities = Object.values(snapshot.val() || {}).filter(
+              activity => activity.userName === userName
+            );
+            if (activities.length > 0) {
+              lastActivity = activities.reduce((latest, current) =>
+                new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest
+              );
+            }
+          }
+
+          if (!lastActivity || DateTime.fromISO(lastActivity.timestamp) < tenMinutesAgo) {
+            const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
+            await set(activityRef, {
+              userName: userName,
+              timestamp: getBrazilDateTimeISO()
+            });
+            localStorage.setItem(lastAccessKey, now.toISO());
+            console.log(`Acesso registrado para ${userName} em ${now.toISO()}`);
+          } else {
+            console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 10 minutos.`);
+          }
+        } catch (error) {
+          console.error('Erro ao registrar acesso:', error);
+          // Não interrompe o fluxo, apenas loga o erro
+        }
+      }
+    }
+
+    document.getElementById('userEmail').textContent = `${user.email}`;
+    console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
+
+    if (isAdmin) {
+      createDashboardButton();
+    }
+    await loadGuestFee();
+    await initializeGameList();
+    setupAdminFeatures();
+  }
+});
+ 
+ 
+ 
+ 
+ 
+    const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', async () => {
     console.log('Botão de logout clicado');
@@ -1144,8 +1195,8 @@ async function loadCurrentUserPlayer() {
         return;
       }
       const result = await Swal.fire({
-        icon: 'question',
-        title: 'Confirmar Convidado',
+        icon: 'warning',
+        title: 'Atenção',
         html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
         showCancelButton: true,
         confirmButtonText: 'Estou Ciente',
@@ -1630,8 +1681,8 @@ async function loadCurrentUserPlayer() {
 
         if (playerObj.category === 'DIARIA') {
           const result = await Swal.fire({
-            icon: 'question',
-            title: 'Confirmar Presença',
+            icon: 'warning',
+            title: 'Atenção',
             html: `<strong>${playerObj.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
             showCancelButton: true,
             confirmButtonText: 'Estou Ciente',
@@ -2058,26 +2109,41 @@ async function loadCurrentUserPlayer() {
   const sortedPlayers = sortPlayers([...confirmedPlayers]);
 
   const playerPositions = [
+
+
+  { top: '41%', left: '50%' },
+    { top: '60%', left: '50%' },
     { top: '18%', left: '15%' },
     { top: '82%', left: '85%' },
     { top: '18%', left: '82%' },
     { top: '82%', left: '15%' },
-    { top: '90%', left: '50%' },
+    { top: '90%', left: '50%' },    
     { top: '10%', left: '50%' },
-    { top: '62%', left: '15%' },
-    { top: '39%', left: '85%' },
-    { top: '60%', left: '50%' },
-    { top: '39%', left: '15%' },
-    { top: '62%', left: '85%' },
-    { top: '41%', left: '50%' },
+    
+     { top: '2%', left: '120%' },
+    { top: '50%', left: '-20%' },
     { top: '12%', left: '120%' },
     { top: '60%', left: '-20%' },
+   
+   
     { top: '22%', left: '120%' },
     { top: '70%', left: '-20%' },
     { top: '32%', left: '120%' },
     { top: '80%', left: '-20%' },
+    
+
     { top: '42%', left: '120%' },
     { top: '90%', left: '-20%' },
+    { top: '52%', left: '120%' },
+    { top: '100%', left: '-20%' },
+
+
+    
+
+
+    
+
+   
   ];
 
   const playersHTML = await Promise.all(
@@ -2424,8 +2490,8 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
     if (horaAtual > horaAlvo || (horaAtual === horaAlvo && minutoAtual >= minutoAlvo)) {
       document.getElementById('addGuestBtn').style.display = 'inline-block';
       document.getElementById('guestNameInput').style.display = 'inline-block';
-      document.getElementById('aviso').style.display = 'none';
-      document.getElementById('meubotao2').style.display = 'none';
+     /* document.getElementById('aviso').style.display = 'none';*/
+      document.getElementById('convidadobtn').style.display = 'none';
     }
   
 
