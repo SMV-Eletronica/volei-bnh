@@ -774,7 +774,6 @@ async function getNotifiedPlayers() {
 
 
 
-
 function setupAdminFeatures() {
   console.log('Iniciando setupAdminFeatures, isAdmin:', isAdmin);
   
@@ -868,9 +867,71 @@ function setupAdminFeatures() {
       logoutBtn.parentNode.insertBefore(notifiedPlayersBtn, logoutBtn);
     }
     
-    // Restante do código existente...
-    adminSettingsBtn.addEventListener('click', () => {
-      // ... (código existente do adminSettingsBtn)
+    // Configurar o clique no botão de administração
+    adminSettingsBtn.addEventListener('click', async () => {
+      if (!currentGameId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Selecione um jogo ativo primeiro.',
+        });
+        return;
+      }
+
+      const { value: formValues } = await Swal.fire({
+        title: 'Configurar Jogo',
+        html: `
+          <div style="text-align: left;">
+            <label for="playerLimit">Limite de Jogadores:</label>
+            <input type="number" id="playerLimit" class="swal2-input" value="${playerLimit}" min="6" max="20">
+            
+            <label for="gameTime">Horário do Jogo:</label>
+            <input type="time" id="gameTime" class="swal2-input" value="${currentGameData?.time || '19:00'}">
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        focusConfirm: false,
+        preConfirm: () => {
+          return {
+            playerLimit: parseInt(document.getElementById('playerLimit').value),
+            gameTime: document.getElementById('gameTime').value
+          };
+        }
+      });
+
+      if (formValues) {
+        try {
+          playerLimit = formValues.playerLimit;
+          gameTime = formValues.gameTime;
+          
+          const gameRef = ref(database, `activeGames/${currentGameId}`);
+          await update(gameRef, {
+            playerLimit: playerLimit,
+            time: gameTime
+          });
+          
+          currentGameData.playerLimit = playerLimit;
+          currentGameData.time = gameTime;
+          
+          updatePlayerLimitDisplay(isAdmin);
+          updateGameDateDisplay();
+          
+          await Swal.fire({
+            icon: 'success',
+            title: 'Configurações salvas!',
+            text: `Limite de jogadores atualizado para ${playerLimit} e horário para ${gameTime}.`,
+          });
+        } catch (error) {
+          console.error('Erro ao atualizar configurações:', error);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Não foi possível salvar as configurações.',
+          });
+        }
+      }
     });
     
     setupPlayerSearch();
@@ -885,8 +946,6 @@ function setupAdminFeatures() {
   
   guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
 }
-
-
 
 
     async function initializeGameList() {
