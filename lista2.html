@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -116,7 +115,9 @@
       </a>
     </div>
   </footer>
+  <script type="module" src="warnings.js"></script>
   <script type="module">
+    import { handlePaymentWarnings, loadNotifiedPlayers, setupUnlockPlayerSearch, resetWarningsOnPaymentApproval } from './warnings.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getDatabase, ref, get, set, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -606,436 +607,345 @@
       }
     }
 
-    async function setupAdminFeatures() {
-      console.log('Iniciando setupAdminFeatures, isAdmin:', isAdmin);
-      if (!adminSettingsBtn) {
-        console.error('Elemento adminSettingsBtn não encontrado no DOM');
-        return;
-      }
-      if (isAdmin) {
-        console.log('Configurando interface para admin');
-        adminSettingsBtn.style.display = 'inline-block';
-        adminSearchContainer.style.display = 'flex';
-        finalizeGameBtn.style.display = 'inline-block';
-        adminSettingsBtn.addEventListener('click', () => {
-          console.log('Botão adminSettingsBtn clicado');
-          Swal.fire({
-            title: 'Configurar Jogos',
-            html: `
-              <div class="organiza">
-                <div class="modal-section">
-                  <label for="modalActionSelect">Ação:</label>
-                  <select id="modalActionSelect" class="game-select">
-                    <option value="createGame">Criar Novo Jogo</option>
-                    <option value="updateLimit">Alterar Participantes</option>
-                    <option value="updateFee">Alterar Taxa</option>
-                    <option value="updateTime">Alterar Horário</option>
-                    <option value="viewNotified">Ver Integrantes Notificados</option>
-                    <option value="unlockPlayer">Desbloquear Integrante</option>
-                  </select>
-                </div>
-                <div class="modal-section" id="gameSelectSection">
-                  <label for="modalGameSelect">Selecione um Jogo</label>
-                  <select id="modalGameSelect" class="game-select">
-                    <option value="">Selecione um jogo</option>
-                  </select>
-                </div>
-                <div id="createGameFields" class="modal-section" style="display: none;">
-                  <h4>Criar Novo Jogo</h4>
-                  <div class="organiza2">
-                    <label for="modalNewGameDate">Data:</label>
-                    <input type="date" id="modalNewGameDate">
-                  </div>
-                  <div class="organiza2">
-                    <label for="modalNewGameTime">Horário:</label>
-                    <input type="time" id="modalNewGameTime" value="19:00">
-                  </div>
-                  <div class="organiza2">
-                    <label for="modalNewGameLimit">Nº de Participantes:</label>
-                    <input type="number" id="modalNewGameLimit" min="1" value="16">
-                    <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
-                  </div>
-                </div>
-                <div id="updateLimitFields" class="modal-section" style="display: none;">
-                  <h4>Alterar Número de Participantes</h4>
-                  <div class="organiza2">
-                    <label for="modalPlayerLimitInput">Participantes</label>
-                    <input type="number" id="modalPlayerLimitInput" value="${playerLimit}" pattern="[0-9]*">
-                    <button id="modalConfirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
-                  </div>
-                </div>
-                <div id="updateFeeFields" class="modal-section" style="display: none;">
-                  <h4>Alterar Taxa de Convidado</h4>
-                  <div class="organiza2">
-                    <label for="modalGuestFeeInput">Taxa (R$)</label>
-                    <input type="number" id="modalGuestFeeInput" step="0.01" min="0" value="${guestFee.toFixed(2)}">
-                    <button id="modalSaveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
-                  </div>
-                </div>
-                <div id="updateTimeFields" class="modal-section" style="display: none;">
-                  <h4>Alterar Horário do Jogo</h4>
-                  <div class="organiza2">
-                    <label for="modalGameTimeInput">Horário</label>
-                    <input type="time" id="modalGameTimeInput" value="${gameTime}">
-                    <button id="modalUpdateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
-                  </div>
-                </div>
-                <div id="viewNotifiedFields" class="modal-section" style="display: none;">
-                  <h4>Integrantes Notificados</h4>
-                  <div id="notifiedPlayersList"></div>
-                </div>
-                <div id="unlockPlayerFields" class="modal-section" style="display: none;">
-                  <h4>Desbloquear Integrante</h4>
-                  <div class="organiza2">
-                    <input type="text" id="unlockPlayerSearch" placeholder="Pesquisar jogador por nome">
-                    <div class="autocomplete-suggestions" id="unlockAutocompleteSuggestions"></div>
-                    <button id="modalUnlockPlayerBtn" disabled><i class="fas fa-unlock"></i> Desbloquear</button>
-                  </div>
-                </div>
+
+async function setupAdminFeatures() {
+  console.log('Iniciando setupAdminFeatures, isAdmin:', isAdmin);
+  if (!adminSettingsBtn) {
+    console.error('Elemento adminSettingsBtn não encontrado no DOM');
+    return;
+  }
+  if (isAdmin) {
+    console.log('Configurando interface para admin');
+    adminSettingsBtn.style.display = 'inline-block';
+    adminSearchContainer.style.display = 'flex';
+    finalizeGameBtn.style.display = 'inline-block';
+    adminSettingsBtn.addEventListener('click', () => {
+      console.log('Botão adminSettingsBtn clicado');
+      Swal.fire({
+        title: 'Configurar Jogos',
+        html: `
+          <div class="organiza">
+            <div class="modal-section">
+              <label for="modalActionSelect">Ação:</label>
+              <select id="modalActionSelect" class="game-select">
+                <option value="createGame">Criar Novo Jogo</option>
+                <option value="updateLimit">Alterar Participantes</option>
+                <option value="updateFee">Alterar Taxa</option>
+                <option value="updateTime">Alterar Horário</option>
+                <option value="viewNotified">Ver Integrantes Notificados</option>
+                <option value="unlockPlayer">Desbloquear Integrante</option>
+              </select>
+            </div>
+            <div class="modal-section" id="gameSelectSection">
+              <label for="modalGameSelect">Selecione um Jogo</label>
+              <select id="modalGameSelect" class="game-select">
+                <option value="">Selecione um jogo</option>
+              </select>
+            </div>
+            <div id="createGameFields" class="modal-section" style="display: none;">
+              <h4>Criar Novo Jogo</h4>
+              <div class="organiza2">
+                <label for="modalNewGameDate">Data:</label>
+                <input type="date" id="modalNewGameDate">
               </div>
-            `,
-            showConfirmButton: false,
-            showCancelButton: true,
-            cancelButtonText: 'Cancelar',
-            didOpen: async () => {
-              console.log('Modal SweetAlert2 aberto');
-              const modalGameSelect = document.getElementById('modalGameSelect');
-              modalGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
-              if (activeGames.length === 0) {
-                modalGameSelect.innerHTML = '<option value="">Nenhum jogo agendado</option>';
-              } else {
-                activeGames.forEach(game => {
-                  const option = document.createElement('option');
-                  option.value = game.id;
-                  const gameDateTime = DateTime.fromISO(`${game.date}T${game.time}`, { zone: 'America/Sao_Paulo' });
-                  const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
-                  const formattedTime = gameDateTime.toFormat('HH:mm');
-                  const dayNumber = gameDateTime.weekday;
-                  const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
-                  option.textContent = `${formattedDate} - ${formattedTime} (${dayOfWeek})`;
-                  if (game.id === currentGameId) {
-                    option.selected = true;
-                  }
-                  modalGameSelect.appendChild(option);
-                });
+              <div class="organiza2">
+                <label for="modalNewGameTime">Horário:</label>
+                <input type="time" id="modalNewGameTime" value="19:00">
+              </div>
+              <div class="organiza2">
+                <label for="modalNewGameLimit">Nº de Participantes:</label>
+                <input type="number" id="modalNewGameLimit" min="1" value="16">
+                <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+              </div>
+            </div>
+            <div id="updateLimitFields" class="modal-section" style="display: none;">
+              <h4>Alterar Número de Participantes</h4>
+              <div class="organiza2">
+                <label for="modalPlayerLimitInput">Participantes</label>
+                <input type="number" id="modalPlayerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                <button id="modalConfirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
+              </div>
+            </div>
+            <div id="updateFeeFields" class="modal-section" style="display: none;">
+              <h4>Alterar Taxa de Convidado</h4>
+              <div class="organiza2">
+                <label for="modalGuestFeeInput">Taxa (R$)</label>
+                <input type="number" id="modalGuestFeeInput" step="0.01" min="0" value="${guestFee.toFixed(2)}">
+                <button id="modalSaveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
+              </div>
+            </div>
+            <div id="updateTimeFields" class="modal-section" style="display: none;">
+              <h4>Alterar Horário do Jogo</h4>
+              <div class="organiza2">
+                <label for="modalGameTimeInput">Horário</label>
+                <input type="time" id="modalGameTimeInput" value="${gameTime}">
+                <button id="modalUpdateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
+              </div>
+            </div>
+            <div id="viewNotifiedFields" class="modal-section" style="display: none;">
+              <h4>Integrantes Notificados</h4>
+              <div id="notifiedPlayersList"></div>
+            </div>
+            <div id="unlockPlayerFields" class="modal-section" style="display: none;">
+              <h4>Desbloquear Integrante</h4>
+              <div class="organiza2">
+                <input type="text" id="unlockPlayerSearch" placeholder="Pesquisar jogador por nome">
+                <div class="autocomplete-suggestions" id="unlockAutocompleteSuggestions"></div>
+                <button id="modalUnlockPlayerBtn" disabled><i class="fas fa-unlock"></i> Desbloquear</button>
+              </div>
+            </div>
+          </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        didOpen: async () => {
+          console.log('Modal SweetAlert2 aberto');
+          const modalGameSelect = document.getElementById('modalGameSelect');
+          modalGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
+          if (activeGames.length === 0) {
+            modalGameSelect.innerHTML = '<option value="">Nenhum jogo agendado</option>';
+          } else {
+            activeGames.forEach(game => {
+              const option = document.createElement('option');
+              option.value = game.id;
+              const gameDateTime = DateTime.fromISO(`${game.date}T${game.time}`, { zone: 'America/Sao_Paulo' });
+              const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
+              const formattedTime = gameDateTime.toFormat('HH:mm');
+              const dayNumber = gameDateTime.weekday;
+              const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+              option.textContent = `${formattedDate} - ${formattedTime} (${dayOfWeek})`;
+              if (game.id === currentGameId) {
+                option.selected = true;
               }
-              modalGameSelect.addEventListener('change', async () => {
-                console.log('modalGameSelect alterado, novo valor:', modalGameSelect.value);
-                currentGameId = modalGameSelect.value;
-                await loadGameData(currentGameId);
-                document.getElementById('gameSelect').value = currentGameId;
+              modalGameSelect.appendChild(option);
+            });
+          }
+          modalGameSelect.addEventListener('change', async () => {
+            console.log('modalGameSelect alterado, novo valor:', modalGameSelect.value);
+            currentGameId = modalGameSelect.value;
+            await loadGameData(currentGameId);
+            document.getElementById('gameSelect').value = currentGameId;
+          });
+          const modalActionSelect = document.getElementById('modalActionSelect');
+          const createGameFields = document.getElementById('createGameFields');
+          const updateLimitFields = document.getElementById('updateLimitFields');
+          const updateFeeFields = document.getElementById('updateFeeFields');
+          const updateTimeFields = document.getElementById('updateTimeFields');
+          const viewNotifiedFields = document.getElementById('viewNotifiedFields');
+          const unlockPlayerFields = document.getElementById('unlockPlayerFields');
+          const gameSelectSection = document.getElementById('gameSelectSection');
+          modalActionSelect.addEventListener('change', () => {
+            createGameFields.style.display = modalActionSelect.value === 'createGame' ? 'block' : 'none';
+            updateLimitFields.style.display = modalActionSelect.value === 'updateLimit' ? 'block' : 'none';
+            updateFeeFields.style.display = modalActionSelect.value === 'updateFee' ? 'block' : 'none';
+            updateTimeFields.style.display = modalActionSelect.value === 'updateTime' ? 'block' : 'none';
+            viewNotifiedFields.style.display = modalActionSelect.value === 'viewNotified' ? 'block' : 'none';
+            unlockPlayerFields.style.display = modalActionSelect.value === 'unlockPlayer' ? 'block' : 'none';
+            gameSelectSection.style.display = ['createGame', 'viewNotified', 'unlockPlayer'].includes(modalActionSelect.value) ? 'none' : 'block';
+            if (modalActionSelect.value === 'viewNotified') {
+              loadNotifiedPlayers();
+            }
+            if (modalActionSelect.value === 'unlockPlayer') {
+              setupUnlockPlayerSearch();
+            }
+          });
+          modalActionSelect.value = 'createGame';
+          createGameFields.style.display = 'block';
+          gameSelectSection.style.display = 'none';
+          const modalCreateGameBtn = document.getElementById('modalCreateGameBtn');
+          modalCreateGameBtn.addEventListener('click', async () => {
+            console.log('Botão modalCreateGameBtn clicado');
+            const newGameDateInput = document.getElementById('modalNewGameDate');
+            const newGameTimeInput = document.getElementById('modalNewGameTime');
+            const newGameLimitInput = document.getElementById('modalNewGameLimit');
+            if (!newGameDateInput || !newGameTimeInput || !newGameLimitInput) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro Interno',
+                text: 'Campos do formulário não encontrados. Tente novamente.',
               });
-              const modalActionSelect = document.getElementById('modalActionSelect');
-              const createGameFields = document.getElementById('createGameFields');
-              const updateLimitFields = document.getElementById('updateLimitFields');
-              const updateFeeFields = document.getElementById('updateFeeFields');
-              const updateTimeFields = document.getElementById('updateTimeFields');
-              const viewNotifiedFields = document.getElementById('viewNotifiedFields');
-              const unlockPlayerFields = document.getElementById('unlockPlayerFields');
-              const gameSelectSection = document.getElementById('gameSelectSection');
-              modalActionSelect.addEventListener('change', () => {
-                createGameFields.style.display = modalActionSelect.value === 'createGame' ? 'block' : 'none';
-                updateLimitFields.style.display = modalActionSelect.value === 'updateLimit' ? 'block' : 'none';
-                updateFeeFields.style.display = modalActionSelect.value === 'updateFee' ? 'block' : 'none';
-                updateTimeFields.style.display = modalActionSelect.value === 'updateTime' ? 'block' : 'none';
-                viewNotifiedFields.style.display = modalActionSelect.value === 'viewNotified' ? 'block' : 'none';
-                unlockPlayerFields.style.display = modalActionSelect.value === 'unlockPlayer' ? 'block' : 'none';
-                gameSelectSection.style.display = ['createGame', 'viewNotified', 'unlockPlayer'].includes(modalActionSelect.value) ? 'none' : 'block';
-                if (modalActionSelect.value === 'viewNotified') {
-                  loadNotifiedPlayers();
-                }
-                if (modalActionSelect.value === 'unlockPlayer') {
-                  setupUnlockPlayerSearch();
-                }
+              return;
+            }
+            const date = newGameDateInput.value;
+            const time = newGameTimeInput.value;
+            const limit = parseInt(newGameLimitInput.value);
+            if (!date || !time || isNaN(limit) || limit < 1) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Dados Inválidos',
+                text: 'Preencha todos os campos corretamente.',
               });
-              modalActionSelect.value = 'createGame';
-              createGameFields.style.display = 'block';
-              gameSelectSection.style.display = 'none';
-              const modalCreateGameBtn = document.getElementById('modalCreateGameBtn');
-              modalCreateGameBtn.addEventListener('click', async () => {
-                console.log('Botão modalCreateGameBtn clicado');
-                const newGameDateInput = document.getElementById('modalNewGameDate');
-                const newGameTimeInput = document.getElementById('modalNewGameTime');
-                const newGameLimitInput = document.getElementById('modalNewGameLimit');
-                if (!newGameDateInput || !newGameTimeInput || !newGameLimitInput) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro Interno',
-                    text: 'Campos do formulário não encontrados. Tente novamente.',
-                  });
-                  return;
-                }
-                const date = newGameDateInput.value;
-                const time = newGameTimeInput.value;
-                const limit = parseInt(newGameLimitInput.value);
-                if (!date || !time || isNaN(limit) || limit < 1) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Dados Inválidos',
-                    text: 'Preencha todos os campos corretamente.',
-                  });
-                  return;
-                }
-                try {
-                  const gameId = `game_${Date.now()}`;
-                  const gameRef = ref(database, `activeGames/${gameId}`);
-                  await set(gameRef, {
-                    date,
-                    time,
-                    playerLimit: limit,
-                    confirmed: {},
-                    waitlist: {},
-                    createdAt: getBrazilDateTimeISO()
-                  });
-                  newGameDateInput.value = '';
-                  newGameTimeInput.value = '19:00';
-                  newGameLimitInput.value = '16';
-                  await Swal.fire({
-                    icon: 'success',
-                    title: 'Jogo Criado',
-                    text: 'Novo jogo criado com sucesso!',
-                  });
-                  const formattedDate = formatDateToBR(date);
-                  const message = `Novo jogo criado para ${formattedDate} às ${time}!`;
-                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
-                  await loadActiveGames();
-                  Swal.close();
-                } catch (error) {
-                  console.error('Erro ao criar jogo:', error);
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Não foi possível criar o jogo.',
-                  });
-                }
+              return;
+            }
+            try {
+              const gameId = `game_${Date.now()}`;
+              const gameRef = ref(database, `activeGames/${gameId}`);
+              await set(gameRef, {
+                date,
+                time,
+                playerLimit: limit,
+                confirmed: {},
+                waitlist: {},
+                createdAt: getBrazilDateTimeISO()
               });
-              const modalConfirmLimitBtn = document.getElementById('modalConfirmLimitBtn');
-              modalConfirmLimitBtn.addEventListener('click', async () => {
-                console.log('Botão modalConfirmLimitBtn clicado');
-                const playerLimitInput = document.getElementById('modalPlayerLimitInput');
-                const inputValue = playerLimitInput.value.trim();
-                const newLimit = parseInt(inputValue);
-                if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Número Inválido',
-                    text: 'Por favor, insira um número inteiro válido.',
-                  });
-                  playerLimitInput.value = playerLimit;
-                  return;
-                }
-                if (newLimit < 1) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Limite Inválido',
-                    text: 'O limite deve ser pelo menos 1.',
-                  });
-                  playerLimitInput.value = playerLimit;
-                  return;
-                }
-                if (newLimit !== playerLimit) {
-                  playerLimit = newLimit;
-                  await adjustConfirmedPlayers();
-                  await updateFirebaseLists();
-                  updateGameList();
-                  updatePlayerLimitDisplay(isAdmin);
-                  const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
-                  const message = `Limite de participantes do jogo ${formattedDate} alterado para ${newLimit}.`;
-                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
-                  Swal.close();
-                }
+              newGameDateInput.value = '';
+              newGameTimeInput.value = '19:00';
+              newGameLimitInput.value = '16';
+              await Swal.fire({
+                icon: 'success',
+                title: 'Jogo Criado',
+                text: 'Novo jogo criado com sucesso!',
               });
-              const modalSaveGuestFeeBtn = document.getElementById('modalSaveGuestFeeBtn');
-              modalSaveGuestFeeBtn.addEventListener('click', async () => {
-                console.log('Botão modalSaveGuestFeeBtn clicado');
-                const newFee = parseFloat(document.getElementById('modalGuestFeeInput').value);
-                if (isNaN(newFee) || newFee < 0) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Valor Inválido',
-                    text: 'Por favor, insira um valor válido.',
-                  });
-                  return;
-                }
-                try {
-                  await set(ref(database, 'settings/guestFee'), newFee);
-                  guestFee = newFee;
-                  await Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso',
-                    text: 'Taxa de convidado atualizada com sucesso.',
-                  });
-                  Swal.close();
-                } catch (error) {
-                  console.error('Erro ao salvar taxa:', error);
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao salvar taxa. Verifique suas permissões.',
-                  });
-                }
-              });
-              const modalUpdateGameTimeBtn = document.getElementById('modalUpdateGameTimeBtn');
-              modalUpdateGameTimeBtn.addEventListener('click', async () => {
-                console.log('Botão modalUpdateGameTimeBtn clicado');
-                if (!currentGameId) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Nenhum Jogo Selecionado',
-                    text: 'Por favor, selecione um jogo para alterar o horário.',
-                  });
-                  return;
-                }
-                const newTime = document.getElementById('modalGameTimeInput').value;
-                if (!newTime) {
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Horário Inválido',
-                    text: 'Por favor, selecione um horário válido.',
-                  });
-                  return;
-                }
-                try {
-                  const gameRef = ref(database, `activeGames/${currentGameId}`);
-                  await set(gameRef, {
-                    ...currentGameData,
-                    time: newTime
-                  });
-                  currentGameData.time = newTime;
-                  gameTime = newTime;
-                  updateGameDateDisplay();
-                  await loadActiveGames();
-                  const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
-                  const message = `Horário do jogo ${formattedDate} alterado para ${newTime}.`;
-                  await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
-                  await Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso',
-                    text: 'Horário do jogo atualizado com sucesso.',
-                  });
-                  Swal.close();
-                } catch (error) {
-                  console.error('Erro ao atualizar horário:', error);
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao atualizar horário. Verifique suas permissões.',
-                  });
-                }
+              const formattedDate = formatDateToBR(date);
+              const message = `Novo jogo criado para ${formattedDate} às ${time}!`;
+              await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+              await loadActiveGames();
+              Swal.close();
+            } catch (error) {
+              console.error('Erro ao criar jogo:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível criar o jogo.',
               });
             }
           });
-        });
-        setupPlayerSearch();
-        setupGuestControls();
-      } else {
-        console.log('Configurando interface para não-admin');
-        adminSettingsBtn.style.display = 'none';
-        adminSearchContainer.style.display = 'none';
-        finalizeGameBtn.style.display = 'none';
-        updatePlayerLimitDisplay(isAdmin);
-      }
-      guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
-    }
-
-    // Nova função para carregar jogadores notificados
-    async function loadNotifiedPlayers() {
-      const notifiedList = document.getElementById('notifiedPlayersList');
-      notifiedList.innerHTML = '<p>Carregando...</p>';
-      try {
-        const playersRef = ref(database, 'players');
-        const snapshot = await get(playersRef);
-        if (snapshot.exists()) {
-          const players = Object.entries(snapshot.val()).map(([id, player]) => ({
-            id,
-            ...player
-          }));
-          const notifiedPlayers = players.filter(player => (player.warningCount || 0) > 0);
-          if (notifiedPlayers.length === 0) {
-            notifiedList.innerHTML = '<p>Nenhum jogador notificado.</p>';
-          } else {
-            const html = notifiedPlayers.map(player => `
-              <div class="player-item">
-                <span>${player.name} (${player.email}) - Avisos: ${player.warningCount}</span>
-              </div>
-            `).join('');
-            notifiedList.innerHTML = html;
-          }
-        } else {
-          notifiedList.innerHTML = '<p>Nenhum jogador encontrado.</p>';
-        }
-      } catch (error) {
-        console.error('Erro ao carregar jogadores notificados:', error);
-        notifiedList.innerHTML = '<p>Erro ao carregar lista.</p>';
-      }
-    }
-
-    // Nova função para configurar o campo de busca para desbloqueio
-    function setupUnlockPlayerSearch() {
-      const unlockPlayerSearch = document.getElementById('unlockPlayerSearch');
-      const unlockAutocompleteSuggestions = document.getElementById('unlockAutocompleteSuggestions');
-      const modalUnlockPlayerBtn = document.getElementById('modalUnlockPlayerBtn');
-      let selectedUnlockPlayerId = null;
-      unlockPlayerSearch.addEventListener('input', () => {
-        const query = unlockPlayerSearch.value.trim().toLowerCase();
-        unlockAutocompleteSuggestions.innerHTML = '';
-        selectedUnlockPlayerId = null;
-        modalUnlockPlayerBtn.disabled = true;
-        if (query.length > 0) {
-          const suggestions = allPlayers
-            .filter(player => player.name?.toLowerCase().includes(query) && (player.warningCount || 0) > 0)
-            .slice(0, 5);
-          if (suggestions.length > 0) {
-            suggestions.forEach(player => {
-              const div = document.createElement('div');
-              div.className = 'autocomplete-suggestion';
-              div.textContent = `${player.name} (${player.warningCount} avisos)`;
-              div.addEventListener('click', () => {
-                unlockPlayerSearch.value = player.name;
-                selectedUnlockPlayerId = player.id;
-                modalUnlockPlayerBtn.disabled = false;
-                unlockAutocompleteSuggestions.style.display = 'none';
+          const modalConfirmLimitBtn = document.getElementById('modalConfirmLimitBtn');
+          modalConfirmLimitBtn.addEventListener('click', async () => {
+            console.log('Botão modalConfirmLimitBtn clicado');
+            const playerLimitInput = document.getElementById('modalPlayerLimitInput');
+            const inputValue = playerLimitInput.value.trim();
+            const newLimit = parseInt(inputValue);
+            if (!Number.isInteger(newLimit) || isNaN(newLimit)) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Número Inválido',
+                text: 'Por favor, insira um número inteiro válido.',
               });
-              unlockAutocompleteSuggestions.appendChild(div);
-            });
-            unlockAutocompleteSuggestions.style.display = 'block';
-          } else {
-            unlockAutocompleteSuggestions.style.display = 'none';
-          }
-        } else {
-          unlockAutocompleteSuggestions.style.display = 'none';
+              playerLimitInput.value = playerLimit;
+              return;
+            }
+            if (newLimit < 1) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Limite Inválido',
+                text: 'O limite deve ser pelo menos 1.',
+              });
+              playerLimitInput.value = playerLimit;
+              return;
+            }
+            if (newLimit !== playerLimit) {
+              playerLimit = newLimit;
+              await adjustConfirmedPlayers();
+              await updateFirebaseLists();
+              updateGameList();
+              updatePlayerLimitDisplay(isAdmin);
+              const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
+              const message = `Limite de participantes do jogo ${formattedDate} alterado para ${newLimit}.`;
+              await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+              Swal.close();
+            }
+          });
+          const modalSaveGuestFeeBtn = document.getElementById('modalSaveGuestFeeBtn');
+          modalSaveGuestFeeBtn.addEventListener('click', async () => {
+            console.log('Botão modalSaveGuestFeeBtn clicado');
+            const newFee = parseFloat(document.getElementById('modalGuestFeeInput').value);
+            if (isNaN(newFee) || newFee < 0) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Valor Inválido',
+                text: 'Por favor, insira um valor válido.',
+              });
+              return;
+            }
+            try {
+              await set(ref(database, 'settings/guestFee'), newFee);
+              guestFee = newFee;
+              await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: 'Taxa de convidado atualizada com sucesso.',
+              });
+              Swal.close();
+            } catch (error) {
+              console.error('Erro ao salvar taxa:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Erro ao salvar taxa. Verifique suas permissões.',
+              });
+            }
+          });
+          const modalUpdateGameTimeBtn = document.getElementById('modalUpdateGameTimeBtn');
+          modalUpdateGameTimeBtn.addEventListener('click', async () => {
+            console.log('Botão modalUpdateGameTimeBtn clicado');
+            if (!currentGameId) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Nenhum Jogo Selecionado',
+                text: 'Por favor, selecione um jogo para alterar o horário.',
+              });
+              return;
+            }
+            const newTime = document.getElementById('modalGameTimeInput').value;
+            if (!newTime) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Horário Inválido',
+                text: 'Por favor, selecione um horário válido.',
+              });
+              return;
+            }
+            try {
+              const gameRef = ref(database, `activeGames/${currentGameId}`);
+              await set(gameRef, {
+                ...currentGameData,
+                time: newTime
+              });
+              currentGameData.time = newTime;
+              gameTime = newTime;
+              updateGameDateDisplay();
+              await loadActiveGames();
+              const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
+              const message = `Horário do jogo ${formattedDate} alterado para ${newTime}.`;
+              await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+              await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: 'Horário do jogo atualizado com sucesso.',
+              });
+              Swal.close();
+            } catch (error) {
+              console.error('Erro ao atualizar horário:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Erro ao atualizar horário. Verifique suas permissões.',
+              });
+            }
+          });
         }
       });
-      unlockPlayerSearch.addEventListener('blur', () => {
-        setTimeout(() => {
-          unlockAutocompleteSuggestions.style.display = 'none';
-        }, 200);
-      });
-      modalUnlockPlayerBtn.addEventListener('click', async () => {
-        if (selectedUnlockPlayerId) {
-          try {
-            await resetWarningCount(selectedUnlockPlayerId);
-            await Swal.fire({
-              icon: 'success',
-              title: 'Sucesso',
-              text: 'Jogador desbloqueado e contador de avisos zerado.',
-            });
-            unlockPlayerSearch.value = '';
-            selectedUnlockPlayerId = null;
-            modalUnlockPlayerBtn.disabled = true;
-            unlockAutocompleteSuggestions.style.display = 'none';
-            Swal.close();
-          } catch (error) {
-            console.error('Erro ao desbloquear jogador:', error);
-            await Swal.fire({
-              icon: 'error',
-              title: 'Erro',
-              text: 'Erro ao desbloquear jogador.',
-            });
-          }
-        }
-      });
-    }
+    });
+    setupPlayerSearch();
+    setupGuestControls();
+  } else {
+    console.log('Configurando interface para não-admin');
+    adminSettingsBtn.style.display = 'none';
+    adminSearchContainer.style.display = 'none';
+    finalizeGameBtn.style.display = 'none';
+    updatePlayerLimitDisplay(isAdmin);
+  }
+  guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
+}
+
+
+
+
+
+
+ 
 
     async function initializeGameList() {
       console.log('Iniciando initializeGameList');
@@ -1496,245 +1406,172 @@
       }
     }
 
+
+
     async function confirmPlayer(targetPlayerId = null) {
-      if (!currentGameId) {
-        await Swal.fire({
-          icon: 'info',
-          title: 'Que pena, nenhum jogo Programado!',
-          text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
-        });
+  if (!currentGameId) {
+    await Swal.fire({
+      icon: 'info',
+      title: 'Que pena, nenhum jogo Programado!',
+      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
+    });
+    return;
+  }
+  const isAdmin = adminEmails.includes(emailLogado);
+  const playerId = isAdmin && targetPlayerId ? targetPlayerId : window.currentUserPlayer?.id;
+  if (!playerId) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Nenhum jogador selecionado ou associado a este email.',
+    });
+    return;
+  }
+  try {
+    // Nova lógica: Verificar pendências e avisos
+    const warningResult = await handlePaymentWarnings(playerId, isAdmin, emailLogado);
+    if (!warningResult.allowConfirmation) {
+      return; // Bloqueia a confirmação se houver pendências e limite de avisos atingido
+    }
+
+    const playerRef = ref(database, `players/${playerId}`);
+    const playerSnapshot = await get(playerRef);
+    if (!playerSnapshot.exists()) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Jogador Não Encontrado',
+        text: 'Jogador não encontrado.',
+      });
+      return;
+    }
+    const playerData = playerSnapshot.val();
+    const playerObj = {
+      id: playerId,
+      name: playerData.name || '-',
+      category: playerData.category || 'CONVIDADO',
+      position: playerData.position || '-',
+      timestamp: getBrazilTimestamp(),
+      paymentStatus: playerData.category === 'DIARIA' ? 'inadimplente' : await checkPaymentStatus(playerId),
+      imageUrl: playerData.imageUrl || defaultImage,
+      status: playerData.category === 'CONVIDADO' || playerData.category === 'DIARIA' ? 'pending' : null,
+      additionalInfo: playerData.name || null,
+      createdAt: getBrazilDateTimeISO(),
+      date: null,
+      month: getBrazilMonthYear(),
+      paymentType: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? playerData.category : null,
+      value: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? parseFloat(guestFee.toFixed(2)) : null
+    };
+    if (confirmedPlayers.some(p => p.id === playerId) || waitlistPlayers.some(p => p.id === playerId)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Presença Já Confirmada',
+        text: 'Você já confirmou sua presença.',
+      });
+      abrirQuadra();
+      return;
+    }
+    if (playerObj.category === 'DIARIA') {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Atenção',
+        html: `<strong>${playerObj.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
+        showCancelButton: true,
+        confirmButtonText: 'Estou Ciente',
+        cancelButtonText: 'Cancelar',
+      });
+      if (!result.isConfirmed) {
         return;
       }
-      const isAdmin = adminEmails.includes(emailLogado);
-      const playerId = isAdmin && targetPlayerId ? targetPlayerId : window.currentUserPlayer?.id;
-      if (!playerId) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Nenhum jogador selecionado ou associado a este email.',
-        });
-        return;
+    }
+    if (playerObj.category === 'DIARIA') {
+      const [year, month] = getBrazilMonthYear().split('-');
+      const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
+      const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+      await set(paymentRef, {
+        additionalInfo: playerObj.name,
+        createdAt: getBrazilDateTimeISO(),
+        month: getBrazilMonthYear(),
+        paymentType: 'DIARIA',
+        playerId: playerId,
+        playerName: playerObj.name,
+        value: parseFloat(guestFee.toFixed(2)),
+        gameId: currentGameId,
+        date: null,
+        paymentStatus: 'inadimplente'
+      });
+    }
+    if (confirmedPlayers.length < playerLimit) {
+      confirmedPlayers.push(playerObj);
+    } else {
+      const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
+      if ((categoryPriority[playerObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
+        confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
+        waitlistPlayers.push(lowestPriorityPlayer);
+        confirmedPlayers.push(playerObj);
+      } else {
+        waitlistPlayers.push(playerObj);
       }
-      try {
-        const playerRef = ref(database, `players/${playerId}`);
-        const playerSnapshot = await get(playerRef);
-        if (!playerSnapshot.exists()) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Jogador Não Encontrado',
-            text: 'Jogador não encontrado.',
-          });
-          return;
-        }
-        const playerData = playerSnapshot.val();
-        const playerObj = {
-          id: playerId,
-          name: playerData.name || '-',
-          category: playerData.category || 'CONVIDADO',
-          position: playerData.position || '-',
-          timestamp: getBrazilTimestamp(),
-          paymentStatus: playerData.category === 'DIARIA' ? 'inadimplente' : await checkPaymentStatus(playerId),
-          imageUrl: playerData.imageUrl || defaultImage,
-          status: playerData.category === 'CONVIDADO' || playerData.category === 'DIARIA' ? 'pending' : null,
-          additionalInfo: playerData.name || null,
-          createdAt: getBrazilDateTimeISO(),
-          date: null,
-          month: getBrazilMonthYear(),
-          paymentType: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? playerData.category : null,
-          value: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? parseFloat(guestFee.toFixed(2)) : null
-        };
-        // Verificar pendências de pagamento
-        const pendingPayments = await checkPendingPayments(playerId);
-        if (pendingPayments.length === 0 && !isAdmin) {
-          // Zerar contador de avisos se não houver pendências
-          await resetWarningCount(playerId);
-        } else if (pendingPayments.length > 0 && !isAdmin) {
-          const warningCount = await getWarningCount(playerId);
-          if (warningCount >= 2) {
-            await Swal.fire({
-              icon: 'error',
-              title: 'Bloqueado',
-              html: `Você atingiu o limite de avisos (2). Não é possível confirmar presença até regularizar suas pendências.<br><br>PIX: <strong>fabioluiztx@outlook.com</strong>`,
-              showCancelButton: true,
-              confirmButtonText: 'Copiar PIX',
-              cancelButtonText: 'OK',
-            }).then(async (result) => {
-              if (result.isConfirmed) {
-                try {
-                  await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-                  await Swal.fire({
-                    icon: 'success',
-                    title: 'Copiado!',
-                    text: 'Endereço PIX copiado para a área de transferência.',
-                    timer: 1500,
-                    showConfirmButton: false,
-                  });
-                } catch (error) {
-                  console.error('Erro ao copiar PIX:', error);
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Não foi possível copiar o endereço PIX.',
-                  });
-                }
-              }
-            });
-            return; // Bloqueia a confirmação
-          }
-          const newWarningCount = await incrementWarningCount(playerId);
-          let pendenciasHTML = '<ul>';
-          pendingPayments.forEach(payment => {
-            const gameDate = payment.date ? formatDateToBR(payment.date) : 'Data não definida';
-            pendenciasHTML += `<li>${payment.paymentType} - ${payment.guestName || payment.playerName}: R$${payment.value.toFixed(2)} (Jogo: ${gameDate})</li>`;
-          });
-          pendenciasHTML += '</ul>';
-          await Swal.fire({
-            icon: 'warning',
-            title: 'Pendências de Pagamento',
-            html: `Você possui pendências de pagamento:<br>${pendenciasHTML}<br>Este é seu <strong>${newWarningCount}º aviso de 2</strong>. Após o segundo aviso, você não poderá confirmar presença.<br>Por favor, regularize os pagamentos pendentes.<br>PIX: <strong>fabioluiztx@outlook.com</strong>`,
-            showCancelButton: true,
-            confirmButtonText: 'Copiar PIX',
-            cancelButtonText: 'OK',
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              try {
-                await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-                await Swal.fire({
-                  icon: 'success',
-                  title: 'Copiado!',
-                  text: 'Endereço PIX copiado para a área de transferência.',
-                  timer: 1500,
-                  showConfirmButton: false,
-                });
-              } catch (error) {
-                console.error('Erro ao copiar PIX:', error);
-                await Swal.fire({
-                  icon: 'error',
-                  title: 'Erro',
-                  text: 'Não foi possível copiar o endereço PIX.',
-                });
-              }
-            }
-          });
-          return; // Bloqueia a confirmação após o aviso
-        }
-        if (confirmedPlayers.some(p => p.id === playerId) || waitlistPlayers.some(p => p.id === playerId)) {
-          await Swal.fire({
-            icon: 'warning',
-            title: 'Presença Já Confirmada',
-            text: 'Você já confirmou sua presença.',
-          });
-          abrirQuadra();
-          return;
-        }
-        if (playerObj.category === 'DIARIA') {
-          const result = await Swal.fire({
-            icon: 'warning',
-            title: 'Atenção',
-            html: `<strong>${playerObj.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
-            showCancelButton: true,
-            confirmButtonText: 'Estou Ciente',
-            cancelButtonText: 'Cancelar',
-          });
-          if (!result.isConfirmed) {
-            return;
-          }
-        }
-        if (playerObj.category === 'DIARIA') {
-          const [year, month] = getBrazilMonthYear().split('-');
-          const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
-          const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-          await set(paymentRef, {
-            additionalInfo: playerObj.name,
-            createdAt: getBrazilDateTimeISO(),
-            month: getBrazilMonthYear(),
-            paymentType: 'DIARIA',
-            playerId: playerId,
-            playerName: playerObj.name,
-            value: parseFloat(guestFee.toFixed(2)),
-            gameId: currentGameId,
-            date: null,
-            paymentStatus: 'inadimplente'
-
-          });
-        }
-
-        if (confirmedPlayers.length < playerLimit) {
-          confirmedPlayers.push(playerObj);
-        } else {
-          const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
-          if ((categoryPriority[playerObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
-            confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
-            waitlistPlayers.push(lowestPriorityPlayer);
-            confirmedPlayers.push(playerObj);
-          } else {
-            waitlistPlayers.push(playerObj);
-          }
-        }
-
-        confirmedPlayers = sortPlayers(confirmedPlayers);
-        waitlistPlayers = sortPlayers(waitlistPlayers);
-
-        await updateFirebaseLists();
-        updateGameList();
-
-        const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
-        const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-        await sendPushNotification(message, playerObj.imageUrl || defaultImage);
-
-        if (playerObj.category === 'DIARIA') {
-          await Swal.fire({
-            icon: 'success',
-            title: 'Sucesso',
-            html: `
-              Confirmação lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição e disponibilidade de Vaga.<br><br>
-              PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
-              <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
-            `,
-            showConfirmButton: false,
-            didOpen: () => {
-              const copyPixBtn = document.getElementById('copyPixBtn');
-              copyPixBtn.addEventListener('click', async () => {
-                try {
-                  await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-                  await Swal.fire({
-                    icon: 'success',
-                    title: 'Copiado!',
-                    text: 'Endereço PIX copiado para a área de transferência.',
-                    timer: 1500,
-                    showConfirmButton: false
-                  });
-                } catch (error) {
-                  console.error('Erro ao copiar PIX:', error);
-                  await Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Não foi possível copiar o endereço PIX.',
-                  });
-                }
+    }
+    confirmedPlayers = sortPlayers(confirmedPlayers);
+    waitlistPlayers = sortPlayers(waitlistPlayers);
+    await updateFirebaseLists();
+    updateGameList();
+    const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
+    const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+    if (playerObj.category === 'DIARIA') {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Sucesso',
+        html: `
+          Confirmação lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição e disponibilidade de Vaga.<br><br>
+          PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+          <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
+        `,
+        showConfirmButton: false,
+        didOpen: () => {
+          const copyPixBtn = document.getElementById('copyPixBtn');
+          copyPixBtn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText('fabioluiztx@outlook.com');
+              await Swal.fire({
+                icon: 'success',
+                title: 'Copiado!',
+                text: 'Endereço PIX copiado para a área de transferência.',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            } catch (error) {
+              console.error('Erro ao copiar PIX:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível copiar o endereço PIX.',
               });
             }
           });
         }
-
-        if (isAdmin && targetPlayerId) {
-          playerSearch.value = '';
-          selectedPlayerId = null;
-          addPlayerBtn.disabled = true;
-          autocompleteSuggestions.style.display = 'none';
-        }
-
-        abrirQuadra();
-
-      } catch (error) {
-        console.error('Erro ao confirmar jogador:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao processar confirmação.',
-        });
-      }
+      });
     }
+    if (isAdmin && targetPlayerId) {
+      playerSearch.value = '';
+      selectedPlayerId = null;
+      addPlayerBtn.disabled = true;
+      autocompleteSuggestions.style.display = 'none';
+    }
+    abrirQuadra();
+  } catch (error) {
+    console.error('Erro ao confirmar jogador:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Erro ao processar confirmação.',
+    });
+  }
+}
+
+
+
 
     async function updateFirebaseLists() {
       if (!currentGameId) return;
