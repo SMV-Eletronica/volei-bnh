@@ -1618,9 +1618,7 @@ async function loadCurrentUserPlayer() {
     }
 
  
-
-
-    async function confirmPlayer(targetPlayerId = null) {
+async function confirmPlayer(targetPlayerId = null) {
   if (!currentGameId) {
     await Swal.fire({
       icon: 'info',
@@ -1629,8 +1627,10 @@ async function loadCurrentUserPlayer() {
     });
     return;
   }
+
   const isAdmin = adminEmails.includes(emailLogado);
   const playerId = isAdmin && targetPlayerId ? targetPlayerId : window.currentUserPlayer?.id;
+
   if (!playerId) {
     await Swal.fire({
       icon: 'error',
@@ -1639,23 +1639,29 @@ async function loadCurrentUserPlayer() {
     });
     return;
   }
+
   try {
-    // Nova lógica: Verificar pendências e avisos
+    // 1. Verificação de pendências com tratamento explícito
     const warningResult = await handlePaymentWarnings(playerId, isAdmin, emailLogado);
+    
     if (!warningResult.allowConfirmation) {
-      return; // Bloqueia a confirmação se houver pendências e limite de avisos atingido
+      // Se não permitir confirmação, mostrar mensagem e bloquear
+      return; // Sai da função sem continuar
     }
 
+    // 2. Obter dados do jogador
     const playerRef = ref(database, `players/${playerId}`);
     const playerSnapshot = await get(playerRef);
+    
     if (!playerSnapshot.exists()) {
       await Swal.fire({
         icon: 'error',
         title: 'Jogador Não Encontrado',
-        text: 'Jogador não encontrado.',
+        text: 'Jogador não encontrado no sistema.',
       });
       return;
     }
+
     const playerData = playerSnapshot.val();
     const playerObj = {
       id: playerId,
@@ -1673,6 +1679,8 @@ async function loadCurrentUserPlayer() {
       paymentType: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? playerData.category : null,
       value: playerData.category === 'DIARIA' || playerData.category === 'CONVIDADO' ? parseFloat(guestFee.toFixed(2)) : null
     };
+
+    // 3. Verificar se já está na lista
     if (confirmedPlayers.some(p => p.id === playerId) || waitlistPlayers.some(p => p.id === playerId)) {
       await Swal.fire({
         icon: 'warning',
@@ -1682,6 +1690,8 @@ async function loadCurrentUserPlayer() {
       abrirQuadra();
       return;
     }
+
+    // 4. Tratamento especial para diaristas
     if (playerObj.category === 'DIARIA') {
       const result = await Swal.fire({
         icon: 'warning',
@@ -1691,11 +1701,12 @@ async function loadCurrentUserPlayer() {
         confirmButtonText: 'Estou Ciente',
         cancelButtonText: 'Cancelar',
       });
+      
       if (!result.isConfirmed) {
         return;
       }
-    }
-    if (playerObj.category === 'DIARIA') {
+
+      // Registrar pagamento pendente para diarista
       const [year, month] = getBrazilMonthYear().split('-');
       const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
       const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
@@ -1712,6 +1723,8 @@ async function loadCurrentUserPlayer() {
         paymentStatus: 'inadimplente'
       });
     }
+
+    // 5. Adicionar à lista apropriada
     if (confirmedPlayers.length < playerLimit) {
       confirmedPlayers.push(playerObj);
     } else {
@@ -1724,54 +1737,34 @@ async function loadCurrentUserPlayer() {
         waitlistPlayers.push(playerObj);
       }
     }
+
+    // 6. Ordenar e atualizar listas
     confirmedPlayers = sortPlayers(confirmedPlayers);
     waitlistPlayers = sortPlayers(waitlistPlayers);
     await updateFirebaseLists();
     updateGameList();
+
+    // 7. Notificação e feedback
     const formattedDate = currentGameData ? formatDateToBR(currentGameData.date) : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
     await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+
+    // 8. Feedback específico para diaristas
     if (playerObj.category === 'DIARIA') {
-      await Swal.fire({
-        icon: 'success',
-        title: 'Sucesso',
-        html: `
-          Confirmação lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição e disponibilidade de Vaga.<br><br>
-          PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
-          <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
-        `,
-        showConfirmButton: false,
-        didOpen: () => {
-          const copyPixBtn = document.getElementById('copyPixBtn');
-          copyPixBtn.addEventListener('click', async () => {
-            try {
-              await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-              await Swal.fire({
-                icon: 'success',
-                title: 'Copiado!',
-                text: 'Endereço PIX copiado para a área de transferência.',
-                timer: 1500,
-                showConfirmButton: false
-              });
-            } catch (error) {
-              console.error('Erro ao copiar PIX:', error);
-              await Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: 'Não foi possível copiar o endereço PIX.',
-              });
-            }
-          });
-        }
-      });
+      await showDiariaConfirmationFeedback();
     }
+
+    // 9. Limpar busca se for admin
     if (isAdmin && targetPlayerId) {
       playerSearch.value = '';
       selectedPlayerId = null;
       addPlayerBtn.disabled = true;
       autocompleteSuggestions.style.display = 'none';
     }
+
+    // 10. Abrir quadra
     abrirQuadra();
+
   } catch (error) {
     console.error('Erro ao confirmar jogador:', error);
     await Swal.fire({
@@ -1781,6 +1774,43 @@ async function loadCurrentUserPlayer() {
     });
   }
 }
+
+// Função auxiliar para feedback de confirmação de diarista
+async function showDiariaConfirmationFeedback() {
+  await Swal.fire({
+    icon: 'success',
+    title: 'Sucesso',
+    html: `
+      Confirmação lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição e disponibilidade de Vaga.<br><br>
+      PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+      <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
+    `,
+    showConfirmButton: false,
+    didOpen: () => {
+      const copyPixBtn = document.getElementById('copyPixBtn');
+      copyPixBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText('fabioluiztx@outlook.com');
+          await Swal.fire({
+            icon: 'success',
+            title: 'Copiado!',
+            text: 'Endereço PIX copiado para a área de transferência.',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } catch (error) {
+          console.error('Erro ao copiar PIX:', error);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Não foi possível copiar o endereço PIX.',
+          });
+        }
+      });
+    }
+  });
+}
+
 
 
     
