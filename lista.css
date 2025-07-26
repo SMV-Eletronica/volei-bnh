@@ -39,6 +39,53 @@ body {
 }
 
 
+.notified-players-list {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.notified-players-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.notified-players-list th, .notified-players-list td {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.notified-players-list th {
+  background-color: #f2f2f2;
+}
+
+.notified-players-list tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.clear-notifications-btn {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.clear-notifications-btn:hover {
+  background-color: #219653;
+}
+
+
+
+
+
+
+
+
+
+
  #convidadobtn {
       
       margin-top: 20px;
