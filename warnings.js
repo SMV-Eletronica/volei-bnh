@@ -1,9 +1,8 @@
+// warnings.js - Versão Corrigida (mantendo todas as funções)
+import { getDatabase, ref, get, update, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+import { DateTime } from "https://moment.github.io/luxon/global/luxon.min.js";
 
-// warnings.js - Funções para gerenciar avisos de pendências e opções administrativas
-import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-//import { DateTime } from "https://moment.github.io/luxon/global/luxon.min.js";
-
-// Função para formatar data (reutilizada para consistência)
+// Função para formatar data
 function formatDateToBR(dateStr) {
   return DateTime.fromISO(dateStr, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
 }
@@ -13,67 +12,140 @@ function getBrazilMonthYear() {
   return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
 }
 
-// Verificar pendências de pagamento
+// Função principal corrigida para gerenciar avisos
+async function handlePaymentWarnings(playerId, isAdmin, emailLogado) {
+  const MAX_WARNINGS = 2; // 2 avisos permitidos (0=1º, 1=2º, 2=bloqueia)
+  const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
+  
+  // 1. Verificar se é admin
+  if (isAdmin || adminEmails.includes(emailLogado)) {
+    return { 
+      allowConfirmation: true,
+      warningCount: 0,
+      message: ''
+    };
+  }
+
+  // 2. Verificar pendências
+  const pendingPayments = await checkPendingPayments(playerId);
+  if (pendingPayments.length === 0) {
+    await resetWarningCount(playerId);
+    return { 
+      allowConfirmation: true,
+      warningCount: 0,
+      message: ''
+    };
+  }
+
+  // 3. Obter avisos existentes
+  const warningCount = await getWarningCount(playerId);
+
+  // 4. Verificar se já atingiu o limite
+  if (warningCount >= MAX_WARNINGS) {
+    const pendenciasHTML = buildPendingPaymentsHTML(pendingPayments);
+    await showBlockedAlert(pendenciasHTML);
+    
+    return {
+      allowConfirmation: false,
+      warningCount: warningCount + 1,
+      message: `Você atingiu o limite de avisos (${warningCount + 1}). Regularize seus pagamentos.`
+    };
+  }
+
+  // 5. Registrar novo aviso (se houver pendências)
+  await registerNewWarning(playerId);
+
+  // Mostrar alerta de aviso
+  const pendenciasHTML = buildPendingPaymentsHTML(pendingPayments);
+  await showWarningAlert(pendenciasHTML, warningCount + 1, MAX_WARNINGS);
+
+  return {
+    allowConfirmation: true, // Permite confirmar mesmo com aviso
+    warningCount: warningCount + 1,
+    message: `Este é seu ${warningCount + 1}º aviso de ${MAX_WARNINGS}.`
+  };
+}
+
+// Funções auxiliares novas
+function buildPendingPaymentsHTML(payments) {
+  let html = '<ul style="text-align: left; margin: 10px 0;">';
+  payments.forEach(payment => {
+    const date = payment.date ? formatDateToBR(payment.date) : 'Data não definida';
+    const name = payment.guestName || payment.playerName || 'Sem nome';
+    html += `<li>${payment.paymentType} - ${name}: R$${payment.value?.toFixed(2) || '0,00'} (${date})</li>`;
+  });
+  html += '</ul>';
+  return html;
+}
+
+async function showBlockedAlert(pendenciasHTML) {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Bloqueado',
+    html: `Você atingiu o limite de avisos e não pode confirmar presença.<br><br>
+           <strong>Pendências:</strong><br>${pendenciasHTML}<br>
+           PIX: <strong>fabioluiztx@outlook.com</strong>`,
+    showCancelButton: true,
+    confirmButtonText: 'Copiar PIX',
+    cancelButtonText: 'Entendi',
+    showCloseButton: true
+  });
+}
+
+async function showWarningAlert(pendenciasHTML, currentWarning, maxWarnings) {
+  return Swal.fire({
+    icon: 'warning',
+    title: 'Atenção às Pendências',
+    html: `Você possui pagamentos pendentes:<br><br>
+           <strong>Pendências:</strong><br>${pendenciasHTML}<br>
+           Este é seu <strong>${currentWarning}º aviso de ${maxWarnings}</strong>.<br>
+           PIX: <strong>fabioluiztx@outlook.com</strong>`,
+    showCancelButton: true,
+    confirmButtonText: 'Copiar PIX',
+    cancelButtonText: 'Entendi',
+    showCloseButton: true
+  });
+}
+
+async function registerNewWarning(playerId) {
+  const newWarningRef = push(ref(getDatabase(), `warnings/${playerId}`));
+  await update(newWarningRef, {
+    timestamp: DateTime.now().setZone('America/Sao_Paulo').toISO(),
+    reason: 'Pagamento pendente',
+    viewed: false
+  });
+  
+  // Atualizar contador
+  const currentCount = await getWarningCount(playerId);
+  await update(ref(getDatabase(), `players/${playerId}`), {
+    warningCount: currentCount + 1
+  });
+}
+
+// Funções existentes mantidas com pequenos ajustes
 async function checkPendingPayments(playerId) {
   const database = getDatabase();
-  try {
-    const paymentsRef = ref(database, 'payments');
-    const snapshot = await get(paymentsRef);
-    const payments = snapshot.val() || {};
-    let pendingPayments = [];
-    for (const year in payments) {
-      for (const month in payments[year]) {
-        const monthPayments = payments[year][month] || {};
-        const playerPayments = Object.values(monthPayments).filter(
-          p => (p.playerId === playerId || p.invitedById === playerId) && p.paymentStatus === 'inadimplente'
-        );
-        pendingPayments.push(...playerPayments.map(payment => ({
-          ...payment,
-          year,
-          month
-        })));
-      }
+  const paymentsRef = ref(database, 'payments');
+  const snapshot = await get(paymentsRef);
+  const payments = snapshot.val() || {};
+  
+  let pendingPayments = [];
+  
+  for (const year in payments) {
+    for (const month in payments[year]) {
+      const monthPayments = payments[year][month] || {};
+      pendingPayments.push(
+        ...Object.values(monthPayments).filter(p => 
+          (p.playerId === playerId || p.invitedById === playerId) && 
+          p.paymentStatus === 'inadimplente'
+        )
+      );
     }
-    return pendingPayments;
-  } catch (error) {
-    console.error('Erro ao verificar pendências de pagamento:', error);
-    return [];
   }
+  
+  return pendingPayments;
 }
 
-// Incrementar contador de avisos
-async function incrementWarningCount(playerId) {
-  const database = getDatabase();
-  try {
-    const playerRef = ref(database, `players/${playerId}`);
-    const snapshot = await get(playerRef);
-    if (snapshot.exists()) {
-      const playerData = snapshot.val();
-      const currentWarnings = parseInt(playerData.warningCount) || 0;
-      const newWarnings = currentWarnings + 1;
-      await update(playerRef, { warningCount: newWarnings });
-      return newWarnings;
-    }
-    return 0;
-  } catch (error) {
-    console.error('Erro ao incrementar contador de avisos:', error);
-    return 0;
-  }
-}
-
-// Zerar contador de avisos
-async function resetWarningCount(playerId) {
-  const database = getDatabase();
-  try {
-    const playerRef = ref(database, `players/${playerId}`);
-    await update(playerRef, { warningCount: 0 });
-    console.log(`Contador de avisos zerado para jogador ${playerId}`);
-  } catch (error) {
-    console.error('Erro ao zerar contador de avisos:', error);
-  }
-}
-
-// Obter contador de avisos
 async function getWarningCount(playerId) {
   const database = getDatabase();
   try {
@@ -89,94 +161,19 @@ async function getWarningCount(playerId) {
   }
 }
 
-// Função principal para gerenciar avisos de pendências
-async function handlePaymentWarnings(playerId, isAdmin, emailLogado) {
-  const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
-  if (isAdmin || adminEmails.includes(emailLogado)) {
-    return { allowConfirmation: true }; // Administradores não são bloqueados
-  }
-  const pendingPayments = await checkPendingPayments(playerId);
-  if (pendingPayments.length === 0) {
-    await resetWarningCount(playerId); // Zerar contador se não houver pendências
-    return { allowConfirmation: true };
-  }
-  const warningCount = await getWarningCount(playerId);
-  if (warningCount >= 2) {
-    let pendenciasHTML = '<ul>';
-    pendingPayments.forEach(payment => {
-      const gameDate = payment.date ? formatDateToBR(payment.date) : 'Data não definida';
-      pendenciasHTML += `<li>${payment.paymentType} - ${payment.guestName || payment.playerName}: R$${payment.value.toFixed(2)} (Jogo: ${gameDate})</li>`;
+async function resetWarningCount(playerId) {
+  try {
+    // Limpa todos os avisos
+    await update(ref(getDatabase(), `warnings/${playerId}`), null);
+    // Zera o contador
+    await update(ref(getDatabase(), `players/${playerId}`), {
+      warningCount: 0
     });
-    pendenciasHTML += '</ul>';
-    await Swal.fire({
-      icon: 'error',
-      title: 'Bloqueado',
-      html: `Você atingiu o limite de avisos (2). Não é possível confirmar presença até regularizar suas pendências.<br>${pendenciasHTML}<br>PIX: <strong>fabioluiztx@outlook.com</strong>`,
-      showCancelButton: true,
-      confirmButtonText: 'Copiar PIX',
-      cancelButtonText: 'OK',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-          await Swal.fire({
-            icon: 'success',
-            title: 'Copiado!',
-            text: 'Endereço PIX copiado para a área de transferência.',
-            timer: 1500,
-            showConfirmButton: false,
-          });
-        } catch (error) {
-          console.error('Erro ao copiar PIX:', error);
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Não foi possível copiar o endereço PIX.',
-          });
-        }
-      }
-    });
-    return { allowConfirmation: false };
+  } catch (error) {
+    console.error('Erro ao resetar avisos:', error);
   }
-  const newWarningCount = await incrementWarningCount(playerId);
-  let pendenciasHTML = '<ul>';
-  pendingPayments.forEach(payment => {
-    const gameDate = payment.date ? formatDateToBR(payment.date) : 'Data não definida';
-    pendenciasHTML += `<li>${payment.paymentType} - ${payment.guestName || payment.playerName}: R$${payment.value.toFixed(2)} (Jogo: ${gameDate})</li>`;
-  });
-  pendenciasHTML += '</ul>';
-  await Swal.fire({
-    icon: 'warning',
-    title: 'Pendências de Pagamento',
-    html: `Você possui pendências de pagamento:<br>${pendenciasHTML}<br>Este é seu <strong>${newWarningCount}º aviso de 2</strong>. Após o segundo aviso, você não poderá confirmar presença.<br>PIX: <strong>fabioluiztx@outlook.com</strong>`,
-    showCancelButton: true,
-    confirmButtonText: 'Copiar PIX',
-    cancelButtonText: 'OK',
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-        await Swal.fire({
-          icon: 'success',
-          title: 'Copiado!',
-          text: 'Endereço PIX copiado para a área de transferência.',
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error('Erro ao copiar PIX:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Não foi possível copiar o endereço PIX.',
-        });
-      }
-    }
-  });
-  return { allowConfirmation: false };
 }
 
-// Carregar jogadores notificados
 async function loadNotifiedPlayers() {
   const notifiedList = document.getElementById('notifiedPlayersList');
   notifiedList.innerHTML = '<p>Carregando...</p>';
@@ -196,6 +193,7 @@ async function loadNotifiedPlayers() {
         const html = notifiedPlayers.map(player => `
           <div class="player-item">
             <span>${player.name} (${player.email}) - Avisos: ${player.warningCount}</span>
+            <button onclick="resetPlayerWarnings('${player.id}')" class="player-action">Zerar</button>
           </div>
         `).join('');
         notifiedList.innerHTML = html;
@@ -209,21 +207,23 @@ async function loadNotifiedPlayers() {
   }
 }
 
-// Configurar busca para desbloqueio de jogador
 function setupUnlockPlayerSearch() {
   const unlockPlayerSearch = document.getElementById('unlockPlayerSearch');
   const unlockAutocompleteSuggestions = document.getElementById('unlockAutocompleteSuggestions');
   const modalUnlockPlayerBtn = document.getElementById('modalUnlockPlayerBtn');
   let selectedUnlockPlayerId = null;
+  
   unlockPlayerSearch.addEventListener('input', () => {
     const query = unlockPlayerSearch.value.trim().toLowerCase();
     unlockAutocompleteSuggestions.innerHTML = '';
     selectedUnlockPlayerId = null;
     modalUnlockPlayerBtn.disabled = true;
+    
     if (query.length > 0) {
       const suggestions = window.allPlayers
         .filter(player => player.name?.toLowerCase().includes(query) && (player.warningCount || 0) > 0)
         .slice(0, 5);
+      
       if (suggestions.length > 0) {
         suggestions.forEach(player => {
           const div = document.createElement('div');
@@ -238,18 +238,16 @@ function setupUnlockPlayerSearch() {
           unlockAutocompleteSuggestions.appendChild(div);
         });
         unlockAutocompleteSuggestions.style.display = 'block';
-      } else {
-        unlockAutocompleteSuggestions.style.display = 'none';
       }
-    } else {
-      unlockAutocompleteSuggestions.style.display = 'none';
     }
   });
+
   unlockPlayerSearch.addEventListener('blur', () => {
     setTimeout(() => {
       unlockAutocompleteSuggestions.style.display = 'none';
     }, 200);
   });
+
   modalUnlockPlayerBtn.addEventListener('click', async () => {
     if (selectedUnlockPlayerId) {
       try {
@@ -259,11 +257,7 @@ function setupUnlockPlayerSearch() {
           title: 'Sucesso',
           text: 'Jogador desbloqueado e contador de avisos zerado.',
         });
-        unlockPlayerSearch.value = '';
-        selectedUnlockPlayerId = null;
-        modalUnlockPlayerBtn.disabled = true;
-        unlockAutocompleteSuggestions.style.display = 'none';
-        Swal.close();
+        loadNotifiedPlayers(); // Atualiza a lista
       } catch (error) {
         console.error('Erro ao desbloquear jogador:', error);
         await Swal.fire({
@@ -276,16 +270,23 @@ function setupUnlockPlayerSearch() {
   });
 }
 
-// Função para zerar contador ao aprovar pagamento
 async function resetWarningsOnPaymentApproval(playerId, isPaid, category, invitedById) {
   if (isPaid) {
-    if (category === 'CONVIDADO' && invitedById) {
-      await resetWarningCount(invitedById);
-    } else {
-      await resetWarningCount(playerId);
-    }
+    const targetPlayerId = (category === 'CONVIDADO' && invitedById) ? invitedById : playerId;
+    await resetWarningCount(targetPlayerId);
   }
 }
 
-// Exportar funções para uso no arquivo principal
-export { handlePaymentWarnings, loadNotifiedPlayers, setupUnlockPlayerSearch, resetWarningsOnPaymentApproval };
+// Exportar todas as funções
+export { 
+  handlePaymentWarnings, 
+  loadNotifiedPlayers, 
+  setupUnlockPlayerSearch, 
+  resetWarningsOnPaymentApproval 
+};
+
+// Função global para uso no HTML
+window.resetPlayerWarnings = async function(playerId) {
+  await resetWarningCount(playerId);
+  loadNotifiedPlayers();
+};
