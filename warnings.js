@@ -1,6 +1,7 @@
 // warnings.js - Versão Corrigida (mantendo todas as funções)
 import { getDatabase, ref, get, update, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-//import { DateTime } from "https://moment.github.io/luxon/global/luxon.min.js";
+import luxon from "https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js";
+const { DateTime } = luxon;
 
 // Função para formatar data
 function formatDateToBR(dateStr) {
