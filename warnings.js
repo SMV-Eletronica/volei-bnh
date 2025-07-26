@@ -1,7 +1,7 @@
 
 // warnings.js - Funções para gerenciar avisos de pendências e opções administrativas
 import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-import { DateTime } from "https://moment.github.io/luxon/global/luxon.min.js";
+//import { DateTime } from "https://moment.github.io/luxon/global/luxon.min.js";
 
 // Função para formatar data (reutilizada para consistência)
 function formatDateToBR(dateStr) {
