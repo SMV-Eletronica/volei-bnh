@@ -773,7 +773,6 @@ async function getNotifiedPlayers() {
 }
 
 
-
 function setupAdminFeatures() {
   console.log('Iniciando setupAdminFeatures, isAdmin:', isAdmin);
 
@@ -854,7 +853,7 @@ function setupAdminFeatures() {
             </div>
           </div>
           <div id="notifiedPlayersFields" class="modal-section" style="display: none;">
-            <h4>Jogadores com Pendências</h4>
+            <h4>Jogadores Notificados</h4>
             <div id="notifiedPlayersList" class="notified-players-list"></div>
           </div>
         </div>
@@ -918,16 +917,15 @@ function setupAdminFeatures() {
                 return;
               }
               
-              let html = '<table><tr><th>Nome</th><th>Notificações</th><th>Última Notificação</th><th>Pendências</th><th>Valor Total</th><th>Ações</th></tr>';
+              let html = '<table><tr><th>Nome</th><th>Avisos</th><th>Ações</th></tr>';
               
               notifiedPlayers.forEach(player => {
                 html += `
                   <tr>
                     <td>${player.name}</td>
-                    <td>${player.alertCount}</td>
-                    <td>${player.lastNotification ? new Date(player.lastNotification).toLocaleString() : 'N/A'}</td>
-                    <td>${player.debtCount}</td>
-                    <td>R$${player.totalDebt.toFixed(2)}</td>
+                    <td>${player.alertCount}</td>                   
+                    
+                    
                     <td>
                       <button class="clear-notifications-btn" data-player-id="${player.id}">
                         <i class="fas fa-check-circle"></i> Regularizado
@@ -964,12 +962,173 @@ function setupAdminFeatures() {
             }
           });
 
+          // Manipulador para o botão Criar Jogo
+          const modalCreateGameBtn = document.getElementById('modalCreateGameBtn');
+          modalCreateGameBtn.addEventListener('click', async () => {
+            console.log('Botão modalCreateGameBtn clicado');
+
+            const newGameDateInput = document.getElementById('modalNewGameDate').value;
+            const newGameTimeInput = document.getElementById('modalNewGameTime').value;
+            const newGameLimitInput = document.getElementById('modalNewGameLimit').value;
+
+            // Validar entradas
+            if (!newGameDateInput || !newGameTimeInput || !newGameLimitInput) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Por favor, preencha todos os campos (data, horário e número de participantes).',
+              });
+              return;
+            }
+
+            const newGameLimit = parseInt(newGameLimitInput);
+            if (isNaN(newGameLimit) || newGameLimit < 1) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'O número de participantes deve ser um valor válido maior que 0.',
+              });
+              return;
+            }
+
+            try {
+              // Criar ID único para o jogo
+              const gameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              const gameRef = ref(database, `activeGames/${gameId}`);
+              
+              // Formatando a data
+              const gameDateTime = DateTime.fromISO(newGameDateInput, { zone: 'America/Sao_Paulo' });
+              const formattedDate = gameDateTime.toISODate();
+              const formattedTime = newGameTimeInput;
+
+              // Criar objeto do jogo
+              const newGame = {
+                date: formattedDate,
+                time: formattedTime,
+                playerLimit: newGameLimit,
+                createdAt: getBrazilDateTimeISO(),
+                confirmed: {},
+                waitlist: {}
+              };
+
+              // Salvar no Firebase
+              await set(gameRef, newGame);
+
+              // Enviar notificação
+              const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
+              const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
+              await sendPushNotification(message, defaultImage);
+
+              // Atualizar a lista de jogos
+              await loadActiveGames();
+              Swal.close();
+
+              await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: 'Jogo criado com sucesso!',
+              });
+            } catch (error) {
+              console.error('Erro ao criar jogo:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível criar o jogo. Tente novamente.',
+              });
+            }
+          });
+
+          // Manipuladores para os outros botões (mantidos como no código original)
+          const modalConfirmLimitBtn = document.getElementById('modalConfirmLimitBtn');
+          modalConfirmLimitBtn.addEventListener('click', async () => {
+            const newLimit = parseInt(document.getElementById('modalPlayerLimitInput').value);
+            if (isNaN(newLimit) || newLimit < 1) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Por favor, insira um número válido de participantes.',
+              });
+              return;
+            }
+            playerLimit = newLimit;
+            await adjustConfirmedPlayers();
+            await updateFirebaseLists();
+            updatePlayerLimitDisplay(isAdmin);
+            Swal.close();
+            await Swal.fire({
+              icon: 'success',
+              title: 'Sucesso',
+              text: 'Número de participantes atualizado!',
+            });
+          });
+
+          const modalSaveGuestFeeBtn = document.getElementById('modalSaveGuestFeeBtn');
+          modalSaveGuestFeeBtn.addEventListener('click', async () => {
+            const newFee = parseFloat(document.getElementById('modalGuestFeeInput').value);
+            if (isNaN(newFee) || newFee < 0) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Por favor, insira um valor válido para a taxa.',
+              });
+              return;
+            }
+            try {
+              const settingsRef = ref(database, 'settings/guestFee');
+              await set(settingsRef, newFee);
+              guestFee = newFee;
+              Swal.close();
+              await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: 'Taxa de convidado atualizada!',
+              });
+            } catch (error) {
+              console.error('Erro ao atualizar taxa:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível atualizar a taxa.',
+              });
+            }
+          });
+
+          const modalUpdateGameTimeBtn = document.getElementById('modalUpdateGameTimeBtn');
+          modalUpdateGameTimeBtn.addEventListener('click', async () => {
+            const newTime = document.getElementById('modalGameTimeInput').value;
+            if (!newTime) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Por favor, insira um horário válido.',
+              });
+              return;
+            }
+            try {
+              const gameRef = ref(database, `activeGames/${currentGameId}`);
+              await update(gameRef, { time: newTime });
+              gameTime = newTime;
+              updateGameDateDisplay();
+              await updateFirebaseLists();
+              Swal.close();
+              await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: 'Horário do jogo atualizado!',
+              });
+            } catch (error) {
+              console.error('Erro ao atualizar horário:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível atualizar o horário.',
+              });
+            }
+          });
+
           modalActionSelect.value = 'createGame';
           createGameFields.style.display = 'block';
           gameSelectSection.style.display = 'none';
-
-          // Restante do código para os outros botões (createGameBtn, confirmLimitBtn, etc.)
-          // ... (mantenha todo o código existente para os outros botões)
         }
       });
     });
@@ -986,8 +1145,6 @@ function setupAdminFeatures() {
   
   guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
 }
-
-
 
     async function initializeGameList() {
       console.log('Iniciando initializeGameList');
@@ -1670,9 +1827,9 @@ function setupAdminFeatures() {
       // Bloquear confirmação após 3 alertas em jogos diferentes
       await Swal.fire({
         icon: 'error',
-        title: 'Acesso Bloqueado',
+        title: 'Confirmação Suspensa',
         html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Regularize suas pendências para liberar sua participação nos jogos.`,
+               Regularize suas pendências ou justifique aos administradores para liberar sua participação nos jogos.`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -1682,9 +1839,9 @@ function setupAdminFeatures() {
         icon: 'warning',
         title: 'Atenção: Pendências Detectadas',
         html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Você já foi notificado ${alertCount} vezes em jogos diferentes. Após 3 notificações, você ficará impedido de confirmar presença.`,
+               Essa é sua ${alertCount}ª notificação. Após 2 notificações, você ficará suspenso de confirmar presença.`,
         showCancelButton: true,
-        confirmButtonText: 'Continuar mesmo assim',
+        confirmButtonText: 'Ciente/Confirmar',
         cancelButtonText: 'Cancelar'
       });
       
