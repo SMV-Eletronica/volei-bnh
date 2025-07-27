@@ -1792,8 +1792,7 @@ function setupAdminFeatures() {
  
 
 
-
-    async function confirmPlayer(targetPlayerId = null) {
+async function confirmPlayer(targetPlayerId = null) {
   if (!currentGameId) {
     await Swal.fire({
       icon: 'info',
@@ -1829,7 +1828,7 @@ function setupAdminFeatures() {
         icon: 'error',
         title: 'Confirmação Suspensa',
         html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Regularize suas pendências ou justifique aos administradores para liberar sua participação nos jogos.`,
+               Regularize suas pendências ou solicite aos administradores para liberar sua participação nos jogos.`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -1849,6 +1848,9 @@ function setupAdminFeatures() {
         return;
       }
     }
+  } else if (!isAdmin && !debtInfo.hasDebt) {
+    // Se não houver pendências, limpar as notificações existentes
+    await clearDebtNotifications(playerId);
   }
 
   // Restante da função original...
@@ -2000,8 +2002,6 @@ function setupAdminFeatures() {
     });
   }
 }
-
-
 
 
 
