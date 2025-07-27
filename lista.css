@@ -57,11 +57,11 @@ body {
 }
 
 .notified-players-list th {
-  background-color: #f2f2f2;
+  background-color: transparent;
 }
 
 .notified-players-list tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: transparent;
 }
 
 .clear-notifications-btn {
