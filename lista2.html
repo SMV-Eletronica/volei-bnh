@@ -860,7 +860,7 @@ function setupAdminFeatures() {
         `,
         showConfirmButton: false,
         showCancelButton: true,
-        cancelButtonText: 'Cancelar',
+        cancelButtonText: 'Sair',
         didOpen: async () => {
           console.log('Modal SweetAlert2 aberto');
           
@@ -917,18 +917,16 @@ function setupAdminFeatures() {
                 return;
               }
               
-              let html = '<table><tr><th>Nome</th><th>Avisos</th><th>Ações</th></tr>';
+              let html = '<table><tr><th>Nome</th><th>Nº</th><th>Ações</th></tr>';
               
               notifiedPlayers.forEach(player => {
                 html += `
                   <tr>
                     <td>${player.name}</td>
-                    <td>${player.alertCount}</td>                   
-                    
-                    
+                    <td>${player.alertCount}</td>                       
                     <td>
                       <button class="clear-notifications-btn" data-player-id="${player.id}">
-                        <i class="fas fa-check-circle"></i> Regularizado
+                        <i class="fas fa-check-circle"></i> Liberar
                       </button>
                     </td>
                   </tr>
