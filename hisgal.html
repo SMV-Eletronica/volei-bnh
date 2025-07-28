@@ -292,17 +292,7 @@
   <div class="overlay" id="overlay"></div>
   
   <div class="container">
-    <!-- Seção de Galeria Geral -->
-    <div class="gallery-section">
-      <h3><i class="fas fa-camera"></i> Galeria de Memórias</h3>
-      <div id="galleryGrid" class="gallery-grid">
-        <p class="no-items-message" id="noGalleryItems">Nenhuma foto ou vídeo na galeria ainda. Que tal ser o primeiro a enviar?</p>
-      </div>
-      <div class="upload-button-container">
-        <button id="uploadPhotoBtn" class="upload-photo-btn admin-only" style="display: none;"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo Local</button>
-        <button id="uploadYoutubeBtn" class="upload-youtube-btn admin-only" style="display: none;"><i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube</button>
-      </div>
-    </div>
+    
     
     <!-- Filtros do Histórico -->
     <div class="filter-container">
@@ -341,6 +331,19 @@
     </div>
     
     <div id="historyList"></div>
+
+
+    <!-- Seção de Galeria Geral -->
+    <div class="gallery-section">
+      <h3><i class="fas fa-camera"></i> Galeria de Memórias</h3>
+      <div id="galleryGrid" class="gallery-grid">
+        <p class="no-items-message" id="noGalleryItems">Nenhuma foto ou vídeo na galeria ainda. Que tal ser o primeiro a enviar?</p>
+      </div>
+      <div class="upload-button-container">
+        <button id="uploadPhotoBtn" class="upload-photo-btn admin-only" style="display: none;"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo Local</button>
+        <button id="uploadYoutubeBtn" class="upload-youtube-btn admin-only" style="display: none;"><i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube</button>
+      </div>
+    </div>
   </div>
   
   <footer class="footer">
@@ -353,10 +356,7 @@
       <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
         <i class="fas fa-fire"></i> Firebase
       </a>
-      <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
-        <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
-        OneSignal
-      </a>
+      
     </div>
   </footer>
   
@@ -389,7 +389,7 @@
     let currentUserPlayer = null;
     let allPlayers = [];
     let isAdmin = false;
-    const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
+    const adminEmails = ['mvvasques@msn.com', 'teste@msn.com', 'evandroAsyncronousFunctionCall@msn.com'];
     const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
     
     // Elementos da página
@@ -961,7 +961,7 @@
           
           const confirmedPlayers = Object.values(game.confirmedPlayers || {});
           if (confirmedPlayers.length > 0) {
-            playersHtml += '<h4>Jogadores Confirmados:</h4>';
+            playersHtml += '<h4>Jogadores Presentes:</h4>';
             
             for (const player of confirmedPlayers) {
               const playerData = allPlayers.find(p => p.id === player.id) || player;
