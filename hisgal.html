@@ -14,7 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <style>
-    /* Estilos para a seção de mídia no gameCard */
+    /* Estilos originais mantidos */
     .game-media-section {
       margin-top: 15px;
       padding-top: 10px;
@@ -95,7 +95,16 @@
     .game-media-item:hover .delete-media-btn {
       opacity: 1;
     }
-    .upload-media-btn {
+    
+    /* NOVOS ESTILOS ADICIONADOS */
+    .game-media-buttons {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .game-media-buttons .upload-media-btn {
       background-color: #28a745;
       color: white;
       padding: 8px 15px;
@@ -103,24 +112,21 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 0.9em;
-      margin-top: 10px;
-      margin-right: 10px;
-      display: none;
+      display: inline-block !important;
     }
-    .upload-media-btn:hover {
-      background-color: #218838;
+    
+    .game-media-buttons .upload-youtube-game-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: inline-block !important;
     }
-    .admin-only {
-      display: none;
-    }
-    .no-media-message {
-      text-align: center;
-      color: #777;
-      font-style: italic;
-      padding: 10px;
-      grid-column: 1 / -1;
-    }
-    /* Estilos para a seção de galeria geral */
+    
+    /* Mantenha todos os outros estilos originais */
     .gallery-section {
       background-color: #f8f9fa;
       border: 1px solid #e9ecef;
@@ -441,6 +447,7 @@
               document.getElementById('sidebarUserPhoto').src = currentUserPlayer.imageUrl;
             }
             isAdmin = adminEmails.includes(currentUser.email) || currentUserPlayer.category === 'ADMIN';
+            console.log('Usuário é admin?', isAdmin, 'Email:', currentUser.email);
             updateSidebarVisibility();
           }
         }
@@ -451,16 +458,23 @@
     
     // Atualizar visibilidade da sidebar
     function updateSidebarVisibility() {
+      console.log('Atualizando visibilidade - isAdmin:', isAdmin);
       if (isAdmin) {
         adminBtn.style.display = 'inline-block';
         uploadPhotoBtn.style.display = 'inline-block';
         uploadYoutubeBtn.style.display = 'inline-block';
-        document.querySelectorAll('.admin-only').forEach(btn => btn.style.display = 'inline-block');
+        document.querySelectorAll('.admin-only').forEach(btn => {
+          console.log('Mostrando botão admin:', btn.id);
+          btn.style.display = 'inline-block';
+        });
       } else {
         adminBtn.style.display = 'none';
         uploadPhotoBtn.style.display = 'none';
         uploadYoutubeBtn.style.display = 'none';
-        document.querySelectorAll('.admin-only').forEach(btn => btn.style.display = 'none');
+        document.querySelectorAll('.admin-only').forEach(btn => {
+          console.log('Ocultando botão admin:', btn.id);
+          btn.style.display = 'none';
+        });
       }
     }
     
@@ -580,13 +594,14 @@
 
     // Função para fazer upload de mídia para um jogo
     async function uploadGameMedia(gameId) {
+      console.log('Tentando upload para jogo:', gameId);
       if (!isAdmin) {
         Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
         return;
       }
 
       const { value: file } = await Swal.fire({
-        title: 'Selecionar Foto ou Vídeo',
+        title: `Enviar mídia para o jogo ${gameId}`,
         input: 'file',
         inputAttributes: {
           'accept': 'image/*,video/*',
@@ -611,7 +626,10 @@
         });
 
         try {
-          const storagePath = `gallery/${file.name}`;
+          const timestamp = DateTime.local().toFormat('yyyyMMddHHmmss');
+          const fileExtension = file.name.split('.').pop();
+          const storagePath = `gallery/game_${gameId}_${timestamp}.${fileExtension}`;
+          
           const storageRefPath = storageRef(storage, storagePath);
           await uploadBytes(storageRefPath, file);
           const downloadURL = await getDownloadURL(storageRefPath);
@@ -619,14 +637,14 @@
           const mediaId = push(ref(database, 'gallery')).key;
           await set(ref(database, `gallery/${mediaId}`), {
             url: downloadURL,
-            caption: file.name,
+            caption: `Mídia do jogo ${gameId}`,
             uploadedBy: currentUserPlayer.id,
             uploadedAt: DateTime.local().setZone('America/Sao_Paulo').toISO(),
             type: file.type.startsWith('image/') ? 'image' : 'video',
             gameId: gameId
           });
 
-          Swal.fire('Sucesso!', 'Arquivo enviado com sucesso!', 'success');
+          Swal.fire('Sucesso!', 'Mídia enviada com sucesso para este jogo!', 'success');
         } catch (error) {
           console.error('Erro ao enviar arquivo:', error);
           Swal.fire('Erro', 'Não foi possível enviar o arquivo. Tente novamente.', 'error');
@@ -691,13 +709,14 @@
 
     // Função para fazer upload de vídeo do YouTube
     async function uploadYoutubeVideo(gameId = null) {
+      console.log('Tentando upload do YouTube para jogo:', gameId);
       if (!isAdmin) {
         Swal.fire('Erro', 'Você não tem permissão para adicionar vídeos do YouTube.', 'error');
         return;
       }
 
       const { value: youtubeUrl } = await Swal.fire({
-        title: `Adicionar Vídeo do YouTube${gameId ? ' ao Jogo' : ''}`,
+        title: gameId ? `Adicionar Vídeo do YouTube ao Jogo` : 'Adicionar Vídeo do YouTube',
         input: 'text',
         inputLabel: 'URL do vídeo do YouTube:',
         inputPlaceholder: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -978,7 +997,7 @@
           
           playersHtml += '</div>';
 
-          // Carregar mídias associadas ao jogo (filtradas do nó gallery)
+          // Seção de mídias - MODIFICADA
           let mediaHtml = '<div class="game-media-section">';
           mediaHtml += '<h4>Mídias do Jogo</h4>';
           
@@ -1015,11 +1034,17 @@
             mediaHtml += '</div>';
           }
 
-          // Botões de upload para administradores
+          // Botões de upload para administradores - MODIFICADO
           if (isAdmin) {
             mediaHtml += `
-              <button class="upload-media-btn admin-only" data-game-id="${game.id}"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo</button>
-              <button class="upload-media-btn admin-only upload-youtube-game-btn" data-game-id="${game.id}"><i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube</button>
+              <div class="game-media-buttons">
+                <button class="upload-media-btn" data-game-id="${game.id}">
+                  <i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo
+                </button>
+                <button class="upload-youtube-game-btn" data-game-id="${game.id}">
+                  <i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube
+                </button>
+              </div>
             `;
           }
           
@@ -1029,19 +1054,23 @@
           historyList.appendChild(gameCard);
         }
 
-        // Adicionar event listeners para botões de upload
+        // Adicionar event listeners para botões de upload - MODIFICADO
         document.querySelectorAll('.upload-media-btn').forEach(button => {
-          if (button.classList.contains('upload-youtube-game-btn')) {
-            button.addEventListener('click', () => {
-              const gameId = button.dataset.gameId;
-              uploadYoutubeVideo(gameId);
-            });
-          } else {
-            button.addEventListener('click', () => {
-              const gameId = button.dataset.gameId;
-              uploadGameMedia(gameId);
-            });
-          }
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const gameId = button.dataset.gameId;
+            console.log('Clicou no botão de upload para jogo:', gameId);
+            uploadGameMedia(gameId);
+          });
+        });
+
+        document.querySelectorAll('.upload-youtube-game-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const gameId = button.dataset.gameId;
+            console.log('Clicou no botão do YouTube para jogo:', gameId);
+            uploadYoutubeVideo(gameId);
+          });
         });
 
         // Adicionar event listeners para visualização de mídia
@@ -1063,7 +1092,8 @@
         // Adicionar event listeners para botões de exclusão
         if (isAdmin) {
           document.querySelectorAll('.delete-media-btn').forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
               const mediaId = button.dataset.id;
               const itemElement = button.closest('.game-media-item');
               const mediaUrl = itemElement.dataset.url;
