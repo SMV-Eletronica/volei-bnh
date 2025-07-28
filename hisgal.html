@@ -7,12 +7,12 @@
   <link rel="icon" type="image/png" sizes="16x16" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-16x16.png?alt=media&token=c23063f2-841d-400a-b32c-3a3f5f65349e">
   <link rel="icon" type="image/png" sizes="32x32" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-32x32.png?alt=media&token=429944a6-1937-4d1a-be29-d6537b029286">
   <link rel="apple-touch-icon" sizes="180x180" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Fapple-touch-icon.png?alt=media&token=9ac93b48-1110-449e-b155-8930b20c9d31">
-  <link rel="manifest" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Fsite.webmanifest?alt=media&token=18b7607a-4ecb-402a-a9f4-5f532b2a632a">
+  
   <link rel="stylesheet" href="history.css?v=2.5">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  
   <style>
     /* Estilos originais mantidos */
     .game-media-section {
@@ -389,7 +389,7 @@
     let currentUserPlayer = null;
     let allPlayers = [];
     let isAdmin = false;
-    const adminEmails = ['mvvasques@msn.com', 'teste@msn.com', 'evandroAsyncronousFunctionCall@msn.com'];
+    const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
     const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
     
     // Elementos da página
@@ -1151,26 +1151,7 @@
       }
     });
 
-    // OneSignal Initialization
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function() {
-      OneSignal.init({
-        appId: "1e5e3158-b635-43ea-981f-7f551b75317e",
-        safari_web_id: "web.onesignal.auto.5a2e6333-8a38-4e56-9d58-b77ffb6b911c",
-        notifyButton: { enable: true },
-        serviceWorkerUpdaterPath: 'OneSignalSDKUpdaterWorker.js',
-        serviceWorkerPath: 'OneSignalSDKWorker.js',
-      });
-
-      OneSignal.getUserId().then(function(userId) {
-        if (userId && currentUserPlayer && auth.currentUser) {
-          const playerRef = ref(database, `players/${currentUserPlayer.id}`);
-          update(playerRef, { oneSignalUserId: userId })
-            .then(() => console.log('OneSignal User ID salvo no Firebase'))
-            .catch(error => console.error('Erro ao salvar OneSignal User ID:', error));
-        }
-      });
-    });
+   
 
     // Inicializar a página
     onAuthStateChanged(auth, async (user) => {
