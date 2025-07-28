@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Presenças - Vôlei BNH</title>
+  <link rel="stylesheet" href="lista.css?v=2.4">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
+</head>
+<body>
+  <div class="header">
+    <button class="menu-toggle" id="menuToggle">
+      <i class="fas fa-bars"></i><br><strong>Menu</strong>
+    </button>
+    <center><h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2></center>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-menu">
+      <div class="user-profile">
+        <img id="sidebarUserPhoto" class="sidebar-user-photo" src="" alt="Foto do usuário">
+        <div class="sidebar-user-info">
+          <div id="sidebarUserName" class="sidebar-user-name"></div>
+          <div id="sidebarUserPosition" class="sidebar-user-position"></div>
+          <div id="userEmail" class="sidebar-user-position"></div>
+        </div>
+      </div>
+      <button id="transparenciaBtn" class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+      <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+      <button id="listaBtn" class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+      <button id="historyBtn" class="logout-btn" onclick="window.location.href='history.html'"><i class="fas fa-history"></i> Histórico</button>
+    </div>
+    <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="container">
+    <div class="section">
+      <h2><i class="fas fa-history"></i> Histórico de Presenças</h2>
+      <div class="game-selector">
+        <h3>Selecione um Jogo</h3>
+        <input type="date" id="dateFilter">
+        <button onclick="filterGamesByDate()">Filtrar</button>
+        <select id="historyGameSelect" class="game-select"></select>
+      </div>
+      <div class="game-list">
+        <h3>Detalhes do Jogo</h3>
+        <div class="game-info">
+          <span id="historyGameDate"></span> - <span id="historyGameTime"></span>
+        </div>
+        <div id="historyConfirmedPlayers"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+      authDomain: "volei-25301.firebaseapp.com",
+      databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+      projectId: "volei-25301",
+      storageBucket: "volei-25301.firebasestorage.app",
+      messagingSenderId: "1007197261034",
+      appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+      measurementId: "G-CYMLX0SJJQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+    const { DateTime } = luxon;
+    luxon.Settings.defaultLocale = 'pt-BR';
+
+    const customWeekdays = {
+      1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta',
+      5: 'Sexta', 6: 'Sábado', 7: 'Domingo'
+    };
+
+    const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
+    let currentUserPlayer = null;
+    let emailLogado = null;
+    const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
+    let isAdmin = false;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acesso Negado',
+          text: 'Você precisa estar logado para acessar esta página.',
+        });
+        window.location.href = 'loginvl.html';
+      } else {
+        emailLogado = user.email;
+        isAdmin = adminEmails.includes(emailLogado);
+        await loadCurrentUserPlayer();
+        await loadHistoryGames();
+      }
+    });
+
+    async function loadCurrentUserPlayer() {
+      try {
+        const playersRef = ref(database, 'players');
+        const snapshot = await get(playersRef);
+        if (snapshot.exists()) {
+          const allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+            id,
+            ...player
+          }));
+          currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+
+          const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+          const sidebarUserName = document.getElementById('sidebarUserName');
+          const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+          const userEmail = document.getElementById('userEmail');
+
+          sidebarUserPhoto.src = currentUserPlayer?.imageUrl || defaultImage;
+          sidebarUserName.textContent = currentUserPlayer?.name || 'Usuário';
+          sidebarUserPosition.textContent = currentUserPlayer?.position || 'Posição não definida';
+          userEmail.textContent = emailLogado;
+
+          if (!currentUserPlayer) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: 'Nenhum jogador associado a este email. Contate o administrador.',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogador:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao carregar seus dados.',
+        });
+      }
+    }
+
+    async function loadHistoryGames() {
+      try {
+        const historyRef = ref(database, 'gameHistory');
+        const snapshot = await get(historyRef);
+        const historyGameSelect = document.getElementById('historyGameSelect');
+        historyGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
+
+        let historyGames = [];
+        if (snapshot.exists()) {
+          historyGames = Object.entries(snapshot.val()).map(([id, game]) => ({
+            id,
+            date: game.date,
+            time: game.time,
+            playerLimit: game.playerLimit || 16,
+            confirmed: game.confirmed || {},
+            finalizedAt: game.finalizedAt
+          }));
+
+          historyGames.sort((a, b) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateB - dateA;
+          });
+
+          historyGames.forEach(game => {
+            if (isAdmin || Object.keys(game.confirmed).includes(currentUserPlayer?.id)) {
+              const option = document.createElement('option');
+              option.value = game.id;
+              const gameDateTime = DateTime.fromISO(`${game.date}T${game.time}`, { zone: 'America/Sao_Paulo' });
+              const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
+              const formattedTime = gameDateTime.toFormat('HH:mm');
+              const dayNumber = gameDateTime.weekday;
+              const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+              option.textContent = `${formattedDate} - ${formattedTime} (${dayOfWeek})`;
+              historyGameSelect.appendChild(option);
+            }
+          });
+        }
+
+        if (historyGames.length === 0) {
+          historyGameSelect.innerHTML = '<option value="">Nenhum jogo no histórico</option>';
+        }
+
+        historyGameSelect.addEventListener('change', async () => {
+          const gameId = historyGameSelect.value;
+          if (gameId) {
+            await loadHistoryGameData(gameId);
+          } else {
+            document.getElementById('historyGameDate').textContent = '';
+            document.getElementById('historyGameTime').textContent = '';
+            document.getElementById('historyConfirmedPlayers').innerHTML = '<div style="color: var(--muted); padding: 10px;">Selecione um jogo para ver os detalhes.</div>';
+          }
+        });
+
+        if (historyGames.length > 0) {
+          historyGameSelect.value = historyGames[0].id;
+          await loadHistoryGameData(historyGames[0].id);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar histórico de jogos:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível carregar o histórico de jogos.',
+        });
+      }
+    }
+
+    async function loadHistoryGameData(gameId) {
+      try {
+        const gameRef = ref(database, `gameHistory/${gameId}`);
+        const snapshot = await get(gameRef);
+        if (!snapshot.exists()) {
+          document.getElementById('historyGameDate').textContent = '';
+          document.getElementById('historyGameTime').textContent = '';
+          document.getElementById('historyConfirmedPlayers').innerHTML = '<div style="color: var(--muted); padding: 10px;">Jogo não encontrado.</div>';
+          return;
+        }
+
+        const gameData = snapshot.val();
+        const gameDateTime = DateTime.fromISO(`${gameData.date}T${gameData.time}`, { zone: 'America/Sao_Paulo' });
+        const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
+        const dayNumber = gameDateTime.weekday;
+        const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+
+        document.getElementById('historyGameDate').textContent = `${formattedDate} (${dayOfWeek})`;
+        document.getElementById('historyGameTime').textContent = gameData.time;
+
+        const confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => ({
+          id,
+          name: player.name || '-',
+          category: player.category || 'CONVIDADO',
+          position: player.position || '-',
+          paymentStatus: player.paymentStatus || 'inadimplente',
+          imageUrl: player.imageUrl || defaultImage,
+          invitedByName: player.invitedByName || null
+        }));
+
+        const confirmedHTML = await Promise.all(
+          confirmedPlayers.map(async (player, index) => {
+            const imageUrl = await preloadImage(player.imageUrl || defaultImage);
+            return `
+              <div class="player-item">
+                <div class="player-info">
+                  <span class="player-counter">${index + 1}.</span>
+                  <img src="${imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+                  <div>
+                    <br>
+                    <span class="player-name">${player.name}</span> (${player.category}, ${player.position})
+                    ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
+                    <br>
+                    <span class="player-status status-${player.paymentStatus}">
+                      ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendente'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+        );
+
+        document.getElementById('historyConfirmedPlayers').innerHTML = confirmedHTML.length === 0
+          ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
+          : confirmedHTML.join('');
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogo histórico:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro ao carregar dados do jogo.',
+        });
+      }
+    }
+
+    async function preloadImage(imageUrl) {
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+      } catch (error) {
+        console.warn(`Erro ao carregar imagem ${imageUrl}:`, error);
+        return defaultImage;
+      }
+    }
+
+    async function filterGamesByDate() {
+      const dateFilter = document.getElementById('dateFilter').value;
+      if (!dateFilter) {
+        await loadHistoryGames();
+        return;
+      }
+      try {
+        const historyRef = ref(database, 'gameHistory');
+        const snapshot = await get(historyRef);
+        const historyGameSelect = document.getElementById('historyGameSelect');
+        historyGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
+
+        let historyGames = [];
+        if (snapshot.exists()) {
+          historyGames = Object.entries(snapshot.val())
+            .map(([id, game]) => ({
+              id,
+              date: game.date,
+              time: game.time,
+              playerLimit: game.playerLimit || 16,
+              confirmed: game.confirmed || {},
+              finalizedAt: game.finalizedAt
+            }))
+            .filter(game => game.date === dateFilter && (isAdmin || Object.keys(game.confirmed).includes(currentUserPlayer?.id)));
+
+          historyGames.sort((a, b) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateB - dateA;
+          });
+
+          historyGames.forEach(game => {
+            const option = document.createElement('option');
+            option.value = game.id;
+            const gameDateTime = DateTime.fromISO(`${game.date}T${game.time}`, { zone: 'America/Sao_Paulo' });
+            const formattedDate = gameDateTime.toFormat('dd/MM/yyyy');
+            const formattedTime = gameDateTime.toFormat('HH:mm');
+            const dayNumber = gameDateTime.weekday;
+            const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
+            option.textContent = `${formattedDate} - ${formattedTime} (${dayOfWeek})`;
+            historyGameSelect.appendChild(option);
+          });
+        }
+
+        if (historyGames.length === 0) {
+          historyGameSelect.innerHTML = '<option value="">Nenhum jogo encontrado para a data selecionada</option>';
+        }
+
+        if (historyGames.length > 0) {
+          historyGameSelect.value = historyGames[0].id;
+          await loadHistoryGameData(historyGames[0].id);
+        }
+      } catch (error) {
+        console.error('Erro ao filtrar jogos por data:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível filtrar os jogos.',
+        });
+      }
+    }
+
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+
+    menuToggle.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Logout',
+          text: 'Você saiu com sucesso.',
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        window.location.assign('loginvl.html');
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível fazer logout. Tente novamente.',
+        });
+      }
+    });
+  </script>
+</body>
+</html>
