@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="lista.css?v=2.3">
+<link rel="stylesheet" href="lista.css?v=2.4">
 
 
  <style>
@@ -917,7 +917,7 @@ function setupAdminFeatures() {
                 return;
               }
               
-              let html = '<table><tr><th>Nome</th><th>Nº</th><th>Ações</th></tr>';
+              let html = '<table><tr><th>Nome</th><th>N</th><th>Ações</th></tr>';
               
               notifiedPlayers.forEach(player => {
                 html += `
@@ -1791,6 +1791,18 @@ function setupAdminFeatures() {
 
 
 async function confirmPlayer(targetPlayerId = null) {
+
+    Swal.fire({
+      title: 'Confirmando...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+
   if (!currentGameId) {
     await Swal.fire({
       icon: 'info',
@@ -1826,7 +1838,7 @@ async function confirmPlayer(targetPlayerId = null) {
         icon: 'error',
         title: 'Confirmação Suspensa',
         html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Regularize suas pendências ou solicite aos administradores para liberar sua participação nos jogos.`,
+               Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências ou solicite aos administradores para liberar sua participação nos jogos.`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -2310,8 +2322,18 @@ async function confirmPlayer(targetPlayerId = null) {
     window.confirmPlayer = confirmPlayer;
     window.abrirQuadra = abrirQuadra;
     
-  
-   async function abrirQuadra() {
+  async function abrirQuadra() {
+  // Exibir popup de loading
+  Swal.fire({
+    title: 'Entrando...',
+    text: 'Por favor, aguarde.',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
   if (!currentGameId) {
     Swal.fire({
       icon: 'info',
@@ -2325,9 +2347,7 @@ async function confirmPlayer(targetPlayerId = null) {
   const sortedPlayers = sortPlayers([...confirmedPlayers]);
 
   const playerPositions = [
-
-
-  { top: '41%', left: '50%' },
+    { top: '41%', left: '50%' },
     { top: '60%', left: '50%' },
     { top: '18%', left: '15%' },
     { top: '82%', left: '85%' },
@@ -2335,31 +2355,18 @@ async function confirmPlayer(targetPlayerId = null) {
     { top: '82%', left: '15%' },
     { top: '90%', left: '50%' },    
     { top: '10%', left: '50%' },
-    
-     { top: '2%', left: '120%' },
+    { top: '2%', left: '120%' },
     { top: '50%', left: '-20%' },
     { top: '12%', left: '120%' },
     { top: '60%', left: '-20%' },
-   
-   
     { top: '22%', left: '120%' },
     { top: '70%', left: '-20%' },
     { top: '32%', left: '120%' },
     { top: '80%', left: '-20%' },
-    
-
     { top: '42%', left: '120%' },
     { top: '90%', left: '-20%' },
     { top: '52%', left: '120%' },
     { top: '100%', left: '-20%' },
-
-
-    
-
-
-    
-
-   
   ];
 
   const playersHTML = await Promise.all(
@@ -2410,107 +2417,114 @@ async function confirmPlayer(targetPlayerId = null) {
     </div>
   `;
 
-  Swal.fire({
-    html: quadraHTML,
-    showCloseButton: true,
-    showConfirmButton: true,
-    confirmButtonText: 'OK',
-    showCancelButton: false,
-    width: 'auto',
-    didOpen: () => {
-      let currentPopup = null;
+  // Fechar o loading e abrir a quadra virtual com um pequeno atraso para garantir que o estado de loading seja limpo
+  setTimeout(() => {
+    Swal.close();
+    Swal.fire({
+      html: quadraHTML,
+      showCloseButton: true,
+      showConfirmButton: true,
+      confirmButtonText: 'OK',
+      showCancelButton: false,
+      width: 'auto',
+      showLoaderOnConfirm: false, // Garante que o botão OK não mostre loading
+      didOpen: () => {
+        let currentPopup = null;
 
-      const botao = document.getElementById('btn-confirmar');
-      if (botao && !isPlayerInList) {
-        botao.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          try {
-            await confirmPlayer();
-          } catch (error) {
-            console.error('Erro ao confirmar jogador:', error);
-            Swal.fire({
-              icon: 'error',
-              title: 'Erro',
-              text: 'Não foi possível confirmar a presença. Verifique o console para mais detalhes.',
-            });
-          }
-        });
-      }
+        const botao = document.getElementById('btn-confirmar');
+        if (botao && !isPlayerInList) {
+          botao.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            try {
+              await confirmPlayer();
+            } catch (error) {
+              console.error('Erro ao confirmar jogador:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível confirmar a presença. Verifique o console para mais detalhes.',
+              });
+            }
+          });
+        }
 
-      const jogadores = document.querySelectorAll('.player');
-      jogadores.forEach((jogador) => {
-        jogador.addEventListener('click', (e) => {
-          e.stopPropagation();
+        const jogadores = document.querySelectorAll('.player');
+        jogadores.forEach((jogador) => {
+          jogador.addEventListener('click', (e) => {
+            e.stopPropagation();
 
-          if (currentPopup) {
-            currentPopup.remove();
-            currentPopup = null;
-          }
-
-          const playerId = jogador.dataset.playerId;
-          if (!playerId) {
-            Swal.fire({
-              icon: 'info',
-              title: 'Posição Vazia',
-              text: 'Nenhum jogador está ocupando esta posição na quadra.',
-              confirmButtonText: 'OK',
-            });
-            return;
-          }
-
-          const nome = jogador.getAttribute('title');
-          const posicao = jogador.dataset.posicao || 'Posição não definida';
-          const index = jogador.dataset.index;
-          const position = playerPositions[index];
-
-          const popup = document.createElement('div');
-          popup.className = 'marker-popup';
-          popup.innerHTML = `<strong>${nome}</strong><br><span>${posicao}</span>`;
-
-          const arrow = document.createElement('div');
-          arrow.className = 'marker-arrow';
-          popup.appendChild(arrow);
-
-          const swalContainer = document.querySelector('.swal2-container');
-          swalContainer.appendChild(popup);
-
-          const quadraContainer = document.querySelector('.quadra-container');
-          const containerRect = quadraContainer.getBoundingClientRect();
-          const playerTopPercent = parseFloat(position.top);
-          const playerLeftPercent = parseFloat(position.left);
-          const topPixels = (playerTopPercent / 100) * containerRect.height;
-          const leftPixels = (playerLeftPercent / 100) * containerRect.width;
-          const popupHeight = 70;
-
-          popup.style.top = `${containerRect.top + topPixels - popupHeight - 2}px`;
-          popup.style.left = `${containerRect.left + leftPixels}px`;
-
-          currentPopup = popup;
-
-          setTimeout(() => {
             if (currentPopup) {
               currentPopup.remove();
               currentPopup = null;
             }
-          }, 6000);
-        });
-      });
 
-      document.querySelector('.swal2-container').addEventListener('click', (e) => {
-        if (currentPopup && !e.target.closest('.player')) {
-          currentPopup.remove();
-          currentPopup = null;
+            const playerId = jogador.dataset.playerId;
+            if (!playerId) {
+              Swal.fire({
+                icon: 'info',
+                title: 'Posição Vazia',
+                text: 'Nenhum jogador está ocupando esta posição na quadra.',
+                confirmButtonText: 'OK',
+              });
+              return;
+            }
+
+            const nome = jogador.getAttribute('title');
+            const posicao = jogador.dataset.posicao || 'Posição não definida';
+            const index = jogador.dataset.index;
+            const position = playerPositions[index];
+
+            const popup = document.createElement('div');
+            popup.className = 'marker-popup';
+            popup.innerHTML = `<strong>${nome}</strong><br><span>${posicao}</span>`;
+
+            const arrow = document.createElement('div');
+            arrow.className = 'marker-arrow';
+            popup.appendChild(arrow);
+
+            const swalContainer = document.querySelector('.swal2-container');
+            swalContainer.appendChild(popup);
+
+            const quadraContainer = document.querySelector('.quadra-container');
+            const containerRect = quadraContainer.getBoundingClientRect();
+            const playerTopPercent = parseFloat(position.top);
+            const playerLeftPercent = parseFloat(position.left);
+            const topPixels = (playerTopPercent / 100) * containerRect.height;
+            const leftPixels = (playerLeftPercent / 100) * containerRect.width;
+            const popupHeight = 70;
+
+            popup.style.top = `${containerRect.top + topPixels - popupHeight - 2}px`;
+            popup.style.left = `${containerRect.left + leftPixels}px`;
+
+            currentPopup = popup;
+
+            setTimeout(() => {
+              if (currentPopup) {
+                currentPopup.remove();
+                currentPopup = null;
+              }
+            }, 6000);
+          });
+        });
+
+        document.querySelector('.swal2-container').addEventListener('click', (e) => {
+          if (currentPopup && !e.target.closest('.player')) {
+            currentPopup.remove();
+            currentPopup = null;
+          }
+        });
+      },
+      willClose: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.removeEventListener('click', () => {});
         }
-      });
-    },
-    willClose: () => {
-      const container = document.querySelector('.swal2-container');
-      if (container) {
-        container.removeEventListener('click', () => {});
-      }
-    },
-  });
+      },
+    });
+  }, 5); // Pequeno atraso de 100ms para garantir que o loading seja completamente fechado. Reduzi para 5ms
 }
+
+
 </script>
 
 
