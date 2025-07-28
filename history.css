@@ -39,6 +39,148 @@ body {
 }
 
 
+ /* Container de Filtros */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px; /* Aumenta o espaçamento entre os itens */
+  margin-bottom: 30px; /* Mais espaço abaixo do container */
+  padding: 20px; /* Aumenta o padding interno */
+  background: #ffffff; /* Fundo branco para se destacar */
+  border-radius: 10px; /* Bordas mais arredondadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Sombra mais pronunciada e suave */
+  align-items: flex-end; /* Alinha os itens pela parte de baixo */
+}
+
+.filter-container > div {
+  
+    display: flex;
+    gap: 5px;
+    flex: 1;
+    min-width: 150px;
+    flex-wrap: nowrap;
+   
+    justify-content: flex-end;
+    align-items: baseline;
+
+}
+
+/* Rótulos dos Filtros */
+.filter-container label {
+  font-weight: bold; /* Deixa o texto do label em negrito */
+  color: var(--text); /* Usa a cor de texto definida em :root */
+  font-size: 0.95em; /* Ajusta o tamanho da fonte */
+  
+}
+
+/* Campos de Seleção (Dropdowns) */
+.filter-select {
+  padding: 10px 12px; /* Aumenta o padding para um toque maior */
+  border: 1px solid #ccc; /* Borda mais suave */
+  border-radius: 6px; /* Bordas arredondadas */
+  font-size: 1em; /* Tamanho da fonte legível */
+  color: #555; /* Cor do texto dentro do select */
+  background-color: #fcfcfc; /* Fundo levemente off-white */
+  appearance: none; /* Remove o estilo padrão do sistema operacional */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13%205.7L146.2%20202.7%2018.3%2075.1a17.6%2017.6%200%200%200-25.3%2024.5l137.9%20137.2a17.6%2017.6%200%200%200%2025.3%200l137.9-137.2c5.7-5.7%205.7-15.3%200-21z%22%2F%3E%3C%2Fsvg%3E'); /* Ícone de seta personalizado */
+  background-repeat: no-repeat;
+  background-position: right 10px top 50%;
+  background-size: 12px auto;
+  cursor: pointer;
+  width: 200px;
+}
+
+.filter-select:focus {
+  border-color: var(--primary); /* Destaca a borda ao focar */
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); /* Adiciona um brilho ao focar */
+  outline: none; /* Remove o outline padrão */
+}
+
+/* Botão de Aplicar Filtros */
+.filter-btn {
+  padding: 10px 20px; /* Aumenta o padding para um botão mais substancial */
+  background-color: var(--primary); /* Cor primária do seu tema */
+  color: white; /* Texto branco */
+  border: none;
+  border-radius: 6px; /* Bordas arredondadas */
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold; /* Texto do botão em negrito */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Transições suaves */
+  display: flex; /* Para alinhar o ícone */
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  white-space: nowrap; /* Evita quebra de linha no botão */
+}
+
+.filter-btn:hover {
+  background-color: #2980b9; /* Tom mais escuro no hover */
+  transform: translateY(-2px); /* Pequeno levantamento no hover */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Sombra mais forte no hover */
+}
+
+.filter-btn i {
+  font-size: 1.1em; /* Ajusta o tamanho do ícone */
+}
+
+/* Media Queries para Responsividade */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column; /* Empilha os filtros em telas pequenas */
+    align-items: stretch; /* Estica os itens para largura total */
+  }
+
+  .filter-container > div {
+    min-width: unset; /* Remove a largura mínima para que se ajustem melhor */
+    width: 100%; /* Ocupa a largura total */
+  }
+
+  .filter-btn {
+    width: 100%; /* Botão ocupa a largura total em telas pequenas */
+  }
+}
+    
+    .game-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .player-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .player-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .player-photo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+
+
+
+
 
 
 .filter-controls {
