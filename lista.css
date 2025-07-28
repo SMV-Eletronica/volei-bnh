@@ -39,6 +39,65 @@ body {
 }
 
 
+
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filter-controls input[type="date"],
+.filter-controls select {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.filter-controls label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-color);
+}
+
+.filter-controls button {
+  padding: 8px 16px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-controls button:hover {
+  background: var(--primary-hover);
+}
+
+
+.game-selector input[type="date"] {
+  padding: 8px;
+  margin-right: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.game-selector button {
+  padding: 8px 16px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.game-selector button:hover {
+  background: var(--primary-hover);
+}
+
+
 .notified-players-list {
   max-height: 40vh;
   overflow-y: auto;
