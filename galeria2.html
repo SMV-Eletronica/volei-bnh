@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico e Galeria - Vôlei BNH</title>
+  <link rel="icon" type="image/png" sizes="16x16" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-16x16.png?alt=media&token=c23063f2-841d-400a-b32c-3a3f5f65349e">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-32x32.png?alt=media&token=429944a6-1937-4d1a-be29-d6537b029286">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Fapple-touch-icon.png?alt=media&token=9ac93b48-1110-449e-b155-8930b20c9d31">
+  
+  <link rel="stylesheet" href="history.css?v=2.5">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+  /* Adicione isso ao seu CSS existente */
+  .players-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .player-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid #6f42c1;
+    transition: transform 0.2s;
+  }
+  
+  .player-avatar:hover {
+    transform: scale(1.1);
+  }
+  
+  .player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Estilos para a tooltip */
+  .player-tooltip {
+    position: absolute;
+    background-color: #6f42c1;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-width: 200px;
+    text-align: center;
+    transform: translateX(-50%);
+    left: 50%;
+    bottom: calc(100% + 10px);
+  }
+
+  .player-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #6f42c1 transparent transparent transparent;
+  }
+
+  .player-avatar-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .player-avatar-container:hover .player-tooltip {
+    opacity: 1;
+  }
+
+    /* Estilos originais mantidos */
+    .game-media-section {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #e9ecef;
+    }
+    .game-media-section h4 {
+      color: #6f42c1;
+      margin-bottom: 10px;
+    }
+    .game-media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+    .game-media-item {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background-color: #eee;
+    }
+    .game-media-item img, .game-media-item video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+    .game-media-item.youtube-video {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+    }
+    .game-media-item.youtube-video img {
+      object-fit: contain;
+      position: static;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+    .game-media-item.youtube-video .youtube-play-icon {
+      position: absolute;
+      font-size: 2em;
+      color: rgba(255, 0, 0, 0.9);
+      text-shadow: 0 0 10px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .game-media-item img:hover, .game-media-item video:hover {
+      transform: scale(1.05);
+    }
+    .game-media-item .delete-media-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: rgba(220, 53, 69, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8em;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      z-index: 10;
+    }
+    .game-media-item:hover .delete-media-btn {
+      opacity: 1;
+    }
+    
+    /* NOVOS ESTILOS ADICIONADOS */
+    .game-media-buttons {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .game-media-buttons .upload-media-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: inline-block !important;
+    }
+    
+    .game-media-buttons .upload-youtube-game-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: none !important;
+    }
+    
+    /* Mantenha todos os outros estilos originais */
+    .gallery-section {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .gallery-section h3 {
+      color: #6f42c1;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    .gallery-section h3 i {
+      margin-right: 10px;
+      font-size: 1.2em;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 10px;
+    }
+    .gallery-item {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background-color: #eee;
+    }
+    .gallery-item img, .gallery-item video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+    .gallery-item.youtube-video {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+    }
+    .gallery-item.youtube-video img {
+      object-fit: contain;
+      position: static;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+    .gallery-item.youtube-video .youtube-play-icon {
+      position: absolute;
+      font-size: 3em;
+      color: rgba(255, 0, 0, 0.9);
+      text-shadow: 0 0 10px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .gallery-item img:hover, .gallery-item video:hover {
+      transform: scale(1.05);
+    }
+    .gallery-item .delete-photo-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: rgba(220, 53, 69, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9em;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      z-index: 10;
+    }
+    .gallery-item:hover .delete-photo-btn {
+      opacity: 1;
+    }
+    .no-items-message {
+      text-align: center;
+      color: #777;
+      font-style: italic;
+      padding: 20px;
+      grid-column: 1 / -1;
+    }
+    .upload-button-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .upload-button-container .upload-photo-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.1em;
+      transition: background-color 0.2s;
+      margin-right: 10px;
+    }
+    .upload-button-container .upload-youtube-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.1em;
+      transition: background-color 0.2s;
+    }
+    .upload-button-container .upload-photo-btn:hover {
+      background-color: #218838;
+    }
+    .upload-button-container .upload-youtube-btn:hover {
+      background-color: #c82333;
+    }
+    .swal2-content iframe {
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="menu-toggle" id="menuToggle" style="font-size: 11px;">
+      <i class="fas fa-bars" style="font-size: 20px;"></i><br><strong>Menu</strong>
+    </button>
+    <center><h2><i class="fas fa-history"></i> Histórico e Galeria</h2></center>
+  </div>
+  
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-menu">
+      <div class="user-profile">
+        <img id="sidebarUserPhoto" class="sidebar-user-photo" src="" alt="Foto do usuário">
+        <div class="sidebar-user-info">
+          <div id="sidebarUserName" class="sidebar-user-name"></div>
+          <div id="sidebarUserPosition" class="sidebar-user-position"></div>
+          <div id="userEmail" class="sidebar-user-position"></div>
+        </div>
+      </div>
+      <button id="adminBtn" class="logout-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> Administração</button>
+      <button class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+      <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+      <button class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+      <button class="logout-btn" onclick="window.location.href='challenges.html'"><i class="fas fa-camera"></i> Desafios</button>
+    </div>
+    <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+  </div>
+  
+  <div class="overlay" id="overlay"></div>
+  
+  <div class="container">
+    
+    <!-- Filtros do Histórico -->
+    <div class="filter-container">
+      <div>
+        <label for="yearFilter">Ano:</label>
+        <select id="yearFilter" class="filter-select">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label for="monthFilter">Mês:</label>
+        <select id="monthFilter" class="filter-select">
+          <option value="">Todos</option>
+          <option value="01">Janeiro</option>
+          <option value="02">Fevereiro</option>
+          <option value="03">Março</option>
+          <option value="04">Abril</option>
+          <option value="05">Maio</option>
+          <option value="06">Junho</option>
+          <option value="07">Julho</option>
+          <option value="08">Agosto</option>
+          <option value="09">Setembro</option>
+          <option value="10">Outubro</option>
+          <option value="11">Novembro</option>
+          <option value="12">Dezembro</option>
+        </select>
+      </div>
+      <div>
+        <label for="playerFilter">Meus Jogos:</label>
+        <select id="playerFilter" class="filter-select">
+          <option value="all">Todos os jogos</option>
+          <option value="mine">Somente meus jogos</option>
+        </select>
+      </div>
+      <button id="applyFilters" class="filter-btn"><i class="fas fa-filter"></i> Aplicar Filtros</button>
+    </div>
+    
+    <div id="historyList"></div>
+
+    <!-- Seção de Galeria Geral -->
+    <div class="gallery-section">
+      <h3><i class="fas fa-camera"></i> Galeria de Memórias</h3>
+      <div id="galleryGrid" class="gallery-grid">
+        <p class="no-items-message" id="noGalleryItems">Nenhuma foto ou vídeo na galeria ainda. Que tal ser o primeiro a enviar?</p>
+      </div>
+      <div class="upload-button-container">
+        <button id="uploadPhotoBtn" class="upload-photo-btn admin-only" style="display: none;"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo Local</button>
+        <button id="uploadYoutubeBtn" class="upload-youtube-btn admin-only" style="display: none;"><i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube</button>
+      </div>
+    </div>
+  </div>
+  
+  <footer class="footer">
+    © 2025 SMV Eletrônica - Todos os direitos reservados<br>
+    <div class="footer-links">
+      Powered by:
+      <a href="https://github.com/SMV-Eletronica" target="_blank" class="github-link">
+        <i class="fab fa-github"></i> GitHub
+      </a>
+      <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
+        <i class="fas fa-fire"></i> Firebase
+      </a>
+    </div>
+  </footer>
+  
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, get, query, orderByChild, equalTo, push, set, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+      authDomain: "volei-25301.firebaseapp.com",
+      databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+      projectId: "volei-25301",
+      storageBucket: "volei-25301.firebasestorage.app",
+      messagingSenderId: "1007197261034",
+      appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+      measurementId: "G-CYMLX0SJJQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+    
+    const { DateTime } = luxon;
+    luxon.Settings.defaultLocale = 'pt-BR';
+    
+    let currentUser = null;
+    let currentUserPlayer = null;
+    let allPlayers = [];
+    let isAdmin = false;
+    const adminEmails = ['mvvasques@msn.com', 'mvv@msn.com', 'evandroAsyncronousFunctionCall@msn.com'];
+    const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
+    
+    // Elementos da página
+    const historyList = document.getElementById('historyList');
+    const yearFilter = document.getElementById('yearFilter');
+    const monthFilter = document.getElementById('monthFilter');
+    const playerFilter = document.getElementById('playerFilter');
+    const applyFilters = document.getElementById('applyFilters');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const noGalleryItems = document.getElementById('noGalleryItems');
+    const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+    const uploadYoutubeBtn = document.getElementById('uploadYoutubeBtn');
+     
+    // Menu toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const adminBtn = document.getElementById('adminBtn');
+    
+    function toggleSidebar() {
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+    
+    menuToggle.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
+    
+    // Função para obter ID do YouTube
+    function getYouTubeId(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    // Carregar dados do usuário
+    async function loadCurrentUser() {
+      try {
+        const playersRef = ref(database, 'players');
+        const snapshot = await get(playersRef);
+        
+        if (snapshot.exists()) {
+          allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+            id,
+            ...player
+          }));
+          
+          currentUserPlayer = allPlayers.find(player => player.email === currentUser.email);
+          
+          if (currentUserPlayer) {
+            document.getElementById('sidebarUserName').textContent = currentUserPlayer.name;
+            document.getElementById('sidebarUserPosition').textContent = currentUserPlayer.position || 'Posição não definida';
+            document.getElementById('userEmail').textContent = currentUser.email;
+            
+            if (currentUserPlayer.imageUrl) {
+              document.getElementById('sidebarUserPhoto').src = currentUserPlayer.imageUrl;
+            }
+            isAdmin = adminEmails.includes(currentUser.email) || currentUserPlayer.category === 'ADMIN';
+            console.log('Usuário é admin?', isAdmin, 'Email:', currentUser.email);
+            updateSidebarVisibility();
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      }
+    }
+    
+    // Atualizar visibilidade da sidebar
+    function updateSidebarVisibility() {
+      console.log('Atualizando visibilidade - isAdmin:', isAdmin);
+      if (isAdmin) {
+        adminBtn.style.display = 'inline-block';
+        uploadPhotoBtn.style.display = 'inline-block';
+        uploadYoutubeBtn.style.display = 'inline-block';
+        document.querySelectorAll('.admin-only').forEach(btn => {
+          console.log('Mostrando botão admin:', btn.id);
+          btn.style.display = 'inline-block';
+        });
+      } else {
+        adminBtn.style.display = 'none';
+        uploadPhotoBtn.style.display = 'none';
+        uploadYoutubeBtn.style.display = 'none';
+        document.querySelectorAll('.admin-only').forEach(btn => {
+          console.log('Ocultando botão admin:', btn.id);
+          btn.style.display = 'none';
+        });
+      }
+    }
+    
+    // Carregar anos disponíveis
+    async function loadAvailableYears() {
+      try {
+        const historyRef = ref(database, 'gameHistory');
+        const snapshot = await get(historyRef);
+        
+        yearFilter.innerHTML = '<option value="">Todos</option>';
+        
+        if (snapshot.exists()) {
+          const years = Object.keys(snapshot.val()).sort((a, b) => b - a);
+          const currentYear = DateTime.now().toFormat('yyyy');
+          const currentMonth = DateTime.now().toFormat('MM');
+          
+          // Verificar se o ano atual existe nos dados
+          const yearExists = years.includes(currentYear);
+          
+          years.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearFilter.appendChild(option);
+          });
+          
+          // Definir valores padrão
+          if (yearExists) {
+            yearFilter.value = currentYear;
+            monthFilter.value = currentMonth;
+            
+            // Verificar se o mês atual existe nos dados
+            const monthsRef = ref(database, `gameHistory/${currentYear}`);
+            const monthsSnapshot = await get(monthsRef);
+            
+            if (monthsSnapshot.exists()) {
+              const months = Object.keys(monthsSnapshot.val());
+              if (!months.includes(currentMonth)) {
+                // Se o mês atual não existir, usar o primeiro mês disponível
+                monthFilter.value = months[0] || '';
+              }
+            }
+          } else if (years.length > 0) {
+            // Se o ano atual não existir, usar o ano mais recente
+            yearFilter.value = years[0];
+            monthFilter.value = '';
+          }
+          
+          // Carregar histórico com os filtros selecionados
+          loadGameHistory({
+            year: yearFilter.value,
+            month: monthFilter.value,
+            onlyMyGames: playerFilter.value === 'mine'
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar anos:', error);
+        Swal.fire('Erro', 'Não foi possível carregar os anos disponíveis.', 'error');
+      }
+    }  
+
+    // Função para mostrar mídia em tela cheia
+    async function showFullMedia(mediaIdentifier, mediaType) {
+      let htmlContent = '';
+      let title = 'Visualizando Mídia';
+
+      if (mediaType === 'image') {
+        htmlContent = `<img src="${mediaIdentifier}" style="max-width: 100%; max-height: 80vh;">`;
+        title = 'Visualizando Imagem';
+      } else if (mediaType === 'video') {
+        htmlContent = `<video src="${mediaIdentifier}" controls style="max-width: 100%; max-height:100vh;"></video>`;
+        title = '<i class="fas fa-camera"></i> BNH';
+      } else if (mediaType === 'youtube_video') {
+        htmlContent = `
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;">
+            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                    src="https://www.youtube.com/embed/${mediaIdentifier}?autoplay=1"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+            </iframe>
+          </div>
+        `;
+        title = 'Assistindo Vídeo do YouTube';
+      }
+
+      Swal.fire({
+        title: title,
+        html: htmlContent,
+        showConfirmButton: false,
+        showCloseButton: true,
+        background: 'rgba(0,0,0,0.8)',
+        backdrop: true,
+        grow: 'fullscreen',
+        customClass: {
+          container: 'swal2-container-full-media',
+          popup: 'swal2-popup-full-media',
+          closeButton: 'swal2-close-button-full-media'
+        },
+        didOpen: () => {
+          const iframe = Swal.getHtmlContainer().querySelector('iframe');
+          if (iframe) {
+            iframe.focus();
+          }
+        },
+        willClose: () => {
+          const iframe = Swal.getHtmlContainer().querySelector('iframe');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+          }
+        }
+      });
+    }
+
+    // Função para deletar mídia
+    async function deleteMedia(mediaId, mediaUrl, mediaType) {
+      const { isConfirmed } = await Swal.fire({
+        title: 'Remover Mídia?',
+        text: 'Tem certeza que deseja remover este item? Esta ação é irreversível.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, Remover!'
+      });
+
+      if (isConfirmed) {
+        try {
+          const mediaRef = ref(database, `gallery/${mediaId}`);
+          await remove(mediaRef);
+
+          if (mediaType !== 'youtube_video' && mediaUrl) {
+            const fileToDeleteRef = storageRef(storage, mediaUrl);
+            try {
+              await deleteObject(fileToDeleteRef);
+              console.log('Arquivo removido do Firebase Storage.');
+            } catch (storageError) {
+              if (storageError.code === 'storage/object-not-found') {
+                console.warn('Arquivo não encontrado no Storage, mas removido do Realtime Database.');
+              } else {
+                console.error('Erro ao remover arquivo do Storage:', storageError);
+              }
+            }
+          }
+
+          Swal.fire('Removido!', 'Item removido com sucesso.', 'success');
+        } catch (error) {
+          console.error('Erro ao remover mídia:', error);
+          Swal.fire('Erro', 'Não foi possível remover o item. Tente novamente.', 'error');
+        }
+      }
+    }
+
+   
+
+    // Função para fazer upload de mídia para a galeria geral
+async function uploadGalleryPhoto() {
+  if (!isAdmin) {
+    Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
+    return;
+  }
+
+  const { value: file } = await Swal.fire({
+    title: 'Selecionar Foto ou Vídeo Local',
+    input: 'file',
+    inputAttributes: {
+      'accept': 'image/*,video/*',
+      'aria-label': 'Upload da sua mídia'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Enviar Arquivo',
+    preConfirm: (fileInput) => {
+      if (!fileInput) {
+        Swal.showValidationMessage('Por favor, selecione uma imagem ou vídeo.');
+      }
+      return fileInput;
+    }
+  });
+
+  if (file) {
+    Swal.fire({
+      title: 'Enviando arquivo...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+      // Obter ano e mês atual
+      const now = DateTime.local().setZone('America/Sao_Paulo');
+      const year = now.toFormat('yyyy');
+      const month = now.toFormat('MM');
+      const timestamp = now.toFormat('yyyyMMddHHmmss');
+      const fileExtension = file.name.split('.').pop();
+      // Definir o caminho com ano e mês
+      const storagePath = `gallery/${year}/${month}/${timestamp}_${file.name}`;
+      const storageRefPath = storageRef(storage, storagePath);
+      await uploadBytes(storageRefPath, file);
+      const downloadURL = await getDownloadURL(storageRefPath);
+
+      const mediaId = push(ref(database, 'gallery')).key;
+      await set(ref(database, `gallery/${mediaId}`), {
+        url: downloadURL,
+        caption: file.name,
+        uploadedBy: currentUserPlayer.id,
+        uploadedAt: now.toISO(),
+        type: file.type.startsWith('image/') ? 'image' : 'video',
+        year: year, // Armazenar ano no banco para facilitar filtros
+        month: month // Armazenar mês no banco para facilitar filtros
+      });
+
+      Swal.fire('Sucesso!', 'Arquivo enviado para a galeria!', 'success');
+    } catch (error) {
+      console.error('Erro ao enviar arquivo:', error);
+      Swal.fire('Erro', 'Não foi possível enviar o arquivo. Tente novamente.', 'error');
+    }
+  }
+}
+
+// Função para fazer upload de mídia para um jogo
+async function uploadGameMedia(gameId) {
+  console.log('Tentando upload para jogo:', gameId);
+  if (!isAdmin) {
+    Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
+    return;
+  }
+
+  const { value: file } = await Swal.fire({
+    title: `Enviar mídia para o jogo ${gameId}`,
+    input: 'file',
+    inputAttributes: {
+      'accept': 'image/*,video/*',
+      'aria-label': 'Upload da sua mídia'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Enviar Arquivo',
+    preConfirm: (fileInput) => {
+      if (!fileInput) {
+        Swal.showValidationMessage('Por favor, selecione uma imagem ou vídeo.');
+      }
+      return fileInput;
+    }
+  });
+
+  if (file) {
+    Swal.fire({
+      title: 'Enviando arquivo...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+      // Obter ano e mês atual
+      const now = DateTime.local().setZone('America/Sao_Paulo');
+      const year = now.toFormat('yyyy');
+      const month = now.toFormat('MM');
+      const timestamp = now.toFormat('yyyyMMddHHmmss');
+      const fileExtension = file.name.split('.').pop();
+      // Definir o caminho com ano e mês
+      const storagePath = `gallery/${year}/${month}/game_${gameId}_${timestamp}.${fileExtension}`;
+      const storageRefPath = storageRef(storage, storagePath);
+      await uploadBytes(storageRefPath, file);
+      const downloadURL = await getDownloadURL(storageRefPath);
+
+      const mediaId = push(ref(database, 'gallery')).key;
+      await set(ref(database, `gallery/${mediaId}`), {
+        url: downloadURL,
+        caption: `Mídia do jogo ${gameId}`,
+        uploadedBy: currentUserPlayer.id,
+        uploadedAt: now.toISO(),
+        type: file.type.startsWith('image/') ? 'image' : 'video',
+        gameId: gameId,
+        year: year, // Armazenar ano no banco para facilitar filtros
+        month: month // Armazenar mês no banco para facilitar filtros
+      });
+
+      Swal.fire('Sucesso!', 'Mídia enviada com sucesso para este jogo!', 'success');
+    } catch (error) {
+      console.error('Erro ao enviar arquivo:', error);
+      Swal.fire('Erro', 'Não foi possível enviar o arquivo. Tente novamente.', 'error');
+    }
+  }
+}
+
+
+
+
+
+
+      if (!isAdmin) {
+        Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
+        return;
+      }
+
+      const { value: file } = await Swal.fire({
+        title: 'Selecionar Foto ou Vídeo Local',
+        input: 'file',
+        inputAttributes: {
+          'accept': 'image/*,video/*',
+          'aria-label': 'Upload da sua mídia'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Enviar Arquivo',
+        preConfirm: (fileInput) => {
+          if (!fileInput) {
+            Swal.showValidationMessage('Por favor, selecione uma imagem ou vídeo.');
+          }
+          return fileInput;
+        }
+      });
+
+      if (file) {
+        Swal.fire({
+          title: 'Enviando arquivo...',
+          text: 'Por favor, aguarde.',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+          const storagePath = `gallery/${file.name}`;
+          const storageRefPath = storageRef(storage, storagePath);
+          await uploadBytes(storageRefPath, file);
+          const downloadURL = await getDownloadURL(storageRefPath);
+
+          const mediaId = push(ref(database, 'gallery')).key;
+          await set(ref(database, `gallery/${mediaId}`), {
+            url: downloadURL,
+            caption: file.name,
+            uploadedBy: currentUserPlayer.id,
+            uploadedAt: DateTime.local().setZone('America/Sao_Paulo').toISO(),
+            type: file.type.startsWith('image/') ? 'image' : 'video'
+          });
+
+          Swal.fire('Sucesso!', 'Arquivo enviado para a galeria!', 'success');
+        } catch (error) {
+          console.error('Erro ao enviar arquivo:', error);
+          Swal.fire('Erro', 'Não foi possível enviar o arquivo. Tente novamente.', 'error');
+        }
+      }
+    }
+
+    // Função para fazer upload de vídeo do YouTube
+    async function uploadYoutubeVideo(gameId = null) {
+      console.log('Tentando upload do YouTube para jogo:', gameId);
+      if (!isAdmin) {
+        Swal.fire('Erro', 'Você não tem permissão para adicionar vídeos do YouTube.', 'error');
+        return;
+      }
+
+      const { value: youtubeUrl } = await Swal.fire({
+        title: gameId ? `Adicionar Vídeo do YouTube ao Jogo` : 'Adicionar Vídeo do YouTube',
+        input: 'text',
+        inputLabel: 'URL do vídeo do YouTube:',
+        inputPlaceholder: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        showCancelButton: true,
+        confirmButtonText: 'Adicionar Vídeo',
+        inputValidator: (value) => {
+          const id = getYouTubeId(value);
+          if (!id) {
+            return 'Por favor, insira um URL válido do YouTube.';
+          }
+          return null;
+        }
+      });
+
+      if (youtubeUrl) {
+        Swal.fire({
+          title: 'Adicionando vídeo...',
+          text: 'Por favor, aguarde.',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+          const youtubeId = getYouTubeId(youtubeUrl);
+          const mediaId = push(ref(database, 'gallery')).key;
+          const mediaData = {
+            youtubeId: youtubeId,
+            caption: 'Vídeo do YouTube',
+            uploadedBy: currentUserPlayer.id,
+            uploadedAt: DateTime.local().setZone('America/Sao_Paulo').toISO(),
+            type: 'youtube_video'
+          };
+          if (gameId) {
+            mediaData.gameId = gameId;
+          }
+          await set(ref(database, `gallery/${mediaId}`), mediaData);
+          Swal.fire('Sucesso!', 'Vídeo do YouTube adicionado!', 'success');
+        } catch (error) {
+          console.error('Erro ao adicionar vídeo do YouTube:', error);
+          Swal.fire('Erro', 'Não foi possível adicionar o vídeo. Tente novamente.', 'error');
+        }
+      }
+    }
+
+    // Carregar galeria geral
+    function loadGallery() {
+      const galleryRef = ref(database, 'gallery');
+      onValue(galleryRef, (snapshot) => {
+        const items = snapshot.val() || {};
+        const galleryItemsHtml = [];
+
+        const sortedItems = Object.entries(items).map(([id, item]) => ({ id, ...item }))
+          .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+
+        for (const item of sortedItems) {
+          if (item.gameId) continue; // Pula mídias vinculadas a jogos (exibidas nos gameCards)
+          let mediaHtml = '';
+          let itemClass = '';
+
+          if (item.type === 'youtube_video' && item.youtubeId) {
+            const thumbnailUrl = `https://img.youtube.com/vi/${item.youtubeId}/mqdefault.jpg`;
+            mediaHtml = `
+              <img src="${thumbnailUrl}" alt="${item.caption || 'Vídeo do YouTube'}">
+              <i class="fab fa-youtube youtube-play-icon"></i>
+            `;
+            itemClass = 'youtube-video';
+          } else if (item.type === 'image' && item.url) {
+            mediaHtml = `<img src="${item.url}" alt="${item.caption || 'Foto da Galeria'}">`;
+            itemClass = 'image';
+          } else if (item.type === 'video' && item.url) {
+            mediaHtml = `<video src="${item.url}" alt="${item.caption || 'Vídeo Local'}" preload="metadata"></video>`;
+            itemClass = 'local-video';
+          }
+
+          galleryItemsHtml.push(`
+            <div class="gallery-item ${itemClass}" data-id="${item.id}" data-type="${item.type || 'unknown'}" data-url="${item.url || ''}" data-youtube-id="${item.youtubeId || ''}">
+              ${mediaHtml}
+              ${isAdmin ? `<button class="delete-photo-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>` : ''}
+            </div>
+          `);
+        }
+
+        galleryGrid.innerHTML = galleryItemsHtml.join('');
+        noGalleryItems.style.display = galleryItemsHtml.length === 0 ? 'block' : 'none';
+
+        galleryGrid.querySelectorAll('.gallery-item').forEach(itemElement => {
+          itemElement.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('delete-photo-btn') && !e.target.closest('.delete-photo-btn')) {
+              const type = itemElement.dataset.type;
+              const url = itemElement.dataset.url;
+              const youtubeId = itemElement.dataset.youtubeId;
+
+              if (type === 'image') {
+                showFullMedia(url, 'image');
+              } else if (type === 'youtube_video') {
+                showFullMedia(youtubeId, 'youtube_video');
+              } else if (type === 'video') {
+                showFullMedia(url, 'video');
+              }
+            }
+          });
+        });
+
+        if (isAdmin) {
+          galleryGrid.querySelectorAll('.delete-photo-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+              const mediaId = e.target.dataset.id || e.target.closest('button').dataset.id;
+              const itemElement = e.target.closest('.gallery-item');
+              const mediaUrl = itemElement.dataset.url;
+              const mediaType = itemElement.dataset.type;
+              deleteMedia(mediaId, mediaUrl, mediaType);
+            });
+          });
+        }
+      }, (error) => {
+        console.error("Erro ao carregar galeria:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível carregar a galeria.',
+        });
+      });
+    }
+
+    // Carregar histórico de jogos
+    async function loadGameHistory(filters = {}) {
+      try {
+        historyList.innerHTML = '<p>Carregando histórico...</p>';
+        
+        let historyQuery;
+        
+        if (filters.year && filters.month) {
+          historyQuery = ref(database, `gameHistory/${filters.year}/${filters.month}`);
+        } else if (filters.year) {
+          historyQuery = ref(database, `gameHistory/${filters.year}`);
+        } else {
+          historyQuery = ref(database, 'gameHistory');
+        }
+        
+        const snapshot = await get(historyQuery);
+        
+        if (!snapshot.exists()) {
+          historyList.innerHTML = '<p>Nenhum jogo encontrado no histórico.</p>';
+          return;
+        }
+        
+        let games = [];
+        
+        const data = snapshot.val();
+        if (filters.year && filters.month) {
+          Object.entries(data).forEach(([gameId, gameData]) => {
+            games.push({
+              id: gameId,
+              year: filters.year,
+              month: filters.month,
+              ...gameData
+            });
+          });
+        } else if (filters.year) {
+          Object.entries(data).forEach(([month, monthGames]) => {
+            Object.entries(monthGames).forEach(([gameId, gameData]) => {
+              games.push({
+                id: gameId,
+                year: filters.year,
+                month,
+                ...gameData
+              });
+            });
+          });
+        } else {
+          Object.entries(data).forEach(([year, yearData]) => {
+            Object.entries(yearData).forEach(([month, monthGames]) => {
+              Object.entries(monthGames).forEach(([gameId, gameData]) => {
+                games.push({
+                  id: gameId,
+                  year,
+                  month,
+                  ...gameData
+                });
+              });
+            });
+          });
+        }
+        
+        games.sort((a, b) => {
+          const dateA = new Date(`${a.date}T${a.time}`);
+          const dateB = new Date(`${b.date}T${b.time}`);
+          return dateB - dateA;
+        });
+        
+        if (filters.onlyMyGames && currentUserPlayer) {
+          const myGames = [];
+          
+          for (const game of games) {
+            const confirmedIds = Object.keys(game.confirmedPlayers || {});
+            
+            if (confirmedIds.includes(currentUserPlayer.id)) {
+              myGames.push({ ...game, myStatus: 'confirmed' });
+            }
+          }
+          
+          games = myGames;
+        }
+        
+        if (games.length === 0) {
+          historyList.innerHTML = '<p>Nenhum jogo encontrado com os filtros selecionados.</p>';
+          return;
+        }
+        
+        // Carregar todas as mídias do nó gallery
+        const galleryRef = ref(database, 'gallery');
+        const gallerySnapshot = await get(galleryRef);
+        const mediaItems = gallerySnapshot.exists() ? Object.entries(gallerySnapshot.val()).map(([id, item]) => ({ id, ...item })) : [];
+
+        historyList.innerHTML = '';
+        
+        for (const game of games) {
+          const gameDate = DateTime.fromISO(game.date, { zone: 'America/Sao_Paulo' });
+          const formattedDate = gameDate.toFormat('dd/MM/yyyy');
+          const formattedTime = DateTime.fromISO(`2000-01-01T${game.time}`).toFormat('HH:mm');
+          const dayOfWeek = gameDate.toFormat('EEEE', { locale: 'pt-BR' });
+          
+          const gameCard = document.createElement('div');
+          gameCard.className = 'game-card';
+          
+          let headerHtml = `
+            <div class="game-header">
+              <h3>${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
+          `;
+          
+          if (game.myStatus) {
+            headerHtml += `<span class="my-status">(${game.myStatus === 'confirmed' ? 'Participou' : ''})</span>`;
+          }
+          
+          headerHtml += `</div>Total presentes: ${Object.keys(game.confirmedPlayers || {}).length} Jogadores`;
+          
+          // Seção de fotos dos jogadores
+          let playersHtml = '<div class="players-grid">';
+          
+          const confirmedPlayers = Object.values(game.confirmedPlayers || {});
+          confirmedPlayers.forEach(player => {
+            const playerData = allPlayers.find(p => p.id === player.id) || player;
+            playersHtml += `
+              <div class="player-avatar-container">
+                <div class="player-avatar">
+                  <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
+                </div>
+                <div class="player-tooltip">
+                  <strong>${playerData.name}</strong><br>${playerData.position || 'Posição não definida'}
+                </div>
+              </div>
+            `;
+          });
+          
+          playersHtml += '</div>';
+
+          // Seção de mídias do jogo
+          let mediaHtml = '<div class="game-media-section">';
+          mediaHtml += '<h4>Mídias do Jogo</h4>';
+          
+          const gameMediaItems = mediaItems.filter(item => item.gameId === game.id);
+          
+          if (gameMediaItems.length === 0) {
+            mediaHtml += '<p class="no-media-message">Nenhuma mídia associada a este jogo.</p>';
+          } else {
+            mediaHtml += '<div class="game-media-grid">';
+            for (const media of gameMediaItems) {
+              let mediaContent = '';
+              let itemClass = '';
+              if (media.type === 'image') {
+                mediaContent = `<img src="${media.url}" alt="${media.caption || 'Imagem do Jogo'}">`;
+                itemClass = 'image';
+              } else if (media.type === 'video') {
+                mediaContent = `<video src="${media.url}" alt="${media.caption || 'Vídeo do Jogo'}" preload="metadata"></video>`;
+                itemClass = 'local-video';
+              } else if (media.type === 'youtube_video') {
+                const thumbnailUrl = `https://img.youtube.com/vi/${media.youtubeId}/mqdefault.jpg`;
+                mediaContent = `
+                  <img src="${thumbnailUrl}" alt="${media.caption || 'Vídeo do YouTube'}">
+                  <i class="fab fa-youtube youtube-play-icon"></i>
+                `;
+                itemClass = 'youtube-video';
+              }
+              mediaHtml += `
+                <div class="game-media-item ${itemClass}" data-url="${media.url || ''}" data-type="${media.type}" data-youtube-id="${media.youtubeId || ''}">
+                  ${mediaContent}
+                  ${isAdmin ? `<button class="delete-media-btn" data-id="${media.id}"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+              `;
+            }
+            mediaHtml += '</div>';
+          }
+
+          // Botões de upload para administradores
+          if (isAdmin) {
+            mediaHtml += `
+              <div class="game-media-buttons">
+                <button class="upload-media-btn" data-game-id="${game.id}">
+                  <i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo
+                </button>
+                <button class="upload-youtube-game-btn" data-game-id="${game.id}">
+                  <i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube
+                </button>
+              </div>
+            `;
+          }
+          
+          mediaHtml += '</div>';
+          
+          gameCard.innerHTML = headerHtml + playersHtml + mediaHtml;
+          historyList.appendChild(gameCard);
+        }
+
+        // Adicionar event listeners para botões de upload
+        document.querySelectorAll('.upload-media-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const gameId = button.dataset.gameId;
+            uploadGameMedia(gameId);
+          });
+        });
+
+        document.querySelectorAll('.upload-youtube-game-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const gameId = button.dataset.gameId;
+            uploadYoutubeVideo(gameId);
+          });
+        });
+
+        // Adicionar event listeners para visualização de mídia
+        document.querySelectorAll('.game-media-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('delete-media-btn') && !e.target.closest('.delete-media-btn')) {
+              const url = item.dataset.url;
+              const type = item.dataset.type;
+              const youtubeId = item.dataset.youtubeId;
+              if (type === 'youtube_video') {
+                showFullMedia(youtubeId, 'youtube_video');
+              } else {
+                showFullMedia(url, type);
+              }
+            }
+          });
+        });
+
+        // Adicionar event listeners para botões de exclusão
+        if (isAdmin) {
+          document.querySelectorAll('.delete-media-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const mediaId = button.dataset.id;
+              const itemElement = button.closest('.game-media-item');
+              const mediaUrl = itemElement.dataset.url;
+              const mediaType = itemElement.dataset.type;
+              deleteMedia(mediaId, mediaUrl, mediaType);
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        historyList.innerHTML = '<p>Ocorreu um erro ao carregar o histórico de jogos.</p>';
+      }
+    }
+
+    // Configurar filtros
+    applyFilters.addEventListener('click', () => {
+      const filters = {
+        year: yearFilter.value,
+        month: monthFilter.value,
+        onlyMyGames: playerFilter.value === 'mine'
+      };
+      
+      loadGameHistory(filters);
+    });
+    
+    // Configurar botões de upload
+    uploadPhotoBtn.addEventListener('click', uploadGalleryPhoto);
+    uploadYoutubeBtn.addEventListener('click', () => uploadYoutubeVideo());
+
+    // Configurar logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      Swal.fire({
+        title: 'Saindo...',
+        text: 'Por favor, aguarde.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+      try {
+        await signOut(auth);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Logout',
+          text: 'Você saiu com sucesso.',
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        window.location.assign('loginvl.html');
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível fazer logout. Tente novamente.',
+        });
+      }
+    });
+
+    // Inicializar a página
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acesso Negado',
+          text: 'Você precisa estar logado para acessar esta página.',
+        });
+        window.location.href = 'loginvl.html';
+        return;
+      }
+      
+      currentUser = user;
+      await loadCurrentUser();
+      await loadAvailableYears();
+      loadGallery();
+    });
+  </script>
+</body>
+</html>
