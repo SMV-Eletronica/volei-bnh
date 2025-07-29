@@ -74,7 +74,7 @@
       </div>
       <div>
         <label for="playerFilter">Meus Jogos:</label>
-        <select id="playerFilter" class="filter-select">
+        <select id="playerFilter" class="filter-select" style="width: 200px" !important;>
           <option value="all">Todos os jogos</option>
           <option value="mine">Somente meus jogos</option>
         </select>
@@ -88,7 +88,7 @@
     <div class="gallery-section">
       <h3><i class="fas fa-camera"></i> Foto do Mês</h3>
       <div id="galleryGrid" class="gallery-grid">
-        <p class="no-items-message" id="noGalleryItems">Nenhuma foto do mês selecionada.</p>
+        <p class="no-items-message" id="noGalleryItems">Vôlei BNH</p>
       </div>
       <div class="upload-button-container">
         <button id="uploadPhotoBtn" class="upload-photo-btn admin-only" style="display: none;"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto do Mês</button>
@@ -762,7 +762,7 @@
           
           let headerHtml = `
             <div class="game-header">
-              <h3>${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
+              <h3>Histórico de Presença: ${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
           `;
           
           if (game.myStatus) {
