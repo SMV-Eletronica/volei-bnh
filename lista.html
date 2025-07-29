@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="lista.css?v=2.4">
+<link rel="stylesheet" href="lista.css?v=2.5">
 
 
  <style>
@@ -1144,58 +1144,116 @@ function setupAdminFeatures() {
   guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
 }
 
+
+
+async function saveGameToHistory(gameId, gameData) {
+  try {
+    const gameDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' });
+    const year = gameDate.toFormat('yyyy');
+    const month = gameDate.toFormat('MM');
+    
+    // Criar objeto com dados completos do jogo
+    const historyData = {
+      date: gameData.date,
+      time: gameData.time,
+      playerLimit: gameData.playerLimit || 16,
+      createdAt: gameData.createdAt,
+      finalizedAt: getBrazilDateTimeISO(),
+      confirmedPlayers: gameData.confirmed || {},
+      waitlistPlayers: gameData.waitlist || {}
+    };
+    
+    // Salvar no histórico geral
+    const historyRef = ref(database, `gameHistory/${year}/${month}/${gameId}`);
+    await set(historyRef, historyData);
+    
+    // Salvar também referência por jogador para filtragem fácil
+    const confirmedPlayerIds = Object.keys(gameData.confirmed || {});
+    const playerUpdates = {};
+    
+    for (const playerId of confirmedPlayerIds) {
+      const playerHistoryRef = `playerHistory/${playerId}/${gameId}`;
+      playerUpdates[playerHistoryRef] = {
+        gameDate: gameData.date,
+        gameTime: gameData.time,
+        status: 'confirmed'
+      };
+    }
+    
+    const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
+    for (const playerId of waitlistPlayerIds) {
+      const playerHistoryRef = `playerHistory/${playerId}/${gameId}`;
+      playerUpdates[playerHistoryRef] = {
+        gameDate: gameData.date,
+        gameTime: gameData.time,
+        status: 'waitlist'
+      };
+    }
+    
+    if (Object.keys(playerUpdates).length > 0) {
+      await update(ref(database), playerUpdates);
+    }
+    
+    console.log(`Jogo ${gameId} salvo no histórico com sucesso em ${year}/${month}.`);
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar jogo no histórico:', error);
+    throw error;
+  }
+}
+
+
     async function initializeGameList() {
       console.log('Iniciando initializeGameList');
       await loadActiveGames();
       
-      finalizeGameBtn.addEventListener('click', async () => {
-        console.log('Botão finalizeGameBtn clicado');
-        if (!currentGameId) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Selecione um jogo ativo para finalizar.',
-          });
-          return;
-        }
-        
-        try {
-          const gameRef = ref(database, `activeGames/${currentGameId}`);
-          const snapshot = await get(gameRef);
-          
-          if (!snapshot.exists()) {
-            await Swal.fire({
-              icon: 'error',
-              title: 'Jogo Não Encontrado',
-              text: 'O jogo selecionado não foi encontrado.',
-            });
-            return;
-          }
-          
-          await set(gameRef, null);
 
-          const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-          const message = `Lista do jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} finalizada.`;
-          await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
-          
-          
-          await Swal.fire({
-            icon: 'success',
-            title: 'Lista Finalizada',
-            text: 'A Lista foi Finalizada.',
-          });
-          
-          currentGameId = null;
-          await loadActiveGames();
-        } catch (error) {
-          console.error('Erro ao finalizar jogo:', error);
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Não foi possível finalizar o jogo.',
-          });
-        }
+finalizeGameBtn.addEventListener('click', async () => {
+  console.log('Botão finalizeGameBtn clicado');
+  if (!currentGameId) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Selecione um jogo ativo para finalizar.',
+    });
+    return;
+  }
+
+  try {
+    const gameRef = ref(database, `activeGames/${currentGameId}`);
+    const snapshot = await get(gameRef);
+
+    if (!snapshot.exists()) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Jogo Não Encontrado',
+        text: 'O jogo selecionado não foi encontrado.',
       });
+      return;
+    }
+
+    const gameData = snapshot.val();
+    await saveGameToHistory(currentGameId, gameData);
+    await set(gameRef, null);
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Lista Finalizada',
+      text: 'A lista foi finalizada e salva no histórico de presenças.',
+    });
+
+    currentGameId = null;
+    await loadActiveGames();
+  } catch (error) {
+    console.error('Erro ao finalizar jogo:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Não foi possível finalizar o jogo ou salvar no histórico.',
+    });
+  }
+});
+
 
       confirmPlayerBtn.addEventListener('click', () => abrirQuadra());
       setupGuestControls();
