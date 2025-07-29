@@ -127,8 +127,283 @@ body {
   font-size: 1.1em; /* Ajusta o tamanho do ícone */
 }
 
+
+ /* Estilos mantidos para a grade de jogadores e tooltips */
+    .players-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .player-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid #6f42c1;
+      transition: transform 0.2s;
+    }
+    
+    .player-avatar:hover {
+      transform: scale(1.1);
+    }
+    
+    .player-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .player-tooltip {
+      position: absolute;
+      background-color: #6f42c1;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      max-width: 200px;
+      text-align: center;
+      transform: translateX(-50%);
+      left: 50%;
+      bottom: calc(100% + 10px);
+    }
+
+    .player-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #6f42c1 transparent transparent transparent;
+    }
+
+    .player-avatar-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .player-avatar-container:hover .player-tooltip {
+      opacity: 1;
+    }
+
+    /* Estilos para mídias de jogos */
+    .game-media-section {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #e9ecef;
+    }
+    .game-media-section h4 {
+      color: #6f42c1;
+      margin-bottom: 10px;
+    }
+    .game-media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+    .game-media-item {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background-color: #eee;
+    }
+    .game-media-item img, .game-media-item video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+    .game-media-item.youtube-video {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+    }
+    .game-media-item.youtube-video img {
+      object-fit: contain;
+      position: static;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+    .game-media-item.youtube-video .youtube-play-icon {
+      position: absolute;
+      font-size: 2em;
+      color: rgba(255, 0, 0, 0.9);
+      text-shadow: 0 0 10px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .game-media-item img:hover, .game-media-item video:hover {
+      transform: scale(1.05);
+    }
+    .game-media-item .delete-media-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: rgba(220, 53, 69, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8em;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      z-index: 10;
+    }
+    .game-media-item:hover .delete-media-btn {
+      opacity: 1;
+    }
+    
+    .game-media-buttons {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .game-media-buttons .upload-media-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: inline-block !important;
+    }
+    
+    .game-media-buttons .upload-youtube-game-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: none !important;
+    }
+    
+    /* Estilos atualizados para a galeria (Foto do Mês) */
+    .gallery-section {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .gallery-section h3 {
+      color: #6f42c1;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    .gallery-section h3 i {
+      margin-right: 10px;
+      font-size: 1.2em;
+    }
+    .gallery-grid {
+      position: relative;
+      width: 100%;
+      height: 300px; /* Altura fixa, ajuste conforme necessário */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+    .gallery-grid .delete-photo-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(220, 53, 69, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9em;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      z-index: 10;
+    }
+    .gallery-grid:hover .delete-photo-btn {
+      opacity: 1;
+    }
+    .no-items-message {
+      text-align: center;
+      color: #777;
+      font-style: italic;
+      padding: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+    }
+    .upload-button-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .upload-button-container .upload-photo-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.1em;
+      transition: background-color 0.2s;
+    }
+    .upload-button-container .upload-photo-btn:hover {
+      background-color: #218838;
+    }
+    .swal2-content iframe {
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+
+
+    
+
 /* Media Queries para Responsividade */
 @media (max-width: 768px) {
+
+
+    .gallery-grid {   
+      height: 100px; /* Altura fixa, ajuste conforme necessário */
+ }
+
   .filter-container {
     flex-direction: column; /* Empilha os filtros em telas pequenas */
     align-items: stretch; /* Estica os itens para largura total */
