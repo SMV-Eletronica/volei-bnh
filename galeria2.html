@@ -693,9 +693,8 @@
       }
     }
 
-   
 
-    // Função para fazer upload de mídia para a galeria geral
+// Função para fazer upload de mídia para a galeria geral
 async function uploadGalleryPhoto() {
   if (!isAdmin) {
     Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
@@ -824,64 +823,11 @@ async function uploadGameMedia(gameId) {
     }
   }
 }
+    
 
 
 
 
-
-
-      if (!isAdmin) {
-        Swal.fire('Erro', 'Você não tem permissão para enviar arquivos.', 'error');
-        return;
-      }
-
-      const { value: file } = await Swal.fire({
-        title: 'Selecionar Foto ou Vídeo Local',
-        input: 'file',
-        inputAttributes: {
-          'accept': 'image/*,video/*',
-          'aria-label': 'Upload da sua mídia'
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Enviar Arquivo',
-        preConfirm: (fileInput) => {
-          if (!fileInput) {
-            Swal.showValidationMessage('Por favor, selecione uma imagem ou vídeo.');
-          }
-          return fileInput;
-        }
-      });
-
-      if (file) {
-        Swal.fire({
-          title: 'Enviando arquivo...',
-          text: 'Por favor, aguarde.',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
-
-        try {
-          const storagePath = `gallery/${file.name}`;
-          const storageRefPath = storageRef(storage, storagePath);
-          await uploadBytes(storageRefPath, file);
-          const downloadURL = await getDownloadURL(storageRefPath);
-
-          const mediaId = push(ref(database, 'gallery')).key;
-          await set(ref(database, `gallery/${mediaId}`), {
-            url: downloadURL,
-            caption: file.name,
-            uploadedBy: currentUserPlayer.id,
-            uploadedAt: DateTime.local().setZone('America/Sao_Paulo').toISO(),
-            type: file.type.startsWith('image/') ? 'image' : 'video'
-          });
-
-          Swal.fire('Sucesso!', 'Arquivo enviado para a galeria!', 'success');
-        } catch (error) {
-          console.error('Erro ao enviar arquivo:', error);
-          Swal.fire('Erro', 'Não foi possível enviar o arquivo. Tente novamente.', 'error');
-        }
-      }
-    }
 
     // Função para fazer upload de vídeo do YouTube
     async function uploadYoutubeVideo(gameId = null) {
