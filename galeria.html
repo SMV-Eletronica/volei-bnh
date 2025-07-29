@@ -191,7 +191,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 0.9em;
-      display: inline-block !important;
+      display: none !important;
     }
     
     /* Mantenha todos os outros estilos originais */
@@ -352,7 +352,7 @@
       <button class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
       <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
       <button class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
-      <button class="logout-btn" onclick="window.location.href='challenges.html'"><i class="fas fa-trophy"></i> Desafios</button>
+      <button class="logout-btn" onclick="window.location.href='challenges.html'"><i class="fas fa-camera"></i> Desafios</button>
     </div>
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
   </div>
@@ -610,8 +610,8 @@
         htmlContent = `<img src="${mediaIdentifier}" style="max-width: 100%; max-height: 80vh;">`;
         title = 'Visualizando Imagem';
       } else if (mediaType === 'video') {
-        htmlContent = `<video src="${mediaIdentifier}" controls style="max-width: 100%; max-height: 80vh;"></video>`;
-        title = 'Assistindo Vídeo';
+        htmlContent = `<video src="${mediaIdentifier}" controls style="max-width: 100%; max-height:100vh;"></video>`;
+        title = '<i class="fas fa-camera"></i> BNH';
       } else if (mediaType === 'youtube_video') {
         htmlContent = `
           <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;">
@@ -1046,14 +1046,13 @@
           let headerHtml = `
             <div class="game-header">
               <h3>${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
-              <span>${Object.keys(game.confirmedPlayers || {}).length} jogadores</span>
           `;
           
           if (game.myStatus) {
             headerHtml += `<span class="my-status">(${game.myStatus === 'confirmed' ? 'Participou' : ''})</span>`;
           }
           
-          headerHtml += `</div>`;
+          headerHtml += `</div>Total presentes: ${Object.keys(game.confirmedPlayers || {}).length} Jogadores`;
           
           // Seção de fotos dos jogadores
           let playersHtml = '<div class="players-grid">';
