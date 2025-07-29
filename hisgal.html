@@ -479,27 +479,65 @@
     }
     
     // Carregar anos disponíveis
-    async function loadAvailableYears() {
-      try {
-        const historyRef = ref(database, 'gameHistory');
-        const snapshot = await get(historyRef);
-        
-        yearFilter.innerHTML = '<option value="">Todos</option>';
-        
-        if (snapshot.exists()) {
-          const years = Object.keys(snapshot.val()).sort((a, b) => b - a);
-          years.forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            yearFilter.appendChild(option);
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar anos:', error);
-      }
-    }
+  // Carregar anos disponíveis e definir padrão para o ano/mês atual
+async function loadAvailableYears() {
+  try {
+    const historyRef = ref(database, 'gameHistory');
+    const snapshot = await get(historyRef);
     
+    yearFilter.innerHTML = '<option value="">Todos</option>';
+    
+    if (snapshot.exists()) {
+      const years = Object.keys(snapshot.val()).sort((a, b) => b - a);
+      const currentYear = DateTime.now().toFormat('yyyy');
+      const currentMonth = DateTime.now().toFormat('MM');
+      
+      // Verificar se o ano atual existe nos dados
+      const yearExists = years.includes(currentYear);
+      
+      years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+      });
+      
+      // Definir valores padrão
+      if (yearExists) {
+        yearFilter.value = currentYear;
+        monthFilter.value = currentMonth;
+        
+        // Verificar se o mês atual existe nos dados
+        const monthsRef = ref(database, `gameHistory/${currentYear}`);
+        const monthsSnapshot = await get(monthsRef);
+        
+        if (monthsSnapshot.exists()) {
+          const months = Object.keys(monthsSnapshot.val());
+          if (!months.includes(currentMonth)) {
+            // Se o mês atual não existir, usar o primeiro mês disponível
+            monthFilter.value = months[0] || '';
+          }
+        }
+      } else if (years.length > 0) {
+        // Se o ano atual não existir, usar o ano mais recente
+        yearFilter.value = years[0];
+        monthFilter.value = '';
+      }
+      
+      // Carregar histórico com os filtros selecionados
+      loadGameHistory({
+        year: yearFilter.value,
+        month: monthFilter.value,
+        onlyMyGames: playerFilter.value === 'mine'
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao carregar anos:', error);
+    Swal.fire('Erro', 'Não foi possível carregar os anos disponíveis.', 'error');
+  }
+}  
+
+
     // Função para mostrar mídia em tela cheia
     async function showFullMedia(mediaIdentifier, mediaType) {
       let htmlContent = '';
@@ -1169,7 +1207,7 @@
       await loadCurrentUser();
       await loadAvailableYears();
       loadGallery();
-      loadGameHistory();
+     
     });
   </script>
 </body>
