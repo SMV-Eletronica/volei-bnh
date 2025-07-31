@@ -7,14 +7,159 @@
   <link rel="icon" type="image/png" sizes="16x16" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-16x16.png?alt=media&token=c23063f2-841d-400a-b32c-3a3f5f65349e">
   <link rel="icon" type="image/png" sizes="32x32" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Ffavicon-32x32.png?alt=media&token=429944a6-1937-4d1a-be29-d6537b029286">
   <link rel="apple-touch-icon" sizes="180x180" href="https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/favcon%2Fapple-touch-icon.png?alt=media&token=9ac93b48-1110-449e-b155-8930b20c9d31">
-  
-  <link rel="stylesheet" href="history.css?v=2.7">
+  <link rel="stylesheet" href="history.css?v=2.9">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
- 
 </head>
+<style>
+
+     /* Estilos para itens de mídia */
+.game-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.game-media-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  transition: transform 0.3s ease;
+}
+
+.game-media-item:hover {
+  transform: scale(1.05);
+}
+
+.game-media-item img,
+.game-media-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-media-item.local-video {
+  position: relative;
+}
+
+.game-media-item.local-video .play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  padding: 10px;
+}
+
+.game-media-item.youtube-video {
+  position: relative;
+}
+
+.game-media-item.youtube-video .youtube-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: #ff0000;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  padding: 10px;
+}
+
+.media-actions {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  display: flex;
+  gap: 5px;
+}
+
+.like-btn, .comment-btn, .delete-media-btn {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.like-btn i, .comment-btn i {
+  font-size: 1rem;
+}
+
+.like-btn .fas.fa-heart {
+  color: #ff4d4d;
+}
+
+.like-btn:hover, .comment-btn:hover, .delete-media-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.delete-media-btn:hover {
+  background: rgba(255, 0, 0, 0.7);
+}
+
+.like-count, .comment-count {
+  font-size: 0.9rem;
+}
+
+.swal2-comments-popup {
+  width: 600px;
+  max-width: 99%;
+  
+}
+
+.comments-container {
+  margin-bottom: 10px;
+}
+
+.comment-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.delete-comment-btn {
+  background: transparent;
+  color: #d33;
+  border: none;
+  cursor: pointer;
+}
+
+.delete-comment-btn:hover {
+  color: #ff4d4d;
+}
+
+#submitComment {
+  background: #3085d6;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#submitComment:hover {
+  background: #2563b5;
+}
+
+#commentInput {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  resize: vertical;
+}
+</style>
 
 <body>
   <div class="header">
@@ -39,7 +184,6 @@
       <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
       <button class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
       <button class="logout-btn" onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
-      
     </div>
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
   </div>
@@ -47,7 +191,6 @@
   <div class="overlay" id="overlay"></div>
   
   <div class="container">
-    <!-- Filtros do Histórico -->
     <div class="filter-container">
       <div>
         <label for="yearFilter">Ano:</label>
@@ -75,7 +218,7 @@
       </div>
       <div>
         <label for="playerFilter">Meus Jogos:</label>
-        <select id="playerFilter" class="filter-select" style="width: 200px" !important;>
+        <select id="playerFilter" class="filter-select" style="width: 200px;">
           <option value="all">Todos os jogos</option>
           <option value="mine">Somente meus jogos</option>
         </select>
@@ -83,13 +226,10 @@
       <button id="applyFilters" class="filter-btn"><i class="fas fa-filter"></i> Aplicar Filtros</button>
     </div>
     
-    
-
-    <!-- Seção de Galeria Geral (Foto do Mês) -->
     <div class="gallery-section">
       <h3><i class="fas fa-camera"></i> Foto do Mês</h3>
       <div id="galleryGrid" class="gallery-grid">
-        <p class="no-items-message" id="noGalleryItems">carregando...</p>
+        <p class="no-items-message" id="noGalleryItems">Vôlei BNH</p>
       </div>
       <div class="upload-button-container">
         <button id="uploadPhotoBtn" class="upload-photo-btn admin-only" style="display: none;"><i class="fas fa-cloud-upload-alt"></i> Enviar Foto do Mês</button>
@@ -247,7 +387,6 @@
             yearFilter.appendChild(option);
           });
           
-          // Definir valores padrão
           if (years.includes(currentYear)) {
             yearFilter.value = currentYear;
             monthFilter.value = currentMonth;
@@ -266,7 +405,6 @@
             monthFilter.value = '';
           }
           
-          // Carregar histórico e galeria com os filtros selecionados
           const filters = {
             year: yearFilter.value,
             month: monthFilter.value,
@@ -280,59 +418,6 @@
         Swal.fire('Erro', 'Não foi possível carregar os anos disponíveis.', 'error');
       }
     }  
-
-    // Função para mostrar mídia em tela cheia
-    async function showFullMedia(mediaIdentifier, mediaType) {
-      let htmlContent = '';
-      let title = 'Visualizando Mídia';
-
-      if (mediaType === 'image') {
-        htmlContent = `<img src="${mediaIdentifier}" style="max-width: 100%; max-height: 80vh;">`;
-        title = '<i class="fas fa-camera"></i> Galeria BNH';
-      } else if (mediaType === 'video') {
-        htmlContent = `<video src="${mediaIdentifier}" controls style="max-width: 100%; max-height:100vh;"></video>`;
-        title = '<i class="fas fa-camera"></i> Galeria BNH';
-      } else if (mediaType === 'youtube_video') {
-        htmlContent = `
-          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: auto;">
-            <iframe style="position: absolute; top: 0; left: 0; width: auto; height: auto;"
-                    src="https://www.youtube.com/embed/${mediaIdentifier}?autoplay=1"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen>
-            </iframe>
-          </div>
-        `;
-        title = 'Assistindo Vídeo do YouTube';
-      }
-
-      Swal.fire({
-        title: title,
-        html: htmlContent,
-        showConfirmButton: false,
-        showCloseButton: true,
-        background: 'rgba(0,0,0,0.8)',
-        backdrop: true,
-        grow: 'fullscreen',
-        customClass: {
-          container: 'swal2-container-full-media',
-          popup: 'swal2-popup-full-media',
-          closeButton: 'swal2-close-button-full-media'
-        },
-        didOpen: () => {
-          const iframe = Swal.getHtmlContainer().querySelector('iframe');
-          if (iframe) {
-            iframe.focus();
-          }
-        },
-        willClose: () => {
-          const iframe = Swal.getHtmlContainer().querySelector('iframe');
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-          }
-        }
-      });
-    }
 
     // Função para deletar mídia
     async function deleteMedia(mediaId, mediaUrl, mediaType) {
@@ -413,7 +498,6 @@
           const year = now.toFormat('yyyy');
           const month = now.toFormat('MM');
           
-          // Verificar se já existe uma foto para este mês
           const galleryRef = query(ref(database, 'gallery'), orderByChild('year'), equalTo(year));
           const snapshot = await get(galleryRef);
           let existingMediaId = null;
@@ -430,14 +514,12 @@
             }
           }
 
-          // Fazer upload da nova imagem
           const fileExtension = file.name.split('.').pop();
           const storagePath = `gallery/${year}/${month}/photo_of_the_month.${fileExtension}`;
           const storageRefPath = storageRef(storage, storagePath);
           await uploadBytes(storageRefPath, file);
           const downloadURL = await getDownloadURL(storageRefPath);
 
-          // Deletar a imagem antiga, se existir
           if (existingMediaId && existingMediaUrl) {
             await remove(ref(database, `gallery/${existingMediaId}`));
             try {
@@ -450,7 +532,6 @@
             }
           }
 
-          // Salvar nova imagem
           const mediaId = push(ref(database, 'gallery')).key;
           await set(ref(database, `gallery/${mediaId}`), {
             url: downloadURL,
@@ -586,6 +667,130 @@
       }
     }
 
+    // Função para mostrar e gerenciar comentários
+    async function showComments(mediaId, mediaUrl, mediaType, youtubeId) {
+      if (!currentUserPlayer) {
+        Swal.fire('Erro', 'Você precisa estar logado para visualizar ou adicionar comentários.', 'error');
+        return;
+      }
+
+      const commentsRef = ref(database, `gallery/${mediaId}/comments`);
+      let commentsHtml = '<div class="comments-container" style="max-height: 300px; overflow-y: auto;">';
+      
+      // Carregar comentários
+      const snapshot = await get(commentsRef);
+      const comments = snapshot.exists() ? Object.entries(snapshot.val()).map(([id, comment]) => ({ id, ...comment })) : [];
+      comments.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      if (comments.length === 0) {
+        commentsHtml += '<p>Nenhum comentário ainda.</p>';
+      } else {
+        comments.forEach(comment => {
+          const formattedDate = DateTime.fromISO(comment.timestamp, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy HH:mm');
+          const canDelete = isAdmin || (currentUserPlayer && comment.userId === currentUserPlayer.id);
+          commentsHtml += `
+            <div class="comment-item" data-comment-id="${comment.id}">
+              <span style="color: silver; font-size: 0.8em;">${comment.userName}</span> <span style="color: silver; font-size: 0.6em;">(${formattedDate})</span><br> <span style=" font-size: 0.9em; color: white;"> ${comment.text}</span>
+              ${canDelete ? `<button class="delete-comment-btn" data-comment-id="${comment.id}" style="margin-left: 10px;"><i class="fas fa-trash"></i></button>` : ''}
+            </div>
+          `;
+        });
+      }
+      commentsHtml += '</div>';
+
+      // Formulário para adicionar comentário
+      const inputHtml = `
+        <div style="margin-top: 10px;">
+          <textarea id="commentInput" placeholder="Escreva seu comentário..." style="width: 100%; min-height: 60px;"></textarea>
+          <button id="submitComment" style="margin-top: 5px;">Enviar</button>
+        </div>
+      `;
+
+      // Exibir mídia na janela de comentários
+      let mediaContent = '';
+      if (mediaType === 'image') {
+        mediaContent = `<img src="${mediaUrl}" style="max-width: 100%; max-height: 200px; margin-bottom: 10px;">`;
+      } else if (mediaType === 'video') {
+        mediaContent = `<video src="${mediaUrl}" controls style="max-width: 100%; max-height: 300px; margin-bottom: 10px;"></video>`;
+      } else if (mediaType === 'youtube_video') {
+        mediaContent = `
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin-bottom: 10px;">
+            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                    src="https://www.youtube.com/embed/${youtubeId}"
+                    frameborder="0"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+            </iframe>
+          </div>
+        `;
+      }
+
+      Swal.fire({
+        title: 'Destaques',
+        html: mediaContent + commentsHtml + inputHtml,
+        showConfirmButton: false,
+        showCloseButton: true,
+        focusConfirm: false,
+        customClass: {
+          popup: 'swal2-comments-popup'
+        },
+        didOpen: () => {
+          const submitButton = document.getElementById('submitComment');
+          const commentInput = document.getElementById('commentInput');
+
+          submitButton.addEventListener('click', async () => {
+            const commentText = commentInput.value.trim();
+            if (!commentText) {
+              Swal.showValidationMessage('Por favor, escreva um comentário.');
+              return;
+            }
+
+            try {
+              const commentId = push(commentsRef).key;
+              await set(ref(database, `gallery/${mediaId}/comments/${commentId}`), {
+                userId: currentUserPlayer.id,
+                userName: currentUserPlayer.name,
+                text: commentText,
+                timestamp: DateTime.local().setZone('America/Sao_Paulo').toISO()
+              });
+              commentInput.value = '';
+              Swal.fire('Sucesso!', 'Comentário adicionado.', 'success');
+              showComments(mediaId, mediaUrl, mediaType, youtubeId); // Recarregar janela
+            } catch (error) {
+              console.error('Erro ao adicionar comentário:', error);
+              Swal.fire('Erro', 'Não foi possível adicionar o comentário. Tente novamente.', 'error');
+            }
+          });
+
+          document.querySelectorAll('.delete-comment-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+              const commentId = e.target.closest('.delete-comment-btn').dataset.commentId;
+              const { isConfirmed } = await Swal.fire({
+                title: 'Remover Comentário?',
+                text: 'Tem certeza que deseja remover este comentário?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, Remover!'
+              });
+
+              if (isConfirmed) {
+                try {
+                  await remove(ref(database, `gallery/${mediaId}/comments/${commentId}`));
+                  Swal.fire('Removido!', 'Comentário removido com sucesso.', 'success');
+                  showComments(mediaId, mediaUrl, mediaType, youtubeId); // Recarregar janela
+                } catch (error) {
+                  console.error('Erro ao remover comentário:', error);
+                  Swal.fire('Erro', 'Não foi possível remover o comentário. Tente novamente.', 'error');
+                }
+              }
+            });
+          });
+        }
+      });
+    }
+
     // Carregar galeria (Foto do Mês)
     async function loadGallery(filters = {}) {
       const galleryRef = ref(database, 'gallery');
@@ -601,7 +806,7 @@
         if (filters.year && filters.month) {
           selectedImage = galleryItems.find(item => item.year === filters.year && item.month === filters.month);
         } else {
-          selectedImage = galleryItems[0]; // Mais recente se filtro for "Todos"
+          selectedImage = galleryItems[0];
         }
 
         if (selectedImage) {
@@ -618,7 +823,6 @@
           galleryGrid.dataset.type = 'image';
         }
 
-        // Adicionar botão de exclusão para admins
         if (isAdmin && selectedImage) {
           galleryGrid.innerHTML = `<button class="delete-photo-btn" data-id="${selectedImage.id}"><i class="fas fa-trash"></i></button>`;
         } else {
@@ -628,18 +832,16 @@
           }
         }
 
-        // Evento de clique para visualizar imagem
         galleryGrid.addEventListener('click', (e) => {
           if (!e.target.classList.contains('delete-photo-btn') && !e.target.closest('.delete-photo-btn')) {
             const url = galleryGrid.dataset.url;
             const type = galleryGrid.dataset.type;
             if (url && type === 'image') {
-              showFullMedia(url, 'image');
+              showComments(galleryGrid.dataset.id, url, type, null);
             }
           }
         });
 
-        // Evento de exclusão
         if (isAdmin) {
           const deleteButton = galleryGrid.querySelector('.delete-photo-btn');
           if (deleteButton) {
@@ -662,303 +864,306 @@
     }
 
     // Carregar histórico de jogos
-
-
-
-
-// Dentro do <script type="module">, substitua a função loadGameHistory por:
-
-// Carregar histórico de jogos
-async function loadGameHistory(filters = {}) {
-  try {
-    historyList.innerHTML = '<p>Carregando histórico...</p>';
-    
-    let historyQuery;
-    
-    if (filters.year && filters.month) {
-      historyQuery = ref(database, `gameHistory/${filters.year}/${filters.month}`);
-    } else if (filters.year) {
-      historyQuery = ref(database, `gameHistory/${filters.year}`);
-    } else {
-      historyQuery = ref(database, 'gameHistory');
-    }
-    
-    const snapshot = await get(historyQuery);
-    
-    if (!snapshot.exists()) {
-      historyList.innerHTML = '<p>Nenhum jogo encontrado no histórico.</p>';
-      return;
-    }
-    
-    let games = [];
-    
-    const data = snapshot.val();
-    if (filters.year && filters.month) {
-      Object.entries(data).forEach(([gameId, gameData]) => {
-        games.push({
-          id: gameId,
-          year: filters.year,
-          month: filters.month,
-          ...gameData
-        });
-      });
-    } else if (filters.year) {
-      Object.entries(data).forEach(([month, monthGames]) => {
-        Object.entries(monthGames).forEach(([gameId, gameData]) => {
-          games.push({
-            id: gameId,
-            year: filters.year,
-            month,
-            ...gameData
-          });
-        });
-      });
-    } else {
-      Object.entries(data).forEach(([year, yearData]) => {
-        Object.entries(yearData).forEach(([month, monthGames]) => {
-          Object.entries(monthGames).forEach(([gameId, gameData]) => {
+    async function loadGameHistory(filters = {}) {
+      try {
+        historyList.innerHTML = '<p>Carregando histórico...</p>';
+        
+        let historyQuery;
+        
+        if (filters.year && filters.month) {
+          historyQuery = ref(database, `gameHistory/${filters.year}/${filters.month}`);
+        } else if (filters.year) {
+          historyQuery = ref(database, `gameHistory/${filters.year}`);
+        } else {
+          historyQuery = ref(database, 'gameHistory');
+        }
+        
+        const snapshot = await get(historyQuery);
+        
+        if (!snapshot.exists()) {
+          historyList.innerHTML = '<p>Nenhum jogo encontrado no histórico.</p>';
+          return;
+        }
+        
+        let games = [];
+        
+        const data = snapshot.val();
+        if (filters.year && filters.month) {
+          Object.entries(data).forEach(([gameId, gameData]) => {
             games.push({
               id: gameId,
-              year,
-              month,
+              year: filters.year,
+              month: filters.month,
               ...gameData
             });
           });
-        });
-      });
-    }
-    
-    games.sort((a, b) => {
-      const dateA = new Date(`${a.date}T${a.time}`);
-      const dateB = new Date(`${b.date}T${b.time}`);
-      return dateB - dateA;
-    });
-    
-    if (filters.onlyMyGames && currentUserPlayer) {
-      const myGames = [];
-      
-      for (const game of games) {
-        const confirmedIds = Object.keys(game.confirmedPlayers || {});
+        } else if (filters.year) {
+          Object.entries(data).forEach(([month, monthGames]) => {
+            Object.entries(monthGames).forEach(([gameId, gameData]) => {
+              games.push({
+                id: gameId,
+                year: filters.year,
+                month,
+                ...gameData
+              });
+            });
+          });
+        } else {
+          Object.entries(data).forEach(([year, yearData]) => {
+            Object.entries(yearData).forEach(([month, monthGames]) => {
+              Object.entries(monthGames).forEach(([gameId, gameData]) => {
+                games.push({
+                  id: gameId,
+                  year,
+                  month,
+                  ...gameData
+                });
+              });
+            });
+          });
+        }
         
-        if (confirmedIds.includes(currentUserPlayer.id)) {
-          myGames.push({ ...game, myStatus: 'confirmed' });
-        }
-      }
-      
-      games = myGames;
-    }
-    
-    if (games.length === 0) {
-      historyList.innerHTML = '<p>Nenhum jogo encontrado com os filtros selecionados.</p>';
-      return;
-    }
-    
-    const galleryRef = ref(database, 'gallery');
-    const gallerySnapshot = await get(galleryRef);
-    const mediaItems = gallerySnapshot.exists() ? Object.entries(gallerySnapshot.val()).map(([id, item]) => ({ id, ...item })) : [];
-
-    historyList.innerHTML = '';
-    
-    for (const game of games) {
-      const gameDate = DateTime.fromISO(game.date, { zone: 'America/Sao_Paulo' });
-      const formattedDate = gameDate.toFormat('dd/MM/yyyy');
-      const formattedTime = DateTime.fromISO(`2000-01-01T${game.time}`).toFormat('HH:mm');
-      const dayOfWeek = gameDate.toFormat('EEEE', { locale: 'pt-BR' });
-      
-      const gameCard = document.createElement('div');
-      gameCard.className = 'game-card';
-      
-      let headerHtml = `
-        <div class="game-header">
-          <h3>Histórico de Presença: ${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
-      `;
-      
-      if (game.myStatus) {
-        headerHtml += `<span class="my-status">(${game.myStatus === 'confirmed' ? 'Participou' : ''})</span>`;
-      }
-      
-      headerHtml += `</div>Total presentes: ${Object.keys(game.confirmedPlayers || {}).length} Jogadores`;
-      
-      let playersHtml = '<div class="players-grid">';
-      
-      const confirmedPlayers = Object.values(game.confirmedPlayers || {});
-      confirmedPlayers.forEach(player => {
-        const playerData = allPlayers.find(p => p.id === player.id) || player;
-        playersHtml += `
-          <div class="player-avatar-container">
-            <div class="player-avatar">
-              <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
-            </div>
-            <div class="player-tooltip">
-              <strong>${playerData.name}</strong><br>${playerData.position || 'Posição não definida'}
-            </div>
-          </div>
-        `;
-      });
-      
-      playersHtml += '</div>';
-
-      let mediaHtml = '<div class="game-media-section">';
-      mediaHtml += '<h4>Mídias do Jogo</h4>';
-      
-      const gameMediaItems = mediaItems.filter(item => item.gameId === game.id);
-      
-      if (gameMediaItems.length === 0) {
-        mediaHtml += '<p class="no-media-message">Nenhuma mídia associada a este jogo.</p>';
-      } else {
-        mediaHtml += '<div class="game-media-grid">';
-        for (const media of gameMediaItems) {
-          let mediaContent = '';
-          let itemClass = media.type === 'image' ? 'image' : media.type === 'video' ? 'local-video' : 'youtube-video';
-          
-          if (media.type === 'image') {
-            mediaContent = `<img src="${media.url}" alt="${media.caption || 'Imagem do Jogo'}">`;
-          } else if (media.type === 'video') {
-            mediaContent = `
-              <video src="${media.url}" alt="${media.caption || 'Vídeo do Jogo'}" preload="metadata"></video>
-              <i class="fas fa-play play-icon"></i>
-            `;
-          } else if (media.type === 'youtube_video') {
-            const thumbnailUrl = `https://img.youtube.com/vi/${media.youtubeId}/mqdefault.jpg`;
-            mediaContent = `
-              <img src="${thumbnailUrl}" alt="${media.caption || 'Vídeo do YouTube'}">
-              <i class="fab fa-youtube youtube-play-icon"></i>
-            `;
-          }
-
-          // Adicionar contagem de curtidas e botão de curtida
-          mediaHtml += `
-            <div class="game-media-item ${itemClass}" data-url="${media.url || ''}" data-type="${media.type}" data-youtube-id="${media.youtubeId || ''}" data-media-id="${media.id}">
-              ${mediaContent}
-              <div class="media-actions">
-                <button class="like-btn" data-media-id="${media.id}" data-liked="false">
-                  <i class="far fa-heart"></i> <span class="like-count">0</span>
-                </button>
-                ${isAdmin ? `<button class="delete-media-btn" data-id="${media.id}"><i class="fas fa-trash"></i></button>` : ''}
-              </div>
-            </div>
-          `;
-        }
-        mediaHtml += '</div>';
-      }
-
-      if (isAdmin) {
-        mediaHtml += `
-          <div class="game-media-buttons">
-            <button class="upload-media-btn" data-game-id="${game.id}">
-              <i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo
-            </button>
-            <button class="upload-youtube-game-btn" data-game-id="${game.id}">
-              <i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube
-            </button>
-          </div>
-        `;
-      }
-      
-      mediaHtml += '</div>';
-      
-      gameCard.innerHTML = headerHtml + playersHtml + mediaHtml;
-      historyList.appendChild(gameCard);
-    }
-
-    // Configurar eventos para botões de upload
-    document.querySelectorAll('.upload-media-btn').forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const gameId = button.dataset.gameId;
-        uploadGameMedia(gameId);
-      });
-    });
-
-    document.querySelectorAll('.upload-youtube-game-btn').forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const gameId = button.dataset.gameId;
-        uploadYoutubeVideo(gameId);
-      });
-    });
-
-    // Configurar eventos para visualização de mídia
-    document.querySelectorAll('.game-media-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('delete-media-btn') && 
-            !e.target.closest('.delete-media-btn') && 
-            !e.target.classList.contains('like-btn') && 
-            !e.target.closest('.like-btn')) {
-          const url = item.dataset.url;
-          const type = item.dataset.type;
-          const youtubeId = item.dataset.youtubeId;
-          if (type === 'youtube_video') {
-            showFullMedia(youtubeId, 'youtube_video');
-          } else {
-            showFullMedia(url, type);
-          }
-        }
-      });
-    });
-
-    // Configurar eventos para exclusão
-    if (isAdmin) {
-      document.querySelectorAll('.delete-media-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const mediaId = button.dataset.id;
-          const itemElement = button.closest('.game-media-item');
-          const mediaUrl = itemElement.dataset.url;
-          const mediaType = itemElement.dataset.type;
-          deleteMedia(mediaId, mediaUrl, mediaType);
+        games.sort((a, b) => {
+          const dateA = new Date(`${a.date}T${a.time}`);
+          const dateB = new Date(`${b.date}T${b.time}`);
+          return dateB - dateA;
         });
-      });
-    }
-
-    // Configurar eventos para curtidas
-    document.querySelectorAll('.like-btn').forEach(button => {
-      const mediaId = button.dataset.mediaId;
-      const likesRef = ref(database, `gallery/${mediaId}/likes`);
-
-      // Atualizar estado inicial e contagem de curtidas
-      onValue(likesRef, (snapshot) => {
-        const likes = snapshot.val() || {};
-        const likeCount = Object.keys(likes).length;
-        const isLiked = currentUserPlayer && likes[currentUserPlayer.id];
-        button.dataset.liked = isLiked ? 'true' : 'false';
-        button.querySelector('.like-count').textContent = likeCount;
-        button.querySelector('i').className = isLiked ? 'fas fa-heart' : 'far fa-heart';
-      });
-
-      button.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!currentUserPlayer) {
-          Swal.fire('Erro', 'Você precisa estar logado para curtir.', 'error');
+        
+        if (filters.onlyMyGames && currentUserPlayer) {
+          const myGames = [];
+          
+          for (const game of games) {
+            const confirmedIds = Object.keys(game.confirmedPlayers || {});
+            
+            if (confirmedIds.includes(currentUserPlayer.id)) {
+              myGames.push({ ...game, myStatus: 'confirmed' });
+            }
+          }
+          
+          games = myGames;
+        }
+        
+        if (games.length === 0) {
+          historyList.innerHTML = '<p>Nenhum jogo encontrado com os filtros selecionados.</p>';
           return;
         }
-        const isLiked = button.dataset.liked === 'true';
-        const userLikeRef = ref(database, `gallery/${mediaId}/likes/${currentUserPlayer.id}`);
-        try {
-          if (isLiked) {
-            await remove(userLikeRef);
-          } else {
-            await set(userLikeRef, true);
+        
+        const galleryRef = ref(database, 'gallery');
+        const gallerySnapshot = await get(galleryRef);
+        const mediaItems = gallerySnapshot.exists() ? Object.entries(gallerySnapshot.val()).map(([id, item]) => ({ id, ...item })) : [];
+
+        historyList.innerHTML = '';
+        
+        for (const game of games) {
+          const gameDate = DateTime.fromISO(game.date, { zone: 'America/Sao_Paulo' });
+          const formattedDate = gameDate.toFormat('dd/MM/yyyy');
+          const formattedTime = DateTime.fromISO(`2000-01-01T${game.time}`).toFormat('HH:mm');
+          const dayOfWeek = gameDate.toFormat('EEEE', { locale: 'pt-BR' });
+          
+          const gameCard = document.createElement('div');
+          gameCard.className = 'game-card';
+          
+          let headerHtml = `
+            <div class="game-header">
+              <h3>Histórico de Presença: ${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
+          `;
+          
+          if (game.myStatus) {
+            headerHtml += `<span class="my-status">(${game.myStatus === 'confirmed' ? 'Participou' : ''})</span>`;
           }
-        } catch (error) {
-          console.error('Erro ao curtir/descurtir:', error);
-          Swal.fire('Erro', 'Não foi possível processar a curtida. Tente novamente.', 'error');
+          
+          headerHtml += `</div>Total presentes: ${Object.keys(game.confirmedPlayers || {}).length} Jogadores`;
+          
+          let playersHtml = '<div class="players-grid">';
+          
+          const confirmedPlayers = Object.values(game.confirmedPlayers || {});
+          confirmedPlayers.forEach(player => {
+            const playerData = allPlayers.find(p => p.id === player.id) || player;
+            playersHtml += `
+              <div class="player-avatar-container">
+                <div class="player-avatar">
+                  <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
+                </div>
+                <div class="player-tooltip">
+                  <strong>${playerData.name}</strong><br>${playerData.position || 'Posição não definida'}
+                </div>
+              </div>
+            `;
+          });
+          
+          playersHtml += '</div>';
+
+          let mediaHtml = '<div class="game-media-section">';
+          mediaHtml += '<h4>Mídias do Jogo</h4>';
+          
+          const gameMediaItems = mediaItems.filter(item => item.gameId === game.id);
+          
+          if (gameMediaItems.length === 0) {
+            mediaHtml += '<p class="no-media-message">Nenhuma mídia associada a este jogo.</p>';
+          } else {
+            mediaHtml += '<div class="game-media-grid">';
+            for (const media of gameMediaItems) {
+              let mediaContent = '';
+              let itemClass = media.type === 'image' ? 'image' : media.type === 'video' ? 'local-video' : 'youtube-video';
+              
+              if (media.type === 'image') {
+                mediaContent = `<img src="${media.url}" alt="${media.caption || 'Imagem do Jogo'}">`;
+              } else if (media.type === 'video') {
+                mediaContent = `
+                  <video src="${media.url}" alt="${media.caption || 'Vídeo do Jogo'}" preload="metadata"></video>
+                  <i class="fas fa-play play-icon"></i>
+                `;
+              } else if (media.type === 'youtube_video') {
+                const thumbnailUrl = `https://img.youtube.com/vi/${media.youtubeId}/mqdefault.jpg`;
+                mediaContent = `
+                  <img src="${thumbnailUrl}" alt="${media.caption || 'Vídeo do YouTube'}">
+                  <i class="fab fa-youtube youtube-play-icon"></i>
+                `;
+              }
+
+              mediaHtml += `
+                <div class="game-media-item ${itemClass}" data-url="${media.url || ''}" data-type="${media.type}" data-youtube-id="${media.youtubeId || ''}" data-media-id="${media.id}">
+                  ${mediaContent}
+                  <div class="media-actions">
+                    <button class="like-btn" data-media-id="${media.id}" data-liked="false">
+                      <i class="far fa-heart"></i> <span class="like-count">0</span>
+                    </button>
+                    <button class="comment-btn" data-media-id="${media.id}">
+                      <i class="far fa-comment"></i> <span class="comment-count">0</span>
+                    </button>
+                    ${isAdmin ? `<button class="delete-media-btn" data-id="${media.id}"><i class="fas fa-trash"></i></button>` : ''}
+                  </div>
+                </div>
+              `;
+            }
+            mediaHtml += '</div>';
+          }
+
+          if (isAdmin) {
+            mediaHtml += `
+              <div class="game-media-buttons">
+                <button class="upload-media-btn" data-game-id="${game.id}">
+                  <i class="fas fa-cloud-upload-alt"></i> Enviar Foto/Vídeo
+                </button>
+                <button class="upload-youtube-game-btn" data-game-id="${game.id}">
+                  <i class="fab fa-youtube"></i> Adicionar Vídeo do YouTube
+                </button>
+              </div>
+            `;
+          }
+          
+          mediaHtml += '</div>';
+          
+          gameCard.innerHTML = headerHtml + playersHtml + mediaHtml;
+          historyList.appendChild(gameCard);
         }
-      });
-    });
-  } catch (error) {
-    console.error('Erro ao carregar histórico:', error);
-    historyList.innerHTML = '<p>Ocorreu um erro ao carregar o histórico de jogos.</p>';
-  }
-}
 
+        document.querySelectorAll('.upload-media-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const gameId = button.dataset.gameId;
+            uploadGameMedia(gameId);
+          });
+        });
 
+        document.querySelectorAll('.upload-youtube-game-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const gameId = button.dataset.gameId;
+            uploadYoutubeVideo(gameId);
+          });
+        });
 
+        document.querySelectorAll('.game-media-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('delete-media-btn') && 
+                !e.target.closest('.delete-media-btn') && 
+                !e.target.classList.contains('like-btn') && 
+                !e.target.closest('.like-btn') && 
+                !e.target.classList.contains('comment-btn') && 
+                !e.target.closest('.comment-btn')) {
+              const mediaId = item.dataset.mediaId;
+              const url = item.dataset.url;
+              const type = item.dataset.type;
+              const youtubeId = item.dataset.youtubeId;
+              showComments(mediaId, url, type, youtubeId);
+            }
+          });
+        });
 
+        if (isAdmin) {
+          document.querySelectorAll('.delete-media-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const mediaId = button.dataset.id;
+              const itemElement = button.closest('.game-media-item');
+              const mediaUrl = itemElement.dataset.url;
+              const mediaType = itemElement.dataset.type;
+              deleteMedia(mediaId, mediaUrl, mediaType);
+            });
+          });
+        }
 
+        document.querySelectorAll('.like-btn').forEach(button => {
+          const mediaId = button.dataset.mediaId;
+          const likesRef = ref(database, `gallery/${mediaId}/likes`);
 
+          onValue(likesRef, (snapshot) => {
+            const likes = snapshot.val() || {};
+            const likeCount = Object.keys(likes).length;
+            const isLiked = currentUserPlayer && likes[currentUserPlayer.id];
+            button.dataset.liked = isLiked ? 'true' : 'false';
+            button.querySelector('.like-count').textContent = likeCount;
+            button.querySelector('i').className = isLiked ? 'fas fa-heart' : 'far fa-heart';
+          });
 
-    // Configurar filtros
+          button.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!currentUserPlayer) {
+              Swal.fire('Erro', 'Você precisa estar logado para curtir.', 'error');
+              return;
+            }
+            const isLiked = button.dataset.liked === 'true';
+            const userLikeRef = ref(database, `gallery/${mediaId}/likes/${currentUserPlayer.id}`);
+            try {
+              if (isLiked) {
+                await remove(userLikeRef);
+              } else {
+                await set(userLikeRef, true);
+              }
+            } catch (error) {
+              console.error('Erro ao curtir/descurtir:', error);
+              Swal.fire('Erro', 'Não foi possível processar a curtida. Tente novamente.', 'error');
+            }
+          });
+        });
+
+        document.querySelectorAll('.comment-btn').forEach(button => {
+          const mediaId = button.dataset.mediaId;
+          const commentsRef = ref(database, `gallery/${mediaId}/comments`);
+
+          onValue(commentsRef, (snapshot) => {
+            const comments = snapshot.val() || {};
+            const commentCount = Object.keys(comments).length;
+            button.querySelector('.comment-count').textContent = commentCount;
+          });
+
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const itemElement = button.closest('.game-media-item');
+            const mediaId = itemElement.dataset.mediaId;
+            const mediaUrl = itemElement.dataset.url;
+            const mediaType = itemElement.dataset.type;
+            const youtubeId = itemElement.dataset.youtubeId;
+            showComments(mediaId, mediaUrl, mediaType, youtubeId);
+          });
+        });
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        historyList.innerHTML = '<p>Ocorreu um erro ao carregar o histórico de jogos.</p>';
+      }
+    }
+
     applyFilters.addEventListener('click', () => {
       const filters = {
         year: yearFilter.value,
@@ -969,10 +1174,8 @@ async function loadGameHistory(filters = {}) {
       loadGallery(filters);
     });
     
-    // Configurar botão de upload
     uploadPhotoBtn.addEventListener('click', uploadGalleryPhoto);
 
-    // Configurar logout
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       Swal.fire({
         title: 'Saindo...',
@@ -1000,7 +1203,6 @@ async function loadGameHistory(filters = {}) {
       }
     });
 
-    // Inicializar a página
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         await Swal.fire({
