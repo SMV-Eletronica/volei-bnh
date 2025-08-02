@@ -1491,170 +1491,208 @@ finalizeGameBtn.addEventListener('click', async () => {
       addGuestBtn.addEventListener('click', addGuest);
     }
     
-    async function addGuest() {     
-      
-      if (!window.currentUserPlayer) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Você precisa estar registrado como jogador para adicionar convidados.',
-        });
-        return;
-      }
-      if (!currentGameId) {
-        await Swal.fire({
-          icon: 'info',
-      title: 'Que pena, nenhum jogo Programado!',
-      text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
-        });
-        return;
-      }
-      const guestName = guestNameInput.value.trim();
-      if (!guestName) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Nome Inválido',
-          text: 'Por favor, insira o nome do convidado.',
-        });
-        return;
-      }
-      if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
-          waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)) {
-        await Swal.fire({
-          icon: 'warning',
-          title: 'Convidado Já Adicionado',
-          text: 'Este convidado já foi adicionado para este jogo.',
-        });
-        return;
-      }
-      const result = await Swal.fire({
-        icon: 'warning',
-        title: 'Atenção',
-        html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
-        showCancelButton: true,
-        confirmButtonText: 'Estou Ciente',
-        cancelButtonText: 'Cancelar',
-      });
-      if (!result.isConfirmed) {
-        guestNameInput.value = '';
-        return;
-      }
-      try {
-        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const guestObj = {
-          id: guestId,
-          name: guestName,
-          category: 'CONVIDADO',
-          position: '-',
-          timestamp: getBrazilTimestamp(),
-          paymentStatus: 'inadimplente',
-          imageUrl: defaultImage,
-          invitedById: window.currentUserPlayer.id,
-          invitedByName: window.currentUserPlayer.name,
-          status: 'pending',
-          additionalInfo: guestName,
-          createdAt: getBrazilDateTimeISO(),
-          date: null,
-          month: getBrazilMonthYear(),
-          paymentType: 'CONVIDADO',
-          value: parseFloat(guestFee.toFixed(2))
-        };
-        console.log(`Adicionando convidado com taxa: R$${guestObj.value}, ID: ${guestId}`);
-        
-        // Criar registro de pagamento para o convidado
-        const [year, month] = getBrazilMonthYear().split('-');
-        const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
-        const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-        await set(paymentRef, {
-          additionalInfo: guestName,
-          createdAt: getBrazilDateTimeISO(),
-          month: getBrazilMonthYear(),
-          paymentType: 'CONVIDADO',
-          playerId: window.currentUserPlayer.id,
-          playerName: window.currentUserPlayer.name,
-          value: parseFloat(guestFee.toFixed(2)),
-          gameId: currentGameId,
-          date: null,
-          paymentStatus: 'inadimplente',
-          guestId: guestId,
-          guestName: guestName
-         
-        });
 
-        if (confirmedPlayers.length < playerLimit) {
+    
+
+  async function addGuest() {
+    Swal.fire({
+      title: 'Adicionando Convidado...',
+      text: 'Por favor, aguarde.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    if (!window.currentUserPlayer) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Você precisa estar registrado como jogador para adicionar convidados.',
+      });
+      return;
+    }
+    if (!currentGameId) {
+      await Swal.fire({
+        icon: 'info',
+        title: 'Que pena, nenhum jogo Programado!',
+        text: 'Selecione um jogo ativo ou aguarde a abertura da lista.',
+      });
+      return;
+    }
+
+    // Verificar pendências do jogador que está convidando
+    const debtInfo = await checkPlayerDebts(window.currentUserPlayer.id);
+    if (!isAdmin && debtInfo.hasDebt) {
+      const alertCount = await updateDebtNotification(window.currentUserPlayer.id, currentGameId);
+      if (alertCount >= 3) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Ação Suspensa',
+          html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
+                 Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências ou solicite aos administradores para liberar sua participação.`,
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      } else {
+        const result = await Swal.fire({
+          icon: 'warning',
+          title: 'Atenção: Pendências Detectadas',
+          html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
+                 Essa é sua ${alertCount}ª notificação. Após 2 notificações, você ficará suspenso de adicionar convidados.`,
+          showCancelButton: true,
+          confirmButtonText: 'Ciente/Continuar',
+          cancelButtonText: 'Cancelar'
+        });
+        if (!result.isConfirmed) {
+          return;
+        }
+      }
+    } else if (!isAdmin && !debtInfo.hasDebt) {
+      await clearDebtNotifications(window.currentUserPlayer.id);
+    }
+
+    const guestName = guestNameInput.value.trim();
+    if (!guestName) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Nome Inválido',
+        text: 'Por favor, insira o nome do convidado.',
+      });
+      return;
+    }
+    if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
+        waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Convidado Já Adicionado',
+        text: 'Este convidado já foi adicionado para este jogo.',
+      });
+      return;
+    }
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Atenção',
+      html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`,
+      showCancelButton: true,
+      confirmButtonText: 'Estou Ciente',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!result.isConfirmed) {
+      guestNameInput.value = '';
+      return;
+    }
+    try {
+      const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const guestObj = {
+        id: guestId,
+        name: guestName,
+        category: 'CONVIDADO',
+        position: '-',
+        timestamp: getBrazilTimestamp(),
+        paymentStatus: 'inadimplente',
+        imageUrl: defaultImage,
+        invitedById: window.currentUserPlayer.id,
+        invitedByName: window.currentUserPlayer.name,
+        status: 'pending',
+        additionalInfo: guestName,
+        createdAt: getBrazilDateTimeISO(),
+        date: null,
+        month: getBrazilMonthYear(),
+        paymentType: 'CONVIDADO',
+        value: parseFloat(guestFee.toFixed(2))
+      };
+      console.log(`Adicionando convidado com taxa: R$${guestObj.value}, ID: ${guestId}`);
+
+      // Criar registro de pagamento para o convidado
+      const [year, month] = getBrazilMonthYear().split('-');
+      const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
+      const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+      await set(paymentRef, {
+        additionalInfo: guestName,
+        createdAt: getBrazilDateTimeISO(),
+        month: getBrazilMonthYear(),
+        paymentType: 'CONVIDADO',
+        playerId: window.currentUserPlayer.id,
+        playerName: window.currentUserPlayer.name,
+        value: parseFloat(guestFee.toFixed(2)),
+        gameId: currentGameId,
+        date: null,
+        paymentStatus: 'inadimplente',
+        guestId: guestId,
+        guestName: guestName
+      });
+
+      if (confirmedPlayers.length < playerLimit) {
+        confirmedPlayers.push(guestObj);
+      } else {
+        const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
+        if ((categoryPriority[guestObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
+          confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
+          waitlistPlayers.push(lowestPriorityPlayer);
           confirmedPlayers.push(guestObj);
         } else {
-          const lowestPriorityPlayer = sortPlayers([...confirmedPlayers]).slice(-1)[0];
-          if ((categoryPriority[guestObj.category] || 0) > (categoryPriority[lowestPriorityPlayer.category] || 0)) {
-            confirmedPlayers = confirmedPlayers.filter(p => p.id !== lowestPriorityPlayer.id);
-            waitlistPlayers.push(lowestPriorityPlayer);
-            confirmedPlayers.push(guestObj);
-          } else {
-            waitlistPlayers.push(guestObj);
-          }
+          waitlistPlayers.push(guestObj);
         }
-        confirmedPlayers = sortPlayers(confirmedPlayers);
-        waitlistPlayers = sortPlayers(waitlistPlayers);
-        await updateFirebaseLists();
-        updateGameList();
-
-        
-
-
-         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-         const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
-         const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
-         await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
-
-        
-
-        
-        guestNameInput.value = '';
-         
-        await Swal.fire({
-          icon: 'success',
-          title: 'Sucesso',
-          html: `
-            Convidado adicionado, efetue o pagamento e comunique aos ADMs para aprovação e registro da contribuição.<br><br>
-            PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
-            <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
-          `,
-          showConfirmButton: false,
-          didOpen: () => {
-            const copyPixBtn = document.getElementById('copyPixBtn');
-            copyPixBtn.addEventListener('click', async () => {
-              try {
-                await navigator.clipboard.writeText('fabioluiztx@outlook.com');
-                await Swal.fire({
-                  icon: 'success',
-                  title: 'Copiado!',
-                  text: 'Endereço PIX copiado para a área de transferência.',
-                  timer: 1500,
-                  showConfirmButton: false
-                });
-
-                abrirQuadra();
-
-              } catch (error) {
-                console.error('Erro ao copiar PIX:', error);
-                await Swal.fire({
-                  icon: 'error',
-                  title: 'Erro',
-                  text: 'Não foi possível copiar o endereço PIX.',
-                });
-              }
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao adicionar convidado:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao adicionar convidado.',
-        });
       }
+      confirmedPlayers = sortPlayers(confirmedPlayers);
+      waitlistPlayers = sortPlayers(waitlistPlayers);
+      await updateFirebaseLists();
+      updateGameList();
+
+      const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+      const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
+      const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
+      await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+
+      guestNameInput.value = '';
+      await Swal.fire({
+        icon: 'success',
+        title: 'Sucesso',
+        html: `
+          Convidado adicionado, efetue o pagamento e comunique aos ADMs para aprovação e registro da contribuição.<br><br>
+          PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+          <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
+        `,
+        showConfirmButton: false,
+        didOpen: () => {
+          const copyPixBtn = document.getElementById('copyPixBtn');
+          copyPixBtn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText('fabioluiztx@outlook.com');
+              await Swal.fire({
+                icon: 'success',
+                title: 'Copiado!',
+                text: 'Endereço PIX copiado para a área de transferência.',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              abrirQuadra();
+            } catch (error) {
+              console.error('Erro ao copiar PIX:', error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível copiar o endereço PIX.',
+              });
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao adicionar convidado:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Erro ao adicionar convidado.',
+      });
     }
+  }
+
+
+
+
 
     async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
       try {
