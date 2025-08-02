@@ -32,6 +32,32 @@
 
  <style>
     /* Estilos para o header */
+
+    .organiza2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 1000;
+  width: 200px;
+}
+
+.autocomplete-suggestion {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.autocomplete-suggestion:hover {
+  background-color: #f0f0f0;
+}
     
     
   </style>
@@ -63,6 +89,7 @@
       <button id="transparenciaBtn" class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
       <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
       <button id="listaBtn" class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+      <button class="logout-btn" onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
       
       
     </div>
@@ -773,9 +800,46 @@ async function getNotifiedPlayers() {
 }
 
 
+async function addManualDebtNotification(playerId, gameId) {
+  try {
+    const notificationRef = ref(database, `debtNotifications/${playerId}/${gameId}`);
+    await set(notificationRef, {
+      timestamp: getBrazilDateTimeISO(),
+      count: 1
+    });
+
+    const globalRef = ref(database, `debtNotificationsGlobal/${playerId}`);
+    const globalSnapshot = await get(globalRef);
+    const currentCount = globalSnapshot.exists() ? globalSnapshot.val().count : 0;
+
+    await set(globalRef, {
+      count: currentCount + 1,
+      lastUpdated: getBrazilDateTimeISO()
+    });
+
+    const player = allPlayers.find(p => p.id === playerId);
+    await Swal.fire({
+      icon: 'success',
+      title: 'Notificação Adicionada',
+      text: `Notificação manual adicionada para ${player?.name || 'Jogador'}. Total de notificações: ${currentCount + 1}.`,
+    });
+
+    return currentCount + 1;
+  } catch (error) {
+    console.error('Erro ao adicionar notificação manual:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Não foi possível adicionar a notificação manual.',
+    });
+    return 0;
+  }
+}
+
+
+
 function setupAdminFeatures() {
   console.log('Iniciando setupAdminFeatures, isAdmin:', isAdmin);
-
   const adminSettingsBtn = document.getElementById('adminSettingsBtn');
   
   if (!adminSettingsBtn) {
@@ -789,74 +853,83 @@ function setupAdminFeatures() {
     adminSearchContainer.style.display = 'flex';
     finalizeGameBtn.style.display = 'inline-block';
     
-    // Configurar o clique no botão de administração
     adminSettingsBtn.addEventListener('click', () => {
       console.log('Botão adminSettingsBtn clicado');
       Swal.fire({
         title: 'Configurar Jogos',
         html: `
-        <div class="organiza">
-          <div class="modal-section">
-            <label for="modalActionSelect">Ação:</label>
-            <select id="modalActionSelect" class="game-select">
-              <option value="createGame">Criar Novo Jogo</option>
-              <option value="updateLimit">Alterar Participantes</option>
-              <option value="updateFee">Alterar Taxa</option>
-              <option value="updateTime">Alterar Horário</option>
-              <option value="viewNotified">Jogadores Notificados</option>
-            </select>
-          </div>
-          <div class="modal-section" id="gameSelectSection">
-            <label for="modalGameSelect">Selecione um Jogo</label>
-            <select id="modalGameSelect" class="game-select">
-              <option value="">Selecione um jogo</option>
-            </select>
-          </div>
-          <div id="createGameFields" class="modal-section" style="display: none;">
-            <h4>Criar Novo Jogo</h4>
-            <div class="organiza2">
-              <label for="modalNewGameDate">Data:</label>
-              <input type="date" id="modalNewGameDate">
+          <div class="organiza">
+            <div class="modal-section">
+              <label for="modalActionSelect">Ação:</label>
+              <select id="modalActionSelect" class="game-select">
+                <option value="createGame">Criar Novo Jogo</option>
+                <option value="updateLimit">Alterar Participantes</option>
+                <option value="updateFee">Alterar Taxa</option>
+                <option value="updateTime">Alterar Horário</option>
+                <option value="viewNotified">Jogadores Notificados</option>
+                <option value="addManualNotification">Adicionar Notificação Manual</option>
+              </select>
             </div>
-            <div class="organiza2">
-              <label for="modalNewGameTime">Horário:</label>
-              <input type="time" id="modalNewGameTime" value="19:00">
+            <div class="modal-section" id="gameSelectSection">
+              <label for="modalGameSelect">Selecione um Jogo</label>
+              <select id="modalGameSelect" class="game-select">
+                <option value="">Selecione um jogo</option>
+              </select>
             </div>
-            <div class="organiza2">
-              <label for="modalNewGameLimit">Nº de Participantes:</label>
-              <input type="number" id="modalNewGameLimit" min="1" value="16">
-              <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+            <div id="createGameFields" class="modal-section" style="display: none;">
+              <h4>Criar Novo Jogo</h4>
+              <div class="organiza2">
+                <label for="modalNewGameDate">Data:</label>
+                <input type="date" id="modalNewGameDate">
+              </div>
+              <div class="organiza2">
+                <label for="modalNewGameTime">Horário:</label>
+                <input type="time" id="modalNewGameTime" value="19:00">
+              </div>
+              <div class="organiza2">
+                <label for="modalNewGameLimit">Nº de Participantes:</label>
+                <input type="number" id="modalNewGameLimit" min="1" value="16">
+                <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+              </div>
+            </div>
+            <div id="updateLimitFields" class="modal-section" style="display: none;">
+              <h4>Alterar Nº de Participantes</h4>
+              <div class="organiza2">
+                <label for="modalPlayerLimitInput">Participantes</label>
+                <input type="number" id="modalPlayerLimitInput" value="${playerLimit}" pattern="[0-9]*">
+                <button id="modalConfirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
+              </div>
+            </div>
+            <div id="updateFeeFields" class="modal-section" style="display: none;">
+              <h4>Alterar Taxa de Convidado</h4>
+              <div class="organiza2">
+                <label for="modalGuestFeeInput">Taxa (R$)</label>
+                <input type="number" id="modalGuestFeeInput" step="0.01" min="0" value="${guestFee.toFixed(2)}">
+                <button id="modalSaveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
+              </div>
+            </div>
+            <div id="updateTimeFields" class="modal-section" style="display: none;">
+              <h4>Alterar Horário do Jogo</h4>
+              <div class="organiza2">
+                <label for="modalGameTimeInput">Horário</label>
+                <input type="time" id="modalGameTimeInput" value="${gameTime}">
+                <button id="modalUpdateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
+              </div>
+            </div>
+            <div id="notifiedPlayersFields" class="modal-section" style="display: none;">
+              <h4>Jogadores Notificados</h4>
+              <div id="notifiedPlayersList" class="notified-players-list"></div>
+            </div>
+            <div id="addManualNotificationFields" class="modal-section" style="display: none;">
+              <h4>Adicionar Notificação Manual</h4>
+              <div class="organiza2">
+                <label for="manualPlayerSearch">Pesquisar Jogador</label>
+                <input type="text" id="manualPlayerSearch" placeholder="Nome do jogador">
+                <div class="autocomplete-suggestions" id="manualAutocompleteSuggestions"></div>
+                <button id="addManualNotificationBtn" disabled><i class="fas fa-plus"></i> Adicionar Notificação</button>
+              </div>
             </div>
           </div>
-          <div id="updateLimitFields" class="modal-section" style="display: none;">
-            <h4>Alterar Nº de Participantes</h4>
-            <div class="organiza2">
-              <label for="modalPlayerLimitInput">Participantes</label>
-              <input type="number" id="modalPlayerLimitInput" value="${playerLimit}" pattern="[0-9]*">
-              <button id="modalConfirmLimitBtn"><i class="fas fa-save"></i> Alterar</button>
-            </div>
-          </div>
-          <div id="updateFeeFields" class="modal-section" style="display: none;">
-            <h4>Alterar Taxa de Convidado</h4>
-            <div class="organiza2">
-              <label for="modalGuestFeeInput">Taxa (R$)</label>
-              <input type="number" id="modalGuestFeeInput" step="0.01" min="0" value="${guestFee.toFixed(2)}">
-              <button id="modalSaveGuestFeeBtn"><i class="fas fa-save"></i> Alterar</button>
-            </div>
-          </div>
-          <div id="updateTimeFields" class="modal-section" style="display: none;">
-            <h4>Alterar Horário do Jogo</h4>
-            <div class="organiza2">
-              <label for="modalGameTimeInput">Horário</label>
-              <input type="time" id="modalGameTimeInput" value="${gameTime}">
-              <button id="modalUpdateGameTimeBtn"><i class="fas fa-save"></i> Alterar</button>
-            </div>
-          </div>
-          <div id="notifiedPlayersFields" class="modal-section" style="display: none;">
-            <h4>Jogadores Notificados</h4>
-            <div id="notifiedPlayersList" class="notified-players-list"></div>
-          </div>
-        </div>
         `,
         showConfirmButton: false,
         showCancelButton: true,
@@ -898,6 +971,7 @@ function setupAdminFeatures() {
           const updateFeeFields = document.getElementById('updateFeeFields');
           const updateTimeFields = document.getElementById('updateTimeFields');
           const notifiedPlayersFields = document.getElementById('notifiedPlayersFields');
+          const addManualNotificationFields = document.getElementById('addManualNotificationFields');
           const gameSelectSection = document.getElementById('gameSelectSection');
 
           modalActionSelect.addEventListener('change', async () => {
@@ -906,7 +980,8 @@ function setupAdminFeatures() {
             updateFeeFields.style.display = modalActionSelect.value === 'updateFee' ? 'block' : 'none';
             updateTimeFields.style.display = modalActionSelect.value === 'updateTime' ? 'block' : 'none';
             notifiedPlayersFields.style.display = modalActionSelect.value === 'viewNotified' ? 'block' : 'none';
-            gameSelectSection.style.display = modalActionSelect.value === 'createGame' || modalActionSelect.value === 'viewNotified' ? 'none' : 'block';
+            addManualNotificationFields.style.display = modalActionSelect.value === 'addManualNotification' ? 'block' : 'none';
+            gameSelectSection.style.display = ['createGame', 'viewNotified', 'addManualNotification'].includes(modalActionSelect.value) ? 'none' : 'block';
             
             if (modalActionSelect.value === 'viewNotified') {
               const notifiedPlayers = await getNotifiedPlayers();
@@ -918,7 +993,6 @@ function setupAdminFeatures() {
               }
               
               let html = '<table><tr><th>Nome</th><th>N</th><th>Ações</th></tr>';
-              
               notifiedPlayers.forEach(player => {
                 html += `
                   <tr>
@@ -932,7 +1006,6 @@ function setupAdminFeatures() {
                   </tr>
                 `;
               });
-              
               html += '</table>';
               notifiedPlayersList.innerHTML = html;
               
@@ -940,7 +1013,6 @@ function setupAdminFeatures() {
                 btn.addEventListener('click', async (e) => {
                   const playerId = e.currentTarget.getAttribute('data-player-id');
                   const success = await clearDebtNotifications(playerId);
-                  
                   if (success) {
                     await Swal.fire({
                       icon: 'success',
@@ -957,19 +1029,83 @@ function setupAdminFeatures() {
                   }
                 });
               });
+            } else if (modalActionSelect.value === 'addManualNotification') {
+              const manualPlayerSearch = document.getElementById('manualPlayerSearch');
+              const manualAutocompleteSuggestions = document.getElementById('manualAutocompleteSuggestions');
+              const addManualNotificationBtn = document.getElementById('addManualNotificationBtn');
+              let selectedManualPlayerId = null;
+
+              manualPlayerSearch.addEventListener('input', () => {
+                const query = manualPlayerSearch.value.trim().toLowerCase();
+                manualAutocompleteSuggestions.innerHTML = '';
+                selectedManualPlayerId = null;
+                addManualNotificationBtn.disabled = true;
+
+                if (query.length > 0) {
+                  const suggestions = allPlayers
+                    .filter(player => player.name?.toLowerCase().includes(query))
+                    .slice(0, 5);
+                  if (suggestions.length > 0) {
+                    suggestions.forEach(player => {
+                      const div = document.createElement('div');
+                      div.className = 'autocomplete-suggestion';
+                      div.textContent = `${player.name} (${player.category || 'CONVIDADO'})`;
+                      div.addEventListener('click', () => {
+                        manualPlayerSearch.value = player.name;
+                        selectedManualPlayerId = player.id;
+                        addManualNotificationBtn.disabled = false;
+                        manualAutocompleteSuggestions.style.display = 'none';
+                      });
+                      manualAutocompleteSuggestions.appendChild(div);
+                    });
+                    manualAutocompleteSuggestions.style.display = 'block';
+                  } else {
+                    manualAutocompleteSuggestions.style.display = 'none';
+                  }
+                } else {
+                  manualAutocompleteSuggestions.style.display = 'none';
+                }
+              });
+
+              manualPlayerSearch.addEventListener('blur', () => {
+                setTimeout(() => {
+                  manualAutocompleteSuggestions.style.display = 'none';
+                }, 200);
+              });
+
+              addManualNotificationBtn.addEventListener('click', async () => {
+                if (!selectedManualPlayerId) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Por favor, selecione um jogador.',
+                  });
+                  return;
+                }
+                if (!currentGameId) {
+                  await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Selecione um jogo ativo para adicionar a notificação.',
+                  });
+                  return;
+                }
+                await addManualDebtNotification(selectedManualPlayerId, currentGameId);
+                manualPlayerSearch.value = '';
+                selectedManualPlayerId = null;
+                addManualNotificationBtn.disabled = true;
+                modalActionSelect.dispatchEvent(new Event('change'));
+              });
             }
           });
 
-          // Manipulador para o botão Criar Jogo
           const modalCreateGameBtn = document.getElementById('modalCreateGameBtn');
           modalCreateGameBtn.addEventListener('click', async () => {
             console.log('Botão modalCreateGameBtn clicado');
-
             const newGameDateInput = document.getElementById('modalNewGameDate').value;
             const newGameTimeInput = document.getElementById('modalNewGameTime').value;
             const newGameLimitInput = document.getElementById('modalNewGameLimit').value;
 
-            // Validar entradas
             if (!newGameDateInput || !newGameTimeInput || !newGameLimitInput) {
               await Swal.fire({
                 icon: 'error',
@@ -990,16 +1126,12 @@ function setupAdminFeatures() {
             }
 
             try {
-              // Criar ID único para o jogo
               const gameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
               const gameRef = ref(database, `activeGames/${gameId}`);
-              
-              // Formatando a data
               const gameDateTime = DateTime.fromISO(newGameDateInput, { zone: 'America/Sao_Paulo' });
               const formattedDate = gameDateTime.toISODate();
               const formattedTime = newGameTimeInput;
 
-              // Criar objeto do jogo
               const newGame = {
                 date: formattedDate,
                 time: formattedTime,
@@ -1009,18 +1141,12 @@ function setupAdminFeatures() {
                 waitlist: {}
               };
 
-              // Salvar no Firebase
               await set(gameRef, newGame);
-
-              // Enviar notificação
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
               await sendPushNotification(message, defaultImage);
-
-              // Atualizar a lista de jogos
               await loadActiveGames();
               Swal.close();
-
               await Swal.fire({
                 icon: 'success',
                 title: 'Sucesso',
@@ -1036,7 +1162,6 @@ function setupAdminFeatures() {
             }
           });
 
-          // Manipuladores para os outros botões (mantidos como no código original)
           const modalConfirmLimitBtn = document.getElementById('modalConfirmLimitBtn');
           modalConfirmLimitBtn.addEventListener('click', async () => {
             const newLimit = parseInt(document.getElementById('modalPlayerLimitInput').value);
@@ -1143,7 +1268,6 @@ function setupAdminFeatures() {
   
   guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
 }
-
 
 
 async function saveGameToHistory(gameId, gameData) {
