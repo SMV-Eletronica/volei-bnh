@@ -1307,7 +1307,6 @@ async function saveGameToHistory(gameId, gameData) {
       console.log('Iniciando initializeGameList');
       await loadActiveGames();
       
-
 finalizeGameBtn.addEventListener('click', async () => {
   console.log('Botão finalizeGameBtn clicado');
   if (!currentGameId) {
@@ -1316,6 +1315,23 @@ finalizeGameBtn.addEventListener('click', async () => {
       title: 'Erro',
       text: 'Selecione um jogo ativo para finalizar.',
     });
+    return;
+  }
+
+  // Exibir popup de confirmação para salvar ou descartar
+  const result = await Swal.fire({
+    icon: 'question',
+    title: 'Finalizar Lista',
+    text: 'Deseja salvar a lista no histórico ou descartá-la (ex.: jogo cancelado por chuva)?',
+    showCancelButton: true,
+    showDenyButton: true,
+    confirmButtonText: 'Salvar no Histórico',
+    denyButtonText: 'Descartar',
+    cancelButtonText: 'Cancelar',
+  });
+
+  if (result.isDismissed) {
+    // Usuário clicou em "Cancelar"
     return;
   }
 
@@ -1333,27 +1349,65 @@ finalizeGameBtn.addEventListener('click', async () => {
     }
 
     const gameData = snapshot.val();
-    await saveGameToHistory(currentGameId, gameData);
-    await set(gameRef, null);
 
-    await Swal.fire({
-      icon: 'success',
-      title: 'Lista Finalizada',
-      text: 'A lista foi finalizada e salva no histórico de presenças.',
-    });
+    if (result.isConfirmed) {
+      // Usuário escolheu salvar no histórico
+      await saveGameToHistory(currentGameId, gameData);
+      await set(gameRef, null); // Remove o jogo da lista ativa
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Lista Finalizada',
+        text: 'A lista foi finalizada e salva no histórico de presenças.',
+      });
+    } else if (result.isDenied) {
+      // Usuário escolheu descartar (não salvar no histórico)
+      await set(gameRef, null); // Remove o jogo da lista ativa
+
+      // Remover registros de pagamento associados ao jogo
+      const confirmedPlayerIds = Object.keys(gameData.confirmed || {});
+      const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
+      const allPlayerIds = [...confirmedPlayerIds, ...waitlistPlayerIds];
+
+      for (const playerId of allPlayerIds) {
+        const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
+        if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
+          const payment = await findExistingPayment(
+            player.category === 'CONVIDADO' ? player.invitedById : playerId,
+            currentGameId,
+            player.category,
+            player.additionalInfo || player.name
+          );
+          if (payment) {
+            const paymentRef = ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`);
+            await remove(paymentRef);
+          }
+        }
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Lista Descartada',
+        text: 'A lista foi descartada e não foi salva no histórico.',
+      });
+
+      // Enviar notificação de cancelamento
+      const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
+      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado e a lista foi descartada.`;
+      await sendPushNotification(message, defaultImage);
+    }
 
     currentGameId = null;
     await loadActiveGames();
   } catch (error) {
-    console.error('Erro ao finalizar jogo:', error);
+    console.error('Erro ao processar finalização do jogo:', error);
     await Swal.fire({
       icon: 'error',
       title: 'Erro',
-      text: 'Não foi possível finalizar o jogo ou salvar no histórico.',
+      text: 'Não foi possível processar a finalização do jogo.',
     });
   }
 });
-
 
       confirmPlayerBtn.addEventListener('click', () => abrirQuadra());
       setupGuestControls();
