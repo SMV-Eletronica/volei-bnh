@@ -84,7 +84,7 @@ self.addEventListener('activate', (event) => {
             return caches.delete(cacheName); // Remove caches de versões anteriores
           }
         })
-      )
+      
   
   });
 });
