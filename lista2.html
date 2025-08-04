@@ -672,7 +672,6 @@ async function loadCurrentUserPlayer() {
   }
 }
 
-
 async function checkPlayerDebts(playerId) {
   try {
     const paymentsRef = ref(database, 'payments');
@@ -682,9 +681,16 @@ async function checkPlayerDebts(playerId) {
     let debtCount = 0;
     let totalDebt = 0;
     let debtDetails = [];
+    const currentMonthYear = getBrazilMonthYear(); // Obtém o mês e ano atuais (ex: "2025-08")
 
     for (const year in payments) {
       for (const month in payments[year]) {
+        // Ignora pagamentos do mês corrente
+        const paymentMonthYear = `${year}-${month}`;
+        if (paymentMonthYear === currentMonthYear) {
+          continue; // Pula para o próximo mês
+        }
+
         const monthPayments = payments[year][month] || {};
         for (const paymentId in monthPayments) {
           const payment = monthPayments[paymentId];
@@ -718,6 +724,7 @@ async function checkPlayerDebts(playerId) {
     };
   }
 }
+
 
 async function clearDebtNotifications(playerId) {
   try {
@@ -1322,7 +1329,7 @@ finalizeGameBtn.addEventListener('click', async () => {
   const result = await Swal.fire({
     icon: 'question',
     title: 'Finalizar Lista',
-    text: 'Deseja salvar a lista no histórico ou descartá-la (ex.: jogo cancelado por chuva)?',
+    text: 'Deseja salvar a lista no histórico ou descartá-la?',
     showCancelButton: true,
     showDenyButton: true,
     confirmButtonText: 'Salvar no Histórico',
