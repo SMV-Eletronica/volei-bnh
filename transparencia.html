@@ -32,7 +32,7 @@
                 <div class="sidebar-user-info">
                     <div id="sidebarUserName" class="sidebar-user-name"></div>
                     <div id="sidebarUserPosition" class="sidebar-user-position"></div>
-                    <div id="userEmail" class="sidebar-user-position"></div>
+                    <div id="sidebarUserCategory" class="sidebar-user-position"></div>
                 </div>
             </div>
             
@@ -382,7 +382,7 @@ function createDashboardButton() {
                 
                 sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                 
-                document.getElementById('userEmail').textContent = `${user.email}`;
+                
                 updateButtonVisibility(user);
                 await loadCurrentUserPlayer();
                 loadFinancialData();
@@ -429,6 +429,7 @@ function createDashboardButton() {
                     const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
                     const sidebarUserName = document.getElementById('sidebarUserName');
                     const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+                    const sidebarUserCategory = document.getElementById('sidebarUserCategory');
 
                     if (currentUserPlayer?.imageUrl) {
                         sidebarUserPhoto.src = currentUserPlayer.imageUrl;
@@ -439,6 +440,7 @@ function createDashboardButton() {
 
                     sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                     sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
+                    sidebarUserCategory.textContent = currentUserPlayer?.category || "Categoria não definida";
                 }
             } catch (error) {
                 console.error('Erro ao carregar dados do jogador:', error);
