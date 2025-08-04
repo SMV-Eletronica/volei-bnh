@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login-Vôlei-BNH</title>
 
-
     <!-- Manifesto para Android -->
     <link rel="manifest" href="site.webmanifest?v=1.3">
 
-   
+  
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -187,17 +185,17 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="email">E-mail:</label>
-                    <input type="email" id="email" required placeholder="Digite seu e-mail">
+                    <input type="email" id="email" required placeholder="Digite seu e-mail" autocomplete="username">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Senha:</label>
-                    <input type="password" id="password" required placeholder="Digite sua senha">
+                    <input type="password" id="password" required placeholder="Digite sua senha" autocomplete="current-password">
                 </div>
 
                 <div class="form-group" id="confirmPasswordGroup" style="display: none;">
                     <label for="confirmPassword">Confirmar Senha:</label>
-                    <input type="password" id="confirmPassword" placeholder="Confirme sua senha">
+                    <input type="password" id="confirmPassword" placeholder="Confirme sua senha" autocomplete="new-password">
                 </div>
 
                 <button type="submit" id="actionBtn">
@@ -205,12 +203,10 @@
                 </button>
 
                 <div class="signup-link">
-                    <!-- adicionar aqui a escrita pré cadastre-se-->
-                   <a href="#" id="toggleAction"></a>
+                    <a href="#" id="toggleAction"></a>
                     <span id="signupText">Vamos Jogar?</span> <a href="pre.html"> Cadastre-se</a>
                 </div>
-
-               
+            </form>
 
             <div class="footer">
                 <p>Cadastro restrito aos integrantes do grupo e avaliados pelos ADMs.</p>
@@ -271,6 +267,7 @@
                 actionText.textContent = 'Cadastrar';
                 actionIcon.className = 'fas fa-user-plus';
                 passwordInput.placeholder = 'Crie sua senha';
+                passwordInput.setAttribute('autocomplete', 'new-password');
                 toggleAction.textContent = 'Entrar';
                 signupText.textContent = 'Já tem uma bola?';
                 confirmPasswordGroup.style.display = 'block';
@@ -279,6 +276,7 @@
                 actionText.textContent = 'Entrar';
                 actionIcon.className = 'fas fa-sign-in-alt';
                 passwordInput.placeholder = 'Digite sua senha';
+                passwordInput.setAttribute('autocomplete', 'current-password');
                 toggleAction.textContent = 'Pré-cadastre-se';
                 signupText.textContent = 'Vamos Jogar?';
                 confirmPasswordGroup.style.display = 'none';
@@ -316,6 +314,7 @@
                     actionText.textContent = 'Entrar';
                     actionIcon.className = 'fas fa-sign-in-alt';
                     passwordInput.placeholder = 'Digite sua senha';
+                    passwordInput.setAttribute('autocomplete', 'current-password');
                     toggleAction.textContent = 'Pré-cadastre-se';
                     signupText.textContent = 'Vamos Jogar?';
                     confirmPasswordGroup.style.display = 'none';
@@ -385,8 +384,6 @@
                 messageDiv.style.display = 'none';
             }, 5000);
         }
-
-      
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('pwabuilder-sw.js')
