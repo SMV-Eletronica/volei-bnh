@@ -1,6 +1,6 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const CACHE = 'volei-bnh-offline-v4';
+const CACHE = 'volei-bnh-offline-v5';
 const offlineFallbackPage = 'offline.html';
 
 // Cache de imagens e vídeos
