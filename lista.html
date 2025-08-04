@@ -57,7 +57,7 @@
             <div class="sidebar-user-info">
                 <div id="sidebarUserName" class="sidebar-user-name"></div>
                 <div id="sidebarUserPosition" class="sidebar-user-position"></div>
-                <div id="userEmail" class="sidebar-user-position"></div>
+                <div id="sidebarUserCategory" class="sidebar-user-position"></div>
             </div>
         </div>
 
@@ -392,7 +392,8 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
 
-    document.getElementById('userEmail').textContent = `${user.email}`;
+    
+
     console.log('Usuário logado:', emailLogado, 'isAdmin:', isAdmin);
 
     if (isAdmin) {
@@ -545,6 +546,7 @@ async function loadCurrentUserPlayer() {
       const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
       const sidebarUserName = document.getElementById('sidebarUserName');
       const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+      const sidebarUserCategory = document.getElementById('sidebarUserCategory');
 
       if (window.currentUserPlayer?.imageUrl) {
         sidebarUserPhoto.src = await preloadImage(window.currentUserPlayer.imageUrl);
@@ -556,6 +558,7 @@ async function loadCurrentUserPlayer() {
 
       sidebarUserName.textContent = window.currentUserPlayer?.name || 'Usuário';
       sidebarUserPosition.textContent = window.currentUserPlayer?.position || 'Posição não definida';
+      sidebarUserCategory.textContent = window.currentUserPlayer?.category || 'Categoria não definida';
 
       // Pré-carregar imagens de todos os jogadores
       await Promise.all(
