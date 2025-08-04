@@ -14,7 +14,7 @@ workbox.routing.registerRoute(
         statuses: [0, 200],
       }),
       new workbox.expiration.ExpirationPlugin({
-        maxEntries: 20,
+        maxEntries: 6,
         maxAgeSeconds: 7 * 24 * 60 * 60,
         purgeOnQuotaError: true,
       }),
@@ -32,7 +32,7 @@ workbox.routing.registerRoute(
         statuses: [0, 200],
       }),
       new workbox.expiration.ExpirationPlugin({
-        maxEntries: 50,
+        maxEntries: 10,
         maxAgeSeconds: 7 * 24 * 60 * 60,
         purgeOnQuotaError: true,
       }),
