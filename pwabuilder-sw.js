@@ -1,45 +1,46 @@
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.6.0/workbox-sw.js');
 
-const CACHE = 'volei-bnh-offline-v5';
+const NAVIGATION_CACHE = 'volei-bnh-navigation-v5';
+const MEDIA_CACHE = 'volei-bnh-media-v5';
 const offlineFallbackPage = 'offline.html';
 
-// Cache de imagens e vídeos com limites mais restritivos para reduzir o tamanho do cache
+// Cache de imagens e vídeos
 workbox.routing.registerRoute(
   ({ request }) => request.destination === 'image' || request.destination === 'video',
   new workbox.strategies.CacheFirst({
-    cacheName: CACHE,
+    cacheName: MEDIA_CACHE,
     plugins: [
       new workbox.cacheableResponse.CacheableResponsePlugin({
         statuses: [0, 200],
       }),
       new workbox.expiration.ExpirationPlugin({
-        maxEntries: 20, // Reduzido de 100 para 20 para limitar o número de arquivos
-        maxAgeSeconds: 7 * 24 * 60 * 60, // Reduzido de 30 dias para 7 dias
+        maxEntries: 20,
+        maxAgeSeconds: 7 * 24 * 60 * 60,
+        purgeOnQuotaError: true,
       }),
     ],
   })
 );
 
-
-
-// Cache de navegação com limites para evitar acúmulo de páginas HTML
+// Cache de navegação
 workbox.routing.registerRoute(
   ({ request }) => request.mode === 'navigate',
   new workbox.strategies.NetworkFirst({
-    cacheName: CACHE,
+    cacheName: NAVIGATION_CACHE,
     plugins: [
       new workbox.cacheableResponse.CacheableResponsePlugin({
         statuses: [0, 200],
       }),
       new workbox.expiration.ExpirationPlugin({
-        maxEntries: 50, // Adicionado limite de 50 páginas
-        maxAgeSeconds: 7 * 24 * 60 * 60, // Expira em 7 dias
+        maxEntries: 50,
+        maxAgeSeconds: 7 * 24 * 60 * 60,
+        purgeOnQuotaError: true,
       }),
     ],
   })
 );
 
-// Excluir requisições de API do cache para evitar armazenamento desnecessário
+// Excluir requisições de API do cache
 workbox.routing.registerRoute(
   ({ url }) => url.pathname.includes('/api/'),
   new workbox.strategies.NetworkOnly()
@@ -53,10 +54,10 @@ workbox.routing.setCatchHandler(({ event }) => {
   return Response.error();
 });
 
-// Pré-cache de arquivos estáticos no momento da instalação
+// Pré-cache de arquivos estáticos
 self.addEventListener('install', async (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => {
+    caches.open(NAVIGATION_CACHE).then((cache) => {
       return cache.addAll([
         offlineFallbackPage,
         'windows11/Square44x44Logo.altform-unplated_targetsize-16.png',
@@ -64,41 +65,50 @@ self.addEventListener('install', async (event) => {
         'android/android-launchericon-192-192.png',
         'android/android-launchericon-512-512.png',
         'ios/192.png',
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css',
         'history.css',
-        'https://moment.github.io/luxon/global/luxon.min.js',
-        'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js'
-      ]);
+        'https://cdn.jsdelivr.net/npm/luxon@3.5.0/build/global/luxon.min.js',
+        'https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.min.js'
+      ]).catch((error) => {
+        console.error('Pré-cache falhou:', error);
+      });
     })
   );
 });
 
-// Limpar caches antigos durante a ativação do Service Worker
+// Limpar caches antigos
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE];
+  const cacheWhitelist = [NAVIGATION_CACHE, MEDIA_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames.map((cacheName) => {
           if (!cacheWhitelist.includes(cacheName)) {
-            return caches.delete(cacheName); // Remove caches de versões anteriores
+            console.log(`Deletando cache antigo: ${cacheName}`);
+            return caches.delete(cacheName);
           }
+          return Promise.resolve();
         })
-      
-  
-  });
+      )
+    )
+  );
 });
 
-// Permitir que o Service Worker assuma o controle imediatamente
+// Skip Waiting
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('Service Worker: skipWaiting acionado');
     self.skipWaiting();
   }
 });
 
-// Manipulação de notificações push
+// Notificações push
 self.addEventListener('push', (event) => {
-  const payload = event.data?.json() || {};
+  if (!event.data) {
+    console.warn('Push recebido sem dados');
+    return;
+  }
+  const payload = event.data.json() || {};
   const title = payload.notification?.title || 'Novo alerta!';
   const options = {
     body: payload.notification?.body || 'Mensagem importante.',
@@ -111,12 +121,13 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Ação ao clicar na notificação
+// Clique em notificações
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const urlToOpen = event.notification.data.url || '/';
+  console.log(`Abrindo URL: ${urlToOpen}`);
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((windowClients) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       const client = windowClients.find((c) => c.url === urlToOpen && 'focus' in c);
       return client ? client.focus() : clients.openWindow(urlToOpen);
     })
