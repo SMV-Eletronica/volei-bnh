@@ -176,7 +176,8 @@
         <div class="sidebar-user-info">
           <div id="sidebarUserName" class="sidebar-user-name"></div>
           <div id="sidebarUserPosition" class="sidebar-user-position"></div>
-          <div id="userEmail" class="sidebar-user-position"></div>
+          <div id="sidebarUserCategory" class="sidebar-user-position"></div>
+          
         </div>
       </div>
       <button id="adminBtn" class="logout-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> Administração</button>
@@ -332,7 +333,7 @@
           if (currentUserPlayer) {
             document.getElementById('sidebarUserName').textContent = currentUserPlayer.name;
             document.getElementById('sidebarUserPosition').textContent = currentUserPlayer.position || 'Posição não definida';
-            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('sidebarUserCategory').textContent = currentUserPlayer.category || 'Categoria não definida';
             
             if (currentUserPlayer.imageUrl) {
               document.getElementById('sidebarUserPhoto').src = currentUserPlayer.imageUrl;
