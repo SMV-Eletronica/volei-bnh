@@ -20,19 +20,7 @@ workbox.routing.registerRoute(
   })
 );
 
-// Cache de thumbnails do YouTube usando StaleWhileRevalidate para menor impacto no cache
-workbox.routing.registerRoute(
-  /https:\/\/img\.youtube\.com\/vi\/.*\/mqdefault\.jpg/,
-  new workbox.strategies.StaleWhileRevalidate({
-    cacheName: CACHE,
-    plugins: [
-      new workbox.expiration.ExpirationPlugin({
-        maxEntries: 20, // Reduzido de 50 para 20
-        maxAgeSeconds: 7 * 24 * 60 * 60, // Reduzido de 30 dias para 7 dias
-      }),
-    ],
-  })
-);
+
 
 // Cache de navegação com limites para evitar acúmulo de páginas HTML
 workbox.routing.registerRoute(
