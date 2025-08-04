@@ -67,7 +67,7 @@ self.addEventListener('install', async (event) => {
         'android/android-launchericon-512-512.png',
         'ios/192.png',
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-        '/history.css',
+        'history.css',
         'https://moment.github.io/luxon/global/luxon.min.js',
         'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js'
       ]);
