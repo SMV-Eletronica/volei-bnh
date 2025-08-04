@@ -277,9 +277,6 @@ function createDashboardButton() {
         emailLogado = user.email;
         isAdmin = adminEmails.includes(emailLogado);
         const player = await loadCurrentUserPlayer();
-        // Atualize esta linha para mostrar nome e e-mail
-        document.getElementById('userEmail').textContent = `${user.email}`;
-
         // Se for admin, crie o botão Dashboard aqui
         if (isAdmin) {
             createDashboardButton();
