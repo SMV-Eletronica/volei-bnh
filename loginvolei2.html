@@ -1,0 +1,31 @@
+if (isSignUpMode) {
+    if (password !== confirmPassword) {
+        showMessage("As senhas não coincidem.", "error");
+        actionBtn.innerHTML = `<i class="fas fa-user-plus"></i> <span>Cadastrar</span>`;
+        return;
+    }
+    showLoading('Criando conta...');
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    showLoading('Registrando no OneSignal...');
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    await new Promise((resolve, reject) => {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                await OneSignal.login(user.uid);
+                await OneSignal.User.addTag("jogadores", "true");
+                console.log(`External ID ${user.uid} associado e tag 'jogadores' adicionada no cadastro.`);
+                resolve();
+            } catch (erro
+r) {
+                reject(error);
+            }
+        });
+    });
+
+    showMessage("Cadastro realizado com sucesso! Redirecionando...", "success");
+    setTimeout(() => {
+        window.location.href = 'lista.html';
+    }, 1000);
+}
