@@ -349,13 +349,13 @@ onAuthStateChanged(auth, async (user) => {
       const userName = window.currentUserPlayer.name;
       const [year, month] = getBrazilMonthYear().split('-');
       const now = DateTime.now().setZone('America/Sao_Paulo');
-      const tenMinutesAgo = now.minus({ minutes: 10 });
+      const tenMinutesAgo = now.minus({ minutes: 30 });
 
       // Verificar no localStorage para otimizar consultas
       const lastAccessKey = `lastAccess_${userId}`;
       const lastAccess = localStorage.getItem(lastAccessKey);
       if (lastAccess && DateTime.fromISO(lastAccess) >= tenMinutesAgo) {
-        console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 10 minutos (localStorage).`);
+        console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos (localStorage).`);
       } else {
         // Consultar Firebase apenas se necessário
         const activitiesRef = ref(database, `userActivity/${year}/${month}`);
@@ -383,7 +383,7 @@ onAuthStateChanged(auth, async (user) => {
             localStorage.setItem(lastAccessKey, now.toISO());
             console.log(`Acesso registrado para ${userName} em ${now.toISO()}`);
           } else {
-            console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 10 minutos.`);
+            console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos.`);
           }
         } catch (error) {
           console.error('Erro ao registrar acesso:', error);
