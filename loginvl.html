@@ -495,7 +495,7 @@
 
         // Registrar Service Worker do OneSignal
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/OneSignalSDKWorker.js')
+            navigator.serviceWorker.register('push/onesignal/OneSignalSDKWorker.js')
                 .then(reg => console.log('✅ Service Worker do OneSignal registrado com sucesso!'))
                 .catch(err => console.error('❌ Erro ao registrar o Service Worker do OneSignal:', err));
         }
