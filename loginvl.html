@@ -334,7 +334,7 @@
                         await OneSignal.login(user.email); // Usar email como External ID
                         await OneSignal.User.addTag("jogadores", "true");
                         console.log(`External ID ${user.email} associado e tag 'jogadores' adicionada.`);
-                        showLoading('Redirecionando...');
+                        showLoading('Autenticando...');
                         setTimeout(() => {
                             window.location.href = 'lista.html';
                         }, 1000);
@@ -430,8 +430,8 @@
                         });
                     });
 
-                    showLoading('Redirecionando...');
-                    showMessage("Login realizado com sucesso! Redirecionando...", "success");
+                    showLoading('Autenticando...');
+                    showMessage("Login realizado com sucesso! Autenticando...", "success");
                     setTimeout(() => {
                         window.location.href = 'lista.html';
                     }, 1000);
