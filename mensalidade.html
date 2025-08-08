@@ -899,7 +899,7 @@
                         comprovanteStatusClass = 'rejected';
                     }
                 }
-                paymentEl.innerHTML = `
+                paymentEl.innerHTML = ` <span style="position: relative; top: 10px; left: 300px;"><i class="fas fa-edit"></i></span>
                     <div>
                         <span class="status-label">Referente ao Caixa:</span>
                         <span class="status-value">${monthName}/${year}</span>
@@ -1002,7 +1002,7 @@
                     savePaymentBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
                     cancelEditBtn.style.display = 'inline-block';
                     deletePaymentBtn.style.display = 'inline-block';
-                    paymentForm.scrollIntoView({ behavior: 'smooth' });
+                    paymentForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 } else {
                     await Swal.fire({
                         icon: 'error',
