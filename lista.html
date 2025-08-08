@@ -1061,7 +1061,7 @@ function setupAdminFeatures() {
                   });
                   return;
                 }
-                if (!currentGameId) {
+               /* if (!currentGameId) {
                   await Swal.fire({
                     icon: 'error',
                     title: 'Erro',
@@ -1069,6 +1069,7 @@ function setupAdminFeatures() {
                   });
                   return;
                 }
+                */
                 await addManualDebtNotification(selectedManualPlayerId, currentGameId);
                 manualPlayerSearch.value = '';
                 selectedManualPlayerId = null;
