@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pré-Cadastro - Vôlei BNH</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=2.0">
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Cropper.js CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+
+    <style>
+        input[type="tel"], input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .image-preview {
+            max-width: 150px;
+            max-height: 150px;
+            margin-top: 10px;
+            display: none;
+            object-fit: contain;
+        }
+        .upload-btn {
+            margin-top: 5px;
+            padding: 8px 12px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .alert {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            border-radius: 4px;
+            border-left: 4px solid #4285f4;
+        }
+        
+        /* Estilos para o editor de imagem embutido */
+        .image-editor-container {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .image-editor-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        .image-editor-container p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+        #cropper-container {
+            /* Tamanhos ajustados para melhor responsividade */
+            max-height: 400px; 
+            max-width: 100%;
+            min-width: 300px;
+            min-height: 300px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .editor-tools {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .editor-tools button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .editor-tools .confirm-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .editor-tools .cancel-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        /* Estilos personalizados para o Cropper */
+        .cropper-crop-box, .cropper-view-box {
+            border-radius: 50%; /* Para recorte circular */
+        }
+        .cropper-face {
+            background-color: transparent; /* Remove o fundo cinza */
+        }
+        .cropper-drag-box {
+            background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+        }
+        .cropper-line {
+            background-color: #4285f4; /* Cor azul para as linhas guia */
+        }
+        .cropper-point {
+            background-color: #4285f4; /* Cor azul para os pontos de redimensionamento */
+            width: 10px;
+            height: 10px;
+        }
+
+        /* Media queries para responsividade */
+        @media (max-width: 768px) {
+            #cropper-container {
+                min-width: 250px;
+                min-height: 250px;
+                max-height: 300px;
+            }
+            
+            .cropper-point {
+                width: 8px;
+                height: 8px;
+            }
+            
+            .image-editor-container {
+                padding: 10px;
+            }
+        }
+
+      
+    </style>
+</head>
+<body>
+    <div class="teste" style="width: 100%; top: 10px; display: flex; justify-content: center; margin-top: 10px;">
+        <div class="header" style="border-radius: 10px; text-align: center; height: 60px; width: 98%;">
+            <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH</h2></center>
+            <div class="button-container">
+                <button onclick="window.location.href='dashboard.html'" style="display: none;"><i class="fas fa-user-plus"></i> Cadastro</button>            
+                <button onclick="window.location.href='mensalidade.html'" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
+                <button onclick="window.location.href='financeiro8.html'" style="display: none;"><i class="fas fa-chart-line"></i> Financeiro</button>
+                <button onclick="window.location.href='lista.html'" style="display: none;"><i class="fas fa-list"></i> Jogos</button>            
+                <button id="logoutBtn" class="logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
+            </div>  
+        </div>
+    </div>
+   
+    <div class="container">
+        <div class="alert">
+            📢 Pré-cadastro aberto temporariamente. Após preencher seus dados, você será direcionado para criar sua Senha.
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-user-edit"></i> Pré-Cadastro de Integrante</h2>
+            
+            <form id="playerForm">
+                <div class="form-group">
+                    <label for="name">Nome e Apelido:</label>
+                    <input type="text" id="name" placeholder="Ex: Ronaldo Fenômeno" maxlength="20" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" required>
+                    <small>Este será usado para criar sua senha depois</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageFile">Foto:</label>
+                    <input type="file" id="imageFile" accept="image/*" required>
+                    <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
+                    <div id="editorTrigger" style="display: none;">
+                        <button type="button" class="upload-btn" id="editImageBtn">
+                            <i class="fas fa-edit"></i> Ajustar Imagem
+                        </button>
+                    </div>
+                    <!-- Editor de imagem embutido -->
+                    <div class="image-editor-container" id="imageEditorContainer">
+                        <h3>Ajuste sua foto</h3>
+                        <p>Mova e redimensione a área de corte como desejar</p>
+                        <div id="cropper-container"></div>
+                        <div class="editor-tools" style="align-items: baseline;">
+                            <button class="cancel-btn" id="cancelEditBtn"><i class="fas fa-times"></i> Cancelar</button>
+                            <button class="confirm-btn" id="confirmEditBtn"><i class="fas fa-check"></i> Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="position">Posição Principal:</label>
+                    <select id="position" required>
+                        <option value="">Selecione uma posição</option>
+                        <option value="Levantador">Levantador</option>
+                        <option value="Ponteiro">Ponteiro</option>
+                        <option value="Oposto">Oposto</option>
+                        <option value="Central">Central</option>
+                        <option value="Líbero">Líbero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact">Telefone (com DDD):</label>
+                    <input type="tel" id="contact" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" placeholder="(99) 99999-9999" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Categoria:</label>
+                    <select id="category" required>
+                        <option value="">Selecione uma categoria</option>                        
+                        <option value="MENSAL">MENSAL</option>
+                        <option value="DIARIA">DIARIA</option>
+                    </select>
+                </div>
+                
+                <input type="hidden" id="playerId">
+                
+                <button type="submit" id="saveBtn" style="background-color: #4285f4; width: auto;"><i class="fas fa-save"></i> Cadastrar</button>                
+                <button type="button" id="clearBtn" style="display: none; background-color: #ff5722;"><i class="fas fa-soap"></i> Limpar</button>
+                <button type="button" id="deleteBtn" style="display: none; background-color: #f44336;"><i class="fas fa-trash"></i> Excluir</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        © 2025 SMV Eletrônica - Todos os direitos reservados<br>
+        <div class="footer-links">
+            Powered by:
+            <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+            <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
+                <i class="fas fa-fire"></i> Firebase
+            </a>        
+            <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
+                <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
+                OneSignal      
+            </a>
+        </div>
+    </footer>
+
+    <!-- Cropper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
+            authDomain: "volei-25301.firebaseapp.com",
+            databaseURL: "https://volei-25301-default-rtdb.firebaseio.com",
+            projectId: "volei-25301",
+            storageBucket: "volei-25301.firebasestorage.app",
+            messagingSenderId: "1007197261034",
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
+            measurementId: "G-CYMLX0SJJQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const storage = getStorage(app);
+
+        const playerForm = document.getElementById('playerForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const imageFileInput = document.getElementById('imageFile');
+        const positionInput = document.getElementById('position');
+        const contactInput = document.getElementById('contact');
+        const categoryInput = document.getElementById('category');
+        const imagePreview = document.getElementById('imagePreview');
+        const editImageBtn = document.getElementById('editImageBtn');
+        const editorTrigger = document.getElementById('editorTrigger');
+        
+        // Elementos do editor de imagem
+        const imageEditorContainer = document.getElementById('imageEditorContainer');
+        const cropperContainer = document.getElementById('cropper-container');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const confirmEditBtn = document.getElementById('confirmEditBtn');
+        
+        let cropper;
+        let originalImageFile;
+
+        // Formatação do telefone
+        contactInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                value = '(' + value;
+            }
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ') ' + value.substring(3);
+            }
+            if (value.length > 10) {
+                value = value.substring(0, 10) + '-' + value.substring(10, 14);
+            }
+            e.target.value = value;
+        });
+
+        // Pré-visualização da imagem e ativação do editor
+        imageFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'A imagem deve ter no máximo 5MB.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Por favor, selecione um arquivo de imagem.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                originalImageFile = file;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        if (img.width > 1024 || img.height > 1024) {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            const maxSize = 1024;
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > maxSize) {
+                                    height *= maxSize / width;
+                                    width = maxSize;
+                                }
+                            } else {
+                                if (height > maxSize) {
+                                    width *= maxSize / height;
+                                    height = maxSize;
+                                }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            ctx.drawImage(img, 0, 0, width, height);
+                            canvas.toBlob((blob) => {
+                                const resizedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+                                originalImageFile = resizedFile;
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(resizedFile);
+                                imageFileInput.files = dataTransfer.files;
+                                imagePreview.src = canvas.toDataURL('image/jpeg', 0.8);
+                                imagePreview.style.display = 'block';
+                                editorTrigger.style.display = 'block';
+                            }, 'image/jpeg', 0.8);
+                        } else {
+                            imagePreview.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                            editorTrigger.style.display = 'block';
+                        }
+                    };
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+                editorTrigger.style.display = 'none';
+            }
+        });
+
+        // Abrir editor de imagem
+        editImageBtn.addEventListener('click', () => {
+            if (!originalImageFile) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                cropperContainer.innerHTML = '<img id="imageToCrop" style="max-width: 100%; max-height: 100%;">';
+                const imageToCrop = document.getElementById('imageToCrop');
+                imageToCrop.src = e.target.result;
+                
+                imageToCrop.onload = () => {
+                    if (cropper) cropper.destroy();
+                    
+                    // Configurações do Cropper.js - AQUI VOCÊ PODE AJUSTAR OS TAMANHOS E COMPORTAMENTOS
+                    cropper = new Cropper(imageToCrop, {
+                        aspectRatio: 1, // Proporção 1:1 (quadrado)
+                        viewMode: 1, // Modo de visualização restrito ao contêiner
+                        autoCropArea: 0.8, // 80% da imagem coberta inicialmente
+                        responsive: true, // Redimensiona automaticamente
+                        restore: false, // Não restaura a imagem após redimensionamento
+                        checkCrossOrigin: false, // Desativa verificação de cross-origin
+                        checkOrientation: true, // Corrige orientação da imagem
+                        modal: true, // Mostra o modal escuro ao redor da área de recorte
+                        guides: true, // Mostra linhas guia
+                        center: true, // Centraliza as linhas guia
+                        highlight: true, // Destaca a área de recorte
+                        background: true, // Mostra o fundo do contêiner
+                        movable: true, // Permite mover a imagem
+                        rotatable: true, // Permite rotacionar
+                        scalable: true, // Permite escalar
+                        zoomable: true, // Permite zoom
+                        zoomOnTouch: true, // Permite zoom com toque
+                        zoomOnWheel: true, // Permite zoom com roda do mouse
+                        wheelZoomRatio: 0.1, // Sensibilidade do zoom
+                        cropBoxMovable: true, // Permite mover a caixa de recorte
+                        cropBoxResizable: true, // Permite redimensionar a caixa de recorte
+                        toggleDragModeOnDblclick: true, // Alterna modo de arrasto com duplo clique
+                        
+                        // Tamanhos mínimos e máximos (AQUI VOCÊ PODE AJUSTAR OS LIMITES)
+                        minCanvasWidth: 100,
+                        minCanvasHeight: 100,
+                        minCropBoxWidth: 100,
+                        minCropBoxHeight: 100,
+                        minContainerWidth: 300,
+                        minContainerHeight: 200,
+                        
+                        ready() {
+                            imageEditorContainer.style.display = 'block';
+                            
+                            // Ajusta o tamanho da crop-box inicial se necessário
+                            const containerData = cropper.getContainerData();
+                            const cropBoxWidth = Math.min(containerData.width, containerData.height) * 0.8;
+                            cropper.setCropBoxData({
+                                width: cropBoxWidth,
+                                height: cropBoxWidth
+                            });
+                        }
+                    });
+                };
+            };
+            reader.readAsDataURL(originalImageFile);
+        });
+
+        // Controles do editor
+        cancelEditBtn.addEventListener('click', () => {
+            imageEditorContainer.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+
+        confirmEditBtn.addEventListener('click', async () => {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 300, // Largura final da imagem recortada
+                    height: 300, // Altura final da imagem recortada
+                    minWidth: 256, // Tamanho mínimo
+                    minHeight: 256,
+                    maxWidth: 1024, // Tamanho máximo
+                    maxHeight: 1024,
+                    fillColor: '#fff', // Cor de fundo para áreas transparentes
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+
+                canvas.toBlob((blob) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        
+                        const editedFile = new File([blob], originalImageFile.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(editedFile);
+                        imageFileInput.files = dataTransfer.files;
+                        
+                        originalImageFile = editedFile;
+                    };
+                    reader.readAsDataURL(blob);
+                    
+                    imageEditorContainer.style.display = 'none';
+                    cropper.destroy();
+                    cropper = null;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Imagem ajustada!',
+                        text: 'Sua foto foi editada com sucesso.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }, 'image/jpeg', 0.7); // Qualidade de 70%
+            }
+        });
+
+        // Envio do formulário
+        playerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
+
+            Swal.fire({
+                title: 'Aguarde...',
+                text: 'Realizando o pré-cadastro...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const file = imageFileInput.files[0];
+                let imageUrl = null;
+
+                if (file) {
+                    const storagePath = `players/${Date.now()}_${file.name}`;
+                    const fileRef = storageRef(storage, storagePath);
+                    await uploadBytes(fileRef, file);
+                    imageUrl = await getDownloadURL(fileRef);
+                }
+
+                const playerData = {
+                    name: nameInput.value,
+                    email: emailInput.value.trim(),
+                    imageUrl: imageUrl,
+                    position: positionInput.value,
+                    contact: contactInput.value,
+                    category: categoryInput.value,
+                    pendingAccount: true,
+                    createdAt: new Date().toISOString()
+                };
+
+                const newPlayerRef = push(ref(database, 'players'));
+                await set(newPlayerRef, playerData);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso!',
+                    text: 'Pré-cadastro realizado com sucesso! Redirecionando para criar senha...',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                setTimeout(() => {
+                    window.location.href = `criar_login.html?email=${encodeURIComponent(playerData.email)}`;
+                }, 1500);
+
+            } catch (error) {
+                console.error("Erro no pré-cadastro:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Falha no pré-cadastro: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
+            }
+        });
+
+        function clearForm() {
+            playerForm.reset();
+            imagePreview.style.display = 'none';
+            editorTrigger.style.display = 'none';
+            imageEditorContainer.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+    </script>
+</body>
+</html>
