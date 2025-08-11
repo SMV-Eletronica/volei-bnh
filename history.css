@@ -89,7 +89,7 @@ body {
   background-position: right 10px top 50%;
   background-size: 12px auto;
   cursor: pointer;
-  width: 200px;
+  width: 100px;
 }
 
 .filter-select:focus {
@@ -403,12 +403,12 @@ body {
     .gallery-grid {   
       height: 100px; /* Altura fixa, ajuste conforme necessário */
  }
-
+/*
   .filter-container {
     flex-direction: column; /* Empilha os filtros em telas pequenas */
-    align-items: stretch; /* Estica os itens para largura total */
-  }
-
+  /*  align-items: stretch; /* Estica os itens para largura total */
+ /* }
+*/
   .filter-container > div {
     min-width: unset; /* Remove a largura mínima para que se ajustem melhor */
     width: 100%; /* Ocupa a largura total */
