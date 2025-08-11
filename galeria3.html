@@ -966,14 +966,14 @@
           
           let headerHtml = `
             <div class="game-header">
-              <h3>Histórico de Presença: ${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
+              <h3>Jogo: ${formattedDate} - ${dayOfWeek} às ${formattedTime}</h3>
           `;
           
           if (game.myStatus) {
             headerHtml += `<span class="my-status">(${game.myStatus === 'confirmed' ? 'Participou' : ''})</span>`;
           }
           
-          headerHtml += `</div>Total presentes: ${Object.keys(game.confirmedPlayers || {}).length} Jogadores`;
+          headerHtml += `</div>Participantes: ${Object.keys(game.confirmedPlayers || {}).length}`;
           
           let playersHtml = '<div class="players-grid">';
           
@@ -986,7 +986,7 @@
                   <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
                 </div>
                 <div class="player-tooltip">
-                  <strong>${playerData.name}</strong><br>${playerData.position || 'Posição não definida'}
+                  <strong>${playerData.name}</strong><p>${playerData.category}<br>${playerData.position || 'Posição não definida'}
                 </div>
               </div>
             `;
