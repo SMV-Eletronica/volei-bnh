@@ -862,6 +862,7 @@ table tr:hover {
 .swal-wide {
     width: 99% !important;
     max-width: 600px !important;
+    justify-items: center !important;
 }
 
 .swal-content {
