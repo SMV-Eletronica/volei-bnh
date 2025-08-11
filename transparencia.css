@@ -845,6 +845,7 @@ table tr:hover {
 
 .swal2-confirm {
     background-color: var(--primary) !important;
+    margin-bottom: 20px;
 }
 
 .swal2-confirm:hover {
