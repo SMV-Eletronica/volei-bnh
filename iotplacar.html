@@ -1,0 +1,543 @@
+
+
+        
+    
+</html>
+
+<!doctype html>
+<html lang=pt-BR></html>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width,initial-scale=1.0">
+<title>Smart Placar - SMV Eletrônica</title>
+
+<style>
+
+body {
+    display:-webkit-flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:90vh;
+    margin:0;
+    font-family:Arial,sans-serif;
+    background-color:#ffffff;
+    -webkit-user-select:  none; /* server para que não seja selecionado o texto na página*/
+    user-select:none; /* server para que não seja selecionado o texto na página*/
+   
+}
+
+footertop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-color: #00090a;
+            backdrop-filter: blur(5px);
+            clip-path: polygon(0 0, 100% 0, 100% 100px, 50% 80px, 0 100px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5em;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+
+
+.empresa{
+    color: rgb(36, 5, 107);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: xx-large;
+    font-style:oblique;  
+    padding: 25px;
+    
+}
+
+
+.scoreboard {
+    display:flex;
+    justify-content:space-around;
+    width:100%;
+    max-width:600px;
+    text-align:center
+}
+.team {
+    margin:20px ;
+    color: #000000;
+}
+.display {
+    font-size:5em;
+    font-family:'Courier New',Courier,monospace;
+    background:#000;
+    color:rgb(255, 2, 2);
+    padding:10px;
+    border-radius:10px;
+    width:130px;
+    margin:0 auto
+    
+}
+.buttons {
+    margin-top:20px;
+    text-align:center;        
+}
+
+button2 {
+    padding: 10px 10px 10px 10px ;
+    text-align: center;
+    font-size:1em;
+    margin:5px;
+    cursor:pointer;
+    background-color:#b90b0b86;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    transition:background-color .3s    
+    
+}
+
+
+button {
+    padding: 15px 15px 15px 15px ;
+    text-align: center;
+    font-size:2em;
+    margin:5px;
+    cursor:pointer;
+    background-color:#00475386;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    transition:background-color .3s    
+    
+}
+
+buttonmenos {
+    padding: 15px 19px 15px 19px ;
+    text-align: center;
+    font-size:2em;
+    margin:5px;
+    cursor:pointer;
+    background-color:#db290a;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    transition:background-color .3s
+    
+    
+}
+
+button:active {
+    background-color:#0056b3
+}
+
+buttonmenos:active {
+    background-color:#0056b3
+}
+
+.reset-button {
+    margin-top:0px
+}
+.reset-button button {
+    font-size:1em;
+    background-color:rgb(57, 55, 80)
+}
+.reset-button button:active {
+    background-color:rgb(52, 21, 167)
+}
+
+.p {
+  color: #ce7e98;
+  margin: 15px 0 10px 0;
+  font-size: 1rem;
+  font-weight: 300;  
+  font-size:small;
+}
+
+
+       
+        /* Estilização do conteúdo */
+        .content2 {
+            padding: 20px;
+        }
+
+       
+
+        /* Estilização do rodapé */
+        .footer2 {
+            position:fixed;
+            background-color: #00090a;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px 10px 5px 10px;
+            font-size: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;               
+            bottom: 0;
+            width: 90%;
+            border-radius:100px;
+        }
+        .footer-section {
+            text-align: center;
+            flex: 1 1 10px;
+            margin: 10px; /* Reduzido pela metade */
+        }
+
+        .footer-section a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .icon {
+            width: 25px; /* Reduzido pela metade */
+            height: 25px; /* Reduzido pela metade */            
+        }        
+
+        .green {
+            fill: rgb(43, 223, 26);
+            width: 30px; /* Reduzido pela metade */
+            height: 30px; /* Reduzido pela metade */
+        }
+
+        .footer-section p {
+            margin-top: 5px; /* Reduzido pela metade os tamanhos dos icones no footer */
+            font-size: 15px; /* Reduzido pela metade os tamanhos dos icones no footer */
+            color: #ffffff;
+            
+        }
+
+        @media (max-width: 600px) {
+            .icon {
+                width: 30px; /* Reduzido pela metade os tamanhos dos icones no footer */
+                height: 30px; /* Reduzido pela metade os tamanhos dos icones no footer */
+                
+            }
+
+            .footer-section p {
+                font-size: 10px; /* Reduzido pela metade fonte no footer */
+            }
+        
+        }
+
+/*exclusivo para inverter o placar*/   
+
+        .inverter {
+            display: flex;
+            flex-direction: row;
+        }
+        .reversed {
+            flex-direction: row-reverse ;
+        }
+
+        /*
+        .div5, .div6 {
+            padding: 155px;
+            margin: 155px;
+            border: 1px solid #000;
+        } */
+
+        
+</style>
+
+    
+    
+    <footer class="footer2">
+
+        <div class="footer-section">
+            
+            <a href="javascript:abrirPopup1()">              
+                
+                <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-width="1.8" d="M20 6H10m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1-4 0m0 0H4m16 6h-2m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1-4 0m0 0H4m16 6H10m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1-4 0m0 0H4"/></svg>
+                <br>Pontuação: 
+                
+               
+            </a>
+        </div>
+
+        
+
+        <div class="footer-section">
+            <a href="javascript:toggleDivs()">
+
+                <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3"/>
+                </svg>
+                <br>Inverter Placar                
+            </a>
+        </div>
+
+        <div class="footer-section">
+            <a href="javascript:resetScores()" >
+                
+                <svg class="green" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="m3 2 1.578 17.834L12 22l7.468-2.165L21 2H3Zm13.3 14.722-4.293 1.204H12l-4.297-1.204-.297-3.167h2.108l.15 1.526 2.335.639 2.34-.64.245-3.05h-7.27l-.187-2.006h7.64l.174-2.006H6.924l-.176-2.006h10.506l-.954 10.71Z"/>
+                  </svg>
+                  
+                <br>Nova Partida            
+            </a>
+            
+        </div>
+
+        <div class="footer-section">
+            <a href="javascript:abrirPopup2()">               
+                <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                  </svg>
+                  
+                <br>Informações
+            </a>
+        </div>
+
+        
+    </footer>
+    
+    
+
+
+
+
+<div class=footertop> 
+    <footertop>
+    Smart Placar&trade;  &NoBreak; <h6><br>&nbsp; SMV Eletrônica-Iot&reg;
+    </footertop></div>        
+   
+
+    <div id="popup1" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background-color:white; padding:15px; border:1px solid black;">
+        <h3>Defina a pontuação para vencer a partida</h3>
+        
+        <select id="valorSelect">
+            <!-- Gerando opções de 1 a 25 -->
+            <script>
+                for (var i = 1; i <= 25; i++) {
+                    document.write('<option value="' + i + '">' + i + '</option>');
+                }                
+            </script>
+        
+        </select>
+        <h3>Defina a diferença de pontos para vencer a partida.</h3> 
+        <select id="valorSelect2">
+            <!-- Gerando opções de 1 a 3 -->
+            <script>
+                for (var i = 1; i <= 3; i++) {
+                    document.write('<option value="' + i + '">' + i + '</option>');
+                }
+            </script>
+        </select><br><br><br>
+
+        <button2 type="button" onclick="definirValor(); definirValor2();">Definir Valores</button>
+
+        <!-- <button2 onclick="definirValor(); definirValor()2;">Definir Valor</button2>-->
+    </div>    
+
+
+<div id="popup2" style="display:none; width: 250px; height: 300px;  position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); color: #000000; background-color:rgb(255, 255, 255); padding:20px; border:1px solid rgb(0, 0, 0);">
+   <h4>Copyright © 2024 <br>SMV Eletrônica-Iot&reg;
+    <br>Design by Marcio Vasques.</h4>
+    Esta Aplicação/Produto ou qualquer parte dele não pode ser reproduzido, copiado ou usado de forma alguma para outros fins sem autorização.<br>
+    <br>Smart Placar&trade; 
+    <br>Modelo/versão:MVHV-1510/24.</p>
+    
+ <!-- Gerando opções de 1 a 3 
+    <select id="valorSelect2">
+       
+        <script>
+            for (var i = 1; i <= 3; i++) {
+                document.write('<option value="' + i + '">' + i + '</option>');
+            }
+        </script>
+    </select>
+    -->
+    <button2 onclick="fecharPopup2()">Fechar</button2>
+</div>
+
+
+<div id="resultado"></div>
+<div id="resultado2"></div>
+<!--
+<div>
+    <input type="checkbox" id="toggle" onclick="toggleDivs()"> 
+    inverter Placar<br>
+</div>
+-->
+<div class=scoreboard>
+
+    
+
+    <div class="inverter" id="inverter">
+       
+        <div class=team><h2>Time A</h2>
+          <div class=display id=scoreA>00</div>
+          <div id=winsA>Vitórias: 0</div>
+           <div class=buttons>
+                 <button onclick='incrementScore("A")'>+</button> 
+                 <buttonmenos onclick='decrementScore("A")'>-</buttonmenos>
+        </div>
+    
+    </div> 
+
+
+
+    <div class=team><h2>Time B</h2>
+        <div class=display id=scoreB>00</div>
+        <div id=winsB>Vitórias: 0</div>
+            <div class=buttons>
+                <button onclick='incrementScore("B")'>+</button> 
+                <buttonmenos onclick='decrementScore("B")'>-</buttonmenos>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleDivs() {
+        const container = document.getElementById('inverter');
+        container.classList.toggle('reversed');
+    }
+</script>
+
+
+    <div class="buttons reset-button">
+
+   <!--  <button onclick=resetScores()>Nova Partida</button>-->
+    </div>
+
+    <script>
+    
+    let scoreA = 0;
+    let scoreB = 0;
+    let winsA = 0;
+    let winsB = 0;
+    let winningScore = 25;
+    let venceu =0;
+    let dif =0;
+
+
+/*
+window.onload = function()  {
+    winningScore = parseInt(prompt("Digite a quantidade de pontos necessários para vencer:", "25"));
+    if (isNaN(winningScore) || winningScore <= 0)  {
+        winningScore = 25;
+    }
+};
+*/
+
+
+function incrementScore(team)  {
+
+    if (team === 'A' && venceu !=1)  {
+        scoreA++;
+        fetch('http://iotplacar.local/H');
+        document.getElementById('scoreA').innerText = scoreA.toString().padStart(2, '0');
+    }
+    else if (team === 'B' && venceu !=1)  {
+        scoreB++;
+        fetch('http://iotplacar.local/ON');
+        document.getElementById('scoreB').innerText = scoreB.toString().padStart(2, '0');
+    }
+    checkWinner();
+}
+function decrementScore(team)  {
+    if (team === 'A' && scoreA > 0 && venceu !=1)  {
+        scoreA--;
+        fetch('http://iotplacar.local/L');
+        document.getElementById('scoreA').innerText = scoreA.toString().padStart(2, '0');
+    }
+    else if (team === 'B' && scoreB > 0 && venceu !=1)  {
+        scoreB--;
+        fetch('http://iotplacar.local/OFF');
+        document.getElementById('scoreB').innerText = scoreB.toString().padStart(2, '0');
+    }
+}
+function checkWinner()  {
+  var texto = " " + scoreA;//**** funcionou com o api whatsaap
+  var texto2 = " a " + scoreB;
+  var completo = texto+texto2;
+  
+    if (scoreA >= winningScore && (scoreA - scoreB) >= dif) {
+       if(venceu !=1)
+        winsA++;
+        alert('Time A é o vencedor!' + texto);
+        fetch('https://api.callmebot.com/whatsapp.php?phone=351911196935&apikey=1028677&text=Time+A+venceu+partida:+'+ completo);
+        venceu =1;
+        // resetScores();
+        document.getElementById('winsA').innerText = 'Vitórias: ' + winsA;
+    }
+    else if (scoreB >= winningScore && (scoreB - scoreA) >= dif)  {
+        if(venceu !=1)
+        winsB++;
+        alert('Time B é o vencedor!');
+        venceu = 1;
+        //resetScores();
+        document.getElementById('winsB').innerText = 'Vitórias: ' + winsB;
+    }
+}
+function resetScores()  {
+    scoreA = 0;
+    scoreB = 0;
+    venceu =0;
+    document.getElementById('scoreA').innerText = '00';
+    document.getElementById('scoreB').innerText = '00';
+    fetch('http://iotplacar.local/ACABOU');
+}
+
+
+
+
+  
+
+</script>
+
+
+
+<script>
+
+
+    function abrirPopup1() {
+        document.getElementById("popup1").style.display = "block";
+    }
+
+    function abrirPopup2() {
+        document.getElementById("popup2").style.display = "block";
+    }
+
+    function fecharPopup() {
+       
+        document.getElementById("popup1").style.display = "none";
+       
+    }
+
+    function fecharPopup2() {
+        document.getElementById("popup2").style.display = "none";
+        
+    }
+
+
+    function definirValor() {
+        var select = document.getElementById("valorSelect");
+        var valor = select.options[select.selectedIndex].value;
+        winningScore = valor;
+       // document.getElementById("win").innerText = winningScore;
+      // document.getElementById("resultado").innerText = "Pontuação para vencer: " + valor;
+        fecharPopup();
+    }
+
+    function definirValor2() {
+        var select = document.getElementById("valorSelect2");
+        var valor = select.options[select.selectedIndex].value;       
+        dif = valor;
+        document.getElementById("dif2").innerText = dif;
+       // document.getElementById("resultado2").innerText = "Diferença para vencer: " + valor;
+       
+        fecharPopup2();
+     
+    
+    }
+
+    
+        
+  
+</script>
+
