@@ -43,13 +43,13 @@ body {
 .filter-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px; /* Aumenta o espaçamento entre os itens */
-  margin-bottom: 30px; /* Mais espaço abaixo do container */
+  gap: 10px; /* Aumenta o espaçamento entre os itens */
+  /*margin-bottom: 30px; /* Mais espaço abaixo do container */
   padding: 20px; /* Aumenta o padding interno */
-  background: #ffffff; /* Fundo branco para se destacar */
-  border-radius: 10px; /* Bordas mais arredondadas */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Sombra mais pronunciada e suave */
-  justify-content: center;
+/* background: #ffffff; /* Fundo branco para se destacar */
+  /* border-radius: 10px; /* Bordas mais arredondadas */
+/*  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Sombra mais pronunciada e suave */
+  align-items: flex-end; /* Alinha os itens pela parte de baixo */
 }
 
 .filter-container > div {
@@ -415,7 +415,7 @@ body {
   }
 
   .filter-btn {
-    width: 50%; /* Botão ocupa a largura total em telas pequenas */
+    width: 100%; /* Botão ocupa a largura total em telas pequenas */
   }
 }
     
