@@ -49,7 +49,7 @@ body {
   background: #ffffff; /* Fundo branco para se destacar */
   border-radius: 10px; /* Bordas mais arredondadas */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Sombra mais pronunciada e suave */
-  align-items: flex-end; /* Alinha os itens pela parte de baixo */
+  justify-content: center;
 }
 
 .filter-container > div {
