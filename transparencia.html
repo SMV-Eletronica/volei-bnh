@@ -800,7 +800,9 @@ async function showDefaulterDetails(playerId, playerName) {
                             comprovanteStatus: payment.comprovanteStatus,
                             comprovanteUploadedAt: payment.comprovanteUploadedAt,
                             additionalInfo: payment.additionalInfo || null,
-                            paymentType: payment.paymentType || null
+                            paymentType: payment.paymentType || null,
+                            createdAt: payment.createdAt || null,
+
                         });
                     }
                 }
@@ -835,6 +837,9 @@ async function showDefaulterDetails(playerId, playerName) {
                 const monthName = getMonthName(payment.month);
                 const formattedDate = `${monthName}/${payment.year}`;
                 const description = payment.additionalInfo || payment.paymentType || '-';
+                //const dia = payment.createdAt || '-';
+                const dia = payment.createdAt ? formatDate(payment.createdAt) : '-';
+
                 
                 // Status do comprovante com emojis
                 const comprovanteStatus = payment.comprovanteStatus 
@@ -871,7 +876,7 @@ async function showDefaulterDetails(playerId, playerName) {
                     <tr id="payment-row-${payment.paymentId}">
                         <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">${formattedDate}</td>
                         <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">R$ ${payment.value.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">${description}</td>
+                        <td style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">${description}<br>${dia}</td>
                         <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 10px 1px 10px 1px; text-align: center;">
                             ${comprovanteLink} ${comprovanteStatus}
                         </td>
