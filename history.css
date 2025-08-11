@@ -415,7 +415,7 @@ body {
   }
 
   .filter-btn {
-    width: 100%; /* Botão ocupa a largura total em telas pequenas */
+    width: 50%; /* Botão ocupa a largura total em telas pequenas */
   }
 }
     
