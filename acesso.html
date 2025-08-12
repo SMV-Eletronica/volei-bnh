@@ -33,6 +33,17 @@
       padding: 8px;
       margin-right: 10px;
     }
+    .delete-btn {
+      padding: 8px;
+      background-color: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background-color: #cc0000;
+    }
   </style>
 </head>
 <body>
@@ -67,6 +78,7 @@
       <input type="text" id="userSearch" placeholder="Filtrar por nome">
       <input type="date" id="dateFilter">
       <button id="applyFilters"><i class="fas fa-filter"></i> Filtrar</button>
+      <button id="deleteFiltered" class="delete-btn"><i class="fas fa-trash-alt"></i> Excluir Filtrados</button>
     </div>
     <table class="access-table">
       <thead>
@@ -81,7 +93,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -101,6 +113,7 @@
 
     const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandroAsyncronousFunctionCall@msn.com'];
     let emailLogado = null;
+    let currentFilteredActivities = []; // Armazena os registros atualmente filtrados
 
     // Função para abrir/fechar o menu lateral
     const menuToggle = document.getElementById('menuToggle');
@@ -174,6 +187,7 @@
 
     // Função para exibir registros de acesso
     function displayAccessLogs(activities) {
+      currentFilteredActivities = activities; // Atualiza os registros filtrados atuais
       const accessList = document.getElementById('accessList');
       accessList.innerHTML = '';
       activities.forEach(activity => {
@@ -225,6 +239,57 @@
           title: 'Erro',
           text: 'Erro ao aplicar filtros.',
         });
+      }
+    });
+
+    // Excluir registros filtrados
+    document.getElementById('deleteFiltered').addEventListener('click', async () => {
+      if (currentFilteredActivities.length === 0) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Nada para excluir',
+          text: 'Não há registros filtrados para excluir.',
+        });
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: 'Tem certeza?',
+        text: `Você está prestes a excluir ${currentFilteredActivities.length} registro(s). Esta ação não pode ser desfeita!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          // Excluir cada registro filtrado
+          for (const activity of currentFilteredActivities) {
+            const activityRef = ref(database, `userActivity/${activity.year}/${activity.month}/${activity.id}`);
+            await remove(activityRef);
+          }
+
+          await Swal.fire({
+            icon: 'success',
+            title: 'Excluído!',
+            text: `Os ${currentFilteredActivities.length} registro(s) foram excluídos com sucesso.`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // Recarregar a lista após exclusão
+          await loadAccessLogs();
+        } catch (error) {
+          console.error('Erro ao excluir registros:', error);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Ocorreu um erro ao tentar excluir os registros.',
+          });
+        }
       }
     });
 
