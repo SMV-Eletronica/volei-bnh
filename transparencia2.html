@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="transparencia.css?v=1.7">
+    <link rel="stylesheet" href="transparencia.css?v=2.3">
 </head>
 <body>
 <!-- cria o loading  -->
@@ -20,9 +20,9 @@
 <!--termina o código do loading-->
 
     <div class="header">
-        <button class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </button>
+        <button class="menu-toggle" id="menuToggle" style="font-size: 11px;">
+      <i class="fas fa-bars" style="font-size: 20px;"></i><br><strong>Menu</strong>
+    </button>
         <center><h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2></center>        
     </div>
     <div class="sidebar" id="sidebar">
@@ -32,13 +32,14 @@
                 <div class="sidebar-user-info">
                     <div id="sidebarUserName" class="sidebar-user-name"></div>
                     <div id="sidebarUserPosition" class="sidebar-user-position"></div>
-                    <div id="userEmail" class="sidebar-user-position"></div>
+                    <div id="sidebarUserCategory" class="sidebar-user-position"></div>
                 </div>
             </div>
-            <button id="loginBtn" class="logout-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-gear"></i> Administração</button>
-            <button id="transparenciaBtn" class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
-            <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
-            <button id="listaBtn" class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+            
+            <button id="transparenciaBtn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+            <button onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+            <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+            <button class="logout-btn" onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
         </div>
         <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
     </div>
@@ -56,7 +57,9 @@
             <div class="section">
 
                 <h2 class="section-title"><i class="fas fa-money-bill-wave"></i> Demonstrativo Financeiro</h2>
-                
+                <div class="pix-button-container">
+                    <button id="copyPixBtn" class="pix-btn"><i class="fas fa-copy"></i> Copiar PIX</button>
+                </div>
 
                 <div class="filter-controls">
                     <div>
@@ -85,8 +88,6 @@
                     </div>
                 </div>
                 <div id="cashSummary" class="cash-summary">
-
-                    
 
                     <div class="cash-summary-grid">
                         <div class="cash-summary-item">
@@ -125,7 +126,7 @@
                 <br>
                 <div class="defaulters-section">
                     <h3><i class="fas fa-exclamation-triangle"></i> Contribuições Pendentes.</h3>
-                    <strong>Clique para abrir...</strong>
+                    <strong>Clique para Exibir...</strong>
                     <div id="defaultersList" class="defaulters-list">
                         <div class="no-defaulters">Carregando informações...</div>
                     </div>
@@ -157,9 +158,9 @@
                 </div>
                 <div class="profile-container">
                     <div class="profile-header">
-                        <button id="prevPlayer" class="nav-arrow" aria-label="Jogador anterior">←</button>
+                        <button id="prevPlayer" class="nav-arrow" aria-label="Jogador anterior"><i class="fas fa-angle-double-left" style="font-size: 20px;"></i></button>
                         <img id="profilePhoto" class="profile-photo" src="" alt="Foto do integrante">
-                        <button id="nextPlayer" class="nav-arrow" aria-label="Próximo jogador">→</button>
+                        <button id="nextPlayer" class="nav-arrow" aria-label="Próximo jogador"><i class="fas fa-angle-double-right" style="font-size: 20px;"></i></button>
                     </div>
                     <div class="profile-details">
                         <h2 id="profileName" class="profile-name">Carregando...</h2>
@@ -226,8 +227,6 @@
         import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
-        // Se só precisar da função de comprovantes
-        //import { sendReceiptNotification } from './pushNotificationsadm.js';
         import { sendPushNotification, sendReceiptNotification } from './pushNotificationsadm.js';
 
         const firebaseConfig = {
@@ -260,7 +259,7 @@
         const totalExpensesElement = document.getElementById('totalExpenses');
         const currentBalanceElement = document.getElementById('currentBalance');
         const logoutBtn = document.getElementById('logoutBtn');
-        const loginBtn = document.getElementById('loginBtn');
+        
         const profilePhoto = document.getElementById('profilePhoto');
         const profileName = document.getElementById('profileName');
         const playerPosition = document.getElementById('playerPosition');
@@ -280,6 +279,7 @@
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
+        const copyPixBtn = document.getElementById('copyPixBtn');
 
         // Variáveis globais
         let players = [];
@@ -289,7 +289,63 @@
         let isAdmin = false;
         let currentUserPlayer = null;
         let allPlayers = [];
-        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'teste@msn.com'];
+        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
+
+        // Função para copiar a chave PIX
+        async function copyPixKey() {
+            const pixKey = "SUA_CHAVE_PIX_AQUI"; // Substitua pela chave PIX real
+            try {
+                await navigator.clipboard.writeText(pixKey);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Chave PIX Copiada!',
+                    text: 'A chave PIX foi copiada para a área de transferência.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                console.error('Erro ao copiar chave PIX:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível copiar a chave PIX.',
+                });
+            }
+        }
+
+        // Event listener para o botão Copiar PIX
+        copyPixBtn.addEventListener('click', copyPixKey);
+
+        // Nova função para criar e inserir o botão Dashboard
+function createDashboardButton() {
+    const sidebarMenu = document.querySelector('.sidebar-menu'); // Pega o contêiner dos botões
+    if (!sidebarMenu) {
+        console.error("Elemento '.sidebar-menu' não encontrado.");
+        return;
+    }
+
+    // Cria o novo elemento div/span
+    const dashboardLink = document.createElement('div');
+    dashboardLink.id = 'dashboardLink'; // Atribui um ID
+    dashboardLink.classList.add('sidebar-btn'); // Atribui a classe de estilo
+
+    // Adiciona o ícone e o texto
+    dashboardLink.innerHTML = '<i class="fas fa-gear"></i> Administração';
+
+    // Adiciona o evento de clique
+    dashboardLink.addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+    });
+
+    // Encontra o botão "Transparência" para inserir o Dashboard antes dele
+    const transparenciaBtn = document.getElementById('transparenciaBtn');
+    if (transparenciaBtn) {
+        sidebarMenu.insertBefore(dashboardLink, transparenciaBtn);
+    } else {
+        // Se por algum motivo o Transparência não existir, adicione no final
+        sidebarMenu.appendChild(dashboardLink);
+    }
+}
 
         // Função para abrir/fechar o menu lateral
         function toggleSidebar() {
@@ -304,10 +360,8 @@
         function updateButtonVisibility(user) {
             if (user) {
                 logoutBtn.style.display = 'block';
-                loginBtn.style.display = isAdmin ? 'inline-block' : 'none';
             } else {
                 logoutBtn.style.display = 'none';
-                loginBtn.style.display = 'inline-block';
             }
         }
 
@@ -324,6 +378,11 @@
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
                 const player = await loadCurrentUserPlayer();
+
+                // Se for admin, crie o botão Dashboard aqui
+                if (isAdmin) {
+                    createDashboardButton();
+                }
                 
                 // Atualiza a foto e o nome no sidebar
                 const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
@@ -338,7 +397,6 @@
                 
                 sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                 
-                document.getElementById('userEmail').textContent = `${user.email}`;
                 updateButtonVisibility(user);
                 await loadCurrentUserPlayer();
                 loadFinancialData();
@@ -368,10 +426,6 @@
             }
         });
 
-        loginBtn.addEventListener('click', () => {
-            window.location.href = 'dashboard.html';
-        });
-
         async function loadCurrentUserPlayer() {
             try {
                 const playersRef = ref(database, 'players');
@@ -387,6 +441,7 @@
                     const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
                     const sidebarUserName = document.getElementById('sidebarUserName');
                     const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+                    const sidebarUserCategory = document.getElementById('sidebarUserCategory');
 
                     if (currentUserPlayer?.imageUrl) {
                         sidebarUserPhoto.src = currentUserPlayer.imageUrl;
@@ -397,6 +452,7 @@
 
                     sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                     sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
+                    sidebarUserCategory.textContent = currentUserPlayer?.category || "Categoria não definida";
                 }
             } catch (error) {
                 console.error('Erro ao carregar dados do jogador:', error);
@@ -720,10 +776,6 @@
             });
         }
 
-
-
-
-
 async function showDefaulterDetails(playerId, playerName) {
     const paymentsRef = ref(database, 'payments');
     try {
@@ -738,6 +790,7 @@ async function showDefaulterDetails(playerId, playerName) {
                 for (const paymentId in monthPayments) {
                     const payment = monthPayments[paymentId];
                     if (payment.playerId === playerId && !payment.date && payment.value > 0) {
+                        // Extrai mês e ano corretamente do campo payment.month
                         const [paymentYear, paymentMonth] = payment.month.includes('-') 
                             ? payment.month.split('-') 
                             : [year, month.padStart(2, '0')];
@@ -753,7 +806,7 @@ async function showDefaulterDetails(playerId, playerName) {
                             comprovanteUploadedAt: payment.comprovanteUploadedAt,
                             additionalInfo: payment.additionalInfo || null,
                             paymentType: payment.paymentType || null,
-                            comprovanteRejectReason: payment.comprovanteRejectReason || null
+                            createdAt: payment.createdAt || null,
                         });
                     }
                 }
@@ -771,90 +824,76 @@ async function showDefaulterDetails(playerId, playerName) {
             detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
         } else {
             detailsHtml += `
-                <div style="max-height: 60vh; overflow-y: auto;">
-                    <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                        <thead>
-                            <tr style="background-color: #f2f2f2; position: sticky; top: 0;">
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Ref.</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Valor (R$)</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Descrição</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Comprovante</th>
-                                ${showUploadButtons ? '<th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Ações</th>' : ''}
-                            </tr>
-                        </thead>
-                        <tbody>
+                <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ref.</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">(R$)</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Descr.</th>
+                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Comp.</th>
+                            ${showUploadButtons ? '<th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ações</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
             `;
             
             defaulterPayments.forEach(payment => {
                 const monthName = getMonthName(payment.month);
                 const formattedDate = `${monthName}/${payment.year}`;
                 const description = payment.additionalInfo || payment.paymentType || '-';
+                const dia = payment.createdAt ? formatDate(payment.createdAt) : '-';
                 
-                // Status do comprovante
-                let comprovanteStatus = '';
-                let comprovanteClass = '';
-                
-                if (payment.comprovanteStatus === 'pendente') {
-                    comprovanteStatus = '🕒 Pendente';
-                    comprovanteClass = 'pending';
-                } else if (payment.comprovanteStatus === 'aprovado') {
-                    comprovanteStatus = '✅ Aprovado';
-                    comprovanteClass = 'approved';
-                } else if (payment.comprovanteStatus === 'rejeitado') {
-                    comprovanteStatus = `❌ Rejeitado (${payment.comprovanteRejectReason || 'sem motivo'})`;
-                    comprovanteClass = 'rejected';
-                } else {
-                    comprovanteStatus = '⚠️ Não enviado';
-                    comprovanteClass = 'missing';
-                }
+                // Status do comprovante com emojis
+                const comprovanteStatus = payment.comprovanteStatus 
+                    ? (payment.comprovanteStatus === 'pendente' 
+                        ? '' 
+                        : payment.comprovanteStatus === 'aprovado' 
+                            ? '👍' 
+                            : `👎 (${payment.comprovanteRejectReason || 'Rejeitado'})`) 
+                    : '👎';
                 
                 // Link para ver comprovante
                 const comprovanteLink = payment.comprovanteURL 
-                    ? `<a href="${payment.comprovanteURL}" target="_blank" style="color: #3498db; text-decoration: none;">Ver</a>` 
+                    ? `<a href="${payment.comprovanteURL}" style="text-decoration: none;" target="_blank">🕒 Ver</a>` 
                     : '';
                 
                 // Botão para enviar comprovante
                 const uploadButton = showUploadButtons ? `
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                    <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">
                         <input type="file" id="comprovante-${payment.paymentId}" 
                                style="display: none;" 
-                               accept="image/*,.pdf,.doc,.docx">
+                               accept="image/*,.pdf">
                         <button onclick="document.getElementById('comprovante-${payment.paymentId}').click()"
-                                style="padding: 6px 12px; background: #4CAF50; color: white; 
+                                style="padding: 4px 8px; background: #4CAF50; color: white; 
                                        border: none; border-radius: 4px; cursor: pointer;
-                                       font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
+                                       font-size: 12px;">
                             <i class="fas fa-upload"></i> Enviar
                         </button>
-                        <span id="upload-status-${payment.paymentId}" style="margin-left: 4px; font-size: 12px;"></span>
+                        <span id="upload-status-${payment.paymentId}" style="margin-left: 4px; font-size: 10px;"></span>
                     </td>
                 ` : '';
                 
-                // Linha da tabela
+                // Adiciona linha na tabela com um identificador único
                 detailsHtml += `
                     <tr id="payment-row-${payment.paymentId}">
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${formattedDate}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${payment.value.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${description}</td>
-                        <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 8px; text-align: center;" class="${comprovanteClass}">
-                            ${comprovanteLink} ${comprovanteStatus}
-                        </td>
+                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${formattedDate}</td>
+                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">R$ ${payment.value.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${description}<br>${dia}</td>
+                        <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;"> ${comprovanteLink} ${comprovanteStatus} </td> 
                         ${uploadButton}
                     </tr>
                 `;
             });
             
             detailsHtml += `
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-                    <p style="font-size: 14px; margin-bottom: 5px;"><strong>Legenda:</strong></p>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        <span style="font-size: 12px;"><span style="color: #FFA500;">🕒</span> Pendente de aprovação</span>
-                        <span style="font-size: 12px;"><span style="color: #28a745;">✅</span> Aprovado</span>
-                        <span style="font-size: 12px;"><span style="color: #dc3545;">❌</span> Rejeitado</span>
-                        <span style="font-size: 12px;"><span style="color: #ffc107;">⚠️</span> Não enviado</span>
-                    </div>
+                    </tbody>
+                </table>
+                <div style="text-align: left; margin-top: 10px;">
+                    <p style="font-size: 14px;">
+                        <strong>Legenda:</strong><br><br>
+                        🕒 Enviado e aguardando aprovação.<br>                        
+                        👎 Comprovante pendente.
+                    </p>
                 </div>
             `;
         }
@@ -883,69 +922,63 @@ async function showDefaulterDetails(playerId, playerName) {
                             if (!file) return;
 
                             const statusElement = document.getElementById(`upload-status-${payment.paymentId}`);
-                            statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                            statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                             statusElement.style.color = '#333';
 
                             try {
                                 // Validações
-                                const validTypes = ['image/jpeg', 'image/png', 'application/pdf', 
-                                                  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                                const maxSize = 5 * 1024 * 1024; // 5MB
-                                
-                                if (file.size > maxSize) {
-                                    throw new Error("Arquivo muito grande (máx. 5MB)");
-                                }
-                                if (!validTypes.includes(file.type)) {
-                                    throw new Error("Formato inválido (use JPG, PNG, PDF ou DOC)");
+                                if (file.size > 5 * 1024 * 1024) throw new Error("Máximo 5MB");
+                                if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
+                                    throw new Error("Apenas imagens/PDF");
                                 }
 
-                                // 1. Deletar comprovante antigo se existir
+                                // 1. Primeiro deleta o comprovante antigo se existir
                                 if (payment.comprovanteURL) {
                                     try {
+                                        // Extrai o caminho do Storage da URL
                                         const urlParts = payment.comprovanteURL.split('/comprovantes%2F');
                                         if (urlParts.length > 1) {
                                             const oldFilePath = decodeURIComponent(urlParts[1].split('?')[0]).replace(/%2F/g, '/');
                                             const oldFileRef = storageRef(storage, `comprovantes/${oldFilePath}`);
                                             await deleteObject(oldFileRef);
+                                            console.log('Comprovante anterior deletado com sucesso');
                                         }
                                     } catch (deleteError) {
-                                        console.warn('Erro ao deletar comprovante anterior:', deleteError);
+                                        console.warn('Não foi possível deletar o comprovante anterior:', deleteError);
+                                        // Não interrompe o processo se falhar ao deletar
                                     }
                                 }
 
-                                // 2. Upload do novo comprovante
+                                // 2. Faz upload do novo comprovante
                                 const storagePath = `comprovantes/${playerId}/${payment.year}/${payment.month}/${payment.paymentId}_${Date.now()}_${file.name}`;
                                 const fileRef = storageRef(storage, storagePath);
                                 await uploadBytes(fileRef, file);
                                 const downloadURL = await getDownloadURL(fileRef);
 
-                                // 3. Atualizar no banco de dados
+                                // 3. Atualiza no Realtime Database
                                 await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
                                     comprovanteURL: downloadURL,
                                     comprovanteStatus: 'pendente',
-                                    comprovanteUploadedAt: new Date().toISOString(),
-                                    comprovanteFileName: file.name
+                                    comprovanteUploadedAt: new Date().toISOString()
                                 });
 
-                                // 4. Atualizar interface
+                                // 4. Atualiza a linha da tabela no popup
                                 const comprovanteCell = document.getElementById(`comprovante-cell-${payment.paymentId}`);
                                 if (comprovanteCell) {
                                     comprovanteCell.innerHTML = `
-                                        <a href="${downloadURL}" target="_blank" style="color: #3498db; text-decoration: none;">Ver</a> 🕒 Pendente
+                                        <a href="${downloadURL}" style="text-decoration: none;" target="_blank">Ver</a> 🕒
                                     `;
-                                    comprovanteCell.className = 'pending';
                                 }
 
                                 // 5. Enviar notificação APENAS PARA ADMINISTRADORES
                                 const currentPlayer = currentUserPlayer || { name: playerName };
                                 const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
-                                
                                 await sendPushNotification(
                                     "📄 Novo comprovante recebido",
-                                    `Jogador: ${currentPlayer.name}\n` +
+                                    `De: ${currentPlayer.name}\n` +
                                     `Valor: R$ ${payment.value.toFixed(2)}\n` +
-                                    `Período: ${monthYear}\n` +
-                                    `Status: Pendente de análise`,
+                                    `Referente: ${monthYear}\n` +
+                                    `Status: 🕒 Pendente de análise`,
                                     null, // Sem imagem
                                     {
                                         playerId: playerId,
@@ -959,47 +992,48 @@ async function showDefaulterDetails(playerId, playerName) {
                                     ["administradores"] // Segmento específico
                                 );
 
-                                statusElement.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Enviado!';
+                                statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
                                 await Swal.fire({
                                     icon: 'success',
-                                    title: 'Sucesso!',
-                                    text: 'Comprovante enviado com sucesso.',
-                                    timer: 2000,
+                                    title: 'Sucesso',
+                                    text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
+                                    timer: 1500,
                                     showConfirmButton: false
                                 });
 
-                                // Atualizar lista de inadimplentes
                                 await loadDefaulters();
                             } catch (error) {
-                                console.error('Erro no upload:', error);
-                                statusElement.innerHTML = `<i class="fas fa-times-circle" style="color: #dc3545;"></i> ${error.message}`;
+                                statusElement.innerHTML = `<i class="fas fa-times" style="color:red"></i> ${error.message}`;
                                 await Swal.fire({
                                     icon: 'error',
                                     title: 'Erro',
-                                    text: error.message,
+                                    text: 'Erro ao enviar comprovante: ' + error.message,
                                 });
-                            } finally {
-                                e.target.value = ''; // Resetar input de arquivo
                             }
                         });
                     }
                 });
             }
         });
-
+        
     } catch (error) {
-        console.error("Erro ao carregar detalhes:", error);
-        await Swal.fire({
+        console.error("Error loading defaulter details:", error);
+        Swal.fire({
             title: 'Erro',
             html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
             icon: 'error',
-            confirmButtonText: 'Fechar'
+            confirmButtonText: 'Fechar',
+            customClass: {
+                popup: 'swal-wide',
+                htmlContainer: 'swal-content'
+            },
+            width: '90%',
+            showCloseButton: true,
+            allowOutsideClick: true,
+            allowEscapeKey: true
         });
     }
 }
-
-
-
 
         async function loadRecentExpenses() {
             const expensesRef = ref(database, 'expenses');
@@ -1289,7 +1323,6 @@ async function showDefaulterDetails(playerId, playerName) {
                     comprovanteUploadedAt: new Date().toISOString()
                 };
                 await update(paymentRef, updateData);
-
                 uploadMessage.style.display = 'block';
                 uploadMessage.textContent = payment.comprovanteURL ? 'Comprovante substituído com sucesso! Aguardando aprovação.' : 'Comprovante enviado com sucesso! Aguardando aprovação.';
                 uploadMessage.style.color = '#28a745';
@@ -1316,29 +1349,43 @@ async function showDefaulterDetails(playerId, playerName) {
             }
         }
 
-        function showPlayer(index) {
-            if (filteredPlayers.length === 0) return;
-            if (index < 0) index = filteredPlayers.length - 1;
-            if (index >= filteredPlayers.length) index = 0;
-            currentPlayerIndex = index;
-            const player = filteredPlayers[index];
-            profileName.textContent = player.name || "-";
-            playerPosition.textContent = player.position || "-";
-            playerCategory.textContent = player.category || "-";
-            playerContact.textContent = player.contact || "-";
-            if (player.imageUrl) {
-                profilePhoto.src = player.imageUrl;
-                profilePhoto.style.display = "block";
-            } else {
-                profilePhoto.style.display = "none";
-            }
-            loadPlayerPayments(player.id);
-            loadPendingPaymentsSelect(player.id);
-            /*o primeiro none abaixo oculta a opção de upload na aba integrantes*/
-            uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
-            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
-            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+function showPlayer(index) {
+    if (filteredPlayers.length === 0) return;
+    if (index < 0) index = filteredPlayers.length - 1;
+    if (index >= filteredPlayers.length) index = 0;
+    currentPlayerIndex = index;
+    const player = filteredPlayers[index];
+    profileName.textContent = player.name || "-";
+    playerPosition.textContent = player.position || "-";
+    playerCategory.textContent = player.category || "-";
+    
+    // Formatar o número de telefone para o WhatsApp
+    let contact = player.contact || "-";
+    if (contact !== "-") {
+        // Remove parênteses, espaços e hífens
+        let cleanedContact = contact.replace(/[\(\)\-\s]/g, '');
+        // Adiciona o código do país +55 se não estiver presente
+        if (!cleanedContact.startsWith('+55')) {
+            cleanedContact = `+55${cleanedContact}`;
         }
+        // Cria o link do WhatsApp com o ícone
+        playerContact.innerHTML = `<a href="https://wa.me/${cleanedContact}" target="_blank"><img src="whatsapp-icone.png" alt="WhatsApp" class="whatsapp-icon"> ${contact}</a>`;
+    } else {
+        playerContact.textContent = "-";
+    }
+
+    if (player.imageUrl) {
+        profilePhoto.src = player.imageUrl;
+        profilePhoto.style.display = "block";
+    } else {
+        profilePhoto.style.display = "none";
+    }
+    loadPlayerPayments(player.id);
+    loadPendingPaymentsSelect(player.id);
+    uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
+    prevPlayerBtn.disabled = filteredPlayers.length <= 1;
+    nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+}
 
         async function loadPlayerPayments(playerId) {
             try {
@@ -1500,8 +1547,8 @@ async function showDefaulterDetails(playerId, playerName) {
 
         function getMonthName(monthNumber) {
             const months = [
-                '01', '02', '03', '04', '05', '06',
-                '07', '08', '09', '10', '11', '12'
+                'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
             ];
             return months[parseInt(monthNumber) - 1] || 'Desconhecido';
         }
