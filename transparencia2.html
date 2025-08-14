@@ -317,88 +317,6 @@
     let allPlayers = [];
     const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
 
-    // Função para copiar a chave PIX e exibir QR Code
-    async function copyPixKey() {
-        const pixKey = "fabioluiztx@outlook.com"; // Substitua pela chave PIX real
-        try {
-            // Copiar a chave PIX para a área de transferência
-            await navigator.clipboard.writeText(pixKey);
-
-            // Criar um contêiner temporário para o QR Code
-            const qrCodeContainer = document.createElement('div');
-            qrCodeContainer.id = 'qrcode';
-
-            // Gerar o QR Code
-            const qrCode = new QRCode(qrCodeContainer, {
-                text: pixKey,
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            // Criar botão de copiar para o popup
-            const copyButton = document.createElement('button');
-            copyButton.className = 'pix-btn';
-            copyButton.innerHTML = '<i class="fas fa-copy"></i> Copiar PIX';
-            copyButton.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(pixKey);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Chave PIX Copiada!',
-                        text: 'A chave PIX foi copiada para a área de transferência.',
-                        timer: 1000,
-                        showConfirmButton: false
-                    });
-                } catch (error) {
-                    console.error('Erro ao copiar chave PIX:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: 'Não foi possível copiar a chave PIX.'
-                    });
-                }
-            });
-
-            // Exibir popup com QR Code e botão
-            Swal.fire({
-                title: 'Chave PIX',
-                html: `
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <p><strong>${pixKey}</strong></p>
-                    </div>
-                    <div id="qrcode-container"></div>
-                    <div style="margin-top: 15px;"></div>
-                `,
-                icon: 'info',
-                showConfirmButton: false,
-                showCloseButton: true,
-                didOpen: () => {
-                    // Adicionar o QR Code e o botão ao popup
-                    const container = document.getElementById('qrcode-container');
-                    container.appendChild(qrCodeContainer);
-                    container.appendChild(copyButton);
-                },
-                willClose: () => {
-                    // Limpar o contêiner do QR Code ao fechar
-                    qrCodeContainer.remove();
-                }
-            });
-        } catch (error) {
-            console.error('Erro ao copiar chave PIX:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: 'Não foi possível copiar a chave PIX.'
-            });
-        }
-    }
-
-    // Event listener para o botão Copiar PIX
-    copyPixBtn.addEventListener('click', copyPixKey);
-
     // Função para criar e inserir o botão Dashboard
     function createDashboardButton() {
         const sidebarMenu = document.querySelector('.sidebar-menu');
@@ -1619,6 +1537,79 @@
         loadFinancialData();
         loadDefaulters();
     });
+</script>
+<!-- Script para a função copyPixKey sem type="module" -->
+<script>
+    async function copyPixKey() {
+        const pixKey = "fabioluiztx@outlook.com";
+        try {
+            await navigator.clipboard.writeText(pixKey);
+            if (typeof QRCode === 'undefined') {
+                throw new Error('Biblioteca QRCode não carregada.');
+            }
+            const qrCodeContainer = document.createElement('div');
+            qrCodeContainer.id = 'qrcode';
+            const qrCode = new QRCode(qrCodeContainer, {
+                text: pixKey,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            const copyButton = document.createElement('button');
+            copyButton.className = 'pix-btn';
+            copyButton.innerHTML = '<i class="fas fa-copy"></i> Copiar PIX';
+            copyButton.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(pixKey);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Chave PIX Copiada!',
+                        text: 'A chave PIX foi copiada para a área de transferência.',
+                        timer: 1000,
+                        showConfirmButton: false
+                    });
+                } catch (error) {
+                    console.error('Erro ao copiar chave PIX:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Não foi possível copiar a chave PIX.'
+                    });
+                }
+            });
+            Swal.fire({
+                title: 'Chave PIX',
+                html: `
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <p><strong>${pixKey}</strong></p>
+                    </div>
+                    <div id="qrcode-container"></div>
+                    <div style="margin-top: 15px;"></div>
+                `,
+                icon: 'info',
+                showConfirmButton: false,
+                showCloseButton: true,
+                didOpen: () => {
+                    const container = document.getElementById('qrcode-container');
+                    container.appendChild(qrCodeContainer);
+                    container.appendChild(copyButton);
+                },
+                willClose: () => {
+                    qrCodeContainer.remove();
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao copiar chave PIX:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: error.message || 'Não foi possível copiar a chave PIX ou gerar o QR Code.'
+            });
+        }
+    }
+    document.getElementById('copyPixBtn').addEventListener('click', copyPixKey);
 </script>
 </body>
 </html>
