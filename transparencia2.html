@@ -10,6 +10,42 @@
     <link rel="stylesheet" href="transparencia.css?v=2.3">
 </head>
 <style>
+/* Estilo para o popup do SweetAlert */
+/* Estilos customizados para o SweetAlert */
+.custom-swal-popup {
+    max-width: 500px;
+    padding: 20px;
+}
+
+.custom-swal-actions {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    margin: 1em auto 0 !important;
+    width: 100% !important;
+}
+
+.custom-confirm-btn, .custom-cancel-btn {
+    margin: 0 !important;
+    flex: 1 !important;
+    max-width: 200px !important;
+    padding: 10px 20px !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+}
+
+.custom-confirm-btn {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.custom-cancel-btn {
+    background-color: #f44336 !important;
+    color: white !important;
+    border: none !important;
+}
 .pix-button-container {
     text-align: left;
     margin: 10px 0;
@@ -30,6 +66,14 @@
 .pix-btn i {
     margin-right: 5px;
 }
+
+.swal-wide {
+    max-width: 500px;
+}
+.swal-content {
+    text-align: center;
+}
+
 </style>
 <body>
 <!-- cria o loading  -->
@@ -146,7 +190,7 @@
                 <br>
                 <div class="defaulters-section">
                     <h3><i class="fas fa-exclamation-triangle"></i> Contribuições Pendentes.<div class="pix-button-container">
-                    <button id="copyPixBtn" class="pix-btn"><i class="fas fa-copy"></i> Copiar PIX</button>
+                    <button id="copyPixBtn" class="pix-btn"><i class="fas fa-copy"></i> Chave PIX</button>
                 </div></h3>
                     <strong>Clique para Exibir...</strong>
                     <div id="defaultersList" class="defaulters-list">
@@ -316,11 +360,30 @@
         // Função para copiar a chave PIX
 
 
-async function copyPixKey() {
-    const pixKey = "fabioluiztx@outlook.com"; // Substitua pela chave PIX real
+
+        async function copyPixKey() {
+    const pixKey = "fabioluiztx@outlook.com";
     
     try {
-        await navigator.clipboard.writeText(pixKey);
+        
+        
+        // Cria um estilo inline temporário para sobrescrever o SweetAlert
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .swal2-popup .swal2-actions {
+                display: flex !important;
+                justify-content: center !important;
+                gap: 10px !important;
+                margin: 1em auto 0 !important;
+                width: 100% !important;
+            }
+            .swal2-popup .swal2-styled {
+                margin: 0 !important;
+                flex: 1 !important;
+                max-width: 200px !important;
+            }
+        `;
+        document.head.appendChild(style);
         
         Swal.fire({
             title: 'Chave PIX Copiada!',
@@ -331,29 +394,25 @@ async function copyPixKey() {
                 </div>
             `,
             showCancelButton: true,
-            confirmButtonText: 'Copiar Chave Novamente',
+            confirmButtonText: 'Copiar Novamente',
             cancelButtonText: 'Fechar',
             focusConfirm: false,
+            buttonsStyling: false,
             customClass: {
-                popup: 'swal-wide',
-                htmlContainer: 'swal-content'
+                popup: 'custom-swal-popup',
+                actions: 'custom-swal-actions',
+                confirmButton: 'custom-confirm-btn',
+                cancelButton: 'custom-cancel-btn'
             },
             width: '90%',
             showCloseButton: true,
-            allowOutsideClick: true,
-            allowEscapeKey: true
+            didDestroy: () => {
+                // Remove o estilo quando o popup é fechado
+                document.head.removeChild(style);
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                // Se o usuário clicar em "Copiar Chave Novamente"
-                navigator.clipboard.writeText(pixKey).then(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Chave Copiada!',
-                        text: 'A chave PIX foi copiada novamente.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                });
+                navigator.clipboard.writeText(pixKey);
             }
         });
         
@@ -366,6 +425,9 @@ async function copyPixKey() {
         });
     }
 }
+
+
+
 
 
 
