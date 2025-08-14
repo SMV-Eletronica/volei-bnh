@@ -358,14 +358,10 @@
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
 
         // Função para copiar a chave PIX
-
-
-
         async function copyPixKey() {
     const pixKey = "fabioluiztx@outlook.com";
     
-    try {
-        
+    try {       
         
         // Cria um estilo inline temporário para sobrescrever o SweetAlert
         const style = document.createElement('style');
@@ -386,10 +382,10 @@
         document.head.appendChild(style);
         
         Swal.fire({
-            title: 'Chave PIX Copiada!',
+            title: 'Chave PIX Código QR!',
             html: `
                 <div style="text-align: center;">
-                    <p>A chave PIX <strong>${pixKey}</strong> foi copiada para a área de transferência.</p>
+                    <p>Chave PIX <strong>${pixKey}</strong></p>
                     <img src="qrcode-pix.png" alt="QR Code PIX" style="max-width: 200px; margin: 10px auto; display: block;">
                 </div>
             `,
@@ -416,8 +412,8 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Chave Copiada!',
-                        text: 'A chave PIX foi copiada novamente.',
-                        timer: 1500,
+                        text: 'A chave PIX foi copiada.',
+                        timer: 3500,
                         showConfirmButton: false
                     });
                 });
