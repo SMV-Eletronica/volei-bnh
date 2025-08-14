@@ -412,7 +412,15 @@
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                navigator.clipboard.writeText(pixKey);
+               navigator.clipboard.writeText(pixKey).then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Chave Copiada!',
+                        text: 'A chave PIX foi copiada novamente.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                });
             }
         });
         
