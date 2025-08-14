@@ -840,9 +840,7 @@ async function showDefaulterDetails(playerId, playerName) {
         const showUploadButtons = isAdmin || isCurrentUser;
 
         // 3. Gerar HTML do popup
-        let detailsHtml = `<h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">Pendências - ${playerName}</h3><div class="pix-button-container">
-                    <button id="copyPixBtn" class="pix-btn"><i class="fas fa-copy"></i> Copiar PIX</button>
-                </div>`;
+        let detailsHtml = `<h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">Pendências - ${playerName}</h3>`;
         
         if (defaulterPayments.length === 0) {
             detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
