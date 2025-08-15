@@ -71,8 +71,9 @@ body {
 
 #financialSummary th, #financialSummary td {
     padding: 8px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #ddd;
+    min-width: 80px;
 }
 
 #financialSummary th {
