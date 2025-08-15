@@ -47,8 +47,8 @@
     border: none !important;
 }
 .pix-button-container {
-    text-align: left;
-    margin: 10px 0;
+    text-align:center;
+    margin: 20px 0;
 }
 .pix-btn {
     padding: 8px 16px;
@@ -154,13 +154,10 @@
 
                     <div class="cash-summary-grid">
                         <div class="cash-summary-item">
-                            <div class="cash-summary-title">Total Receita Recebida</div>
+                            <div class="cash-summary-title">Total das Contribuições Recebidas</div>
                             <div id="totalIncome" class="cash-summary-value">R$0,00</div>
                         </div>
-                        <div class="cash-summary-item" style="border-left: 4px solid orange">
-                            <div class="cash-summary-title">Total Contribuições Pendentes</div>
-                            <div id="totalReceivables" class="cash-summary-value">R$0,00</div>
-                        </div>
+                        
                         <div class="cash-summary-item" style="border-left: 4px solid red">
                             <div class="cash-summary-title">Total Despesas</div>
                             <div id="totalExpenses" class="cash-summary-value">R$0,00</div>
@@ -169,6 +166,8 @@
                             <div class="cash-summary-title">Saldo Atual</div>
                             <div id="currentBalance" class="cash-summary-value">R$0,00</div>
                         </div>
+
+                        
                     </div>
                 </div>
                 <div id="financialSummary">
@@ -176,10 +175,10 @@
                         <thead>
                             <tr>
                                 <th>Mês/Ano</th>
-                                <th>Receitas Recebidas</th>
-                                <th>Contribuições Pendentes</th>
+                                <th>Receitas Recebidas</th>                                
                                 <th>Despesas</th>
                                 <th>Saldo</th>
+                                <th>Contribuições Pendentes</th>
                             </tr>
                         </thead>
                         <tbody id="financialData">
@@ -188,11 +187,18 @@
                 </div>
                 <br>
                 <div class="defaulters-section">
-                   <h3 class="section-title" style="color: orange; margin-top: 15px;"><i class="fas fa-exclamation-triangle"></i>Contribuições Pendentes</h3>
+                   <h3 class="section-title" style="margin-top: 15px;"><i class="fas fa-exclamation-triangle"></i> Contribuições Pendentes</h3>
+                   <div class="cash-summary-item" style="border-left: 4px solid orange">
+                            <div class="cash-summary-title">Total das Contribuições a receber</div>
+                            <div id="totalReceivables" class="cash-summary-value">R$0,00</div>
+                    </div>
                    <div class="pix-button-container">
                     <button id="copyPixBtn" class="pix-btn"><i class="fa fa-qrcode" aria-hidden="true"></i> QR Code PIX</button>
                 </div>
+                
                     <strong>Clique para Exibir...</strong>
+                    
+
                     <div id="defaultersList" class="defaulters-list">
                         <div class="no-defaulters">Carregando informações...</div>
                     </div>
@@ -750,11 +756,12 @@ function createDashboardButton() {
                 row.innerHTML = `
                     <td>${data.monthName}/${data.year}</td>
                     <td>R$${data.income.toFixed(2)}</td>
-                    <td>R$${data.receivables.toFixed(2)}</td>
+                    
                     <td>R$${data.expenses.toFixed(2)}</td>
                     <td class="${balance >= 0 ? 'positive' : 'negative'}">
                         ${balance < 0 ? '-' : ''}R$${Math.abs(balance).toFixed(2)}
                     </td>
+                    <td>R$${data.receivables.toFixed(2)}</td>
                 `;
                 
                 financialData.appendChild(row);
@@ -766,11 +773,12 @@ function createDashboardButton() {
             totalsRow.innerHTML = `
                 <td><strong>TOTAIS</strong></td>
                 <td><strong>R$${totalIncome.toFixed(2)}</strong></td>
-                <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
+                
                 <td><strong>R$${totalExpenses.toFixed(2)}</strong></td>
                 <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
                     <strong>${totalBalance < 0 ? '-' : ''}R$${Math.abs(totalBalance).toFixed(2)}</strong>
                 </td>
+                <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
             `;
             
             financialData.appendChild(totalsRow);
