@@ -154,19 +154,19 @@
                     <div class="cash-summary-grid">
                         <div class="cash-summary-item">
                             <div class="cash-summary-title">Total Receita Recebida</div>
-                            <div id="totalIncome" class="cash-summary-value">R$ 0,00</div>
+                            <div id="totalIncome" class="cash-summary-value">R$0,00</div>
                         </div>
                         <div class="cash-summary-item" style="border-left: 4px solid orange">
                             <div class="cash-summary-title">Total Contribuições Pendentes</div>
-                            <div id="totalReceivables" class="cash-summary-value">R$ 0,00</div>
+                            <div id="totalReceivables" class="cash-summary-value">R$0,00</div>
                         </div>
                         <div class="cash-summary-item" style="border-left: 4px solid red">
                             <div class="cash-summary-title">Total Despesas</div>
-                            <div id="totalExpenses" class="cash-summary-value">R$ 0,00</div>
+                            <div id="totalExpenses" class="cash-summary-value">R$0,00</div>
                         </div>
                         <div class="cash-summary-item">
                             <div class="cash-summary-title">Saldo Atual</div>
-                            <div id="currentBalance" class="cash-summary-value">R$ 0,00</div>
+                            <div id="currentBalance" class="cash-summary-value">R$0,00</div>
                         </div>
                     </div>
                 </div>
@@ -746,11 +746,11 @@ function createDashboardButton() {
                 
                 row.innerHTML = `
                     <td>${data.monthName}/${data.year}</td>
-                    <td>R$ ${data.income.toFixed(2)}</td>
-                    <td>R$ ${data.receivables.toFixed(2)}</td>
-                    <td>R$ ${data.expenses.toFixed(2)}</td>
+                    <td>R$${data.income.toFixed(2)}</td>
+                    <td>R$${data.receivables.toFixed(2)}</td>
+                    <td>R$${data.expenses.toFixed(2)}</td>
                     <td class="${balance >= 0 ? 'positive' : 'negative'}">
-                        ${balance < 0 ? '-' : ''}R$ ${Math.abs(balance).toFixed(2)}
+                        ${balance < 0 ? '-' : ''}R$${Math.abs(balance).toFixed(2)}
                     </td>
                 `;
                 
@@ -762,11 +762,11 @@ function createDashboardButton() {
             totalsRow.className = 'totals-row';
             totalsRow.innerHTML = `
                 <td><strong>TOTAIS</strong></td>
-                <td><strong>R$ ${totalIncome.toFixed(2)}</strong></td>
-                <td><strong>R$ ${totalReceivables.toFixed(2)}</strong></td>
-                <td><strong>R$ ${totalExpenses.toFixed(2)}</strong></td>
+                <td><strong>R$${totalIncome.toFixed(2)}</strong></td>
+                <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
+                <td><strong>R$${totalExpenses.toFixed(2)}</strong></td>
                 <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
-                    <strong>${totalBalance < 0 ? '-' : ''}R$ ${Math.abs(totalBalance).toFixed(2)}</strong>
+                    <strong>${totalBalance < 0 ? '-' : ''}R$${Math.abs(totalBalance).toFixed(2)}</strong>
                 </td>
             `;
             
@@ -794,15 +794,15 @@ function createDashboardButton() {
         function updateCashSummary(income, receivables, expenses) {
             const balance = income - expenses;
             
-            totalIncomeElement.textContent = `R$ ${income.toFixed(2)}`;
-            totalReceivablesElement.textContent = `R$ ${receivables.toFixed(2)}`;
-            totalExpensesElement.textContent = `R$ ${expenses.toFixed(2)}`;
+            totalIncomeElement.textContent = `R$${income.toFixed(2)}`;
+            totalReceivablesElement.textContent = `R$${receivables.toFixed(2)}`;
+            totalExpensesElement.textContent = `R$${expenses.toFixed(2)}`;
             
-            currentBalanceElement.textContent = `R$ ${Math.abs(balance).toFixed(2)}`;
+            currentBalanceElement.textContent = `R$${Math.abs(balance).toFixed(2)}`;
             currentBalanceElement.className = `cash-summary-value ${balance >= 0 ? 'positive' : 'negative'}`;
             
             if (balance < 0) {
-                currentBalanceElement.textContent = `-R$ ${Math.abs(balance).toFixed(2)}`;
+                currentBalanceElement.textContent = `-R$${Math.abs(balance).toFixed(2)}`;
             }
         }
 
@@ -999,7 +999,7 @@ async function showDefaulterDetails(playerId, playerName) {
                 detailsHtml += `
                     <tr id="payment-row-${payment.paymentId}">
                         <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${formattedDate}</td>
-                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">R$ ${payment.value.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">R$${payment.value.toFixed(2)}</td>
                         <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${description}<br>${dia}</td>
                         <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;"> ${comprovanteLink} ${comprovanteStatus} </td> 
                         ${uploadButton}
@@ -1099,7 +1099,7 @@ async function showDefaulterDetails(playerId, playerName) {
                                 await sendPushNotification(
                                     "📄 Novo comprovante recebido",
                                     `De: ${currentPlayer.name}\n` +
-                                    `Valor: R$ ${payment.value.toFixed(2)}\n` +
+                                    `Valor: R$${payment.value.toFixed(2)}\n` +
                                     `Referente: ${monthYear}\n` +
                                     `Status: 🕒 Pendente de análise`,
                                     null, // Sem imagem
@@ -1249,7 +1249,7 @@ async function showDefaulterDetails(playerId, playerName) {
                     expenseEl.innerHTML = `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                             <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
-                            <span class="expense-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                            <span class="expense-value">R$${parseFloat(expense.value).toFixed(2)}</span>
                         </div>
                         <div style="color: #666; margin-bottom: 5px;">
                             ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
@@ -1292,7 +1292,7 @@ async function showDefaulterDetails(playerId, playerName) {
                     expenseEl.innerHTML = `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                             <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
-                            <span class="expenseDel-value">R$ ${parseFloat(expense.value).toFixed(2)}</span>
+                            <span class="expenseDel-value">R$${parseFloat(expense.value).toFixed(2)}</span>
                         </div>
                         <div style="color: #666; margin-bottom: 5px;">
                             ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
@@ -1355,7 +1355,7 @@ async function showDefaulterDetails(playerId, playerName) {
                                 const monthName = getMonthName(month);
                                 const option = document.createElement('option');
                                 option.value = `${year}/${month}/${paymentId}`;
-                                option.textContent = `${monthName}/${year} - R$ ${parseFloat(payment.value).toFixed(2)} (${payment.additionalInfo || 'Não informado'})`;
+                                option.textContent = `${monthName}/${year} - R$${parseFloat(payment.value).toFixed(2)} (${payment.additionalInfo || 'Não informado'})`;
                                 paymentSelect.appendChild(option);
                                 hasPayments = true;
                             }
@@ -1606,9 +1606,9 @@ function showPlayer(index) {
                     <div>
                         <span class="status-label">Valor:</span>
                         <span class="status-value ${isPaid ? 'paid' : isExcluded ? 'unpaid' : 'unpaid'}">
-                            ${isExcluded ? `R$ ${parseFloat(payment.value).toFixed(2)} (Excluído)` : 
-                            isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 
-                            `R$ ${parseFloat(payment.value).toFixed(2)} (Pendente)`}
+                            ${isExcluded ? `R$${parseFloat(payment.value).toFixed(2)} (Excluído)` : 
+                            isPaid ? `R$${parseFloat(payment.value).toFixed(2)}` : 
+                            `R$${parseFloat(payment.value).toFixed(2)} (Pendente)`}
                         </span>
                     </div>
                     <div>
