@@ -254,7 +254,7 @@
                         </div>
                         <div class="payment-status">
                             <h3 class="status-title">Status das Contribuições</h3>
-                            <div id="paymentsList"></div>
+                            <div id="paymentsList" style="text-align: left;"></div>
                         </div>
                         <div id="pendingStatus" class="pending-alert" style="display: none;">
                             Este integrante possui pendências!
@@ -1263,7 +1263,7 @@ async function showDefaulterDetails(playerId, playerName) {
                             <span class="expense-value">R$${parseFloat(expense.value).toFixed(2)}</span>
                         </div>
                         <div style="color: #666; margin-bottom: 5px;">
-                            ${expense.month ? `${getMonthName(month)}/${year}` : 'Sem mês de referência'}
+                            ${expense.month ? `${getMonthName2(month)}/${year}` : 'Sem mês de referência'}
                         </div>
                         <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
                         <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
@@ -1687,6 +1687,14 @@ function showPlayer(index) {
             return months[parseInt(monthNumber) - 1] || 'Desconhecido';
         }
         
+        function getMonthName2(monthNumber) {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return months[parseInt(monthNumber) - 1] || 'Desconhecido';
+        }
+
         function formatDate(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
