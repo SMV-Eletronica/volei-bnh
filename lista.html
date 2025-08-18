@@ -547,6 +547,7 @@ async function preloadImage(imageUrl) {
 
 // Atualizar loadCurrentUserPlayer para usar IndexedDB
 async function loadCurrentUserPlayer() {
+  document.getElementById('loading-overlay').style.display = 'flex';
   try {
     const playersRef = ref(database, 'players');
     const snapshot = await get(playersRef);
