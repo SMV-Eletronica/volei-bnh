@@ -2124,7 +2124,7 @@ async function confirmPlayer(targetPlayerId = null) {
         title: 'Atenção: Pendências Detectadas',
         html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
                Essa é sua ${alertCount}ª notificação. Após 2 notificações, você ficará suspenso de confirmar presença.`,
-        showCancelButton: true,
+        showCancelButton: false,
         confirmButtonText: 'Ciente/Confirmar',
         cancelButtonText: 'Cancelar'
       });
