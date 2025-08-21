@@ -1608,8 +1608,8 @@ finalizeGameBtn.addEventListener('click', async () => {
         await Swal.fire({
           icon: 'error',
           title: 'Ação Suspensa',
-          html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-                 Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+          html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
+                 Você já utilizou a tolerância de 2 jogos com advertências.<br>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
           confirmButtonText: 'Entendido'
         });
         return;
@@ -2112,8 +2112,8 @@ async function confirmPlayer(targetPlayerId = null) {
       await Swal.fire({
         icon: 'error',
         title: 'Confirmação Suspensa',
-        html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+        html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
+               Você já utilizou a tolerância de 2 jogos com advertências.<br>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
         confirmButtonText: 'Entendido'
       });
       return;
