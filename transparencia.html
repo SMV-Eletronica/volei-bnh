@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="transparencia.css?v=2.3">
+    <link rel="stylesheet" href="transparencia.css?v=2.7">
 </head>
 <style>
 /* Estilo para o popup do SweetAlert */
@@ -114,9 +114,9 @@
     <div class="container">
         <br>
         <div class="tabs">
-            <div class="tab active" data-tab="report"><i class="fas fa-file-alt"></i> Caixa</div>
-            <div class="tab" data-tab="expenses"><i class="fas fa-receipt"></i> Despesas</div>
-            <div class="tab" data-tab="profile"><i class="fas fa-users"></i> Integrantes</div>
+            <div class="tab active" data-tab="report"><i class="fas fa-file-alt"></i> CAIXA</div>
+            <div class="tab" data-tab="expenses"><i class="fas fa-receipt"></i> DESPESAS</div>
+            <div class="tab" data-tab="profile"><i class="fas fa-users"></i> INTEGRANTES</div>
         </div>
         
         <div id="report" class="tab-content active">
@@ -155,14 +155,14 @@
                     <div class="cash-summary-grid">
                         <div class="cash-summary-item">
                             <div class="cash-summary-title">Total Contribuições Recebidas</div>
-                            <div id="totalIncome" class="cash-summary-value">R$0,00</div>
+                            <div id="totalIncome" class="cash-summary-value" style="color:#3498db">R$0,00</div>
                         </div>
                         
                         <div class="cash-summary-item" style="border-left: 4px solid red">
                             <div class="cash-summary-title">Total Despesas</div>
                             <div id="totalExpenses" class="cash-summary-value" style="color: red" >R$0,00</div>
                         </div>
-                        <div class="cash-summary-item">
+                        <div class="cash-summary-item" id="currentBalanceItem">
                             <div class="cash-summary-title">Saldo Atual</div>
                             <div id="currentBalance" class="cash-summary-value">R$0,00</div>
                         </div>
@@ -175,7 +175,7 @@
                         <thead>
                             <tr>
                                 <th>Caixa</th>
-                                <th>Contribuições Recebidas</th>                                
+                                <th>Contribuições</th>                                
                                 <th>Despesas</th>
                                 <th>Saldo</th>
                                 <th>Contribuições Pendentes</th>
@@ -196,7 +196,7 @@
                     <button id="copyPixBtn" class="pix-btn"><i class="fa fa-qrcode" aria-hidden="true"></i> QR Code PIX</button>
                 </div>
                 
-                    <strong>Clique para Exibir...</strong>
+                    <strong> Clique no integrante para exibir...</strong>
                     
 
                     <div id="defaultersList" class="defaulters-list">
@@ -252,15 +252,16 @@
                                 <div id="playerContact" class="info-value">-</div>
                             </div>
                         </div>
+                        
+                        <div id="pendingStatus" class="pending-alert" style="display: none;">
+                           Este integrante possui pendências!
+                        </div>
+                        <div id="noPendingStatus" class="no-pending" style="display: none;">
+                          <i class="fa fa-trophy" style="font-size:18px"></i> Integrante em dia com suas Contribuições!
+                        </div>
                         <div class="payment-status">
                             <h3 class="status-title">Status das Contribuições</h3>
                             <div id="paymentsList" style="text-align: left;"></div>
-                        </div>
-                        <div id="pendingStatus" class="pending-alert" style="display: none;">
-                            Este integrante possui pendências!
-                        </div>
-                        <div id="noPendingStatus" class="no-pending" style="display: none;">
-                            Integrante em dia com as Contribuições!
                         </div>
                         <div id="uploadComprovanteSection" class="upload-comprovante">
                             <h3>Enviar Comprovante de Pagamento</h3>
@@ -390,7 +391,7 @@
         document.head.appendChild(style);
         
         Swal.fire({
-            title: 'Chave PIX - QR Ccode',
+            title: '<i class="fa fa-qrcode" aria-hidden="true"></i> Chave PIX',
             html: `
                 <div style="text-align: center;">
                     <p><strong>${pixKey}</strong></p>
@@ -811,6 +812,12 @@ function createDashboardButton() {
             
             currentBalanceElement.textContent = `R$${Math.abs(balance).toFixed(2)}`;
             currentBalanceElement.className = `cash-summary-value ${balance >= 0 ? 'positive' : 'negative'}`;
+
+              // Atualizar a borda com base no saldo
+              const currentBalanceItem = document.getElementById('currentBalanceItem');
+              if (currentBalanceItem) {
+                currentBalanceItem.style.borderLeft = `4px solid ${balance >= 0 ? '#28a745' : 'red'}`;
+             }
             
             if (balance < 0) {
                 currentBalanceElement.textContent = `-R$${Math.abs(balance).toFixed(2)}`;
