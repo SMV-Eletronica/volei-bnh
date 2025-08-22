@@ -886,7 +886,7 @@ function setupAdminFeatures() {
               <div class="organiza2">
                 <label for="modalNewGameLimit">Nº de Participantes:</label>
                 <input type="number" id="modalNewGameLimit" min="1" value="16">
-                <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Jogo</button>
+                <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Lista</button>
               </div>
             </div>
             <div id="updateLimitFields" class="modal-section" style="display: none;">
@@ -2848,7 +2848,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
       headings: { en: "🏐 Vôlei BNH - Informações" },
       contents: { en: message },
-      included_segments: ["All2"],
+      included_segments: ["All"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
       collapse_id: uniqueId,
       ios_thread_id: uniqueId
