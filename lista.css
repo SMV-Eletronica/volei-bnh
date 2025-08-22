@@ -522,7 +522,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    align-items: flex-start;
+    /*align-items: center;*/
     border: none;
     padding: 0;
 }
@@ -532,7 +532,7 @@ body {
     flex-wrap: wrap;
     /* gap: 10px; */
     flex-direction: column;
-    align-content: center;
+    align-content: flex-start;
     align-items: flex-start;
 }
 
