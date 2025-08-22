@@ -522,7 +522,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    align-items: stretch;
+    align-items: flex-start;
     border: none;
     padding: 0;
 }
@@ -746,7 +746,7 @@ body {
 .swal2-html-container {
     padding: 0;
     margin: 0 auto;
-    text-align: center;
+    text-align: left;
 }
 
 .swal2-title {
