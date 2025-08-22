@@ -853,7 +853,7 @@ function setupAdminFeatures() {
     adminSettingsBtn.addEventListener('click', () => {
       console.log('Botão adminSettingsBtn clicado');
       Swal.fire({
-        title: 'Configurar Jogos',
+        title: 'Configurações',
         html: `
           <div class="organiza">
             <div class="modal-section">
@@ -863,8 +863,8 @@ function setupAdminFeatures() {
                 <option value="updateLimit">Alterar Participantes</option>
                 <option value="updateFee">Alterar Taxa</option>
                 <option value="updateTime">Alterar Horário</option>
-                <option value="viewNotified">Jogadores Notificados</option>
-                <option value="addManualNotification">Adicionar Notificação Manual</option>
+                <option value="viewNotified">Integrantes Notificados</option>
+                <option value="addManualNotification">Notificação Manual</option>
               </select>
             </div>
             <div class="modal-section" id="gameSelectSection">
@@ -914,7 +914,7 @@ function setupAdminFeatures() {
               </div>
             </div>
             <div id="notifiedPlayersFields" class="modal-section" style="display: none;">
-              <h4>Jogadores Notificados</h4>
+              <h4>Integrantes Notificados:</h4>
               <div id="notifiedPlayersList" class="notified-players-list"></div>
             </div>
             <div id="addManualNotificationFields" class="modal-section" style="display: none;">
@@ -933,6 +933,9 @@ function setupAdminFeatures() {
         cancelButtonText: 'Sair',
         didOpen: async () => {
           console.log('Modal SweetAlert2 aberto');
+
+          // Definir a data atual no campo de data
+      document.getElementById('modalNewGameDate').value = DateTime.now().setZone('America/Sao_Paulo').toISODate();
           
           const modalGameSelect = document.getElementById('modalGameSelect');
           modalGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
@@ -1006,27 +1009,45 @@ function setupAdminFeatures() {
               html += '</table>';
               notifiedPlayersList.innerHTML = html;
               
-              document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                  const playerId = e.currentTarget.getAttribute('data-player-id');
-                  const success = await clearDebtNotifications(playerId);
-                  if (success) {
-                    await Swal.fire({
-                      icon: 'success',
-                      title: 'Sucesso',
-                      text: `Notificações de ${notifiedPlayers.find(p => p.id === playerId).name} foram zeradas.`,
-                    });
-                    modalActionSelect.dispatchEvent(new Event('change'));
-                  } else {
-                    await Swal.fire({
-                      icon: 'error',
-                      title: 'Erro',
-                      text: 'Não foi possível limpar as notificações. Tente novamente.',
-                    });
-                  }
-                });
-              });
-            } else if (modalActionSelect.value === 'addManualNotification') {
+document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    const playerId = e.currentTarget.getAttribute('data-player-id');
+    const player = notifiedPlayers.find(p => p.id === playerId);
+
+    // Adicionar popup de confirmação
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'Confirmar Liberação',
+      text: `Você tem certeza que deseja zerar as notificações de pendências de ${player.name}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sim, liberar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (result.isConfirmed) {
+      const success = await clearDebtNotifications(playerId);
+      if (success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Sucesso',
+          text: `Notificações de ${player.name} foram zeradas.`,
+        });
+        modalActionSelect.dispatchEvent(new Event('change')); // Atualiza a lista
+      } else {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Não foi possível limpar as notificações. Tente novamente.',
+        });
+      }
+    }
+  });
+});
+            }
+
+
+            
+            else if (modalActionSelect.value === 'addManualNotification') {
               const manualPlayerSearch = document.getElementById('manualPlayerSearch');
               const manualAutocompleteSuggestions = document.getElementById('manualAutocompleteSuggestions');
               const addManualNotificationBtn = document.getElementById('addManualNotificationBtn');
@@ -2827,7 +2848,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
       headings: { en: "🏐 Vôlei BNH - Informações" },
       contents: { en: message },
-      included_segments: ["All"],
+      included_segments: ["All2"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
       collapse_id: uniqueId,
       ios_thread_id: uniqueId
