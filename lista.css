@@ -307,11 +307,11 @@ body {
 }
 
 .game-controls {
-    display: flex;
+   /* display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 20px;
-    justify-content: flex-start;
+    justify-content: flex-start;*/
     align-items: flex-start;
     margin-bottom: 20px;
 }
@@ -365,6 +365,8 @@ body {
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 14px;
+    width: 100%;    
+    height: 40px;
 }
 
 .game-controls button:hover {
@@ -687,7 +689,7 @@ body {
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 14px;
-    width: 300px;
+    width: 50%;
     height: 40px;
 }
 
@@ -699,7 +701,7 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
-    width: 300px;
+    width: 50%;
     height: 40px;
 }
 
@@ -713,8 +715,9 @@ body {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-    width: 300px;
+    width: 100%;
     height: 40px;
+   
     padding: 8px;
     border-radius: 4px;
     font-weight: bold;
@@ -735,7 +738,8 @@ body {
     padding: 1rem !important;  
     overflow: hidden;
      width: 99%;
-    max-width: 600px;
+    max-width: 500px;
+    height: 100% !important;
 }
 
 .swal2-html-container {
@@ -1164,11 +1168,14 @@ body {
 }
 
 @media (max-width: 768px) {
-    .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
+   /* .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
         flex-direction: column;
         gap: 8px;
         align-items: flex-start;
     }
+
+    */
+
 
     .player-item {
         flex-direction: column;
