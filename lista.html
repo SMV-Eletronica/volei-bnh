@@ -125,14 +125,16 @@
             <!-- <p id="aviso">A lista para convidados ativa após 16:00.</p>-->
              <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados após 16:00 </button>
              <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
-             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Adicionar Convidado</button>
+             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Convidado</button>
           </div>
 
           <div class="guest-controls" id="adminSearchContainer" style="display: none;">
-             <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">
-              <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+            <input type="text" id="playerSearch" placeholder="Pesquisar jogador por nome">              
               <button id="addPlayerBtn" disabled><i class="fas fa-plus"></i> Adicionar Jogador</button>
+              
+
           </div>
+          <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
 
           <button id="finalizeGameBtn" style="display: none;" class="finalize-btn"><i class="fas fa-save"></i> Finalizar Lista</button>
          
@@ -1630,7 +1632,7 @@ finalizeGameBtn.addEventListener('click', async () => {
           icon: 'error',
           title: 'Ação Suspensa',
           html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-                 Você já utilizou a tolerância de 2 jogos com advertências.<br>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+                 Você já utilizou a tolerância de 2 jogos com advertências.<p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
           confirmButtonText: 'Entendido'
         });
         return;
@@ -2134,7 +2136,7 @@ async function confirmPlayer(targetPlayerId = null) {
         icon: 'error',
         title: 'Confirmação Suspensa',
         html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Você já utilizou a tolerância de 2 jogos com advertências.<br>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+               Você já utilizou a tolerância de 2 jogos com advertências.<p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -2707,7 +2709,7 @@ async function confirmPlayer(targetPlayerId = null) {
       <div class="linha-3m-baixo"></div>
       ${playersHTML.join('')}
     </div>
-    <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">
+    <button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; width:200px; height: 40px; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">
       Confirmar Presença ✅
     </button>
     <div class="info">
