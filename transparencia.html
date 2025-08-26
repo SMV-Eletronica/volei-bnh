@@ -968,7 +968,7 @@ async function showDefaulterDetails(playerId, playerName) {
         if (defaulterPayments.length === 0) {
             detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
         } else {
-            detailsHtml += `
+            detailsHtml += `<div style="max-height: 40vh; overflow-y: auto;">
                 <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #f2f2f2;">
@@ -1032,7 +1032,7 @@ async function showDefaulterDetails(playerId, playerName) {
             
             detailsHtml += `
                     </tbody>
-                </table>
+                </table></div>
                 <div style="text-align: left; margin-top: 10px;">
                     <p style="font-size: 14px;">
                         <strong>Legenda:</strong><br><br>
