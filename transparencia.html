@@ -1274,11 +1274,11 @@ async function showDefaulterDetails(playerId, playerName) {
                             <strong>${expenseDate} - ${expenseCategoryName(expense.category)}</strong>
                             <span class="expense-value">R$${parseFloat(expense.value).toFixed(2)}</span>
                         </div>
-                        <div style="color: #666; margin-bottom: 5px;">
+                        <div style="color: #666; margin-bottom: 5px;"><strong>Caixa:</strong>
                             ${expense.month ? `${getMonthName2(month)}/${year}` : 'Sem mês de referência'}
                         </div>
-                        <div style="margin-bottom: 5px;">Descrição: ${expense.description || 'Sem descrição'}</div>
-                        <div style="margin-bottom: 5px;">Registrado por: ${createdBy}</div>
+                        <div style="margin-bottom: 5px;"><strong><br>Descrição:</strong> ${expense.description || 'Sem descrição'}</div>
+                        <div style="margin-bottom: 5px;"><strong><br>Registrado por:</strong> ${createdBy}</div>
                         ${comprovanteHtml}
                     `;
                     activeExpenses.appendChild(expenseEl);
