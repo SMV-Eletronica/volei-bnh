@@ -51,22 +51,23 @@
 
 
                     <div>
-                        <label for="newPollTitle">Título:</label>
+                        <label for="newPollTitle">Título:</label><br>
                         <input type="text" id="newPollTitle" placeholder="Título da enquete">
                     </div>
                     <div>
-                        <label for="newPollDescription">Descrição:</label>
-                        <textarea id="newPollDescription" placeholder="Descrição da enquete"></textarea>
+                        <label for="newPollDescription">Descrição:</label><br>
+                        <textarea id="newPollDescription" placeholder="Descrição da enquete" style="width: 300px;"></textarea>
                     </div>
                  
                     <div>
-                        <label>Opções Principais:</label>
+                        <label>Opção A:</label>
                         <div id="mainOptions">
                             <div class="option-input">
                                 <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim">
                                 <button class="add-sub-option-btn" onclick="addSubOption(this)"><i class="fas fa-plus"></i> Subopção</button>
                                 <div class="sub-options"></div>
                             </div>
+                            <label>Opção B:</label>
                             <div class="option-input">
                                 <input type="text" class="main-option" placeholder="Opção 2 (ex: Não)" value="Não">
                                 <div class="sub-options"></div>
@@ -74,7 +75,7 @@
                         </div>
                         
                     </div>
-                    <button id="createPollBtn"><i class="fas fa-plus"></i> Criar Enquete</button>
+                    <button id="createPollBtn" style="background: var(--warning);"><i class="fas fa-plus"></i> Criar Enquete</button>
                 </div>
             </div>
 
