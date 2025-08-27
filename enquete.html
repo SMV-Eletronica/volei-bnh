@@ -64,7 +64,7 @@
                         <div id="mainOptions">
                             <div class="option-input">
                                 <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim">
-                                <button class="add-sub-option-btn" onclick="addSubOption(this)"><i class="fas fa-plus"></i> Subopção</button>
+                                <button class="add-sub-option-btn" onclick="addSubOption(this)"><i class="fas fa-plus"></i> Subopções para A</button>
                                 <div class="sub-options"></div>
                             </div>
                             <label>Opção B:</label>
@@ -720,7 +720,7 @@
             const subOptionInput = document.createElement('div');
             subOptionInput.className = 'sub-option-input';
             subOptionInput.innerHTML = `
-                <input type="text" class="sub-option" placeholder="Subopção">
+                <input type="text" class="sub-option" placeholder="Subopção para opção A">
                 <button onclick="removeSubOption(this)">Remover</button>
             `;
             subOptions.appendChild(subOptionInput);
