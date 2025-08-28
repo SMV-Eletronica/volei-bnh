@@ -672,7 +672,7 @@
                             <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'}</span>
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
                             <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
-                                ${poll.is_active ? 'Ativa' : 'Finalizada'}
+                                ${poll.is_active ? 'Em Votação' : 'Finalizada'}
                             </span>
                             <span>Data: ${formatDateToBR(poll.created_at)}</span>
                             ${voteCountHtml}
