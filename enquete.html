@@ -669,7 +669,7 @@
                 const html = `
                     <div class="poll-item ${isSelected ? 'selected' : ''}" data-poll-id="${poll.id}">
                         <div class="poll-info">
-                            <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'}</span>
+                            <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'} <span style="font-size:14px;"><br>👉 Clique para abrir.</span></span>                            
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
                             <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
                                 ${poll.is_active ? 'Em Votação' : 'Finalizada'}
@@ -682,9 +682,7 @@
                         </div>
                         ${isSelected ? `
                             <div class="poll-actions">
-                                ${!poll.is_active ? `
-                                    <button class="results-btn"><i class="fas fa-check"></i> Resultados Disponíveis</button>
-                                ` : ''}
+                                ${!poll.is_active ? '' : ''}
                                 ${isAdmin && poll.is_active ? `
                                     <button class="close-poll-btn" onclick="event.stopPropagation(); closePoll('${poll.id}')">Finalizar Enquete</button>
                                     <button class="delete-poll-btn" onclick="event.stopPropagation(); deletePoll('${poll.id}')">Excluir Enquete</button>
