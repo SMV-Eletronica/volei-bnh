@@ -361,6 +361,13 @@ body {
     vertical-align: middle;
 }
 
+.pending-comprovante-icon2 {
+    color: #f39c12;
+    margin-left: 4px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
 /* Tabs */
 .tabs {
     display: flex;
