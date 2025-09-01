@@ -198,7 +198,7 @@
                 </div>
                 <div class="defaulters-section">
                    
-                    <p style="font-size: 12px;">Legenda:<br> ⚠️ Integrante apenas notificado.<br> 🚫 Integrante com confirmação suspensa.</p>
+                    <p style="font-size: 12px;">Legenda:<br> ⚠️ Integrante notificado.<br> 🚫 Confirmação em jogos suspensa.</p>
                     <p style="font-size: 12px;">Clique no integrante para exibir....</p>
                     <div class="cash-summary-item" style="border-left: 4px solid orange">
                             <div class="cash-summary-title" style="color:red">Total em Contribuições Pendentes</div>
@@ -904,7 +904,7 @@ function createDashboardButton() {
                     <div class="defaulter-info">
                         <div class="defaulter-name">
                             ${defaulter.name}
-                            ${notificationMessage ? `<span class="notification-message" style="color: ${defaulter.notificationCount >= 2 ? '#e74c3c' : '#f1c40f'}; font-weight: bold; margin-top: 5px;">${notificationMessage}</span>` : ''}
+                            ${notificationMessage ? `<span class="notification-message" style="color: ${defaulter.notificationCount >= 2 ? '#e74c3c' : '#f1c40f'};font-size:16px; font-weight: bold; margin-top: 5px;">${notificationMessage}</span>` : ''}
                             ${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}</div>
                           
                         <div class="defaulter-months">${formattedMonths}</div>
