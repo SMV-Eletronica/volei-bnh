@@ -1198,7 +1198,7 @@ async function showDefaulterDetails(playerId, playerName) {
                 activeExpensesData.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
                 deletedExpensesArray.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
                 
-                renderRecentExpenses(activeExpensesData.slice(0, 10), deletedExpensesArray.slice(0, 10));
+                renderRecentExpenses(activeExpensesData.slice(0, 50), deletedExpensesArray.slice(0, 50));
             } catch (error) {
                 console.error("Error loading recent expenses:", error);
                 if (activeExpenses && activeExpenses instanceof HTMLElement) {
