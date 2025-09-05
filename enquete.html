@@ -213,13 +213,13 @@
         }
 
         function updateButtonVisibility() {
-    if (isAdmin || currentUserPlayer?.category === 'MENSAL') {
-        newPollControls.style.display = 'block';
-    } else {
-        newPollControls.style.display = 'none';
-    }
-    transparenciaBtn.style.display = 'inline-block';
-}
+            if (isAdmin || currentUserPlayer?.category === 'MENSAL') {
+                newPollControls.style.display = 'block';
+            } else {
+                newPollControls.style.display = 'none';
+            }
+            transparenciaBtn.style.display = 'inline-block';
+        }
 
         function switchTab(tabName) {
             activeTab = tabName;
@@ -671,10 +671,12 @@
                         <div class="poll-info">
                             <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'} <span style="font-size:14px;"><br>👉 Clique para abrir.</span></span>                            
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
+                            <span class="poll-creator">Criada por: ${poll.created_by_name || 'Desconhecido'}</span>
+                            <span>Data: ${formatDateToBR(poll.created_at)}</span>
                             <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
                                 ${poll.is_active ? 'Em Votação' : 'Finalizada'}
                             </span>
-                            <span>Data: ${formatDateToBR(poll.created_at)}</span>
+                            
                             ${voteCountHtml}
                             <div id="spinner-${poll.id}" class="loading-spinner"></div>
                             ${voteOptionsHtml}
@@ -711,8 +713,6 @@
             }
         }
 
-        
-
         function addSubOption(button) {
             const subOptions = button.nextElementSibling;
             const subOptionInput = document.createElement('div');
@@ -728,98 +728,92 @@
             button.parentElement.remove();
         }
 
-        
-
-
         async function createPoll() {
-    // Verificar se o usuário é administrador ou da categoria MENSAL
-    if (!isAdmin && currentUserPlayer?.category !== 'MENSAL') {
-        await Swal.fire({
-            icon: 'error',
-            title: 'Permissão Negada',
-            text: 'Apenas administradores ou membros MENSAL podem criar enquetes.',
-        });
-        return;
-    }
-    const title = newPollTitle.value.trim();
-    const description = newPollDescription.value.trim();
-    if (!title || !description) {
-        await Swal.fire({
-            icon: 'error',
-            title: 'Dados Inválidos',
-            text: 'Preencha o título e a descrição.',
-        });
-        return;
-    }
-    const mainOptions = document.querySelectorAll('.main-option');
-    const options = {};
-    const subOptions = {};
-    mainOptions.forEach((input, index) => {
-        const optionKey = `option${index + 1}`;
-        const optionValue = input.value.trim() || `Opção ${index + 1}`;
-        options[optionKey] = optionValue;
-        const subOptionInputs = input.parentElement.querySelectorAll('.sub-option');
-        if (subOptionInputs.length > 0) {
-            subOptions[optionKey] = {};
-            subOptionInputs.forEach((subInput, subIndex) => {
-                const subOptionValue = subInput.value.trim();
-                if (subOptionValue) {
-                    subOptions[optionKey][`sub${subIndex + 1}`] = subOptionValue;
+            // Verificar se o usuário é administrador ou da categoria MENSAL
+            if (!isAdmin && currentUserPlayer?.category !== 'MENSAL') {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Permissão Negada',
+                    text: 'Apenas administradores ou membros MENSAL podem criar enquetes.',
+                });
+                return;
+            }
+            const title = newPollTitle.value.trim();
+            const description = newPollDescription.value.trim();
+            if (!title || !description) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Dados Inválidos',
+                    text: 'Preencha o título e a descrição.',
+                });
+                return;
+            }
+            const mainOptions = document.querySelectorAll('.main-option');
+            const options = {};
+            const subOptions = {};
+            mainOptions.forEach((input, index) => {
+                const optionKey = `option${index + 1}`;
+                const optionValue = input.value.trim() || `Opção ${index + 1}`;
+                options[optionKey] = optionValue;
+                const subOptionInputs = input.parentElement.querySelectorAll('.sub-option');
+                if (subOptionInputs.length > 0) {
+                    subOptions[optionKey] = {};
+                    subOptionInputs.forEach((subInput, subIndex) => {
+                        const subOptionValue = subInput.value.trim();
+                        if (subOptionValue) {
+                            subOptions[optionKey][`sub${subIndex + 1}`] = subOptionValue;
+                        }
+                    });
                 }
             });
+            if (Object.keys(options).length < 2) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Dados Inválidos',
+                    text: 'Adicione pelo menos duas opções principais.',
+                });
+                return;
+            }
+            try {
+                const pollsRef = ref(database, 'polls');
+                const newPollRef = push(pollsRef);
+                await set(newPollRef, {
+                    title,
+                    description,
+                    created_by: currentUserPlayer?.id || 'unknown',
+                    created_by_name: currentUserPlayer?.name || 'Desconhecido',
+                    created_at: getBrazilDateTimeISO(),
+                    is_active: true,
+                    options,
+                    subOptions: Object.keys(subOptions).length > 0 ? subOptions : null
+                });
+                newPollTitle.value = '';
+                newPollDescription.value = '';
+                document.getElementById('mainOptions').innerHTML = `
+                    <div class="option-input">
+                        <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim/Concordo">
+                        <button class="add-sub-option-btn" onclick="addSubOption(this)">Adicionar Subopção</button>
+                        <div class="sub-options"></div>
+                    </div>
+                    <div class="option-input">
+                        <input type="text" class="main-option" placeholder="Opção 2 (ex: Não)" value="Não/Não Concordo">
+                        <div class="sub-options"></div>
+                    </div>
+                `;
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Enquete Criada',
+                    text: 'Enquete criada com sucesso!',
+                });
+            } catch (error) {
+                console.error('Erro ao criar enquete:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível criar a enquete.',
+                });
+            }
         }
-    });
-    if (Object.keys(options).length < 2) {
-        await Swal.fire({
-            icon: 'error',
-            title: 'Dados Inválidos',
-            text: 'Adicione pelo menos duas opções principais.',
-        });
-        return;
-    }
-    try {
-        const pollsRef = ref(database, 'polls');
-        const newPollRef = push(pollsRef);
-        await set(newPollRef, {
-            title,
-            description,
-            created_by: currentUserPlayer?.id || 'unknown',
-            created_at: getBrazilDateTimeISO(),
-            is_active: true,
-            options,
-            subOptions: Object.keys(subOptions).length > 0 ? subOptions : null
-        });
-        newPollTitle.value = '';
-        newPollDescription.value = '';
-        document.getElementById('mainOptions').innerHTML = `
-            <div class="option-input">
-                <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim/Condordo">
-                <button class="add-sub-option-btn" onclick="addSubOption(this)">Adicionar Subopção</button>
-                <div class="sub-options"></div>
-            </div>
-            <div class="option-input">
-                <input type="text" class="main-option" placeholder="Opção 2 (ex: Não)" value="Não/Não Concordo">
-                <div class="sub-options"></div>
-            </div>
-        `;
-        await Swal.fire({
-            icon: 'success',
-            title: 'Enquete Criada',
-            text: 'Enquete criada com sucesso!',
-        });
-    } catch (error) {
-        console.error('Erro ao criar enquete:', error);
-        await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Não foi possível criar a enquete.',
-        });
-    }
-}
-
-
-
-
 
         async function selectMainOption(pollId, option) {
             if (!currentUserPlayer || currentUserPlayer.category !== 'MENSAL') {
@@ -1064,7 +1058,6 @@
             }
         });
 
-        
         window.addSubOption = addSubOption;
         window.removeSubOption = removeSubOption;
         window.votePoll = votePoll;
