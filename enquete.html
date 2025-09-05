@@ -669,18 +669,24 @@
                 const html = `
                     <div class="poll-item ${isSelected ? 'selected' : ''}" data-poll-id="${poll.id}">
                         <div class="poll-info">
-                            <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'} <span style="font-size:14px;"><br>👉 Clique para abrir.</span></span>                            
+                            <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'} 
+
+                               
+
+                            <span style="font-size:14px;"><br>👉 Clique para abrir.</span></span>    
+                                                   
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
                             <span class="poll-creator">Criada por: ${poll.created_by_name || 'Desconhecido'}</span>
                             <span>Data: ${formatDateToBR(poll.created_at)}</span>
-                            <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
-                                ${poll.is_active ? 'Em Votação' : 'Finalizada'}
-                            </span>
+                            
                             
                             ${voteCountHtml}
                             <div id="spinner-${poll.id}" class="loading-spinner"></div>
                             ${voteOptionsHtml}
                             ${resultsHtml}
+                            <span class="poll-status status-${poll.is_active ? 'active' : 'closed'}">
+                                ${poll.is_active ? 'Em Votação' : 'Finalizada'}
+                            </span>  
                         </div>
                         ${isSelected ? `
                             <div class="poll-actions">
