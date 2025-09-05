@@ -60,16 +60,16 @@
                     </div>
                  
                     <div>
-                        <label>Opção A:</label>
+                        <label>Opção A para aprovar:</label>
                         <div id="mainOptions">
                             <div class="option-input">
-                                <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim">
+                                <input type="text" class="main-option" placeholder="(ex: Sim / Concordo)" >
                                 <button class="add-sub-option-btn" onclick="addSubOption(this)"><i class="fas fa-plus"></i> Subopções para A</button>
                                 <div class="sub-options"></div>
                             </div>
-                            <label>Opção B:</label>
+                            <label>Opção B para reprovar:</label>
                             <div class="option-input">
-                                <input type="text" class="main-option" placeholder="Opção 2 (ex: Não)" value="Não">
+                                <input type="text" class="main-option" placeholder="(ex: Não / Não Concordo)" >
                                 <div class="sub-options"></div>
                             </div>
                         </div>
@@ -718,7 +718,7 @@
             const subOptionInput = document.createElement('div');
             subOptionInput.className = 'sub-option-input';
             subOptionInput.innerHTML = `
-                <input type="text" class="sub-option" placeholder="Subopção para opção A">
+                <input type="text" class="sub-option" placeholder="(ex: Marca / Horário / Modelo)">
                 <button onclick="removeSubOption(this)">Remover</button>
             `;
             subOptions.appendChild(subOptionInput);
@@ -793,12 +793,12 @@
         newPollDescription.value = '';
         document.getElementById('mainOptions').innerHTML = `
             <div class="option-input">
-                <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim">
+                <input type="text" class="main-option" placeholder="Opção 1 (ex: Sim)" value="Sim/Condordo">
                 <button class="add-sub-option-btn" onclick="addSubOption(this)">Adicionar Subopção</button>
                 <div class="sub-options"></div>
             </div>
             <div class="option-input">
-                <input type="text" class="main-option" placeholder="Opção 2 (ex: Não)" value="Não">
+                <input type="text" class="main-option" placeholder="Opção 2 (ex: Não)" value="Não/Não Concordo">
                 <div class="sub-options"></div>
             </div>
         `;
