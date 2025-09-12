@@ -741,7 +741,7 @@ body {
     overflow: hidden;
      width: 99%;
     max-width: 500px;
-    height: 100% !important;
+   /* height: 100% !important;*/
 }
 
 .swal2-html-container {
