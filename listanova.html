@@ -1903,7 +1903,8 @@ async function addGuest() {
       }
     }
 
-async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
+
+    async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
   if (!isAdmin) {
     await Swal.fire({
       icon: 'error',
@@ -1922,6 +1923,9 @@ async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
   }
 
   try {
+    let playerData; // Variável para armazenar os dados do jogador
+    let paymentValue; // Variável para armazenar o valor do pagamento
+
     const gameRef = ref(database, `activeGames/${currentGameId}`);
     await runTransaction(gameRef, (currentGameData) => {
       if (!currentGameData) {
@@ -1945,31 +1949,19 @@ async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
         return currentGameData;
       }
 
+      // Armazena os dados do jogador para uso posterior
+      playerData = {...player};
+      
       if (player.status !== 'approved') {
         player.status = 'approved';
       }
       player.paymentStatus = isPaid ? 'pago' : 'inadimplente';
 
-      let paymentValue = parseFloat(guestFee.toFixed(2));
+      paymentValue = parseFloat(guestFee.toFixed(2));
       if (isNaN(paymentValue) || paymentValue <= 0) {
         console.warn(`Valor inválido para jogador ${player.name}: ${paymentValue}. Usando valor padrão: ${guestFee}`);
         paymentValue = parseFloat(guestFee.toFixed(2));
       }
-
-      const paymentData = {
-        additionalInfo: player.additionalInfo || player.name,
-        createdAt: player.createdAt || getBrazilDateTimeISO(),
-        month: player.month || getBrazilMonthYear(),
-        paymentType: player.paymentType || (player.category === 'CONVIDADO' ? 'CONVIDADO' : 'DIARIA'),
-        playerId: player.category === 'CONVIDADO' ? player.invitedById || player.id : player.id,
-        playerName: player.category === 'CONVIDADO' ? player.invitedByName || player.name : player.name,
-        value: paymentValue,
-        gameId: currentGameId,
-        date: isPaid ? (player.date || formatDateToISO(new Date())) : null,
-        paymentStatus: player.paymentStatus,
-        guestId: player.category === 'CONVIDADO' ? player.id : null,
-        guestName: player.category === 'CONVIDADO' ? player.name : null
-      };
 
       const confirmedData = {};
       confirmedPlayers.forEach(player => {
@@ -2021,34 +2013,59 @@ async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
       };
     });
 
+    // Agora use playerData em vez de player
+    if (!playerData) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Jogador Não Encontrado',
+        text: 'Jogador não encontrado.',
+      });
+      return;
+    }
+
+    const paymentData = {
+      additionalInfo: playerData.additionalInfo || playerData.name,
+      createdAt: playerData.createdAt || getBrazilDateTimeISO(),
+      month: playerData.month || getBrazilMonthYear(),
+      paymentType: playerData.paymentType || (playerData.category === 'CONVIDADO' ? 'CONVIDADO' : 'DIARIA'),
+      playerId: playerData.category === 'CONVIDADO' ? playerData.invitedById || playerData.id : playerData.id,
+      playerName: playerData.category === 'CONVIDADO' ? playerData.invitedByName || playerData.name : playerData.name,
+      value: paymentValue,
+      gameId: currentGameId,
+      date: isPaid ? (playerData.date || formatDateToISO(new Date())) : null,
+      paymentStatus: playerData.paymentStatus,
+      guestId: playerData.category === 'CONVIDADO' ? playerData.id : null,
+      guestName: playerData.category === 'CONVIDADO' ? playerData.name : null
+    };
+
     const existingPayment = await findExistingPayment(
-      player.category === 'CONVIDADO' ? player.invitedById || player.id : player.id,
+      paymentData.playerId,
       currentGameId,
-      player.paymentType || (player.category === 'CONVIDADO' ? 'CONVIDADO' : 'DIARIA'),
-      player.additionalInfo || player.name
+      paymentData.paymentType,
+      paymentData.additionalInfo
     );
 
-    const [year, month] = (player.month || getBrazilMonthYear()).split('-');
+    const [year, month] = (paymentData.month || getBrazilMonthYear()).split('-');
 
     if (existingPayment) {
-      console.log(`Atualizando pagamento existente para ${player.name}, ID: ${existingPayment.paymentId}`);
+      console.log(`Atualizando pagamento existente para ${playerData.name}, ID: ${existingPayment.paymentId}`);
       const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
       await update(paymentRef, {
-        paymentStatus: player.paymentStatus,
+        paymentStatus: playerData.paymentStatus,
         date: paymentData.date,
         value: paymentValue,
         updatedAt: getBrazilDateTimeISO()
       });
     } else {
-      console.log(`Criando novo pagamento para ${player.name}`);
-      const paymentId = `payment_${player.id}_${currentGameId}_${paymentData.paymentType}_${Date.now()}`;
+      console.log(`Criando novo pagamento para ${playerData.name}`);
+      const paymentId = `payment_${playerData.id}_${currentGameId}_${paymentData.paymentType}_${Date.now()}`;
       const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
       await set(paymentRef, paymentData);
     }
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
-    const message = `${player.name} foi ${statusText} para o jogo ${formattedDate}.`;
+    const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
     await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
 
     await Swal.fire({
@@ -2065,7 +2082,6 @@ async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
     });
   }
 }
-
 
 async function loadGameData(gameId) {
   console.log('Iniciando loadGameData, gameId:', gameId);
