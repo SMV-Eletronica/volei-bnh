@@ -1607,7 +1607,6 @@ finalizeGameBtn.addEventListener('click', async () => {
     }
     
 
-    
 
     async function addGuest() {
   Swal.fire({
@@ -1676,8 +1675,10 @@ finalizeGameBtn.addEventListener('click', async () => {
     });
     return;
   }
-  if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
-      waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)) {
+  if (
+    confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
+    waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)
+  ) {
     await Swal.fire({
       icon: 'warning',
       title: 'Convidado Já Adicionado',
@@ -1686,13 +1687,12 @@ finalizeGameBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Verificar saldo de crédito
   let useCredit = false;
   if (debtInfo.creditBalance >= guestFee) {
     const result = await Swal.fire({
       icon: 'question',
       title: 'Usar Crédito?',
-      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos (contribuições na categoria Outros). Deseja usar R$${guestFee.toFixed(2)} para adicionar o convidado <strong>${guestName}</strong>?`,
+      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja usar R$${guestFee.toFixed(2)} para adicionar o convidado <strong>${guestName}</strong>?`,
       showCancelButton: true,
       confirmButtonText: 'Usar Crédito',
       cancelButtonText: 'Pagar Normalmente',
@@ -1752,8 +1752,10 @@ finalizeGameBtn.addEventListener('click', async () => {
       }));
       playerLimit = currentGameData.playerLimit || 16;
 
-      if (confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
-          waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)) {
+      if (
+        confirmedPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id) ||
+        waitlistPlayers.some(p => p.name === guestName && p.category === 'CONVIDADO' && p.invitedById === window.currentUserPlayer.id)
+      ) {
         return currentGameData;
       }
 
@@ -1825,54 +1827,16 @@ finalizeGameBtn.addEventListener('click', async () => {
 
     const [year, month] = getBrazilMonthYear().split('-');
     if (useCredit) {
-      // Encontrar e marcar uma contribuição Outros como usada
-      let remainingCredit = guestFee;
-      const paymentsRef = ref(database, 'payments');
-      const paymentsSnapshot = await get(paymentsRef);
-      if (paymentsSnapshot.exists()) {
-        const paymentsData = paymentsSnapshot.val();
-        for (const y in paymentsData) {
-          for (const m in paymentsData[y]) {
-            for (const paymentId in paymentsData[y][m]) {
-              const payment = paymentsData[y][m][paymentId];
-              if (
-                payment.playerId === window.currentUserPlayer.id &&
-                payment.paymentType === 'Outros' &&
-                payment.paymentStatus === 'pago' &&
-                !payment.usedAt &&
-                remainingCredit > 0
-              ) {
-                const paymentRef = ref(database, `payments/${y}/${m}/${paymentId}`);
-                const paymentValue = parseFloat(payment.value);
-                if (paymentValue <= remainingCredit) {
-                  await update(paymentRef, {
-                    usedAt: getBrazilDateTimeISO(),
-                    usedInGameId: currentGameId
-                  });
-                  remainingCredit -= paymentValue;
-                } else {
-                  // Dividir a contribuição se for maior que o necessário
-                  await update(paymentRef, {
-                    value: paymentValue - remainingCredit,
-                    updatedAt: getBrazilDateTimeISO()
-                  });
-                  const newPaymentId = `payment_split_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                  const newPaymentRef = ref(database, `payments/${y}/${m}/${newPaymentId}`);
-                  await set(newPaymentRef, {
-                    ...payment,
-                    value: remainingCredit,
-                    usedAt: getBrazilDateTimeISO(),
-                    usedInGameId: currentGameId
-                  });
-                  remainingCredit = 0;
-                }
-              }
-            }
-          }
-        }
+      const creditResult = await useCredit(window.currentUserPlayer.id, guestFee, currentGameId, `Convidado ${guestName}`);
+      if (!creditResult.success) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Crédito insuficiente ou erro ao processar crédito.',
+        });
+        return;
       }
 
-      // Criar registro de pagamento com tipo 'credito'
       const paymentId = `payment_${guestId}_${currentGameId}_credito_${Date.now()}`;
       const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
       await set(paymentRef, {
@@ -1890,12 +1854,10 @@ finalizeGameBtn.addEventListener('click', async () => {
         guestName: guestName
       });
 
-      // Notificar uso de crédito
       const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
       const message = `Você usou R$${guestFee.toFixed(2)} de crédito para adicionar ${guestName}. Saldo de crédito restante: R$${newBalance.toFixed(2)}.`;
       await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]);
     } else {
-      // Criar registro de pagamento normal
       const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
       const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
       await set(paymentRef, {
@@ -1917,7 +1879,7 @@ finalizeGameBtn.addEventListener('click', async () => {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]);
 
     guestNameInput.value = '';
     await Swal.fire({
@@ -1966,6 +1928,7 @@ finalizeGameBtn.addEventListener('click', async () => {
     });
   }
 }
+    
 
     async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
       try {
@@ -2337,7 +2300,76 @@ async function loadGameData(gameId) {
       waitlistPlayers = sortPlayers(waitlistPlayers);
     }
 
- 
+
+
+    async function useCredit(playerId, amount, gameId, reason) {
+  try {
+    const paymentsRef = ref(database, 'payments');
+    const paymentsSnapshot = await get(paymentsRef);
+    let remainingAmount = amount;
+    const [year, month] = getBrazilMonthYear().split('-');
+    const usedCredits = [];
+
+    if (!paymentsSnapshot.exists()) {
+      return { success: false, remainingAmount };
+    }
+
+    const paymentsData = paymentsSnapshot.val();
+    for (const y in paymentsData) {
+      for (const m in paymentsData[y]) {
+        for (const paymentId in paymentsData[y][m]) {
+          const payment = paymentsData[y][m][paymentId];
+          if (
+            payment.playerId === playerId &&
+            payment.paymentType === 'Outros' &&
+            payment.paymentStatus === 'pago' &&
+            !payment.usedAt &&
+            remainingAmount > 0
+          ) {
+            const paymentRef = ref(database, `payments/${y}/${m}/${paymentId}`);
+            const paymentValue = parseFloat(payment.value);
+
+            if (paymentValue <= remainingAmount) {
+              // Usar todo o crédito e excluir o registro
+              await update(paymentRef, {
+                usedAt: getBrazilDateTimeISO(),
+                usedInGameId: gameId,
+                usedReason: reason
+              });
+              remainingAmount -= paymentValue;
+              usedCredits.push({ paymentId, year: y, month: m, value: paymentValue });
+            } else {
+              // Dividir o crédito
+              await update(paymentRef, {
+                value: paymentValue - remainingAmount,
+                updatedAt: getBrazilDateTimeISO()
+              });
+              const newPaymentId = `payment_split_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              const newPaymentRef = ref(database, `payments/${y}/${m}/${newPaymentId}`);
+              await set(newPaymentRef, {
+                ...payment,
+                value: remainingAmount,
+                usedAt: getBrazilDateTimeISO(),
+                usedInGameId: gameId,
+                usedReason: reason
+              });
+              usedCredits.push({ paymentId: newPaymentId, year: y, month: m, value: remainingAmount });
+              remainingAmount = 0;
+            }
+          }
+        }
+      }
+    }
+
+    return { success: remainingAmount === 0, remainingAmount, usedCredits };
+  } catch (error) {
+    console.error('Erro ao usar crédito:', error);
+    return { success: false, remainingAmount: amount, usedCredits: [] };
+  }
+}
+
+
+
 async function confirmPlayer(targetPlayerId = null) {
   Swal.fire({
     title: 'Confirmando...',
@@ -2414,12 +2446,16 @@ async function confirmPlayer(targetPlayerId = null) {
 
     const playerData = playerSnapshot.val();
     let useCredit = false;
+    let paymentStatus = playerData.category === 'MENSAL' ? 'pago' : 'inadimplente';
+    let paymentType = playerData.category === 'DIARIA' ? 'DIARIA' : null;
+    let paymentDate = null;
+
     if (playerData.category === 'DIARIA') {
       if (debtInfo.creditBalance >= guestFee) {
         const result = await Swal.fire({
           icon: 'question',
           title: 'Usar Crédito?',
-          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos (contribuições na categoria Outros). Deseja usar R$${guestFee.toFixed(2)} para confirmar sua presença?`,
+          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja usar R$${guestFee.toFixed(2)} para confirmar sua presença?`,
           showCancelButton: true,
           confirmButtonText: 'Usar Crédito',
           cancelButtonText: 'Pagar Normalmente',
@@ -2427,7 +2463,20 @@ async function confirmPlayer(targetPlayerId = null) {
         useCredit = result.isConfirmed;
       }
 
-      if (!useCredit) {
+      if (useCredit) {
+        const creditResult = await useCredit(playerId, guestFee, currentGameId, `Presença de ${playerData.name}`);
+        if (!creditResult.success) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Crédito insuficiente ou erro ao processar crédito.',
+          });
+          return;
+        }
+        paymentStatus = 'pago';
+        paymentType = 'credito';
+        paymentDate = formatDateToISO(new Date());
+      } else {
         const result = await Swal.fire({
           icon: 'warning',
           title: 'Atenção',
@@ -2448,14 +2497,14 @@ async function confirmPlayer(targetPlayerId = null) {
       category: playerData.category || 'CONVIDADO',
       position: playerData.position || '-',
       timestamp: getBrazilTimestamp(),
-      paymentStatus: playerData.category === 'DIARIA' ? (useCredit ? 'pago' : 'inadimplente') : await checkPaymentStatus(playerId),
+      paymentStatus,
       imageUrl: playerData.imageUrl || defaultImage,
       status: playerData.category === 'DIARIA' ? (useCredit ? 'approved' : 'pending') : null,
       additionalInfo: playerData.name || null,
       createdAt: getBrazilDateTimeISO(),
-      date: useCredit ? formatDateToISO(new Date()) : null,
+      date: paymentDate,
       month: getBrazilMonthYear(),
-      paymentType: playerData.category === 'DIARIA' ? (useCredit ? 'credito' : 'DIARIA') : null,
+      paymentType,
       value: playerData.category === 'DIARIA' ? parseFloat(guestFee.toFixed(2)) : null
     };
 
@@ -2557,85 +2606,25 @@ async function confirmPlayer(targetPlayerId = null) {
 
     if (playerObj.category === 'DIARIA') {
       const [year, month] = getBrazilMonthYear().split('-');
+      const paymentId = `payment_${playerId}_${currentGameId}_${useCredit ? 'credito' : 'DIARIA'}_${Date.now()}`;
+      const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+      await set(paymentRef, {
+        additionalInfo: playerObj.name,
+        createdAt: getBrazilDateTimeISO(),
+        month: getBrazilMonthYear(),
+        paymentType: useCredit ? 'credito' : 'DIARIA',
+        playerId: playerId,
+        playerName: playerObj.name,
+        value: parseFloat(guestFee.toFixed(2)),
+        gameId: currentGameId,
+        date: useCredit ? formatDateToISO(new Date()) : null,
+        paymentStatus: useCredit ? 'pago' : 'inadimplente'
+      });
+
       if (useCredit) {
-        let remainingCredit = guestFee;
-        const paymentsRef = ref(database, 'payments');
-        const paymentsSnapshot = await get(paymentsRef);
-        if (paymentsSnapshot.exists()) {
-          const paymentsData = paymentsSnapshot.val();
-          for (const y in paymentsData) {
-            for (const m in paymentsData[y]) {
-              for (const paymentId in paymentsData[y][m]) {
-                const payment = paymentsData[y][m][paymentId];
-                if (
-                  payment.playerId === playerId &&
-                  payment.paymentType === 'Outros' &&
-                  payment.paymentStatus === 'pago' &&
-                  !payment.usedAt &&
-                  remainingCredit > 0
-                ) {
-                  const paymentRef = ref(database, `payments/${y}/${m}/${paymentId}`);
-                  const paymentValue = parseFloat(payment.value);
-                  if (paymentValue <= remainingCredit) {
-                    await update(paymentRef, {
-                      usedAt: getBrazilDateTimeISO(),
-                      usedInGameId: currentGameId
-                    });
-                    remainingCredit -= paymentValue;
-                  } else {
-                    await update(paymentRef, {
-                      value: paymentValue - remainingCredit,
-                      updatedAt: getBrazilDateTimeISO()
-                    });
-                    const newPaymentId = `payment_split_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                    const newPaymentRef = ref(database, `payments/${y}/${m}/${newPaymentId}`);
-                    await set(newPaymentRef, {
-                      ...payment,
-                      value: remainingCredit,
-                      usedAt: getBrazilDateTimeISO(),
-                      usedInGameId: currentGameId
-                    });
-                    remainingCredit = 0;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        const paymentId = `payment_${playerId}_${currentGameId}_credito_${Date.now()}`;
-        const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-        await set(paymentRef, {
-          additionalInfo: playerObj.name,
-          createdAt: getBrazilDateTimeISO(),
-          month: getBrazilMonthYear(),
-          paymentType: 'credito',
-          playerId: playerId,
-          playerName: playerObj.name,
-          value: parseFloat(guestFee.toFixed(2)),
-          gameId: currentGameId,
-          date: formatDateToISO(new Date()),
-          paymentStatus: 'pago'
-        });
-
         const newBalance = await checkPlayerDebts(playerId).creditBalance;
         const message = `Você usou R$${guestFee.toFixed(2)} de crédito para confirmar presença. Saldo de crédito restante: R$${newBalance.toFixed(2)}.`;
         await sendPushNotification(message, playerObj.imageUrl || defaultImage, [playerId]);
-      } else {
-        const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
-        const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-        await set(paymentRef, {
-          additionalInfo: playerObj.name,
-          createdAt: getBrazilDateTimeISO(),
-          month: getBrazilMonthYear(),
-          paymentType: 'DIARIA',
-          playerId: playerId,
-          playerName: playerObj.name,
-          value: parseFloat(guestFee.toFixed(2)),
-          gameId: currentGameId,
-          date: null,
-          paymentStatus: 'inadimplente'
-        });
       }
     }
 
@@ -2701,6 +2690,7 @@ async function confirmPlayer(targetPlayerId = null) {
 }
 
 
+ 
     async function checkPaymentStatus(playerId) {
       try {
         const paymentsRef = ref(database, 'payments');
