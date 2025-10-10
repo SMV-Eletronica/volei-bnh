@@ -1433,8 +1433,14 @@ finalizeGameBtn.addEventListener('click', async () => {
               value: parseFloat(payment.value),
               gameId: currentGameId,
               date: formatDateToISO(new Date()),
-              paymentStatus: 'pago'
+              paymentStatus: 'pago',
               // NÃO marca como usado - fica disponível para jogos futuros
+              // Incluir campos de comprovante, se existirem
+    comprovanteApprovedAt: payment.comprovanteApprovedAt || null,
+    comprovanteApprovedBy: payment.comprovanteApprovedBy || null,
+    comprovanteStatus: payment.comprovanteStatus || null,
+    comprovanteURL: payment.comprovanteURL || null,
+    comprovanteUploadedAt: payment.comprovanteUploadedAt || null
             });
 
             // Remover o pagamento original
@@ -1614,7 +1620,7 @@ finalizeGameBtn.addEventListener('click', async () => {
 
 
     // Nova função para usar créditos com subtração
-async function usePlayerCredit(playerId, amount, gameId, description) {
+    async function usePlayerCredit(playerId, amount, gameId, description) {
   try {
     let remainingAmount = amount;
     const paymentsRef = ref(database, 'payments');
@@ -1626,6 +1632,7 @@ async function usePlayerCredit(playerId, amount, gameId, description) {
 
     const paymentsData = paymentsSnapshot.val();
     const usedCredits = [];
+    let comprovanteData = {}; // PARA ARMAZENAR DADOS DO COMPROVANTE
 
     // Buscar créditos disponíveis (Creditos pagos não usados)
     for (const year in paymentsData) {
@@ -1641,6 +1648,15 @@ async function usePlayerCredit(playerId, amount, gameId, description) {
             
             const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
             const paymentValue = parseFloat(payment.value);
+            
+            // CAPTURAR DADOS DO COMPROVANTE DO CRÉDITO
+            if (payment.comprovanteURL) {
+              comprovanteData.comprovanteURL = payment.comprovanteURL;
+              comprovanteData.comprovanteStatus = payment.comprovanteStatus;
+              comprovanteData.comprovanteApprovedAt = payment.comprovanteApprovedAt;
+              comprovanteData.comprovanteApprovedBy = payment.comprovanteApprovedBy;
+              comprovanteData.comprovanteUploadedAt = payment.comprovanteUploadedAt;
+            }
             
             if (paymentValue <= remainingAmount) {
               // Usar crédito completo e excluir registro
@@ -1686,7 +1702,8 @@ async function usePlayerCredit(playerId, amount, gameId, description) {
     return { 
       success: remainingAmount === 0, 
       remaining: remainingAmount,
-      usedCredits: usedCredits
+      usedCredits: usedCredits,
+      comprovanteData: comprovanteData // RETORNAR DADOS DO COMPROVANTE
     };
 
   } catch (error) {
@@ -1694,7 +1711,6 @@ async function usePlayerCredit(playerId, amount, gameId, description) {
     return { success: false, remaining: amount, error: error.message };
   }
 }
-
 
 
 async function addGuest() {
@@ -1822,6 +1838,8 @@ async function addGuest() {
       month: getBrazilMonthYear(),
       paymentType: useCredit ? 'CONVIDADO' : 'CONVIDADO',
       value: parseFloat(guestFee.toFixed(2))
+
+      
     };
 
     const gameRef = ref(database, `activeGames/${currentGameId}`);
@@ -1879,6 +1897,7 @@ async function addGuest() {
           month: player.month || null,
           paymentType: player.paymentType || null,
           value: player.value || null
+          
         };
       });
 
@@ -1913,40 +1932,51 @@ async function addGuest() {
 
     const [year, month] = getBrazilMonthYear().split('-');
     if (useCredit) {
-      // Usar a nova função de crédito
-      const creditResult = await usePlayerCredit(
-        window.currentUserPlayer.id,
-        guestFee,
-        currentGameId,
-        `Convidado: ${guestName}`
-      );
+  // Usar a função de crédito
+  const creditResult = await usePlayerCredit(
+    window.currentUserPlayer.id,
+    guestFee,
+    currentGameId,
+    `Convidado: ${guestName}`
+  );
 
-      if (!creditResult.success) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Crédito Insuficiente',
-          text: `Saldo de crédito insuficiente. Faltam R$${creditResult.remaining.toFixed(2)}.`,
-        });
-        return;
-      }
+  if (!creditResult.success) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Crédito Insuficiente',
+      text: `Saldo de crédito insuficiente. Faltam R$${creditResult.remaining.toFixed(2)}.`,
+    });
+    return;
+  }
 
-      // Criar registro de pagamento com tipo 'credito'
-      const paymentId = `payment_${guestId}_${currentGameId}_credito_${Date.now()}`;
-      const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-      await set(paymentRef, {
-        additionalInfo: guestName,
-        createdAt: getBrazilDateTimeISO(),
-        month: getBrazilMonthYear(),
-        paymentType: 'CONVIDADO',
-        playerId: window.currentUserPlayer.id,
-        playerName: window.currentUserPlayer.name,
-        value: parseFloat(guestFee.toFixed(2)),
-        gameId: currentGameId,
-        date: formatDateToISO(new Date()),
-        paymentStatus: 'pago',
-        guestId: guestId,
-        guestName: guestName
-      });
+  // Criar registro de pagamento COM DADOS DO COMPROVANTE
+  const paymentId = `payment_${guestId}_${currentGameId}_credito_${Date.now()}`;
+  const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+  
+  const paymentData = {
+    additionalInfo: guestName,
+    createdAt: getBrazilDateTimeISO(),
+    month: getBrazilMonthYear(),
+    paymentType: 'CONVIDADO',
+    playerId: window.currentUserPlayer.id,
+    playerName: window.currentUserPlayer.name,
+    value: parseFloat(guestFee.toFixed(2)),
+    gameId: currentGameId,
+    date: formatDateToISO(new Date()),
+    paymentStatus: 'pago',
+    guestId: guestId,
+    guestName: guestName,
+    // TRANSFERIR DADOS DO COMPROVANTE DOS CRÉDITOS
+    comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || null,
+    comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || null,
+    comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || null,
+    comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
+    comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null
+  };
+
+  await set(paymentRef, paymentData);
+
+  // Resto do código permanece igual...
 
       // Notificar uso de crédito com detalhes
       const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
@@ -2631,38 +2661,50 @@ async function loadGameData(gameId) {
 
     if (playerObj.category === 'DIARIA') {
       const [year, month] = getBrazilMonthYear().split('-');
-      if (useCredit) {
-        // Usar a nova função de crédito
-        const creditResult = await usePlayerCredit(
-          playerId,
-          guestFee,
-          currentGameId,
-          `Diarista: ${playerObj.name}`
-        );
+     if (useCredit) {
+  // Usar a função de crédito
+  const creditResult = await usePlayerCredit(
+    playerId,
+    guestFee,
+    currentGameId,
+    `Diarista: ${playerObj.name}`
+  );
 
-        if (!creditResult.success) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Crédito Insuficiente',
-            text: `Saldo de crédito insuficiente. Faltam R$${creditResult.remaining.toFixed(2)}.`,
-          });
-          return;
-        }
+  if (!creditResult.success) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Crédito Insuficiente',
+      text: `Saldo de crédito insuficiente. Faltam R$${creditResult.remaining.toFixed(2)}.`,
+    });
+    return;
+  }
 
-        const paymentId = `payment_${playerId}_${currentGameId}_credito_${Date.now()}`;
-        const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-        await set(paymentRef, {
-          additionalInfo: playerObj.name,
-          createdAt: getBrazilDateTimeISO(),
-          month: getBrazilMonthYear(),
-          paymentType: 'DIARIA',
-          playerId: playerId,
-          playerName: playerObj.name,
-          value: parseFloat(guestFee.toFixed(2)),
-          gameId: currentGameId,
-          date: formatDateToISO(new Date()),
-          paymentStatus: 'pago'
-        });
+  const paymentId = `payment_${playerId}_${currentGameId}_credito_${Date.now()}`;
+  const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+  
+  const paymentData = {
+    additionalInfo: playerObj.name,
+    createdAt: getBrazilDateTimeISO(),
+    month: getBrazilMonthYear(),
+    paymentType: 'DIARIA',
+    playerId: playerId,
+    playerName: playerObj.name,
+    value: parseFloat(guestFee.toFixed(2)),
+    gameId: currentGameId,
+    date: formatDateToISO(new Date()),
+    paymentStatus: 'pago',
+    // TRANSFERIR DADOS DO COMPROVANTE DOS CRÉDITOS
+    comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || null,
+    comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || null,
+    comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || null,
+    comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
+    comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null
+  };
+
+  await set(paymentRef, paymentData);
+
+  // Resto do código permanece igual...
+
 
         // Notificar uso de crédito com detalhes
         const newBalance = await checkPlayerDebts(playerId).creditBalance;
