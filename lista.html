@@ -2156,13 +2156,15 @@ async function addGuest() {
         return currentGameData;
       }
 
-      // Armazena os dados do jogador para uso posterior
-      playerData = {...player};
+     
       
       if (player.status !== 'approved') {
         player.status = 'approved';
       }
       player.paymentStatus = isPaid ? 'pago' : 'inadimplente';
+
+       // Armazena os dados do jogador para uso posterior
+      playerData = {...player};
 
       paymentValue = parseFloat(guestFee.toFixed(2));
       if (isNaN(paymentValue) || paymentValue <= 0) {
