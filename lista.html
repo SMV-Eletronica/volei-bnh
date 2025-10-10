@@ -2835,7 +2835,7 @@ async function loadGameData(gameId) {
       }
     }
 
-async function removePlayer(playerId, fromConfirmed = true) {
+    async function removePlayer(playerId, fromConfirmed = true) {
   if (!currentGameId) {
     await Swal.fire({
       icon: 'error',
@@ -2961,28 +2961,60 @@ async function removePlayer(playerId, fromConfirmed = true) {
       };
     });
 
+    // Verificar e converter pagamento em crédito, se necessário
+    let existingPayment = null;
     if (player.category === 'CONVIDADO') {
-      const existingPayment = await findExistingPayment(
+      existingPayment = await findExistingPayment(
         player.invitedById || window.currentUserPlayer.id,
         currentGameId,
         'CONVIDADO',
         player.name
       );
-      if (existingPayment) {
-        const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-        await remove(paymentRef);
-      }
     } else if (player.category === 'DIARIA') {
-      const existingPayment = await findExistingPayment(
+      existingPayment = await findExistingPayment(
         playerId,
         currentGameId,
         'DIARIA',
         player.name
       );
-      if (existingPayment) {
-        const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-        await remove(paymentRef);
-      }
+    }
+
+    if (existingPayment && existingPayment.paymentStatus === 'pago') {
+      const [year, month] = getBrazilMonthYear().split('-');
+      const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
+      const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
+      
+      // Criar novo registro de crédito
+      await set(newPaymentRef, {
+        additionalInfo: `Crédito por remoção de ${player.name} do jogo ${currentGameId}`,
+        createdAt: getBrazilDateTimeISO(),
+        month: getBrazilMonthYear(),
+        paymentType: 'Creditos',
+        playerId: existingPayment.playerId,
+        playerName: existingPayment.playerName,
+        value: parseFloat(existingPayment.value),
+        gameId: currentGameId,
+        date: formatDateToISO(new Date()),
+        paymentStatus: 'pago',
+        comprovanteApprovedAt: existingPayment.comprovanteApprovedAt || null,
+        comprovanteApprovedBy: existingPayment.comprovanteApprovedBy || null,
+        comprovanteStatus: existingPayment.comprovanteStatus || null,
+        comprovanteURL: existingPayment.comprovanteURL || null,
+        comprovanteUploadedAt: existingPayment.comprovanteUploadedAt || null
+      });
+
+      // Notificar jogador sobre o crédito
+      const playerData = allPlayers.find(p => p.id === existingPayment.playerId);
+      const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} no jogo ${currentGameId} foi convertido em crédito (categoria Creditos) devido à remoção da lista.`;
+      await sendPushNotification(message, playerData?.imageUrl || defaultImage, [existingPayment.playerId]);
+
+      // Remover o pagamento original
+      const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+      await remove(paymentRef);
+    } else if (existingPayment) {
+      // Se o pagamento existe mas não está pago, apenas remover
+      const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
+      await remove(paymentRef);
     }
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
@@ -3005,7 +3037,6 @@ async function removePlayer(playerId, fromConfirmed = true) {
     });
   }
 }
-
 
      async function updateFirebaseLists() {
       if (!currentGameId) return;
