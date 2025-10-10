@@ -1423,8 +1423,14 @@ finalizeGameBtn.addEventListener('click', async () => {
             const [year, month] = getBrazilMonthYear().split('-');
             const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
             const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
+
+            // Obter a data do jogador e formatar
+      const gameDate = player.date 
+        ? DateTime.fromISO(player.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy')
+        : 'data não definida';
+        
             await set(newPaymentRef, {
-              additionalInfo: `Crédito por cancelamento do jogo`,
+              additionalInfo: `Crédito por cancelamento do jogo ${gameDate}`,
               createdAt: getBrazilDateTimeISO(),
               month: getBrazilMonthYear(),
               paymentType: 'Creditos',
@@ -3011,7 +3017,7 @@ async function loadGameData(gameId) {
 
       // Notificar jogador sobre o crédito
       const playerData = allPlayers.find(p => p.id === existingPayment.playerId);
-      const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} no jogo ${currentGameId} foi convertido em crédito (categoria Creditos) devido à remoção da lista.`;
+      const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} foi convertido em crédito devido à remoção da lista.`;
       await sendPushNotification(message, playerData?.imageUrl || defaultImage, [existingPayment.playerId]);
 
       // Remover o pagamento original
