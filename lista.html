@@ -2001,7 +2001,7 @@ async function addGuest() {
           PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
           <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
         `,
-      showConfirmButton: !useCredit,
+      showConfirmButton: useCredit,
       didOpen: () => {
         if (!useCredit) {
           const copyPixBtn = document.getElementById('copyPixBtn');
