@@ -1424,7 +1424,7 @@ finalizeGameBtn.addEventListener('click', async () => {
             const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
             const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
             await set(newPaymentRef, {
-              additionalInfo: `Crédito por cancelamento do jogo ${currentGameId}`,
+              additionalInfo: `Crédito por cancelamento do jogo`,
               createdAt: getBrazilDateTimeISO(),
               month: getBrazilMonthYear(),
               paymentType: 'Creditos',
