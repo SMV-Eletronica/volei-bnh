@@ -714,13 +714,15 @@ async function checkPlayerDebts(playerId) {
         for (const month in paymentsData[year]) {
           for (const paymentId in paymentsData[year][month]) {
             const payment = paymentsData[year][month][paymentId];
-            if (payment.playerId === playerId) {
+            if (payment && payment.playerId === playerId) {
               if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && payment.paymentStatus === 'inadimplente') {
                 debtCount += 1;
                 totalDebt += parseFloat(payment.value || 0);
               } else if (payment.paymentType === 'Creditos' && payment.paymentStatus === 'pago' && !payment.usedAt) {
-                // Agora soma o valor atual dos créditos (que pode ter sido reduzido)
-                creditBalance += parseFloat(payment.value || 0);
+                const creditValue = parseFloat(payment.value);
+                if (!isNaN(creditValue)) {
+                  creditBalance += creditValue;
+                }
               }
             }
           }
@@ -728,19 +730,23 @@ async function checkPlayerDebts(playerId) {
       }
     }
 
+    // Garantir valores numéricos válidos
     return {
       hasDebt: debtCount > 0,
-      debtCount,
-      totalDebt,
-      creditBalance
+      debtCount: debtCount || 0,
+      totalDebt: totalDebt || 0,
+      creditBalance: creditBalance || 0
     };
   } catch (error) {
     console.error('Erro ao verificar débitos e créditos:', error);
-    return { hasDebt: false, debtCount: 0, totalDebt: 0, creditBalance: 0 };
+    return { 
+      hasDebt: false, 
+      debtCount: 0, 
+      totalDebt: 0, 
+      creditBalance: 0
+    };
   }
 }
-
-
 
 async function clearDebtNotifications(playerId) {
   try {
@@ -1956,7 +1962,7 @@ async function addGuest() {
         message += ` Detalhes: ${creditDetails}.`;
       }
       
-      message += ` Saldo de crédito restante: R$${newBalance.toFixed(2)}.`;
+      message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
       
       await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]);
     } else {
@@ -2672,7 +2678,7 @@ async function loadGameData(gameId) {
           message += ` Detalhes: ${creditDetails}.`;
         }
         
-        message += ` Saldo de crédito restante: R$${newBalance.toFixed(2)}.`;
+        message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
         
         await sendPushNotification(message, playerObj.imageUrl || defaultImage, [playerId]);
       } else {
@@ -2700,7 +2706,7 @@ async function loadGameData(gameId) {
     if (playerObj.category === 'DIARIA') {
       await Swal.fire({
         icon: 'success',
-        title: 'Sucesso',
+        title: 'Sucesso',        
         html: useCredit
           ? `Presença confirmada usando crédito de R$${guestFee.toFixed(2)}.`
           : `
@@ -2708,7 +2714,7 @@ async function loadGameData(gameId) {
             PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
             <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
           `,
-        showConfirmButton: !useCredit,
+        showConfirmButton: useCredit,
         didOpen: () => {
           if (!useCredit) {
             const copyPixBtn = document.getElementById('copyPixBtn');
