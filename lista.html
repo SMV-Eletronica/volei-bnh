@@ -718,7 +718,7 @@ async function checkPlayerDebts(playerId) {
               if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && payment.paymentStatus === 'inadimplente') {
                 debtCount += 1;
                 totalDebt += parseFloat(payment.value || 0);
-              } else if (payment.paymentType === 'Outros' && payment.paymentStatus === 'pago' && !payment.usedAt) {
+              } else if (payment.paymentType === 'Creditos' && payment.paymentStatus === 'pago' && !payment.usedAt) {
                 // Agora soma o valor atual dos créditos (que pode ter sido reduzido)
                 creditBalance += parseFloat(payment.value || 0);
               }
@@ -1403,7 +1403,7 @@ finalizeGameBtn.addEventListener('click', async () => {
       const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
       const allPlayerIds = [...confirmedPlayerIds, ...waitlistPlayerIds];
 
-      // Converter pagamentos pagos em contribuições Outros (sem marcar como usado)
+      // Converter pagamentos pagos em contribuições Creditos (sem marcar como usado)
       for (const playerId of allPlayerIds) {
         const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
         if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
@@ -1415,13 +1415,13 @@ finalizeGameBtn.addEventListener('click', async () => {
           );
           if (payment && payment.paymentStatus === 'pago') {
             const [year, month] = getBrazilMonthYear().split('-');
-            const newPaymentId = `payment_${playerId}_${currentGameId}_Outros_${Date.now()}`;
+            const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
             const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
             await set(newPaymentRef, {
               additionalInfo: `Crédito por cancelamento do jogo ${currentGameId}`,
               createdAt: getBrazilDateTimeISO(),
               month: getBrazilMonthYear(),
-              paymentType: 'Outros',
+              paymentType: 'Creditos',
               playerId: payment.playerId,
               playerName: payment.playerName,
               value: parseFloat(payment.value),
@@ -1437,7 +1437,7 @@ finalizeGameBtn.addEventListener('click', async () => {
 
             // Notificar jogador sobre o crédito
             const playerData = allPlayers.find(p => p.id === payment.playerId);
-            const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito (categoria Outros).`;
+            const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito (categoria Creditos).`;
             await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
           }
         }
@@ -1447,7 +1447,7 @@ finalizeGameBtn.addEventListener('click', async () => {
       await Swal.fire({
         icon: 'success',
         title: 'Lista Descartada',
-        text: 'A lista foi descartada e os pagamentos foram convertidos em créditos (categoria Outros).',
+        text: 'A lista foi descartada e os pagamentos foram convertidos em créditos (categoria Creditos).',
       });
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
@@ -1621,14 +1621,14 @@ async function usePlayerCredit(playerId, amount, gameId, description) {
     const paymentsData = paymentsSnapshot.val();
     const usedCredits = [];
 
-    // Buscar créditos disponíveis (Outros pagos não usados)
+    // Buscar créditos disponíveis (Creditos pagos não usados)
     for (const year in paymentsData) {
       for (const month in paymentsData[year]) {
         for (const paymentId in paymentsData[year][month]) {
           const payment = paymentsData[year][month][paymentId];
           
           if (payment.playerId === playerId && 
-              payment.paymentType === 'Outros' && 
+              payment.paymentType === 'Creditos' && 
               payment.paymentStatus === 'pago' && 
               !payment.usedAt && 
               remainingAmount > 0) {
@@ -1774,7 +1774,7 @@ async function addGuest() {
     const result = await Swal.fire({
       icon: 'question',
       title: 'Usar Crédito?',
-      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos (contribuições na categoria Outros). Deseja usar R$${guestFee.toFixed(2)} para adicionar o convidado <strong>${guestName}</strong>?`,
+      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos (contribuições na categoria Creditos). Deseja usar R$${guestFee.toFixed(2)} para adicionar o convidado <strong>${guestName}</strong>?`,
       showCancelButton: true,
       confirmButtonText: 'Usar Crédito',
       cancelButtonText: 'Pagar Normalmente',
@@ -2487,7 +2487,7 @@ async function loadGameData(gameId) {
         const result = await Swal.fire({
           icon: 'question',
           title: 'Usar Crédito?',
-          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos (contribuições na categoria Outros). Deseja usar R$${guestFee.toFixed(2)} para confirmar sua presença?`,
+          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos (contribuições na categoria Creditos). Deseja usar R$${guestFee.toFixed(2)} para confirmar sua presença?`,
           showCancelButton: true,
           confirmButtonText: 'Usar Crédito',
           cancelButtonText: 'Pagar Normalmente',
