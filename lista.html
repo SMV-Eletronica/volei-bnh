@@ -579,12 +579,24 @@ async function loadCurrentUserPlayer() {
       sidebarUserPosition.textContent = window.currentUserPlayer?.position || 'Posição não definida';
       sidebarUserCategory.textContent = window.currentUserPlayer?.category || 'Categoria não definida';
 
-      // Exibir saldo de crédito
+     // Exibir saldo de crédito
+      /*
       const debtInfo = await checkPlayerDebts(window.currentUserPlayer?.id);
       const creditDisplay = document.createElement('div');
       creditDisplay.className = 'sidebar-user-credit';
       creditDisplay.textContent = `Crédito: R$${debtInfo.creditBalance.toFixed(2)}`;
       document.querySelector('.sidebar-user-info').appendChild(creditDisplay);
+
+*/
+
+// Exibir saldo de crédito apenas se for maior que zero
+const debtInfo = await checkPlayerDebts(window.currentUserPlayer?.id);
+if (debtInfo.creditBalance && debtInfo.creditBalance > 0) {
+    const creditDisplay = document.createElement('div');
+    creditDisplay.className = 'sidebar-user-credit';
+    creditDisplay.textContent = `Crédito: R$${debtInfo.creditBalance.toFixed(2)}`;
+    document.querySelector('.sidebar-user-info').appendChild(creditDisplay);
+}
 
       await Promise.all(
         allPlayers
