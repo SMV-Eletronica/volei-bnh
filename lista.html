@@ -2988,17 +2988,11 @@ async function loadGameData(gameId) {
     if (existingPayment && existingPayment.paymentStatus === 'pago') {
       const [year, month] = getBrazilMonthYear().split('-');
       const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
-      const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
-
-
-       // Obter a data do jogador e formatar
-      const gameDate2 = player.date 
-        ? DateTime.fromISO(player.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy')
-        : 'data não definida';
+      const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);     
       
       // Criar novo registro de crédito
       await set(newPaymentRef, {
-        additionalInfo: `Crédito por remoção de ${player.name} do jogo ${gameDate2}`,
+        additionalInfo: `Crédito por remoção de ${player.name} do jogo`,
         createdAt: getBrazilDateTimeISO(),
         month: getBrazilMonthYear(),
         paymentType: 'Creditos',
