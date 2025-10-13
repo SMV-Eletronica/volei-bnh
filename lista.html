@@ -1369,8 +1369,7 @@ async function saveGameToHistory(gameId, gameData) {
     async function initializeGameList() {
       console.log('Iniciando initializeGameList');
       await loadActiveGames();
-      
-finalizeGameBtn.addEventListener('click', async () => {
+ finalizeGameBtn.addEventListener('click', async () => {
   if (!currentGameId) {
     await Swal.fire({
       icon: 'error',
@@ -1421,7 +1420,7 @@ finalizeGameBtn.addEventListener('click', async () => {
       const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
       const allPlayerIds = [...confirmedPlayerIds, ...waitlistPlayerIds];
 
-      // Converter pagamentos pagos em contribuições Creditos (sem marcar como usado)
+      // Processar pagamentos de todos os jogadores
       for (const playerId of allPlayerIds) {
         const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
         if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
@@ -1431,41 +1430,41 @@ finalizeGameBtn.addEventListener('click', async () => {
             player.category,
             player.additionalInfo || player.name
           );
-          if (payment && payment.paymentStatus === 'pago') {
-            const [year, month] = getBrazilMonthYear().split('-');
-            const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
-            const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
-
           
-        
-            await set(newPaymentRef, {
-              additionalInfo: `Crédito por cancelamento do jogo`,
-              createdAt: getBrazilDateTimeISO(),
-              month: getBrazilMonthYear(),
-              paymentType: 'Creditos',
-              playerId: payment.playerId,
-              playerName: payment.playerName,
-              value: parseFloat(payment.value),
-              gameId: currentGameId,
-              date: formatDateToISO(new Date()),
-              paymentStatus: 'pago',
-              // NÃO marca como usado - fica disponível para jogos futuros
-              // Incluir campos de comprovante, se existirem
-    comprovanteApprovedAt: payment.comprovanteApprovedAt || null,
-    comprovanteApprovedBy: payment.comprovanteApprovedBy || null,
-    comprovanteStatus: payment.comprovanteStatus || null,
-    comprovanteURL: payment.comprovanteURL || null,
-    comprovanteUploadedAt: payment.comprovanteUploadedAt || null
-            });
+          if (payment) {
+            if (payment.paymentStatus === 'pago') {
+              // Converter pagamentos pagos em créditos
+              const [year, month] = getBrazilMonthYear().split('-');
+              const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
+              const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
 
-            // Remover o pagamento original
+              await set(newPaymentRef, {
+                additionalInfo: `Crédito por cancelamento do jogo`,
+                createdAt: getBrazilDateTimeISO(),
+                month: getBrazilMonthYear(),
+                paymentType: 'Creditos',
+                playerId: payment.playerId,
+                playerName: payment.playerName,
+                value: parseFloat(payment.value),
+                gameId: currentGameId,
+                date: formatDateToISO(new Date()),
+                paymentStatus: 'pago',
+                comprovanteApprovedAt: payment.comprovanteApprovedAt || null,
+                comprovanteApprovedBy: payment.comprovanteApprovedBy || null,
+                comprovanteStatus: payment.comprovanteStatus || null,
+                comprovanteURL: payment.comprovanteURL || null,
+                comprovanteUploadedAt: payment.comprovanteUploadedAt || null
+              });
+
+              // Notificar jogador sobre o crédito
+              const playerData = allPlayers.find(p => p.id === payment.playerId);
+              const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
+              await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
+            }
+            
+            // REMOVER O PAGAMENTO ORIGINAL (tanto pagos quanto não pagos)
             const paymentRef = ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`);
             await remove(paymentRef);
-
-            // Notificar jogador sobre o crédito
-            const playerData = allPlayers.find(p => p.id === payment.playerId);
-            const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
-            await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
           }
         }
       }
@@ -1474,11 +1473,11 @@ finalizeGameBtn.addEventListener('click', async () => {
       await Swal.fire({
         icon: 'success',
         title: 'Lista Descartada',
-        text: 'A lista foi descartada e os pagamentos foram convertidos em créditos.',
+        text: 'A lista foi descartada. Diaristas e Convidados pagos foram convertidos em créditos e os não pagos foram removidos.',
       });
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
-      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado e a lista foi descartada. Pagamentos foram convertidos em créditos.`;
+      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
       await sendPushNotification(message, defaultImage);
     }
 
@@ -1493,7 +1492,6 @@ finalizeGameBtn.addEventListener('click', async () => {
     });
   }
 });
-
 
 
       confirmPlayerBtn.addEventListener('click', () => abrirQuadra());
@@ -2042,7 +2040,7 @@ async function addGuest() {
       html: useCredit
         ? `Convidado ${guestName} adicionado usando crédito de R$${guestFee.toFixed(2)}.`
         : `
-          Convidado adicionado, efetue o pagamento e comunique aos ADMs para aprovação e registro da contribuição.<br><br>
+          Convidado adicionado, efetue o pagamento e aguarde confirmação e registro da contribuição.<br><br>
           PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
           <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
         `,
@@ -2290,12 +2288,13 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
     const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
+    
     await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
 
     await Swal.fire({
       icon: 'success',
       title: 'Sucesso',
-      text: `Jogador marcado como ${isPaid ? 'pago' : 'devendo'} e registro atualizado.`,
+      html: `Jogador <strong>${playerData.name}</strong> marcado como ${isPaid ? 'pago' : 'devendo'} e registro atualizado.`,
     });
   } catch (error) {
     console.error('Erro ao aprovar jogador:', error);
@@ -2769,7 +2768,7 @@ async function loadGameData(gameId) {
         html: useCredit
           ? `Presença confirmada usando crédito de R$${guestFee.toFixed(2)}.`
           : `
-            Confirmação lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição e disponibilidade de Vaga.<br><br>
+            Presença lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição.<br><br>
             PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
             <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
           `,
@@ -2885,7 +2884,7 @@ async function loadGameData(gameId) {
   const result = await Swal.fire({
     icon: 'question',
     title: 'Confirmar Remoção',
-    text: `Você tem certeza que deseja remover ${player.name} da lista?`,
+    html: `Você tem certeza que deseja remover <strong>${player.name}</strong> da lista?`,
     showCancelButton: true,
     confirmButtonText: 'Sim, remover',
     cancelButtonText: 'Cancelar',
@@ -3001,7 +3000,7 @@ async function loadGameData(gameId) {
       
       // Criar novo registro de crédito
       await set(newPaymentRef, {
-        additionalInfo: `Crédito por remoção de ${player.name} do jogo`,
+        additionalInfo: `Crédito por remoção de (${player.name}) do jogo.`,
         createdAt: getBrazilDateTimeISO(),
         month: getBrazilMonthYear(),
         paymentType: 'Creditos',
