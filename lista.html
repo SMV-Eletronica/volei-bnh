@@ -2038,9 +2038,9 @@ async function addGuest() {
       icon: 'success',
       title: 'Sucesso',
       html: useCredit
-        ? `Convidado ${guestName} adicionado usando crédito de R$${guestFee.toFixed(2)}.`
+        ? `Convidado <strong>${guestName}</strong> adicionado usando crédito de R$${guestFee.toFixed(2)}.`
         : `
-          Convidado adicionado, efetue o pagamento e aguarde confirmação e registro da contribuição.<br><br>
+          Convidado <strong>${guestName}</strong> adicionado a lista! Efetue a contribuição e anexe o comprovante ao Transparência para registro.<br><br>
           PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
           <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
         `,
@@ -3038,9 +3038,9 @@ async function loadGameData(gameId) {
     await Swal.fire({
       icon: 'success',
       title: 'Sucesso',
-      text: `${player.name} foi removido da lista com sucesso.`,
-      timer: 1500,
-      showConfirmButton: false,
+      html: `<strong>${player.name}</strong> foi removido da lista com sucesso, caso haja pagamento de <strong>DIÁRIA</strong> a mesma será convertida em crédito`,
+      showConfirmButton: true,
+      confirmButtonText: 'OK',
     });
   } catch (error) {
     console.error('Erro ao remover jogador:', error);
