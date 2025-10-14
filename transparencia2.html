@@ -1725,94 +1725,99 @@ function showPlayer(index) {
             loadDefaulters();
         });
 
-        async function loadPrediction() {
-            const predictionSummary = document.getElementById('predictionSummary');
-            const anticipatedList = document.getElementById('anticipatedList');
-            const playersRef = ref(database, 'players');
-            const paymentsRef = ref(database, 'payments/2025');
-            const months = ['11', '12'];
-            let mensalPlayers = [];
-            let anticipated = {};
-            let pendingSum = 0;
-            try {
-                const snapshotPlayers = await get(playersRef);
-                if (snapshotPlayers.exists()) {
-                    Object.entries(snapshotPlayers.val()).forEach(([id, player]) => {
-                        if (player.category === 'mensal') {
-                            mensalPlayers.push({id, name: player.name});
-                        }
-                    });
+   async function loadPrediction() {
+    const predictionSummary = document.getElementById('predictionSummary');
+    const anticipatedList = document.getElementById('anticipatedList');
+    const playersRef = ref(database, 'players');
+    const paymentsRef = ref(database, 'payments/2025');
+    const months = ['11', '12'];
+    let mensalPlayers = [];
+    let anticipated = {};
+    let pendingSum = 0;
+    try {
+        const snapshotPlayers = await get(playersRef);
+        if (snapshotPlayers.exists()) {
+            Object.entries(snapshotPlayers.val()).forEach(([id, player]) => {
+                if (player.category === 'MENSAL') {
+                    mensalPlayers.push({id, name: player.name});
                 }
-                const snapshotPayments = await get(paymentsRef);
-                const paymentsData = snapshotPayments.val() || {};
-                for (const mensal of mensalPlayers) {
-                    for (const month of months) {
-                        const monthPayments = paymentsData[month] || {};
-                        let hasPayment = false;
-                        for (const paymentId in monthPayments) {
-                            const payment = monthPayments[paymentId];
-                            if (payment.playerId === mensal.id && payment.month === `2025-${month}`) {
-                                hasPayment = true;
-                                if (payment.date) {
-                                    // anticipated
-                                    if (!anticipated[mensal.id]) {
-                                        anticipated[mensal.id] = {name: mensal.name, months: []};
-                                    }
-                                    anticipated[mensal.id].months.push(month);
-                                } else {
-                                    // pending
-                                    pendingSum += parseFloat(payment.value) || 5;
-                                }
-                                break;
+            });
+        }
+        const snapshotPayments = await get(paymentsRef);
+        const paymentsData = snapshotPayments.val() || {};
+        for (const mensal of mensalPlayers) {
+            for (const month of months) {
+                const monthPayments = paymentsData[month] || {};
+                let hasPayment = false;
+                for (const paymentId in monthPayments) {
+                    const payment = monthPayments[paymentId];
+                    if (payment.playerId === mensal.id && payment.month === `2025-${month}`) {
+                        hasPayment = true;
+                        if (payment.date) {
+                            // anticipated
+                            if (!anticipated[mensal.id]) {
+                                anticipated[mensal.id] = {name: mensal.name, months: []};
                             }
+                            anticipated[mensal.id].months.push(month);
+                        } else {
+                            // pending
+                            pendingSum += parseFloat(payment.value) || 5;
                         }
-                        if (!hasPayment) {
-                            // assume pending
-                            pendingSum += 5;
-                        }
+                        break;
                     }
                 }
-                const currentBalanceText = currentBalanceElement.textContent.replace(/[^0-9.-]+/g, '').replace(',', '.');
-                const currentBalance = parseFloat(currentBalanceText) || 0;
-                let predicted = currentBalance + pendingSum;
-                predictionSummary.innerHTML = `
-                    <div class="cash-summary-grid">
-                        <div class="cash-summary-item">
-                            <div class="cash-summary-title">Saldo Atual</div>
-                            <div class="cash-summary-value">R$${currentBalance.toFixed(2)}</div>
-                        </div>
-                        <div class="cash-summary-item">
-                            <div class="cash-summary-title">Pendentes Nov/Dez</div>
-                            <div class="cash-summary-value">R$${pendingSum.toFixed(2)}</div>
-                        </div>
-                        <div class="cash-summary-item">
-                            <div class="cash-summary-title">Previsão Final</div>
-                            <div class="cash-summary-value">R$${predicted.toFixed(2)}</div>
-                        </div>
-                    </div>
-                `;
-                anticipatedList.innerHTML = '';
-                if (Object.keys(anticipated).length === 0) {
-                    anticipatedList.innerHTML = '<div class="no-defaulters">Nenhum integrante antecipou Nov/Dez</div>';
-                } else {
-                    Object.values(anticipated).forEach(ant => {
-                        const el = document.createElement('div');
-                        el.className = 'defaulter-item';
-                        const formattedMonths = ant.months.map(m => m === '11' ? 'Nov' : 'Dez').join(', ');
-                        el.innerHTML = `
-                            <div class="defaulter-info">
-                                <div class="defaulter-name">${ant.name}</div>
-                                <div class="defaulter-months">${formattedMonths}</div>
-                            </div>
-                        `;
-                        anticipatedList.appendChild(el);
-                    });
+                if (!hasPayment) {
+                    // assume pending
+                    pendingSum += 5;
                 }
-            } catch (error) {
-                console.error("Error loading prediction:", error);
-                predictionSummary.innerHTML = '<div>Erro ao carregar previsão</div>';
             }
         }
-    </script>
+        const currentBalanceText = currentBalanceElement.textContent.replace(/[^0-9.-]+/g, '').replace(',', '.');
+        const currentBalance = parseFloat(currentBalanceText) || 0;
+        let predicted = currentBalance + pendingSum;
+        predictionSummary.innerHTML = `
+            <div class="cash-summary-grid">
+                <div class="cash-summary-item">
+                    <div class="cash-summary-title">Integrantes Mensais</div>
+                    <div class="cash-summary-value">${mensalPlayers.length}</div>
+                </div>
+                <div class="cash-summary-item">
+                    <div class="cash-summary-title">Saldo Atual</div>
+                    <div class="cash-summary-value">R$${currentBalance.toFixed(2)}</div>
+                </div>
+                <div class="cash-summary-item">
+                    <div class="cash-summary-title">Pendentes Nov/Dez</div>
+                    <div class="cash-summary-value">R$${pendingSum.toFixed(2)}</div>
+                </div>
+                <div class="cash-summary-item">
+                    <div class="cash-summary-title">Previsão Final</div>
+                    <div class="cash-summary-value">R$${predicted.toFixed(2)}</div>
+                </div>
+            </div>
+        `;
+        anticipatedList.innerHTML = '';
+        if (Object.keys(anticipated).length === 0) {
+            anticipatedList.innerHTML = '<div class="no-defaulters">Nenhum integrante antecipou Nov/Dez</div>';
+        } else {
+            Object.values(anticipated).forEach(ant => {
+                const el = document.createElement('div');
+                el.className = 'defaulter-item';
+                const formattedMonths = ant.months.map(m => m === '11' ? 'Nov' : 'Dez').join(', ');
+                el.innerHTML = `
+                    <div class="defaulter-info">
+                        <div class="defaulter-name">${ant.name}</div>
+                        <div class="defaulter-months">${formattedMonths}</div>
+                    </div>
+                `;
+                anticipatedList.appendChild(el);
+            });
+        }
+    } catch (error) {
+        console.error("Error loading prediction:", error);
+        predictionSummary.innerHTML = '<div>Erro ao carregar previsão</div>';
+    }
+}
+   
+   </script>
 </body>
 </html>
