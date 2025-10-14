@@ -8,7 +8,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="transparencia.css?v=2.8">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <style>
 /* Estilo para o popup do SweetAlert */
@@ -136,6 +135,17 @@
                         <label for="yearFilter">Ano:</label>
                         <select id="yearFilter">
                             <option value="all">Todos</option>
+
+                            <!-- SE EU QUISER DEIXAR O ANO MANUALMENTE -->   
+
+                            <!-- <option value="2024" selected>2025</option> -->
+                             
+                <!-- SE EU QUISER DEIXAR O ANO CORRENTE AUTOMÁTICO -->  
+                <!--
+                <script>
+                    document.write(`<option value="${new Date().getFullYear()}" selected>${new Date().getFullYear()}</option>`);
+                </script>
+                -->                           
                         </select>
                     </div>
                     <div>
@@ -158,7 +168,6 @@
                     </div>
                 </div>
                 <div id="cashSummary" class="cash-summary">
-                    <canvas id="financialChart" style="max-height: 300px; width: 100%; margin-bottom: 20px;"></canvas>
 
                     <div class="cash-summary-grid">
                         <div class="cash-summary-item">
@@ -213,6 +222,12 @@
                         <div class="no-defaulters">Carregando informações...</div>
                     </div>
                 </div>
+            </div>
+            <div class="section">
+                <h3 class="section-title"><i class="fas fa-chart-line"></i> Previsão de Caixa em 31/12/2025</h3>
+                <div id="predictionSummary" class="cash-summary"></div>
+                <h4>Integrantes que anteciparam Nov/Dez</h4>
+                <div id="anticipatedList" class="defaulters-list"></div>
             </div>
         </div>
         
@@ -367,8 +382,6 @@
         const copyPixBtn = document.getElementById('copyPixBtn');
 
         // Variáveis globais
-        // Variáveis globais (adicione esta linha após as existentes)
-        let financialChart = null;  // Referência ao gráfico atual
         let players = [];
         let currentPlayerIndex = 0;
         let filteredPlayers = [];
@@ -533,6 +546,7 @@ function createDashboardButton() {
                 loadFinancialData();
                 loadDefaulters();
                 loadRecentExpenses();
+                loadPrediction();
             }
         });
 
@@ -609,18 +623,15 @@ function createDashboardButton() {
             yearFilter.disabled = true;
             const paymentsRef = ref(database, 'payments');
             const expensesRef = ref(database, 'expenses');
-            const notificationsRef = ref(database, 'debtNotificationsGlobal');
             
             try {
-                const [paymentsSnapshot, expensesSnapshot, notificationsSnapshot] = await Promise.all([
+                const [paymentsSnapshot, expensesSnapshot] = await Promise.all([
                     get(paymentsRef),
-                    get(expensesRef),
-                    get(notificationsRef)
+                    get(expensesRef)
                 ]);
                 
                 const paymentsData = paymentsSnapshot.val() || {};
                 const expenses = expensesSnapshot.val() || {};
-                const notificationsData = notificationsSnapshot.val() || {};
                 const monthlyData = {};
                 const years = new Set();
                 
@@ -643,9 +654,6 @@ function createDashboardButton() {
                             const payment = payments[paymentId];
                             if (!payment.month || payment.value === undefined) continue;
                             
-                            const paymentValue = parseFloat(payment.value) || 0;
-                            const notificationCount = notificationsData[payment.playerId]?.count || 0;
-                            
                             const [paymentYear, paymentMonth] = payment.month.split('-');
                             const monthKey = `${paymentYear}-${paymentMonth}`;
                             const monthName = getMonthName(paymentMonth);
@@ -663,10 +671,12 @@ function createDashboardButton() {
                                 };
                             }
                             
+                            const paymentValue = parseFloat(payment.value) || 0;
+                            
                             if (payment.date) {
                                 monthlyData[monthKey].income += paymentValue;
                                 filteredIncome += paymentValue;
-                            } else if (notificationCount < 2) { // Exclui pendentes de bloqueados
+                            } else {
                                 monthlyData[monthKey].receivables += paymentValue;
                                 monthlyData[monthKey].lateCount++;
                                 filteredReceivables += paymentValue;
@@ -713,7 +723,6 @@ function createDashboardButton() {
                 updateYearFilterOptions(Array.from(years).sort().reverse());
                 updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses);
                 renderFinancialData(monthlyData);
-                renderFinancialChart(monthlyData);
                 
             } catch (error) {
                 console.error("Error loading financial data:", error);
@@ -820,77 +829,7 @@ function createDashboardButton() {
                 currentBalanceElement.textContent = `-R$${Math.abs(balance).toFixed(2)}`;
             }
         }
-function renderFinancialChart(monthlyData) {
-    const canvas = document.getElementById('financialChart');
-    const ctx = canvas.getContext('2d');
-    
-    // Destrói o gráfico anterior se existir
-    if (financialChart) {
-        financialChart.destroy();
-        financialChart = null;
-    }
-    
-    // Limpa o canvas para garantir
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
-        const [yearA, monthA] = a.split('-');
-        const [yearB, monthB] = b.split('-');
-        return yearB - yearA || monthB - monthA;
-    });
-    
-    const labels = sortedMonths.map(monthKey => `${monthlyData[monthKey].monthName}/${monthlyData[monthKey].year}`);
-    const incomes = sortedMonths.map(monthKey => monthlyData[monthKey].income);
-    const receivables = sortedMonths.map(monthKey => monthlyData[monthKey].receivables);
-    const expenses = sortedMonths.map(monthKey => monthlyData[monthKey].expenses);
-    
-    // Cria nova instância do gráfico
-    financialChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Contribuições Recebidas',
-                    data: incomes,
-                    backgroundColor: '#3498db',
-                    borderColor: '#2980b9',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Contribuições Pendentes',
-                    data: receivables,
-                    backgroundColor: '#e74c3c',
-                    borderColor: '#c0392b',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Despesas',
-                    data: expenses,
-                    backgroundColor: '#e67e22',
-                    borderColor: '#d35400',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Valor (R$)' }
-                },
-                x: {
-                    title: { display: true, text: 'Período' }
-                }
-            },
-            plugins: {
-                legend: { display: true, position: 'top' }
-            },
-            responsive: true,  // Torna o gráfico responsivo
-            maintainAspectRatio: false  // Permite ajustar o tamanho do canvas se necessário
-        }
-    });
-}
+
         async function loadDefaulters() {
             const paymentsRef = ref(database, 'payments');
             const playersRef = ref(database, 'players');
@@ -909,7 +848,6 @@ function renderFinancialChart(monthlyData) {
                 const defaulters = {};
                 const selectedYear = yearFilter.value;
                 const selectedMonth = monthFilter.value;
-                let totalReceivables = 0;
                 
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
@@ -922,31 +860,23 @@ function renderFinancialChart(monthlyData) {
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
                             if (!payment.date && payment.value > 0) {
-                                const notificationCount = notificationsData[payment.playerId]?.count || 0;
-                                
                                 if (!defaulters[payment.playerId]) {
                                     defaulters[payment.playerId] = {
                                         name: payment.playerName,
                                         months: [],
                                         photo: players[payment.playerId]?.imageUrl || null,
                                         hasPendingComprovante: false,
-                                        notificationCount: notificationCount
+                                        notificationCount: notificationsData[payment.playerId]?.count || 0
                                     };
                                 }
                                 defaulters[payment.playerId].months.push(payment.month);
                                 if (payment.comprovanteStatus === 'pendente') {
                                     defaulters[payment.playerId].hasPendingComprovante = true;
                                 }
-                                
-                                if (notificationCount < 2) {
-                                    totalReceivables += parseFloat(payment.value) || 0;
-                                }
                             }
                         }
                     }
                 }
-                
-                totalReceivablesElement.textContent = `R$${totalReceivables.toFixed(2)}`;
                 
                 renderDefaultersList(defaulters);
             } catch (error) {
@@ -980,8 +910,10 @@ function renderFinancialChart(monthlyData) {
                 
                 let notificationMessage = '';
                 if (defaulter.notificationCount === 1) {
+                  /*  notificationMessage = `Integrante recebeu ${defaulter.notificationCount} notificação!  ⚠️ Confirmação permitida para o próximo jogo.`;*/
                      notificationMessage = `⚠️`;
                 } else if (defaulter.notificationCount >= 2) {
+                  /*  notificationMessage = `Integrante recebeu ${defaulter.notificationCount} 🚫notificações!<br>Confirmação suspensa para o próximo jogo.`;*/
                  notificationMessage = `🚫`;
                 }
                 
@@ -1792,6 +1724,95 @@ function showPlayer(index) {
             loadFinancialData();
             loadDefaulters();
         });
+
+        async function loadPrediction() {
+            const predictionSummary = document.getElementById('predictionSummary');
+            const anticipatedList = document.getElementById('anticipatedList');
+            const playersRef = ref(database, 'players');
+            const paymentsRef = ref(database, 'payments/2025');
+            const months = ['11', '12'];
+            let mensalPlayers = [];
+            let anticipated = {};
+            let pendingSum = 0;
+            try {
+                const snapshotPlayers = await get(playersRef);
+                if (snapshotPlayers.exists()) {
+                    Object.entries(snapshotPlayers.val()).forEach(([id, player]) => {
+                        if (player.category === 'mensal') {
+                            mensalPlayers.push({id, name: player.name});
+                        }
+                    });
+                }
+                const snapshotPayments = await get(paymentsRef);
+                const paymentsData = snapshotPayments.val() || {};
+                for (const mensal of mensalPlayers) {
+                    for (const month of months) {
+                        const monthPayments = paymentsData[month] || {};
+                        let hasPayment = false;
+                        for (const paymentId in monthPayments) {
+                            const payment = monthPayments[paymentId];
+                            if (payment.playerId === mensal.id && payment.month === `2025-${month}`) {
+                                hasPayment = true;
+                                if (payment.date) {
+                                    // anticipated
+                                    if (!anticipated[mensal.id]) {
+                                        anticipated[mensal.id] = {name: mensal.name, months: []};
+                                    }
+                                    anticipated[mensal.id].months.push(month);
+                                } else {
+                                    // pending
+                                    pendingSum += parseFloat(payment.value) || 5;
+                                }
+                                break;
+                            }
+                        }
+                        if (!hasPayment) {
+                            // assume pending
+                            pendingSum += 5;
+                        }
+                    }
+                }
+                const currentBalanceText = currentBalanceElement.textContent.replace(/[^0-9.-]+/g, '').replace(',', '.');
+                const currentBalance = parseFloat(currentBalanceText) || 0;
+                let predicted = currentBalance + pendingSum;
+                predictionSummary.innerHTML = `
+                    <div class="cash-summary-grid">
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Saldo Atual</div>
+                            <div class="cash-summary-value">R$${currentBalance.toFixed(2)}</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Pendentes Nov/Dez</div>
+                            <div class="cash-summary-value">R$${pendingSum.toFixed(2)}</div>
+                        </div>
+                        <div class="cash-summary-item">
+                            <div class="cash-summary-title">Previsão Final</div>
+                            <div class="cash-summary-value">R$${predicted.toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+                anticipatedList.innerHTML = '';
+                if (Object.keys(anticipated).length === 0) {
+                    anticipatedList.innerHTML = '<div class="no-defaulters">Nenhum integrante antecipou Nov/Dez</div>';
+                } else {
+                    Object.values(anticipated).forEach(ant => {
+                        const el = document.createElement('div');
+                        el.className = 'defaulter-item';
+                        const formattedMonths = ant.months.map(m => m === '11' ? 'Nov' : 'Dez').join(', ');
+                        el.innerHTML = `
+                            <div class="defaulter-info">
+                                <div class="defaulter-name">${ant.name}</div>
+                                <div class="defaulter-months">${formattedMonths}</div>
+                            </div>
+                        `;
+                        anticipatedList.appendChild(el);
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading prediction:", error);
+                predictionSummary.innerHTML = '<div>Erro ao carregar previsão</div>';
+            }
+        }
     </script>
 </body>
 </html>
