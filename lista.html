@@ -711,7 +711,6 @@ if (debtInfo.creditBalance && debtInfo.creditBalance > 0) {
   }
 }
 
-
 async function checkPlayerDebts(playerId) {
   try {
     const paymentsRef = ref(database, 'payments');
@@ -727,7 +726,9 @@ async function checkPlayerDebts(playerId) {
           for (const paymentId in paymentsData[year][month]) {
             const payment = paymentsData[year][month][paymentId];
             if (payment && payment.playerId === playerId) {
-              if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && payment.paymentStatus === 'inadimplente') {
+              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente
+              if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && 
+                  (!payment.date || payment.paymentStatus === 'inadimplente')) {
                 debtCount += 1;
                 totalDebt += parseFloat(payment.value || 0);
               } else if (payment.paymentType === 'Creditos' && payment.paymentStatus === 'pago' && !payment.usedAt) {
@@ -742,7 +743,6 @@ async function checkPlayerDebts(playerId) {
       }
     }
 
-    // Garantir valores numéricos válidos
     return {
       hasDebt: debtCount > 0,
       debtCount: debtCount || 0,
@@ -759,6 +759,8 @@ async function checkPlayerDebts(playerId) {
     };
   }
 }
+
+
 
 async function clearDebtNotifications(playerId) {
   try {
@@ -1757,7 +1759,7 @@ async function addGuest() {
   const debtInfo = await checkPlayerDebts(window.currentUserPlayer.id);
   if (!isAdmin && debtInfo.hasDebt) {
     const alertCount = await updateDebtNotification(window.currentUserPlayer.id, currentGameId);
-    if (alertCount >= 3) {
+    if (alertCount >= 2) {
       await Swal.fire({
         icon: 'error',
         title: 'Ação Suspensa',
@@ -2493,7 +2495,7 @@ async function loadGameData(gameId) {
   const debtInfo = await checkPlayerDebts(playerId);
   if (!isAdmin && debtInfo.hasDebt) {
     const alertCount = await updateDebtNotification(playerId, currentGameId);
-    if (alertCount >= 3) {
+    if (alertCount >= 2) {
       await Swal.fire({
         icon: 'error',
         title: 'Confirmação Suspensa',
@@ -3450,7 +3452,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
       headings: { en: "🏐 Vôlei BNH - Informações" },
       contents: { en: message },
-      included_segments: ["All"],
+      included_segments: ["All2"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
       collapse_id: uniqueId,
       ios_thread_id: uniqueId
