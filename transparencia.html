@@ -653,9 +653,9 @@ function createDashboardButton() {
                     const payment = payments[paymentId];
                     if (!payment.month || payment.value === undefined) continue;
                     
-                    // Ignorar jogadores com categoria "BLOQUEADO" para pendências
+                    // Ignorar jogadores com categoria "INATIVO" para pendências
                     const player = players[payment.playerId];
-                    if (player?.category === 'BLOQUEADO' && !payment.date) continue;
+                    if (player?.category === 'INATIVO' && !payment.date) continue;
                     
                     const paymentValue = parseFloat(payment.value) || 0;
                     
@@ -868,8 +868,8 @@ async function loadDefaulters() {
                     const payment = payments[paymentId];
                     const player = players[payment.playerId];
                     
-                    // Ignorar jogadores com categoria "BLOQUEADO"
-                    if (player?.category === 'BLOQUEADO') continue;
+                    // Ignorar jogadores com categoria "INATIVO"
+                    if (player?.category === 'INATIVO') continue;
                     
                     if (!payment.date && payment.value > 0) {
                         if (!defaulters[payment.playerId]) {
@@ -957,11 +957,11 @@ async function showDefaulterDetails(playerId, playerName) {
     const playerSnapshot = await get(playersRef);
     const player = playerSnapshot.val();
     
-    if (player?.category === 'BLOQUEADO') {
+    if (player?.category === 'INATIVO') {
         Swal.fire({
             icon: 'info',
             title: 'Sem Pendências',
-            text: 'Este integrante está bloqueado e não possui pendências exibidas.',
+            text: 'Este integrante está INATIVO e não possui pendências exibidas.',
             confirmButtonText: 'Fechar'
         });
         return;
