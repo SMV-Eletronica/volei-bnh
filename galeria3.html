@@ -218,10 +218,12 @@
         </select>
       </div>
       <div>
-        <label for="playerFilter">Meus Jogos:</label>
-        <select id="playerFilter" class="filter-select" style="width: 200px;">
-          <option value="all">Todos os jogos</option>
-          <option value="mine">Somente meus jogos</option>
+        <label for="playerFilter">Filtrar Jogos:</label>
+        <select id="playerFilter" class="filter-select" style="width: 220px;">
+          <option value="media_mine">Meus Jogos com mídia</option>
+          <option value="mine">Meus Jogos</option>
+          <option value="media_all">Todos os Jogos com mídia</option>
+          <option value="all">Todos os Jogos</option>
         </select>
       </div>
       <button id="applyFilters" class="filter-btn"><i class="fas fa-filter"></i> Aplicar Filtros</button>
@@ -316,6 +318,94 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
+    // NOVA FUNÇÃO: Obter datas com mídias
+    async function getDatesWithMedia() {
+      try {
+        const galleryRef = ref(database, 'gallery');
+        const snapshot = await get(galleryRef);
+        
+        if (!snapshot.exists()) {
+          return { years: [], months: [] };
+        }
+        
+        const mediaItems = Object.values(snapshot.val());
+        const yearsWithMedia = new Set();
+        const monthsWithMedia = new Set();
+        
+        mediaItems.forEach(item => {
+          if (item.year && (item.type === 'image' || item.type === 'video' || item.type === 'youtube_video')) {
+            yearsWithMedia.add(item.year);
+            if (item.month) {
+              monthsWithMedia.add(item.month);
+            }
+          }
+        });
+        
+        return {
+          years: Array.from(yearsWithMedia).sort((a, b) => b - a),
+          months: Array.from(monthsWithMedia).sort()
+        };
+      } catch (error) {
+        console.error('Erro ao obter datas com mídias:', error);
+        return { years: [], months: [] };
+      }
+    }
+
+    // NOVA FUNÇÃO: Filtrar jogos com mídias
+    function filterGamesWithMedia(games, mediaItems) {
+      const gamesWithMedia = new Set();
+      
+      // Coletar todos os gameIds que possuem mídias
+      mediaItems.forEach(media => {
+        if (media.gameId && (media.type === 'image' || media.type === 'video' || media.type === 'youtube_video')) {
+          gamesWithMedia.add(media.gameId);
+        }
+      });
+      
+      // Filtrar jogos que estão na lista de jogos com mídias
+      return games.filter(game => gamesWithMedia.has(game.id));
+    }
+
+    // NOVA FUNÇÃO: Filtrar meus jogos
+    function filterMyGames(games) {
+      if (!currentUserPlayer) return games;
+      
+      console.log('Aplicando filtro "Meus Jogos" para:', currentUserPlayer.name);
+      
+      const myGames = [];
+      
+      for (const game of games) {
+        const confirmedPlayers = game.confirmedPlayers || {};
+        
+        // Verificar de várias formas se o jogador está no jogo
+        let playerInGame = false;
+        
+        // Verificar pelo ID do jogador nas chaves do objeto confirmedPlayers
+        if (confirmedPlayers[currentUserPlayer.id]) {
+          playerInGame = true;
+        } else {
+          // Verificar se o ID do jogador está em algum dos valores do objeto
+          const playerIds = Object.values(confirmedPlayers).map(player => player.id);
+          if (playerIds.includes(currentUserPlayer.id)) {
+            playerInGame = true;
+          } else {
+            // Verificar pelo email (caso o objeto tenha email)
+            const playerEmails = Object.values(confirmedPlayers).map(player => player.email).filter(email => email);
+            if (playerEmails.includes(currentUser.email)) {
+              playerInGame = true;
+            }
+          }
+        }
+        
+        if (playerInGame) {
+          myGames.push({ ...game, myStatus: 'confirmed' });
+        }
+      }
+      
+      console.log('Jogos encontrados para o usuário:', myGames.length);
+      return myGames;
+    }
+
     // Carregar dados do usuário
     async function loadCurrentUser() {
       try {
@@ -368,7 +458,7 @@
       }
     }
     
-    // Carregar anos disponíveis
+    // MODIFICADA: Carregar anos disponíveis com filtro de mídias
     async function loadAvailableYears() {
       try {
         const historyRef = ref(database, 'gameHistory');
@@ -378,8 +468,7 @@
         
         if (snapshot.exists()) {
           const years = Object.keys(snapshot.val()).sort((a, b) => b - a);
-          const currentYear = DateTime.now().toFormat('yyyy');
-          const currentMonth = DateTime.now().toFormat('MM');
+          const { years: yearsWithMedia } = await getDatesWithMedia();
           
           years.forEach(year => {
             const option = document.createElement('option');
@@ -388,28 +477,26 @@
             yearFilter.appendChild(option);
           });
           
-          if (years.includes(currentYear)) {
-            yearFilter.value = currentYear;
-            monthFilter.value = currentMonth;
+          // NOVO FILTRO: Selecionar automaticamente anos que tenham mídias
+          if (yearsWithMedia.length > 0) {
+            // Se há anos com mídias, selecionar o ano mais recente
+            yearFilter.value = yearsWithMedia[0];
             
-            const monthsRef = ref(database, `gameHistory/${currentYear}`);
+            // Carregar meses disponíveis para o ano selecionado
+            const monthsRef = ref(database, `gameHistory/${yearsWithMedia[0]}`);
             const monthsSnapshot = await get(monthsRef);
             
             if (monthsSnapshot.exists()) {
               const months = Object.keys(monthsSnapshot.val());
-              if (!months.includes(currentMonth)) {
-                monthFilter.value = months[0] || '';
-              }
+              // Não selecionar mês específico - mostrar todos os meses do ano
+              monthFilter.value = '';
             }
-          } else if (years.length > 0) {
-            yearFilter.value = years[0];
-            monthFilter.value = '';
           }
           
           const filters = {
             year: yearFilter.value,
             month: monthFilter.value,
-            onlyMyGames: playerFilter.value === 'mine'
+            playerFilter: playerFilter.value
           };
           await loadGameHistory(filters);
           await loadGallery(filters);
@@ -864,7 +951,7 @@
       });
     }
 
-    // Carregar histórico de jogos
+    // MODIFICADA: Carregar histórico de jogos com as 4 opções de filtro
     async function loadGameHistory(filters = {}) {
       try {
         historyList.innerHTML = '<p>Carregando histórico...</p>';
@@ -930,18 +1017,38 @@
           return dateB - dateA;
         });
         
-        if (filters.onlyMyGames && currentUserPlayer) {
-          const myGames = [];
-          
-          for (const game of games) {
-            const confirmedIds = Object.keys(game.confirmedPlayers || {});
+        // NOVA LÓGICA: Aplicar filtros baseados na seleção do usuário
+        const galleryRef = ref(database, 'gallery');
+        const gallerySnapshot = await get(galleryRef);
+        const mediaItems = gallerySnapshot.exists() ? Object.values(gallerySnapshot.val()) : [];
+        
+        console.log('Filtro selecionado:', filters.playerFilter);
+        
+        switch (filters.playerFilter) {
+          case 'media_mine':
+            // Meus Jogos com mídia
+            games = filterMyGames(games);
+            games = filterGamesWithMedia(games, mediaItems);
+            break;
             
-            if (confirmedIds.includes(currentUserPlayer.id)) {
-              myGames.push({ ...game, myStatus: 'confirmed' });
-            }
-          }
-          
-          games = myGames;
+          case 'mine':
+            // Meus Jogos
+            games = filterMyGames(games);
+            break;
+            
+          case 'media_all':
+            // Todos os Jogos com mídia
+            games = filterGamesWithMedia(games, mediaItems);
+            break;
+            
+          case 'all':
+            // Todos os Jogos (não aplicar filtro adicional)
+            break;
+            
+          default:
+            // Padrão: Meus Jogos com mídia
+            games = filterMyGames(games);
+            games = filterGamesWithMedia(games, mediaItems);
         }
         
         if (games.length === 0) {
@@ -949,9 +1056,7 @@
           return;
         }
         
-        const galleryRef = ref(database, 'gallery');
-        const gallerySnapshot = await get(galleryRef);
-        const mediaItems = gallerySnapshot.exists() ? Object.entries(gallerySnapshot.val()).map(([id, item]) => ({ id, ...item })) : [];
+        const mediaItemsDetailed = gallerySnapshot.exists() ? Object.entries(gallerySnapshot.val()).map(([id, item]) => ({ id, ...item })) : [];
 
         historyList.innerHTML = '';
         
@@ -997,7 +1102,7 @@
           let mediaHtml = '<div class="game-media-section">';
           mediaHtml += '<h4>Mídias do Jogo</h4>';
           
-          const gameMediaItems = mediaItems.filter(item => item.gameId === game.id);
+          const gameMediaItems = mediaItemsDetailed.filter(item => item.gameId === game.id);
           
           if (gameMediaItems.length === 0) {
             mediaHtml += '<p class="no-media-message">Nenhuma mídia associada a este jogo.</p>';
@@ -1169,7 +1274,7 @@
       const filters = {
         year: yearFilter.value,
         month: monthFilter.value,
-        onlyMyGames: playerFilter.value === 'mine'
+        playerFilter: playerFilter.value
       };
       loadGameHistory(filters);
       loadGallery(filters);
