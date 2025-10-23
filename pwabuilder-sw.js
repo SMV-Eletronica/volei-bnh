@@ -1,6 +1,6 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.6.0/workbox-sw.js');
 
-const MEDIA_CACHE = 'volei-media-online-only-v1';
+const MEDIA_CACHE = 'volei-media-online-only-v1.1';
 const OFFLINE_PAGE = 'offline.html';
 
 // ===== INSTALAÇÃO ===== //
