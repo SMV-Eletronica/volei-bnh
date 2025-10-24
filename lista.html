@@ -962,7 +962,7 @@ function setupAdminFeatures() {
           const modalGameSelect = document.getElementById('modalGameSelect');
           modalGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
           if (activeGames.length === 0) {
-            modalGameSelect.innerHTML = '<option value="">Nenhum jogo agendado</option>';
+            modalGameSelect.innerHTML = '<option value="">Nenhum jogo programado</option>';
           } else {
             activeGames.forEach(game => {
               const option = document.createElement('option');
@@ -1536,7 +1536,7 @@ async function saveGameToHistory(gameId, gameData) {
         gameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
 
         if (activeGames.length === 0) {
-          gameSelect.innerHTML = '<option value="">Nenhum jogo agendado</option>';
+          gameSelect.innerHTML = '<option value="">Nenhum jogo programado</option>';
           console.log('Nenhum jogo agendado');
         } else {
           activeGames.forEach(game => {
