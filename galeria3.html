@@ -7,7 +7,7 @@
    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
    <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
-  <link rel="stylesheet" href="history.css?v=3.4">
+  <link rel="stylesheet" href="history.css?v=3.5">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -159,6 +159,27 @@
   padding: 5px;
   resize: vertical;
 }
+
+/* Estilos para o botão de like na modal */
+#modalLikeBtn {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 5px !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+#modalLikeBtn:hover {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+#modalLikeBtn .fas.fa-heart {
+  color: #ff4d4d !important;
+}
 </style>
 
 <body>
@@ -220,10 +241,11 @@
       <div>
         <label for="playerFilter">Filtrar Jogos:</label>
         <select id="playerFilter" class="filter-select" style="width: 220px;">
-          <option value="media_mine">Meus Jogos com mídia</option>
-          <option value="mine">Meus Jogos</option>
-          <option value="media_all">Todos os Jogos com mídia</option>
-          <option value="all">Todos os Jogos</option>
+          <option value="media_all">Todos com mídia</option>
+          <option value="all">Todos</option>
+          <option value="media_mine">Meus com mídia</option>
+          <option value="mine">Meus Jogos</option>          
+          
         </select>
       </div>
       <button id="applyFilters" class="filter-btn"><i class="fas fa-filter"></i> Aplicar Filtros</button>
@@ -755,7 +777,7 @@
       }
     }
 
-    // Função para mostrar e gerenciar comentários
+    // Função para mostrar e gerenciar comentários E likes
     async function showComments(mediaId, mediaUrl, mediaType, youtubeId) {
       if (!currentUserPlayer) {
         Swal.fire('Erro', 'Você precisa estar logado para visualizar ou adicionar comentários.', 'error');
@@ -763,11 +785,13 @@
       }
 
       const commentsRef = ref(database, `gallery/${mediaId}/comments`);
+      const likesRef = ref(database, `gallery/${mediaId}/likes`);
+      
       let commentsHtml = '<div class="comments-container" style="max-height: 300px; overflow-y: auto;">';
       
       // Carregar comentários
-      const snapshot = await get(commentsRef);
-      const comments = snapshot.exists() ? Object.entries(snapshot.val()).map(([id, comment]) => ({ id, ...comment })) : [];
+      const commentsSnapshot = await get(commentsRef);
+      const comments = commentsSnapshot.exists() ? Object.entries(commentsSnapshot.val()).map(([id, comment]) => ({ id, ...comment })) : [];
       comments.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
       if (comments.length === 0) {
@@ -786,11 +810,23 @@
       }
       commentsHtml += '</div>';
 
-      // Formulário para adicionar comentário
+      // Carregar likes para a modal
+      const likesSnapshot = await get(likesRef);
+      const likes = likesSnapshot.exists() ? likesSnapshot.val() : {};
+      const likeCount = Object.keys(likes).length;
+      const isLiked = currentUserPlayer && likes[currentUserPlayer.id];
+
+      // Formulário para adicionar comentário E botão de like
       const inputHtml = `
-        <div style="margin-top: 10px;">
-          <textarea id="commentInput" placeholder="Escreva seu comentário..." style="width: 100%; min-height: 60px;"></textarea>
-          <button id="submitComment" style="margin-top: 5px;">Enviar</button>
+        <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <button id="modalLikeBtn" class="like-btn" data-media-id="${mediaId}" data-liked="${isLiked ? 'true' : 'false'}" style="background: rgba(0, 0, 0, 0.7); color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
+            <i class="${isLiked ? 'fas fa-heart' : 'far fa-heart'}" style="color: ${isLiked ? '#ff4d4d' : 'white'};"></i> 
+            <span class="like-count">${likeCount}</span>
+          </button>
+          <div style="display: flex; gap: 10px; align-items: center; flex-grow: 1; justify-content: flex-end;">
+            <textarea id="commentInput" placeholder="Escreva seu comentário..." style="width: 200px; min-height: 40px; padding: 5px; flex-grow: 1;"></textarea>
+            <button id="submitComment" style="background: #3085d6; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; flex-shrink: 0;">Enviar</button>
+          </div>
         </div>
       `;
 
@@ -823,6 +859,54 @@
           popup: 'swal2-comments-popup'
         },
         didOpen: () => {
+          // Configurar o botão de like da modal
+          const modalLikeBtn = document.getElementById('modalLikeBtn');
+          
+          modalLikeBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!currentUserPlayer) {
+              Swal.fire('Erro', 'Você precisa estar logado para curtir.', 'error');
+              return;
+            }
+            
+            const mediaId = modalLikeBtn.dataset.mediaId;
+            const isLiked = modalLikeBtn.dataset.liked === 'true';
+            const userLikeRef = ref(database, `gallery/${mediaId}/likes/${currentUserPlayer.id}`);
+            
+            try {
+              if (isLiked) {
+                await remove(userLikeRef);
+                modalLikeBtn.dataset.liked = 'false';
+                modalLikeBtn.querySelector('i').className = 'far fa-heart';
+                modalLikeBtn.querySelector('i').style.color = 'white';
+              } else {
+                await set(userLikeRef, true);
+                modalLikeBtn.dataset.liked = 'true';
+                modalLikeBtn.querySelector('i').className = 'fas fa-heart';
+                modalLikeBtn.querySelector('i').style.color = '#ff4d4d';
+              }
+              
+              // Atualizar contagem
+              const newLikesSnapshot = await get(ref(database, `gallery/${mediaId}/likes`));
+              const newLikes = newLikesSnapshot.exists() ? newLikesSnapshot.val() : {};
+              const newLikeCount = Object.keys(newLikes).length;
+              modalLikeBtn.querySelector('.like-count').textContent = newLikeCount;
+              
+              // Atualizar também o like na galeria (se estiver visível)
+              const galleryLikeBtn = document.querySelector(`.like-btn[data-media-id="${mediaId}"]`);
+              if (galleryLikeBtn) {
+                galleryLikeBtn.dataset.liked = modalLikeBtn.dataset.liked;
+                galleryLikeBtn.querySelector('i').className = modalLikeBtn.querySelector('i').className;
+                galleryLikeBtn.querySelector('.like-count').textContent = newLikeCount;
+              }
+              
+            } catch (error) {
+              console.error('Erro ao curtir/descurtir:', error);
+              Swal.fire('Erro', 'Não foi possível processar a curtida. Tente novamente.', 'error');
+            }
+          });
+
+          // Configurar o botão de comentário (código existente)
           const submitButton = document.getElementById('submitComment');
           const commentInput = document.getElementById('commentInput');
 
@@ -1047,7 +1131,6 @@
             
           default:
             // Padrão: Meus Jogos com mídia
-            games = filterMyGames(games);
             games = filterGamesWithMedia(games, mediaItems);
         }
         
