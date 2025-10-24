@@ -50,6 +50,7 @@ body {
   /* border-radius: 10px; /* Bordas mais arredondadas */
 /*  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Sombra mais pronunciada e suave */
   align-items: flex-end; /* Alinha os itens pela parte de baixo */
+    margin-bottom: 20px;
 }
 
 .filter-container > div {
@@ -417,6 +418,7 @@ body {
 
   .filter-btn {
     width: 100%; /* Botão ocupa a largura total em telas pequenas */
+    margin-top: 10px;
   }
 }
     
