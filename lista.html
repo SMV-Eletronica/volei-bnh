@@ -3456,7 +3456,8 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       included_segments: ["administradores"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
       collapse_id: uniqueId,
-      ios_thread_id: uniqueId
+      ios_thread_id: uniqueId,
+      android_group: uniqueId,
     };
 
     const defaultImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
