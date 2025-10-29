@@ -3446,15 +3446,17 @@ async function loadGameData(gameId) {
 async function sendPushNotification(message, imageUrl = null, playerId = null) {
   try {
     const now = Date.now(); // usado para gerar um ID único
-    const uniqueId = `${now}`;
+    const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     console.log("🔔 Unique ID da notificação:", uniqueId); // <-- Aqui está o log
 
     const payload = {
+      collapse_id: uniqueId,
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
       headings: { en: "🏐 Vôlei BNH - INFORMAÇÕES" },
       contents: { en: message },
       included_segments: ["administradores"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
+      
       
     };
 
