@@ -3446,7 +3446,7 @@ async function loadGameData(gameId) {
 async function sendPushNotification(message, imageUrl = null, playerId = null) {
   try {
     const now = Date.now(); // usado para gerar um ID único
-    const uniqueId = `push_${playerId || 'anon'}_${now}`;
+    const uniqueId = `${now}`;
     console.log("🔔 Unique ID da notificação:", uniqueId); // <-- Aqui está o log
 
     const payload = {
