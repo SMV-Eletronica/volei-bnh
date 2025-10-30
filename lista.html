@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="lista.css?v=3.2">
+<link rel="stylesheet" href="lista.css?v=3.1">
 
 
  <style>
@@ -65,15 +65,17 @@
         </div>
 
            
-      <button id="transparenciaBtn" class="logout-btn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
-      <button class="logout-btn" onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
-      <button id="listaBtn" class="logout-btn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
-      <button class="logout-btn" onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
+      <button id="transparenciaBtn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+      <button onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+      <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>
+      <button onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
       
       
     </div>
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+    <p style="font-size:xx-small; margin: 10px" class="versao">Versão-1.0</p>
   </div>
+  
   <div class="overlay" id="overlay"></div>
 
 
@@ -3452,7 +3454,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
     const payload = {
       
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-      headings: { en: "🏐 Vôlei BNH - INFORMAÇÕES" },
+      headings: { en: "🏐 Vôlei BNH - INFORMAÇÕES v1.0" },
       contents: { en: message },
       included_segments: ["All"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
