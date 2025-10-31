@@ -12,7 +12,7 @@
   <title>Lista de Presença - Vôlei BNH</title>  
   
   <!-- Manifesto para Android -->
-    <link rel="manifest" href="site.webmanifest?v=1.5">
+    <link rel="manifest" href="site.webmanifest?v=1.4">
   
 
   <!-- Favicon padrão para navegadores -->
@@ -3458,7 +3458,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       contents: { en: message },
       included_segments: ["administradores"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
-      web_push_topic: uniqueId, // se remover passa a substituir a notificação anterior
+      web_push_topic: uniqueId // se remover passa a substituir a notificação anterior
       
     };
 
