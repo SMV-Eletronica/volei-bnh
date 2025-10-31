@@ -396,7 +396,7 @@ onAuthStateChanged(auth, async (user) => {
             const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
             await set(activityRef, {
-              userName: userName + " v2",
+              userName: userName + " v1",
               timestamp: getBrazilDateTimeISO()
             });
             localStorage.setItem(lastAccessKey, now.toISO());
