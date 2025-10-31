@@ -729,7 +729,7 @@ async function checkPlayerDebts(playerId) {
             const payment = paymentsData[year][month][paymentId];
             if (payment && payment.playerId === playerId) {
               // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente
-              if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && 
+              if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
                   (!payment.date || payment.paymentStatus === 'inadimplente')) {
                 debtCount += 1;
                 totalDebt += parseFloat(payment.value || 0);
