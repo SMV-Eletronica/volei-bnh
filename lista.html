@@ -728,7 +728,7 @@ async function checkPlayerDebts(playerId) {
           for (const paymentId in paymentsData[year][month]) {
             const payment = paymentsData[year][month][paymentId];
             if (payment && payment.playerId === playerId) {
-              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente
+              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente em todas as categorias
               if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
                   (!payment.date || payment.paymentStatus === 'inadimplente')) {
                 debtCount += 1;
@@ -2500,9 +2500,9 @@ async function loadGameData(gameId) {
     if (alertCount >= 2) {
       await Swal.fire({
         icon: 'error',
-        title: 'Confirmação Suspensa',
+        title: 'Participação Suspensa',
         html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Você já utilizou a tolerância de 2 jogos com advertências.<p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+               Você já utilizou a tolerância de 2 jogos com advertências.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -3456,7 +3456,7 @@ async function sendPushNotification(message, imageUrl = null, playerId = null) {
       app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
       headings: { en: "🏐 Vôlei BNH - INFORMAÇÕES v1.0" },
       contents: { en: message },
-      included_segments: ["Administradores"],
+      included_segments: ["administradores"],
       url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
       web_push_topic: uniqueId, // se remover passa a substituir a notificação anterior
       
