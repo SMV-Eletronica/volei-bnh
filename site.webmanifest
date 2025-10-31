@@ -13,7 +13,7 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
-  "theme_color": "#000000",
+  "theme_color": "#3498db",
   "background_color": "#FFFFFF",
 "gcm_sender_id": "103953800507",
 
