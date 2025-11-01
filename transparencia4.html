@@ -1784,7 +1784,7 @@ function showPlayer(index) {
 // No seu código atual, substitua por:
 const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-uc.a.run.app';
 
-  async function sendPushNotification(message, imageUrl = null, segments = ["administradores"]) {
+  async function sendPushNotification(message, imageUrl = null, segments) {
   console.log("🎯 Segmentos:", segments);
       console.log("📤 Enviando notificação...");
   console.log("📝 Conteúdo da mensagem:", message);
