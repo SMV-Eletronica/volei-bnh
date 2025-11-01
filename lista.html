@@ -209,8 +209,7 @@
     };
 
     const contentDiv = document.getElementById('content');
-    const confirmPlayerBtn = document.getElementById('confirmPlayer');
-    
+    const confirmPlayerBtn = document.getElementById('confirmPlayer');    
     const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
     const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
     const adminSearchContainer = document.getElementById('adminSearchContainer');
@@ -224,7 +223,6 @@
     const guestNameInput = document.getElementById('guestNameInput');
     const addGuestBtn = document.getElementById('addGuestBtn');
     const adminSettingsBtn = document.getElementById('adminSettingsBtn');
-
     const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -245,7 +243,7 @@
     let currentGameId = null;
     let currentGameData = null;
 
-
+    const segments = ["administradores"];
 
 
       // Nova função para criar e inserir o botão Dashboard
@@ -1190,7 +1188,7 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
-              const segments = ["All"];
+             // const segments = ["All"];
               await sendPushNotification(message, defaultImage, segments);
 
 
@@ -1490,7 +1488,7 @@ async function saveGameToHistory(gameId, gameData) {
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
       const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
-       const segments = ["All"];
+      // const segments = ["All"];
         await sendPushNotification(message, defaultImage, segments);
     }
 
@@ -2044,7 +2042,7 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
-     const segments = ["All"];    
+    // const segments = ["All"];    
     await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments);
 
     guestNameInput.value = '';
@@ -2302,7 +2300,7 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
     const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
-    const segments = ["All"];
+    //const segments = ["All"];
     await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
 
     await Swal.fire({
@@ -2773,7 +2771,7 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-    const segments = ["All"];
+   // const segments = ["All"];
     await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments);
 
 
@@ -3052,7 +3050,7 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["All"]);
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
 
     await Swal.fire({
       icon: 'success',
