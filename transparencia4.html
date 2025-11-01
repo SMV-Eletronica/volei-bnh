@@ -1786,7 +1786,7 @@ const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-uc.a.run.app';
 
   async function sendPushNotification(message, imageUrl = null, segments) {
   console.log("🎯 Segmentos:", segments);
-      console.log("📤 Enviando notificação...");
+  console.log("📤 Enviando notificação...");
   console.log("📝 Conteúdo da mensagem:", message);
   if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
 
@@ -1794,7 +1794,7 @@ const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-uc.a.run.app';
     const response = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message,segments, imageUrl })
+      body: JSON.stringify({ message, imageUrl, segments })
     });
 
     const result = await response.json();
