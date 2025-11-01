@@ -321,7 +321,7 @@
         import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
-        import { sendPushNotification, sendReceiptNotification } from './pushNotificationsadm.js';
+     
 
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
@@ -1144,6 +1144,21 @@ async function showDefaulterDetails(playerId, playerName) {
                                     `;
                                 }
 
+                              
+                              
+                              
+
+ const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+    const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+
+                                
+
+
+
+
+/*
+                              
                                 const currentPlayer = currentUserPlayer || { name: playerName };
                                 const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
                                 await sendPushNotification(
@@ -1164,7 +1179,7 @@ async function showDefaulterDetails(playerId, playerName) {
                                     },
                                     ["All"]
                                 );
-
+*/
                                 statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
                                 await Swal.fire({
                                     icon: 'success',
@@ -1759,5 +1774,35 @@ function showPlayer(index) {
             loadDefaulters();
         });
     </script>
+
+
+<!-- SDK do OneSignal -->
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+
+// No seu código atual, substitua por:
+const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-uc.a.run.app';
+
+async function sendPushNotification(message, imageUrl = null) {
+  try {
+    const response = await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, imageUrl })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    Swal.fire('Erro', error.message, 'error');
+  }
+}
+
+</script>
 </body>
 </html>
