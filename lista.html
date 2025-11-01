@@ -243,7 +243,7 @@
     let currentGameId = null;
     let currentGameData = null;
 
-    const segments = "administradores";
+   window.const segments = ["administradores"];
 
 
       // Nova função para criar e inserir o botão Dashboard
@@ -1188,7 +1188,7 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
-             // const segments = ["All"];
+             //const segments = ["All"];
               await sendPushNotification(message, defaultImage, segments);
 
 
