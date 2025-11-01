@@ -1469,9 +1469,9 @@ async function saveGameToHistory(gameId, gameData) {
               });
 
               // Notificar jogador sobre o crédito
-              const playerData = allPlayers.find(p => p.id === payment.playerId);
-              const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
-              await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
+              //const playerData = allPlayers.find(p => p.id === payment.playerId);
+             // const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
+             // await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
             }
             
             // REMOVER O PAGAMENTO ORIGINAL (tanto pagos quanto não pagos)
@@ -1490,7 +1490,8 @@ async function saveGameToHistory(gameId, gameData) {
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
       const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
-      await sendPushNotification(message, defaultImage);
+       const segments = ["administradores"];
+        await sendPushNotification(message, defaultImage, segments);
     }
 
     currentGameId = null;
@@ -2043,7 +2044,8 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+     const segments = ["administradores"];    
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments);
 
     guestNameInput.value = '';
     await Swal.fire({
