@@ -1148,8 +1148,8 @@ async function showDefaulterDetails(playerId, playerName) {
                               
                               
 
- const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-    const message = `confirmou presença para o jogo ${formattedDate} às .`;
+ 
+    const message = `confirmou presença para o jogo às .`;
     await sendPushNotification(message, playerObj.imageUrl || defaultImage);
 
                                 
