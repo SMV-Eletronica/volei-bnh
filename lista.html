@@ -2763,7 +2763,12 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-    await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+    const segments = ["administradores"];
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments);
+
+
+
+    
 
     if (playerObj.category === 'DIARIA') {
       await Swal.fire({
@@ -3439,22 +3444,31 @@ async function loadGameData(gameId) {
 // No seu código atual, substitua por:
 const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-uc.a.run.app';
 
-async function sendPushNotification(message, imageUrl = null) {
+  async function sendPushNotification(message, imageUrl = null, segments) {
+  console.log("🎯 Segmentos:", segments);
+  console.log("📤 Enviando notificação...");
+  console.log("📝 Conteúdo da mensagem:", message);
+  if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
+
   try {
     const response = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, imageUrl })
+      body: JSON.stringify({ message, imageUrl, segments })
     });
-    
+
     const result = await response.json();
-    
+    console.log("📬 Resposta da função:", result);
+
     if (result.success) {
+      console.log("✅ Notificação enviada com sucesso!");
       Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
     } else {
+      console.warn("⚠️ Falha ao enviar:", result.error);
       throw new Error(result.error);
     }
   } catch (error) {
+    console.error("❌ Erro ao enviar notificação:", error.message);
     Swal.fire('Erro', error.message, 'error');
   }
 }
