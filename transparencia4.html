@@ -1153,7 +1153,7 @@ async function showDefaulterDetails(playerId, playerName) {
     const message = `💰 Nova contribuição recebida\n De: ${currentPlayer.name}\n Valor: R$${payment.value.toFixed(2)}\n Referente: ${monthYear}\n Status: 🕒 Pendente de análise`;
     // Definir segmentos baseado no contexto
 const segments = ["administradores"];
-await sendPushNotification(message, segments);
+await sendPushNotification(message, null, segments);
 
 
 
