@@ -1148,8 +1148,9 @@ async function showDefaulterDetails(playerId, playerName) {
                               
                               
 
- 
-    const message = `confirmou presença para o jogo às .`;
+    const currentPlayer = currentUserPlayer || { name: playerName };
+    const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
+    const message = `💰 Nova contribuição recebida De: ${currentPlayer.name}\n`;
     await sendPushNotification(message);
 
                                 
