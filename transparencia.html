@@ -384,6 +384,7 @@
         let currentUserPlayer = null;
         let allPlayers = [];
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
+        window.segments = ["administradores"]; // Tornar global para o sendPushnotifications
 
         // Função para copiar a chave PIX
         async function copyPixKey() {
@@ -1151,9 +1152,8 @@ async function showDefaulterDetails(playerId, playerName) {
     const currentPlayer = currentUserPlayer || { name: playerName };
     const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
     const message = `💰 Nova contribuição recebida\n De: ${currentPlayer.name}\n Valor: R$${payment.value.toFixed(2)}\n Referente: ${monthYear}\n Status: 🕒 Pendente de análise`;
-    // Definir segmentos baseado no contexto
-const segments = ["administradores"];
-await sendPushNotification(message, null, segments);
+    //  segments é definida como global
+    await sendPushNotification(message, null, segments);
 
 
 
