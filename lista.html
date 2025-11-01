@@ -1185,9 +1185,17 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               };
 
               await set(gameRef, newGame);
+
+
+              
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
-              await sendPushNotification(message, defaultImage);
+              const segments = ["administradores"];
+              await sendPushNotification(message, defaultImage, segments);
+
+
+
+              
               await loadActiveGames();
               Swal.close();
               await Swal.fire({
