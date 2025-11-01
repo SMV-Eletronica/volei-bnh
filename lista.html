@@ -2302,8 +2302,8 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
     const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
-    
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+    const segments = ["administradores"];
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
 
     await Swal.fire({
       icon: 'success',
