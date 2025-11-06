@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="lista.css?v=3.1">
+<link rel="stylesheet" href="lista.css?v=3.3">
 
 
  <style>
@@ -175,6 +175,17 @@
       </div>
     </footer>
 
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.init({
+            appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+         //   allowLocalhostAsSecureOrigin: true // Remova em produção
+        });
+    });
+</script>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getDatabase, ref, get, set, onValue, push, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
@@ -209,8 +220,7 @@
     };
 
     const contentDiv = document.getElementById('content');
-    const confirmPlayerBtn = document.getElementById('confirmPlayer');
-    
+    const confirmPlayerBtn = document.getElementById('confirmPlayer');    
     const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
     const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
     const adminSearchContainer = document.getElementById('adminSearchContainer');
@@ -224,7 +234,6 @@
     const guestNameInput = document.getElementById('guestNameInput');
     const addGuestBtn = document.getElementById('addGuestBtn');
     const adminSettingsBtn = document.getElementById('adminSettingsBtn');
-
     const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -245,7 +254,7 @@
     let currentGameId = null;
     let currentGameData = null;
 
-
+   window.segments = ["All"]; // Tornar global para o sendPushnotifications o segmento All 
 
 
       // Nova função para criar e inserir o botão Dashboard
@@ -396,7 +405,7 @@ onAuthStateChanged(auth, async (user) => {
             const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
             await set(activityRef, {
-              userName: userName + " v1",
+              userName: userName + " v2",
               timestamp: getBrazilDateTimeISO()
             });
             localStorage.setItem(lastAccessKey, now.toISO());
@@ -728,8 +737,8 @@ async function checkPlayerDebts(playerId) {
           for (const paymentId in paymentsData[year][month]) {
             const payment = paymentsData[year][month][paymentId];
             if (payment && payment.playerId === playerId) {
-              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente
-              if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && 
+              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente em todas as categorias
+              if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
                   (!payment.date || payment.paymentStatus === 'inadimplente')) {
                 debtCount += 1;
                 totalDebt += parseFloat(payment.value || 0);
@@ -1185,9 +1194,17 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               };
 
               await set(gameRef, newGame);
+
+
+              
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
-              await sendPushNotification(message, defaultImage);
+             //const segments = ["All"];
+              await sendPushNotification(message, defaultImage, segments);
+
+
+
+              
               await loadActiveGames();
               Swal.close();
               await Swal.fire({
@@ -1461,9 +1478,9 @@ async function saveGameToHistory(gameId, gameData) {
               });
 
               // Notificar jogador sobre o crédito
-              const playerData = allPlayers.find(p => p.id === payment.playerId);
-              const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
-              await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
+              //const playerData = allPlayers.find(p => p.id === payment.playerId);
+             // const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
+             // await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
             }
             
             // REMOVER O PAGAMENTO ORIGINAL (tanto pagos quanto não pagos)
@@ -1482,7 +1499,8 @@ async function saveGameToHistory(gameId, gameData) {
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
       const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
-      await sendPushNotification(message, defaultImage);
+      // const segments = ["All"];
+        await sendPushNotification(message, defaultImage, segments);
     }
 
     currentGameId = null;
@@ -2035,7 +2053,8 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+    // const segments = ["All"];    
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments);
 
     guestNameInput.value = '';
     await Swal.fire({
@@ -2292,8 +2311,8 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
     const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
-    
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+    //const segments = ["All"];
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
 
     await Swal.fire({
       icon: 'success',
@@ -2500,9 +2519,9 @@ async function loadGameData(gameId) {
     if (alertCount >= 2) {
       await Swal.fire({
         icon: 'error',
-        title: 'Confirmação Suspensa',
+        title: 'Participação Suspensa',
         html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Você já utilizou a tolerância de 2 jogos com advertências.<p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+               Você já utilizou a tolerância de 2 jogos com advertências.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -2763,7 +2782,12 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-    await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+   // const segments = ["All"];
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments);
+
+
+
+    
 
     if (playerObj.category === 'DIARIA') {
       await Swal.fire({
@@ -3037,7 +3061,7 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
 
     await Swal.fire({
       icon: 'success',
@@ -3432,187 +3456,41 @@ async function loadGameData(gameId) {
 
 </script>
 
-
-
-   <!-- SDK do OneSignal -->
+  <!-- SDK do OneSignal -->
  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-    });
-  });
 
+// No seu código atual, substitua por:
+const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
 
-async function sendPushNotification(message, imageUrl = null, playerId = null) {
+  async function sendPushNotification(message, imageUrl = null, segments) {
+  console.log("🎯 Segmentos:", segments);
+  console.log("📤 Enviando notificação...");
+  console.log("📝 Conteúdo da mensagem:", message);
+  if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
+
   try {
-    const now = Date.now(); // usado para gerar um ID único
-    const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log("🔔 Unique ID da notificação:", uniqueId); // <-- Aqui está o log
-
-    const payload = {
-      
-      app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-      headings: { en: "🏐 Vôlei BNH - INFORMAÇÕES v1.0" },
-      contents: { en: message },
-      included_segments: ["administradores"],
-      url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
-      web_push_topic: uniqueId, // se remover passa a substituir a notificação anterior
-      
-    };
-
-    const defaultImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-
-    if (imageUrl && imageUrl.startsWith('https://') &&
-        (imageUrl.match(/\.(jpg|jpeg|png)$/i) || imageUrl.includes('firebasestorage.googleapis.com'))) {
-      payload.big_picture = imageUrl;
-      payload.ios_attachments = { id: imageUrl };
-      payload.chrome_web_image = imageUrl;
-    } else {
-      console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
-      payload.big_picture = defaultImage;
-      payload.ios_attachments = { id: defaultImage };
-      payload.chrome_web_image = defaultImage;
-    }
-
-    console.log('Enviando notificação com payload:', payload);
-
-    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    const response = await fetch(FUNCTION_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkufl35qda6meux45j2ijc3x6fcelvbyjbutkcjw4upuwdn6l3uvxsbzluszrcj6msznwsnightmn2cq'
-      },
-      body: JSON.stringify(payload)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, imageUrl, segments })
     });
 
-    const data = await response.json();
-    console.log('Resposta da API do OneSignal:', data);
-    console.log('Status HTTP:', response.status);
+    const result = await response.json();
+    console.log("📬 Resposta da função:", result);
 
-    if (!response.ok) {
-      console.error('Erro na API do OneSignal:', data.errors || data);
-      Swal.fire({
-        icon: 'warning',
-        title: 'Aviso',
-        text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
-      });
+    if (result.success) {
+      console.log("✅ Notificação enviada com sucesso!");
+     // Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
+    } else {
+      console.warn("⚠️ Falha ao enviar:", result.error);
+      throw new Error(result.error);
     }
   } catch (error) {
-    console.error('Erro ao enviar notificação:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Erro',
-      text: 'Erro ao enviar notificação: ' + error.message,
-    });
+    console.error("❌ Erro ao enviar notificação:", error.message);
+    Swal.fire('Erro', error.message, 'error');
   }
 }
-
-
-
-
-    
-    async function sendPushNotification2(message, imageUrl = null) {
-      try {
-        const payload = {
-          app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-          headings: { en: "🏐 Vôlei BNH - Atualização" },
-          contents: { en: message },
-          included_segments: ["All"],          
-          url: "https://smv-eletronica.github.io/volei-bnh/lista.html"
-        };
-        
-        if (imageUrl) {
-          if (
-  imageUrl.startsWith('https://') &&
-  (
-    imageUrl.match(/\.(jpg|jpeg|png)$/i) || 
-    imageUrl.includes('firebasestorage.googleapis.com')
-  )
-) {
-  payload.big_picture = imageUrl;
-  payload.ios_attachments = { id: imageUrl };
-  payload.chrome_web_image = imageUrl;
-} else {
-  console.warn('URL da imagem inválida, usando imagem padrão:', imageUrl);
-  const fallbackImage = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-  payload.big_picture = fallbackImage;
-  payload.ios_attachments = { id: fallbackImage };
-  payload.chrome_web_image = fallbackImage;
-}
-
-        } else {
-          payload.big_picture = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-          payload.ios_attachments = { id: "https://smv-eletronica.github.io/volei-bnh/ios/256.png" };
-          payload.chrome_web_image = "https://smv-eletronica.github.io/volei-bnh/ios/256.png";
-        }
-        console.log('Enviando notificação com payload:', payload);
-        const response = await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
-          },
-          body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        console.log('Resposta da API do OneSignal:', data);
-        console.log('Status HTTP:', response.status);
-        if (!response.ok) {
-          console.error('Erro na API do OneSignal:', data.errors || data);
-          Swal.fire({
-            icon: 'warning',
-            title: 'Aviso',
-            text: 'Notificação não enviada: ' + (data.errors ? JSON.stringify(data.errors) : 'Erro desconhecido'),
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao enviar notificação:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao enviar notificação: ' + error.message,
-        });
-      }
-    }
-  
-
-  async function sendPushNotification3(message, imageUrl, tags = []) {
-    const payload = {
-      app_id: "65e53671-840a-40bd-a24b-6db4b0e8d555",
-      headings: { en: "🏐 Vôlei BNH - Administração" },
-      contents: { en: message },
-      url: "https://smv-eletronica.github.io/volei-bnh/lista.html",
-      big_picture: imageUrl,
-    };
-
-    if (tags.length === 0) {
-      // Envia para todos
-      payload.included_segments = ["All2"];
-    } else {
-      // Envia somente para quem tiver pelo menos uma das tags
-      payload.filters = [];
-      tags.forEach((tag, index) => {
-        if (index > 0) payload.filters.push({ operator: "OR" });
-        payload.filters.push({
-          field: "tag",
-          key: tag,
-          relation: "=",
-          value: "true"
-        });
-      });
-    }
-
-    await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        'Authorization': 'Basic os_v2_app_mxstm4mebjal3islnw2lb2gvkxbb3l3xrrwei6mr7qdhvjl4n2shqdcbrszjb2t45lbztbfdrgjv5gplcgqqauvq4biodcb743toa4y'
-      },
-      body: JSON.stringify(payload)
-    });
-  }
 
 
 
