@@ -2368,6 +2368,7 @@ async function loadGameData(gameId) {
       currentGameDate = gameData.date;
       gameTime = gameData.time;
       playerLimit = gameData.playerLimit || 16;
+      updateGameDateDisplay();
 
       // Atualizar listas de jogadores
       confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
