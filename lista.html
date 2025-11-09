@@ -99,7 +99,7 @@
         </div>
         <div class="game-selector">
          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados </h2>
-          <select id="gameSelect" class="game-select"></select>
+          
         </div>
         
         
@@ -107,9 +107,12 @@
           <h3>Lista do Dia: 
             <span class="lampada" onclick="mostrarPopup('meupopup1')">ℹ️</span>    
           </h3>
-          <div class="game-info">
+          <select id="gameSelect" class="game-select"></select>
+          <!--<div class="game-info">
             <span id="gameDate"></span> - <span id="gameTime"></span>
-          </div>
+          </div> -->
+
+
           <div id="confirmedPlayers"></div>
         </div>
         <div class="waitlist">
@@ -328,6 +331,8 @@ function createDashboardButton() {
       return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
     }
 
+
+    
     function updateGameDateDisplay() {
       if (currentGameData) {
         const gameDateTime = DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' });
@@ -356,6 +361,7 @@ function createDashboardButton() {
     }
 
    
+
 onAuthStateChanged(auth, async (user) => {
   console.log('onAuthStateChanged disparado, usuário:', user);
   document.getElementById('loading-overlay').style.display = 'flex';
@@ -1291,7 +1297,7 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               const gameRef = ref(database, `activeGames/${currentGameId}`);
               await update(gameRef, { time: newTime });
               gameTime = newTime;
-              updateGameDateDisplay();
+              //updateGameDateDisplay();
               await updateFirebaseLists();
               Swal.close();
               await Swal.fire({
@@ -2337,7 +2343,7 @@ async function loadGameData(gameId) {
       waitlistPlayers = [];
       playerLimit = 16;
       currentGameData = null;
-      updateGameDateDisplay();
+     // updateGameDateDisplay();
       updateGameList();
       updatePlayerLimitDisplay(isAdmin);
       return;
@@ -2357,7 +2363,7 @@ async function loadGameData(gameId) {
         waitlistPlayers = [];
         playerLimit = 16;
         currentGameData = null;
-        updateGameDateDisplay();
+       // updateGameDateDisplay();
         updateGameList();
         updatePlayerLimitDisplay(isAdmin);
         return;
@@ -2368,7 +2374,7 @@ async function loadGameData(gameId) {
       currentGameDate = gameData.date;
       gameTime = gameData.time;
       playerLimit = gameData.playerLimit || 16;
-      updateGameDateDisplay();
+    //  updateGameDateDisplay();
 
       // Atualizar listas de jogadores
       confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
