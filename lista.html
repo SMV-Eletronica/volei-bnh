@@ -93,10 +93,11 @@
   <div class="container">
     <div id="game-list" class="tab-content active">
       <div id="content" class="section">
-        <div class="section-title">
-          
-          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Configurações</button>
+        
+        <div class="section-title">          
+          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> </button>
         </div>
+        
         <div class="game-selector">
          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados </h2>
           
@@ -3178,13 +3179,18 @@ async function loadGameData(gameId) {
               <span class="player-name">${player.name}</span> <br>(${player.category}, ${player.position})
               ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
               <br>
-              <div class="player-status status-aprovado">Contribuição / Liberação<br></div>
+              <div class="player-status status-aprovado">Contribuições:
               <span class="player-status status-${player.paymentStatus}">
-                ${player.paymentStatus === 'pago' ? 'Pago /' : 'Pendência /'}
-              </span>
+                ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendência(s)'}
+              </span></div>
+              
+             <div class="player-status status-aprovado">Liberação:
               ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
                 ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                </span>` : ''}
+                </span>` : 'Não se aplica'}
+                </div>
+
+
             </div>
           </div>
           <div>
