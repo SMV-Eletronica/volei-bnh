@@ -1840,7 +1840,7 @@ async function addGuest() {
     const result = await Swal.fire({
       icon: 'question',
       title: 'Usar Crédito?',
-      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja usar R$${guestFee.toFixed(2)} para adicionar o convidado <strong>${guestName}</strong>?`,
+      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja usar R$${guestFee.toFixed(2)} para adicionar <strong>${guestName}</strong>?`,
       showCancelButton: true,
       confirmButtonText: 'Usar Crédito',
       cancelButtonText: 'Pagar Normalmente',
