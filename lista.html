@@ -2023,6 +2023,7 @@ async function addGuest() {
       // Notificar uso de crédito com detalhes
       const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
       let message = `Você usou R$${guestFee.toFixed(2)} de crédito para adicionar ${guestName}.`;
+      const titulo = "Uso de Créditos"
       
       if (creditResult.usedCredits.length > 0) {
         const creditDetails = creditResult.usedCredits.map(credit => 
@@ -2036,7 +2037,7 @@ async function addGuest() {
       
       message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
       
-      await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]);
+      await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]), titulo;
     } else {
       // Criar registro de pagamento normal
       const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
@@ -2061,7 +2062,8 @@ async function addGuest() {
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
     // const segments = ["All"];    
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments);
+    const titulo = "Convidados"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments), titulo;
 
     guestNameInput.value = '';
     await Swal.fire({
