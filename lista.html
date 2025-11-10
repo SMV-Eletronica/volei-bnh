@@ -2791,7 +2791,7 @@ async function loadGameData(gameId) {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
    // const segments = ["All"];
-    const titulo = "Título em português";
+    const titulo = `Título em português`;
     await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments, titulo);
 
 
