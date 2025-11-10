@@ -2039,7 +2039,7 @@ async function addGuest() {
       
   //    message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
       
-  //    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]), titulo;
+  //    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id], titulo);
     } else {
       // Criar registro de pagamento normal
       const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
@@ -2064,8 +2064,8 @@ async function addGuest() {
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
     // const segments = ["All"];    
-    const titulo = "Convidados"
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments), titulo;
+    const titulo ="Vôlei BNH - Informações"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments, titulo);
 
     guestNameInput.value = '';
     await Swal.fire({
@@ -2323,7 +2323,8 @@ async function addGuest() {
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
     const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
     //const segments = ["All"];
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
+    const titulo ="Vôlei BNH - Transparência"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, titulo);
 
     await Swal.fire({
       icon: 'success',
@@ -2758,22 +2759,22 @@ async function loadGameData(gameId) {
 
 
         // Notificar uso de crédito com detalhes
-        const newBalance = await checkPlayerDebts(playerId).creditBalance;
-        let message = `Você usou R$${guestFee.toFixed(2)} de crédito para confirmar presença.`;
+     //   const newBalance = await checkPlayerDebts(playerId).creditBalance;
+      //  let message = `Você usou R$${guestFee.toFixed(2)} de crédito para confirmar presença.`;
         
-        if (creditResult.usedCredits.length > 0) {
-          const creditDetails = creditResult.usedCredits.map(credit => 
-            credit.type === 'full' ? 
-              `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
-              `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
-          ).join(', ');
+     //   if (creditResult.usedCredits.length > 0) {
+      //    const creditDetails = creditResult.usedCredits.map(credit => 
+      //      credit.type === 'full' ? 
+      //        `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
+      //        `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
+     //     ).join(', ');
           
-          message += ` Detalhes: ${creditDetails}.`;
-        }
+     //     message += ` Detalhes: ${creditDetails}.`;
+     //   }
         
-        message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
+    //    message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
         
-        await sendPushNotification(message, playerObj.imageUrl || defaultImage, [playerId]);
+     //   await sendPushNotification(message, playerObj.imageUrl || defaultImage, [playerId], titulo);
       } else {
         const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
         const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
@@ -2795,7 +2796,7 @@ async function loadGameData(gameId) {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
    // const segments = ["All"];
-    const titulo = "Título em português";
+    const titulo ="Vôlei BNH - Informações"
     await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments, titulo);
 
 
@@ -3059,9 +3060,10 @@ async function loadGameData(gameId) {
       });
 
       // Notificar jogador sobre o crédito
-      const playerData = allPlayers.find(p => p.id === existingPayment.playerId);
-      const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} foi convertido em crédito devido à remoção da lista.`;
-      await sendPushNotification(message, playerData?.imageUrl || defaultImage, [existingPayment.playerId]);
+    //  const playerData = allPlayers.find(p => p.id === existingPayment.playerId);
+    //  const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} foi convertido em crédito devido à remoção da lista.`;
+   // const titulo ="Vôlei BNH - Informações"
+      //  await sendPushNotification(message, playerData?.imageUrl || defaultImage, [existingPayment.playerId], titulo);
 
       // Remover o pagamento original
       const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
@@ -3074,7 +3076,8 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments);
+    const titulo ="Vôlei BNH - Informações"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, titulo);
 
     await Swal.fire({
       icon: 'success',
