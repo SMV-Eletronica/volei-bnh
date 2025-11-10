@@ -1153,7 +1153,8 @@ async function showDefaulterDetails(playerId, playerName) {
     const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
     const message = `💰 Nova contribuição recebida\n De: ${currentPlayer.name}\n Valor: R$${payment.value.toFixed(2)}\n Referente: ${monthYear}\n Status: 🕒 Pendente de análise`;
     //  segments é definida como global
-    await sendPushNotification(message, null, segments);
+    const titulo = "BNH Vôlei - Transparência"
+    await sendPushNotification(message, null, segments, titulo);
 
 
 
