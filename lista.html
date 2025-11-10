@@ -2791,7 +2791,8 @@ async function loadGameData(gameId) {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
    // const segments = ["All"];
-    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments);
+    const setor = ["quarto"]
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments, setor);
 
 
 
@@ -3476,17 +3477,18 @@ async function loadGameData(gameId) {
 // No seu código atual, substitua por:
 const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
 
-  async function sendPushNotification(message, imageUrl = null, segments) {
+  async function sendPushNotification(message, imageUrl = null, segments, setor) {
   console.log("🎯 Segmentos:", segments);
   console.log("📤 Enviando notificação...");
   console.log("📝 Conteúdo da mensagem:", message);
+    console.log("📝 Conteúdo da setor:", setor);
   if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
 
   try {
     const response = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, imageUrl, segments })
+      body: JSON.stringify({ message, imageUrl, segments, setor })
     });
 
     const result = await response.json();
