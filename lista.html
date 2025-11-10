@@ -1207,7 +1207,8 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
              //const segments = ["All"];
-              await sendPushNotification(message, defaultImage, segments);
+              const titulo ="Vôlei BNH - Informações"
+              await sendPushNotification(message, defaultImage, segments, titulo);
 
 
 
@@ -1507,7 +1508,8 @@ async function saveGameToHistory(gameId, gameData) {
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
       const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
       // const segments = ["All"];
-        await sendPushNotification(message, defaultImage, segments);
+      const titulo ="Vôlei BNH - Informações"
+        await sendPushNotification(message, defaultImage, segments, titulo);
     }
 
     currentGameId = null;
@@ -2021,23 +2023,23 @@ async function addGuest() {
   // Resto do código permanece igual...
 
       // Notificar uso de crédito com detalhes
-      const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
-      let message = `Você usou R$${guestFee.toFixed(2)} de crédito para adicionar ${guestName}.`;
-      const titulo = "Uso de Créditos"
+   //   const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
+  //    let message = `Você usou R$${guestFee.toFixed(2)} de crédito para adicionar ${guestName}.`;
+   //   const titulo = "Uso de Créditos"
       
-      if (creditResult.usedCredits.length > 0) {
-        const creditDetails = creditResult.usedCredits.map(credit => 
-          credit.type === 'full' ? 
-            `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
-            `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
-        ).join(', ');
+ //     if (creditResult.usedCredits.length > 0) {
+  //      const creditDetails = creditResult.usedCredits.map(credit => 
+   //       credit.type === 'full' ? 
+     //       `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
+   //         `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
+   //     ).join(', ');
         
-        message += ` Detalhes: ${creditDetails}.`;
-      }
+    //    message += ` Detalhes: ${creditDetails}.`;
+   //   }
       
-      message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
+  //    message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
       
-      await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]), titulo;
+  //    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]), titulo;
     } else {
       // Criar registro de pagamento normal
       const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
