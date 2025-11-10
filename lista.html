@@ -3478,13 +3478,13 @@ async function loadGameData(gameId) {
 
 // No seu código atual, substitua por:
 const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
-
+ console.log("🔍 Tipo de titulo:", typeof titulo, "| Valor:", titulo);
   async function sendPushNotification(message, imageUrl = null, segments, titulo) {
     console.log("📤 Enviando notificação...");      
     console.log("📝 Conteúdo da setor:", titulo);
     console.log("📝 Conteúdo da mensagem:", message);
     console.log("🎯 Segmentos:", segments);
-    console.log("🔍 Tipo de titulo:", typeof titulo, "| Valor:", titulo);
+   
     
   if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
 
