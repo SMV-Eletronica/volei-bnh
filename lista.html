@@ -2791,8 +2791,8 @@ async function loadGameData(gameId) {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
    // const segments = ["All"];
-    const setor = "quarto";
-    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments, setor);
+    const titulo = "Título em português";
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments, titulo);
 
 
 
@@ -3470,25 +3470,28 @@ async function loadGameData(gameId) {
 
 </script>
 
-  <!-- SDK do OneSignal -->
+  <!-- SDK do OneSignal 
  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+  -->
 <script>
 
 // No seu código atual, substitua por:
 const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
 
-  async function sendPushNotification(message, imageUrl = null, segments, setor) {
-  console.log("🎯 Segmentos:", segments);
-  console.log("📤 Enviando notificação...");
-  console.log("📝 Conteúdo da mensagem:", message);
-    console.log("📝 Conteúdo da setor:", setor);
+  async function sendPushNotification(message, imageUrl = null, segments, titulo) {
+    console.log("📤 Enviando notificação...");      
+    console.log("📝 Conteúdo da setor:", titulo);
+    console.log("📝 Conteúdo da mensagem:", message);
+    console.log("🎯 Segmentos:", segments);
+    
   if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
 
   try {
     const response = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, imageUrl, segments, setor })
+      body: JSON.stringify({ message, imageUrl, segments, titulo })
     });
 
     const result = await response.json();
