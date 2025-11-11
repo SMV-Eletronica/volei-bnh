@@ -132,7 +132,7 @@ body {
 }
 
 .sidebar.active {
-    left: 0;
+    left: 9px;
 }
 
 .sidebar-menu {
