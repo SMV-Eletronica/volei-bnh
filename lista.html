@@ -1507,7 +1507,7 @@ async function saveGameToHistory(gameId, gameData) {
       });
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
-      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
+      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Diárias foram convertidas em créditos.`;
       // const segments = ["All"];
       const titulo ="Vôlei BNH - Informações"
         await sendPushNotification(message, defaultImage, segments, titulo);
@@ -2076,7 +2076,7 @@ async function addGuest() {
         ? `Convidado <strong>${guestName}</strong> adicionado usando crédito de R$${guestFee.toFixed(2)}.`
         : `
           Convidado <strong>${guestName}</strong> adicionado a lista!<br> Efetue a contribuição e anexe o comprovante ao Transparência para registro.<br><br>
-          PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br><p>
+          PIX para contribuição: <strong>fabioluiztx@outlook.com</strong><br><p>
           <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
         `,
       showConfirmButton: useCredit,
@@ -2812,7 +2812,7 @@ async function loadGameData(gameId) {
           ? `Presença confirmada usando crédito de R$${guestFee.toFixed(2)}.`
           : `
             Presença lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição.<br><br>
-            PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+            PIX para contribuição: <strong>fabioluiztx@outlook.com</strong><br>
             <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
           `,
         showConfirmButton: useCredit,
@@ -3083,7 +3083,7 @@ async function loadGameData(gameId) {
     await Swal.fire({
       icon: 'success',
       title: 'Sucesso',
-      html: `<strong>${player.name}</strong> foi removido da lista com sucesso, caso haja pagamento de <strong>DIÁRIA</strong> a mesma será convertida em crédito`,
+      html: `<strong>${player.name}</strong> foi removido da lista com sucesso, caso haja contribuição de <strong>DIÁRIA</strong> a mesma será convertida em crédito`,
       showConfirmButton: true,
       confirmButtonText: 'OK',
     });
