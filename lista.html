@@ -1507,7 +1507,7 @@ async function saveGameToHistory(gameId, gameData) {
       });
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
-      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Diárias foram convertidas em créditos.`;
+      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado./n Diárias foram convertidas em créditos.`;
       // const segments = ["All"];
       const titulo ="Vôlei BNH - Informações"
         await sendPushNotification(message, defaultImage, segments, titulo);
