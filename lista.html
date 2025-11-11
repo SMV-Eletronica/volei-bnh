@@ -1510,7 +1510,7 @@ async function saveGameToHistory(gameId, gameData) {
       const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado./n Diárias foram convertidas em créditos.`;
       // const segments = ["All"];
       const titulo ="Vôlei BNH - Informações"
-        await sendPushNotification(message, defaultImage, segments, titulo);
+        await sendPushNotification(message, undefined, segments, titulo);
     }
 
     currentGameId = null;
