@@ -3214,7 +3214,7 @@ async function loadGameData(gameId) {
   );
 
   confirmedPlayersDiv.innerHTML = confirmedHTML.length === 0
-    ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
+    ? '<div style="color: var(--text); padding: 10px;">Nenhum jogador confirmado.</div>'
     : confirmedHTML.join('');
 
   const waitlistHTML = await Promise.all(
@@ -3251,7 +3251,7 @@ async function loadGameData(gameId) {
   );
 
   waitlistPlayersDiv.innerHTML = waitlistHTML.length === 0
-    ? '<div style="color: var(--muted); padding: 10px;">Ninguém na lista de espera.</div>'
+    ? '<div style="color: var(--text); padding: 10px;">Nenhum jogador na lista de espera.</div>'
     : waitlistHTML.join('');
 }
 
