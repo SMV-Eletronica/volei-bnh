@@ -62,8 +62,8 @@ body {
 }
 
 .sidebar-user-photo {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
     margin-right: 10px;
@@ -629,9 +629,9 @@ body {
 
 .sidebar {
     position: fixed;
-    left: -250px;
-    width: 250px;
-    height: 100%;
+    left: -270px;
+    width: 270px;
+    height: 90%;
     background-color: #2c3e50;
     color: white;
     transition: left 0.3s ease-in-out;
@@ -641,7 +641,7 @@ body {
 }
 
 .sidebar.active {
-    left: 0;
+    left: 9px;
 }
 
 .sidebar-menu {
