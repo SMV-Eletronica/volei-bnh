@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="lista.css?v=3.1">
+<link rel="stylesheet" href="lista.css?v=1.1">
 
 
  <style>
@@ -93,13 +93,14 @@
   <div class="container">
     <div id="game-list" class="tab-content active">
       <div id="content" class="section">
-        <div class="section-title">
-          
+        
+         <div class="section-title">          
           <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Configurações</button>
         </div>
+        
         <div class="game-selector">
          <h2><i class="fas fa-volleyball-ball"></i> Jogos Programados </h2>
-          <select id="gameSelect" class="game-select"></select>
+          
         </div>
         
         
@@ -107,9 +108,13 @@
           <h3>Lista do Dia: 
             <span class="lampada" onclick="mostrarPopup('meupopup1')">ℹ️</span>    
           </h3>
-          <div class="game-info">
+         
+          <select id="gameSelect" class="game-select"></select>
+          <!--<div class="game-info">
             <span id="gameDate"></span> - <span id="gameTime"></span>
-          </div>
+          </div> -->
+
+
           <div id="confirmedPlayers"></div>
         </div>
         <div class="waitlist">
@@ -175,6 +180,17 @@
       </div>
     </footer>
 
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.init({
+            appId: "65e53671-840a-40bd-a24b-6db4b0e8d555",
+         //   allowLocalhostAsSecureOrigin: true // Remova em produção
+        });
+    });
+</script>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getDatabase, ref, get, set, onValue, push, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
@@ -209,8 +225,7 @@
     };
 
     const contentDiv = document.getElementById('content');
-    const confirmPlayerBtn = document.getElementById('confirmPlayer');
-    
+    const confirmPlayerBtn = document.getElementById('confirmPlayer');    
     const confirmedPlayersDiv = document.getElementById('confirmedPlayers');
     const waitlistPlayersDiv = document.getElementById('waitlistPlayers');
     const adminSearchContainer = document.getElementById('adminSearchContainer');
@@ -224,7 +239,6 @@
     const guestNameInput = document.getElementById('guestNameInput');
     const addGuestBtn = document.getElementById('addGuestBtn');
     const adminSettingsBtn = document.getElementById('adminSettingsBtn');
-
     const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -245,7 +259,7 @@
     let currentGameId = null;
     let currentGameData = null;
 
-
+   window.segments = ["Administradores"]; // Tornar global para o sendPushnotifications o segmento All 
 
 
       // Nova função para criar e inserir o botão Dashboard
@@ -319,6 +333,8 @@ function createDashboardButton() {
       return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
     }
 
+
+    
     function updateGameDateDisplay() {
       if (currentGameData) {
         const gameDateTime = DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' });
@@ -347,6 +363,7 @@ function createDashboardButton() {
     }
 
    
+
 onAuthStateChanged(auth, async (user) => {
   console.log('onAuthStateChanged disparado, usuário:', user);
   document.getElementById('loading-overlay').style.display = 'flex';
@@ -396,7 +413,7 @@ onAuthStateChanged(auth, async (user) => {
             const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
             await set(activityRef, {
-              userName: userName + " v1",
+              userName: userName + " v2",
               timestamp: getBrazilDateTimeISO()
             });
             localStorage.setItem(lastAccessKey, now.toISO());
@@ -728,8 +745,8 @@ async function checkPlayerDebts(playerId) {
           for (const paymentId in paymentsData[year][month]) {
             const payment = paymentsData[year][month][paymentId];
             if (payment && payment.playerId === playerId) {
-              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente
-              if (['CONVIDADO', 'DIARIA'].includes(payment.paymentType) && 
+              // VERIFICAÇÃO CORRIGIDA: considera como pendência se não tem data OU se está como inadimplente em todas as categorias
+              if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
                   (!payment.date || payment.paymentStatus === 'inadimplente')) {
                 debtCount += 1;
                 totalDebt += parseFloat(payment.value || 0);
@@ -1185,9 +1202,18 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               };
 
               await set(gameRef, newGame);
+
+
+              
               const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
-              await sendPushNotification(message, defaultImage);
+             //const segments = ["All"];
+              const titulo ="Vôlei BNH - Informações"
+              await sendPushNotification(message, defaultImage, segments, titulo);
+
+
+
+              
               await loadActiveGames();
               Swal.close();
               await Swal.fire({
@@ -1274,7 +1300,7 @@ document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
               const gameRef = ref(database, `activeGames/${currentGameId}`);
               await update(gameRef, { time: newTime });
               gameTime = newTime;
-              updateGameDateDisplay();
+              //updateGameDateDisplay();
               await updateFirebaseLists();
               Swal.close();
               await Swal.fire({
@@ -1461,9 +1487,9 @@ async function saveGameToHistory(gameId, gameData) {
               });
 
               // Notificar jogador sobre o crédito
-              const playerData = allPlayers.find(p => p.id === payment.playerId);
-              const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
-              await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
+              //const playerData = allPlayers.find(p => p.id === payment.playerId);
+             // const message = `Seu pagamento de R$${payment.value.toFixed(2)} para o jogo cancelado foi convertido em crédito.`;
+             // await sendPushNotification(message, playerData?.imageUrl || defaultImage, [payment.playerId]);
             }
             
             // REMOVER O PAGAMENTO ORIGINAL (tanto pagos quanto não pagos)
@@ -1481,8 +1507,10 @@ async function saveGameToHistory(gameId, gameData) {
       });
 
       const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
-      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado. Pagamentos foram processados conforme necessário.`;
-      await sendPushNotification(message, defaultImage);
+      const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado.\n Diárias foram convertidas em créditos.`;
+      // const segments = ["All"];
+      const titulo ="Vôlei BNH - Informações"
+        await sendPushNotification(message, undefined, segments, titulo);
     }
 
     currentGameId = null;
@@ -1813,7 +1841,7 @@ async function addGuest() {
     const result = await Swal.fire({
       icon: 'question',
       title: 'Usar Crédito?',
-      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja usar R$${guestFee.toFixed(2)} para adicionar o convidado <strong>${guestName}</strong>?`,
+      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja usar R$${guestFee.toFixed(2)} para adicionar <strong>${guestName}</strong>?`,
       showCancelButton: true,
       confirmButtonText: 'Usar Crédito',
       cancelButtonText: 'Pagar Normalmente',
@@ -1996,22 +2024,23 @@ async function addGuest() {
   // Resto do código permanece igual...
 
       // Notificar uso de crédito com detalhes
-      const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
-      let message = `Você usou R$${guestFee.toFixed(2)} de crédito para adicionar ${guestName}.`;
+   //   const newBalance = await checkPlayerDebts(window.currentUserPlayer.id).creditBalance;
+  //    let message = `Você usou R$${guestFee.toFixed(2)} de crédito para adicionar ${guestName}.`;
+   //   const titulo = "Uso de Créditos"
       
-      if (creditResult.usedCredits.length > 0) {
-        const creditDetails = creditResult.usedCredits.map(credit => 
-          credit.type === 'full' ? 
-            `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
-            `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
-        ).join(', ');
+ //     if (creditResult.usedCredits.length > 0) {
+  //      const creditDetails = creditResult.usedCredits.map(credit => 
+   //       credit.type === 'full' ? 
+     //       `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
+   //         `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
+   //     ).join(', ');
         
-        message += ` Detalhes: ${creditDetails}.`;
-      }
+    //    message += ` Detalhes: ${creditDetails}.`;
+   //   }
       
-      message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
+  //    message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
       
-      await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id]);
+  //    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, [window.currentUserPlayer.id], titulo);
     } else {
       // Criar registro de pagamento normal
       const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
@@ -2035,7 +2064,9 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
     const message = `Convidado ${guestName} adicionado ao jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'} por ${playerName}.`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, window.currentUserPlayer?.id);
+    // const segments = ["All"];    
+    const titulo ="Vôlei BNH - Informações"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage,segments, titulo);
 
     guestNameInput.value = '';
     await Swal.fire({
@@ -2045,7 +2076,7 @@ async function addGuest() {
         ? `Convidado <strong>${guestName}</strong> adicionado usando crédito de R$${guestFee.toFixed(2)}.`
         : `
           Convidado <strong>${guestName}</strong> adicionado a lista!<br> Efetue a contribuição e anexe o comprovante ao Transparência para registro.<br><br>
-          PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br><p>
+          PIX para contribuição: <strong>fabioluiztx@outlook.com</strong><br><p>
           <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
         `,
       showConfirmButton: useCredit,
@@ -2292,8 +2323,9 @@ async function addGuest() {
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
     const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
-    
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage);
+    //const segments = ["All"];
+    const titulo ="Vôlei BNH - Transparência"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, titulo);
 
     await Swal.fire({
       icon: 'success',
@@ -2318,7 +2350,7 @@ async function loadGameData(gameId) {
       waitlistPlayers = [];
       playerLimit = 16;
       currentGameData = null;
-      updateGameDateDisplay();
+     // updateGameDateDisplay();
       updateGameList();
       updatePlayerLimitDisplay(isAdmin);
       return;
@@ -2338,7 +2370,7 @@ async function loadGameData(gameId) {
         waitlistPlayers = [];
         playerLimit = 16;
         currentGameData = null;
-        updateGameDateDisplay();
+       // updateGameDateDisplay();
         updateGameList();
         updatePlayerLimitDisplay(isAdmin);
         return;
@@ -2349,6 +2381,7 @@ async function loadGameData(gameId) {
       currentGameDate = gameData.date;
       gameTime = gameData.time;
       playerLimit = gameData.playerLimit || 16;
+    //  updateGameDateDisplay();
 
       // Atualizar listas de jogadores
       confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
@@ -2500,9 +2533,9 @@ async function loadGameData(gameId) {
     if (alertCount >= 2) {
       await Swal.fire({
         icon: 'error',
-        title: 'Confirmação Suspensa',
+        title: 'Participação Suspensa',
         html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
-               Você já utilizou a tolerância de 2 jogos com advertências.<p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
+               Você já utilizou a tolerância de 2 jogos com advertências.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`,
         confirmButtonText: 'Entendido'
       });
       return;
@@ -2727,22 +2760,22 @@ async function loadGameData(gameId) {
 
 
         // Notificar uso de crédito com detalhes
-        const newBalance = await checkPlayerDebts(playerId).creditBalance;
-        let message = `Você usou R$${guestFee.toFixed(2)} de crédito para confirmar presença.`;
+     //   const newBalance = await checkPlayerDebts(playerId).creditBalance;
+      //  let message = `Você usou R$${guestFee.toFixed(2)} de crédito para confirmar presença.`;
         
-        if (creditResult.usedCredits.length > 0) {
-          const creditDetails = creditResult.usedCredits.map(credit => 
-            credit.type === 'full' ? 
-              `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
-              `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
-          ).join(', ');
+     //   if (creditResult.usedCredits.length > 0) {
+      //    const creditDetails = creditResult.usedCredits.map(credit => 
+      //      credit.type === 'full' ? 
+      //        `Crédito de R$${credit.value.toFixed(2)} utilizado completamente` :
+      //        `Crédito de R$${credit.value.toFixed(2)} utilizado (saldo restante: R$${credit.remaining.toFixed(2)})`
+     //     ).join(', ');
           
-          message += ` Detalhes: ${creditDetails}.`;
-        }
+     //     message += ` Detalhes: ${creditDetails}.`;
+     //   }
         
-        message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
+    //    message += ` Saldo de crédito restante: R$${(newBalance || 0).toFixed(2)}.`;
         
-        await sendPushNotification(message, playerObj.imageUrl || defaultImage, [playerId]);
+     //   await sendPushNotification(message, playerObj.imageUrl || defaultImage, [playerId], titulo);
       } else {
         const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
         const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
@@ -2763,7 +2796,13 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${playerObj.name} confirmou presença para o jogo ${formattedDate} às ${currentGameData?.time || 'horário não definido'}.`;
-    await sendPushNotification(message, playerObj.imageUrl || defaultImage);
+   // const segments = ["All"];
+    const titulo ="Vôlei BNH - Informações"
+    await sendPushNotification(message, playerObj.imageUrl || defaultImage, segments, titulo);
+
+
+
+    
 
     if (playerObj.category === 'DIARIA') {
       await Swal.fire({
@@ -2773,7 +2812,7 @@ async function loadGameData(gameId) {
           ? `Presença confirmada usando crédito de R$${guestFee.toFixed(2)}.`
           : `
             Presença lançada com sucesso, aguarde aprovação dos ADMs para registro da contribuição.<br><br>
-            PIX para pagamento: <strong>fabioluiztx@outlook.com</strong><br>
+            PIX para contribuição: <strong>fabioluiztx@outlook.com</strong><br>
             <button id="copyPixBtn" class="swal2-confirm swal2-styled">Copiar PIX</button>
           `,
         showConfirmButton: useCredit,
@@ -3022,9 +3061,10 @@ async function loadGameData(gameId) {
       });
 
       // Notificar jogador sobre o crédito
-      const playerData = allPlayers.find(p => p.id === existingPayment.playerId);
-      const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} foi convertido em crédito devido à remoção da lista.`;
-      await sendPushNotification(message, playerData?.imageUrl || defaultImage, [existingPayment.playerId]);
+    //  const playerData = allPlayers.find(p => p.id === existingPayment.playerId);
+    //  const message = `Seu pagamento de R$${existingPayment.value.toFixed(2)} para ${player.name} foi convertido em crédito devido à remoção da lista.`;
+   // const titulo ="Vôlei BNH - Informações"
+      //  await sendPushNotification(message, playerData?.imageUrl || defaultImage, [existingPayment.playerId], titulo);
 
       // Remover o pagamento original
       const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
@@ -3037,12 +3077,13 @@ async function loadGameData(gameId) {
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
-    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, ["administradores"]);
+    const titulo ="Vôlei BNH - Informações"
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, titulo);
 
     await Swal.fire({
       icon: 'success',
       title: 'Sucesso',
-      html: `<strong>${player.name}</strong> foi removido da lista com sucesso, caso haja pagamento de <strong>DIÁRIA</strong> a mesma será convertida em crédito`,
+      html: `<strong>${player.name}</strong> foi removido da lista com sucesso, caso haja contribuição de <strong>DIÁRIA</strong> a mesma será convertida em crédito`,
       showConfirmButton: true,
       confirmButtonText: 'OK',
     });
@@ -3147,13 +3188,18 @@ async function loadGameData(gameId) {
               <span class="player-name">${player.name}</span> <br>(${player.category}, ${player.position})
               ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
               <br>
-              <div class="player-status status-aprovado">Contribuição / Liberação<br></div>
+              <div class="player-status status-aprovado">Contribuições:
               <span class="player-status status-${player.paymentStatus}">
-                ${player.paymentStatus === 'pago' ? 'Pago /' : 'Pendência /'}
-              </span>
+                ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendência(s)'}
+              </span></div>
+              
+             <div class="player-status status-aprovado">Liberação:
               ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">
                 ${player.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                </span>` : ''}
+                </span>` : 'Não se aplica'}
+                </div>
+
+
             </div>
           </div>
           <div>
@@ -3169,7 +3215,7 @@ async function loadGameData(gameId) {
   );
 
   confirmedPlayersDiv.innerHTML = confirmedHTML.length === 0
-    ? '<div style="color: var(--muted); padding: 10px;">Nenhum jogador confirmado.</div>'
+    ? '<div style="color: var(--text); padding: 10px;">Nenhum jogador confirmado.</div>'
     : confirmedHTML.join('');
 
   const waitlistHTML = await Promise.all(
@@ -3206,7 +3252,7 @@ async function loadGameData(gameId) {
   );
 
   waitlistPlayersDiv.innerHTML = waitlistHTML.length === 0
-    ? '<div style="color: var(--muted); padding: 10px;">Ninguém na lista de espera.</div>'
+    ? '<div style="color: var(--text); padding: 10px;">Nenhum jogador na lista de espera.</div>'
     : waitlistHTML.join('');
 }
 
@@ -3432,39 +3478,47 @@ async function loadGameData(gameId) {
 
 </script>
 
-
-   <!-- SDK do OneSignal -->
+  <!-- SDK do OneSignal 
  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+-->
+  
 <script>
 
 // No seu código atual, substitua por:
-const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-uc.a.run.app';
+const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
+ 
+  async function sendPushNotification(message, imageUrl = null, segments, titulo) {
+    console.log("📤 Enviando notificação...");      
+    console.log("📝 Conteúdo da setor:", titulo);
+    console.log("📝 Conteúdo da mensagem:", message);
+    console.log("🎯 Segmentos:", segments);
+    console.log("🔍 Tipo de titulo:", typeof titulo, "| Valor:", titulo);
+   
+    
+  if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
 
-async function sendPushNotification(message, imageUrl = null) {
   try {
     const response = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, imageUrl })
+      body: JSON.stringify({ message, imageUrl, segments, titulo })
     });
-    
+
     const result = await response.json();
-    
+    console.log("📬 Resposta da função:", result);
+
     if (result.success) {
-      Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
+      console.log("✅ Notificação enviada com sucesso!");
+     // Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
     } else {
+      console.warn("⚠️ Falha ao enviar:", result.error);
       throw new Error(result.error);
     }
   } catch (error) {
+    console.error("❌ Erro ao enviar notificação:", error.message);
     Swal.fire('Erro', error.message, 'error');
   }
 }
-
-
-
-
-
-
 
 
 
