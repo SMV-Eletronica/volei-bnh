@@ -1789,7 +1789,7 @@ async function addGuest() {
   const debtInfo = await checkPlayerDebts(window.currentUserPlayer.id);
   if (!isAdmin && debtInfo.hasDebt) {
     const alertCount = await updateDebtNotification(window.currentUserPlayer.id, currentGameId);
-    if (alertCount >= 2) {
+    if (alertCount >= 3) {
       await Swal.fire({
         icon: 'error',
         title: 'Ação Suspensa',
@@ -2530,7 +2530,7 @@ async function loadGameData(gameId) {
   const debtInfo = await checkPlayerDebts(playerId);
   if (!isAdmin && debtInfo.hasDebt) {
     const alertCount = await updateDebtNotification(playerId, currentGameId);
-    if (alertCount >= 2) {
+    if (alertCount >= 3) {
       await Swal.fire({
         icon: 'error',
         title: 'Participação Suspensa',
