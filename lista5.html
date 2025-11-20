@@ -1975,6 +1975,9 @@ async function addGuest() {
       };
     });
 
+    // VERIFICAR SE guestFee É MAIOR QUE ZERO ANTES DE CRIAR PAGAMENTO
+if (guestFee > 0) {
+
     const [year, month] = getBrazilMonthYear().split('-');
     if (useCredit) {
   // Usar a função de crédito
@@ -2060,6 +2063,7 @@ async function addGuest() {
         guestName: guestName
       });
     }
+} // FIM DA VERIFICAÇÃO guestFee > 0
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const playerName = window.currentUserPlayer?.name || 'usuário não identificado';
@@ -2280,6 +2284,10 @@ async function addGuest() {
       return;
     }
 
+    
+    // VERIFICAR SE guestFee É MAIOR QUE ZERO ANTES DE CRIAR PAGAMENTO
+if (guestFee > 0) {
+    
     const paymentData = {
       additionalInfo: playerData.additionalInfo || playerData.name,
       createdAt: playerData.createdAt || getBrazilDateTimeISO(),
@@ -2319,6 +2327,8 @@ async function addGuest() {
       const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
       await set(paymentRef, paymentData);
     }
+
+    } // FIM DA VERIFICAÇÃO guestFee > 0
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
@@ -2713,6 +2723,8 @@ async function loadGameData(gameId) {
     });
 
     if (playerObj.category === 'DIARIA') {
+          // VERIFICAR SE guestFee É MAIOR QUE ZERO ANTES DE CRIAR PAGAMENTO
+    if (guestFee > 0) {
       const [year, month] = getBrazilMonthYear().split('-');
      if (useCredit) {
   // Usar a função de crédito
@@ -2792,6 +2804,7 @@ async function loadGameData(gameId) {
           paymentStatus: 'inadimplente'
         });
       }
+      } // FIM DA VERIFICAÇÃO guestFee > 0
     }
 
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
