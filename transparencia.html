@@ -570,9 +570,9 @@ function createDashboardButton() {
         window.location.href = 'dashboard.html';
     });
 
-    const transparenciaBtn = document.getElementById('transparenciaBtn');
-    if (transparenciaBtn) {
-        sidebarMenu.insertBefore(dashboardLink, transparenciaBtn);
+    const listaBtn = document.getElementById('listaBtn');
+    if (listaBtn) {
+        sidebarMenu.insertBefore(dashboardLink, listaBtn);
     } else {
         sidebarMenu.appendChild(dashboardLink);
     }
