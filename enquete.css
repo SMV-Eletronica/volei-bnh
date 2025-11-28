@@ -392,6 +392,8 @@ body {
     font-weight: bold;
     position: relative;
     z-index: 8000;
+    /* 1. Sombra suave e moderna (recomendada) */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -405,6 +407,8 @@ body {
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s;
+    /* 1. Sombra suave e moderna (recomendada) */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .vote-option-btn.selected {
