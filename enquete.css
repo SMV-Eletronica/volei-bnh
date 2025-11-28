@@ -379,6 +379,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s;
+    z-index: 8000;
 }
 
 
@@ -388,7 +389,7 @@ body {
     color: white;
     margin-bottom: 10px;
     font-size: 1.0rem;
-    
+    z-index: 8000;
 }
 
 
