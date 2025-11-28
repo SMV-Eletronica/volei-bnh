@@ -1073,6 +1073,15 @@
         window.deletePoll = deletePoll;
         window.selectPoll = selectPoll;
         window.switchTab = switchTab;
+
+
+        // GARANTE QUE TODOS OS BOTÕES DE VOTO (principais e subopções) NUNCA abram/fecham a enquete
+document.addEventListener('click', function(e) {
+    // Se o clique for em qualquer botão de voto (ou dentro dele), impede que abra a enquete
+    if (e.target.closest('.vote-option-btn')) {
+        e.stopPropagation();
+    }
+}, true); // <-- useCapture = true para capturar antes do outro listener
     </script>
 </body>
 </html>
