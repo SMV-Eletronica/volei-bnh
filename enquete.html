@@ -650,7 +650,7 @@
                                     ${value}
                                 </button>
                                 ${isSelected && selectedMainOption === key && poll.subOptions && poll.subOptions[key] ? `
-                                    <div class="sub-options" style="margin-left: 20px; display: block;">
+                                    <div class="sub-options" style="display: block;">
                                         ${Object.entries(poll.subOptions[key]).map(([subKey, subValue]) => `
                                             <button class="vote-option-btn sub-option ${subKey} ${userVote?.subOption === subKey ? 'selected' : ''}" 
                                                     onclick="event.stopPropagation(); votePoll('${poll.id}', '${key}', '${subKey}')" 
