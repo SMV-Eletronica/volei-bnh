@@ -393,7 +393,7 @@ body {
     position: relative;
     z-index: 8000;
     /* 1. Sombra suave e moderna (recomendada) */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); 
 }
 
 
