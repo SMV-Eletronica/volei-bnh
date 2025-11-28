@@ -386,6 +386,8 @@ body {
 .vote-option-btn.option1, .vote-option-btn.sub-option.sub1, .vote-option-btn.sub-option.sub2, .vote-option-btn.sub-option.sub3  {
     background-color: #2ecc71;
     color: white;
+    margin-bottom: 10px;
+    
 }
 
 
