@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1054,15 +1055,23 @@
 
         createPollBtn.addEventListener('click', createPoll);
 
-        document.addEventListener('click', (event) => {
-            const pollItem = event.target.closest('.poll-item');
-            if (pollItem) {
-                const pollId = pollItem.dataset.pollId;
-                if (pollId) {
-                    selectPoll(pollId);
-                }
-            }
-        });
+       // NOVO E MELHOR listener global de clique
+document.addEventListener('click', function(e) {
+    // Se clicou em qualquer botão de voto (ou subopção), impede abrir a enquete
+    if (e.target.closest('.vote-option-btn')) {
+        e.stopPropagation();
+        return;
+    }
+
+    // Só abre a enquete se NÃO clicou em botão de voto
+    const pollItem = e.target.closest('.poll-item');
+    if (pollItem) {
+        const pollId = pollItem.dataset.pollId;
+        if (pollId) {
+            selectPoll(pollId);
+        }
+    }
+});
 
         window.addSubOption = addSubOption;
         window.removeSubOption = removeSubOption;
