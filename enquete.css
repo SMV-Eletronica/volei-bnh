@@ -734,7 +734,7 @@ body {
         flex-direction: column;
     }
     .tabs {
-        flex-direction: column;
+      /*  flex-direction: column; */
         gap: 5px;
     }
     .tab {
