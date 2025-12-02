@@ -64,10 +64,10 @@
             </div>
         </div>
 
-           
+      <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>     
       <button id="transparenciaBtn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
       <button onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
-      <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>
+      
       <button onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
       
       
@@ -284,9 +284,9 @@ function createDashboardButton() {
     });
 
     // Encontra o botão "Transparência" para inserir o Dashboard antes dele
-    const transparenciaBtn = document.getElementById('transparenciaBtn');
-    if (transparenciaBtn) {
-        sidebarMenu.insertBefore(dashboardLink, transparenciaBtn);
+    const listaBtn = document.getElementById('listaBtn');
+    if (listaBtn) {
+        sidebarMenu.insertBefore(dashboardLink, listaBtn);
     } else {
         // Se por algum motivo o Transparência não existir, adicione no final
         sidebarMenu.appendChild(dashboardLink);
