@@ -64,10 +64,10 @@
             </div>
         </div>
 
-      <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>     
+           
       <button id="transparenciaBtn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
       <button onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
-      
+      <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>
       <button onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
       
       
@@ -284,9 +284,9 @@ function createDashboardButton() {
     });
 
     // Encontra o botão "Transparência" para inserir o Dashboard antes dele
-    const listaBtn = document.getElementById('listaBtn');
-    if (listaBtn) {
-        sidebarMenu.insertBefore(dashboardLink, listaBtn);
+    const transparenciaBtn = document.getElementById('transparenciaBtn');
+    if (transparenciaBtn) {
+        sidebarMenu.insertBefore(dashboardLink, transparenciaBtn);
     } else {
         // Se por algum motivo o Transparência não existir, adicione no final
         sidebarMenu.appendChild(dashboardLink);
@@ -3205,7 +3205,7 @@ async function loadGameData(gameId) {
               <br>
               <div class="player-status status-aprovado">Contribuições:
               <span class="player-status status-${player.paymentStatus}">
-                ${player.paymentStatus === 'pago' ? 'Pago' : 'Pendência(s)'}
+                ${player.paymentStatus === 'pago' ? 'Isentas DEZ e JAN' : 'Pendência(s)'}
               </span></div>
               
              <div class="player-status status-aprovado">Liberação:
