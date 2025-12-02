@@ -1845,7 +1845,7 @@ async function addGuest() {
       showCancelButton: false,
      // confirmButtonText: 'Usar Crédito',
       confirmButtonText: 'Usar Isenção DEZ e JAN',
-     // cancelButtonText: 'Pagar Normalmente',
+      cancelButtonText: 'Pagar Normalmente',
      
     });
     useCredit = result.isConfirmed;
@@ -2589,8 +2589,8 @@ async function loadGameData(gameId) {
           icon: 'question',
           title: 'Usar Crédito?',
           html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja usar R$${guestFee.toFixed(2)} para confirmar sua presença?`,
-          showCancelButton: true,
-          confirmButtonText: 'Usar Crédito',
+          showCancelButton: false,
+          confirmButtonText: 'Usar Isenção DEZ e JAN',
           cancelButtonText: 'Pagar Normalmente',
         });
         useCredit = result.isConfirmed;
