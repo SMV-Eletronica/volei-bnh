@@ -285,9 +285,9 @@ function createDashboardButton() {
     });
 
     // Encontra o botão "Transparência" para inserir o Dashboard antes dele
-    const transparenciaBtn = document.getElementById('transparenciaBtn');
-    if (transparenciaBtn) {
-        sidebarMenu.insertBefore(dashboardLink, transparenciaBtn);
+    const listaBtn = document.getElementById('listaBtn');
+    if (listaBtn) {
+        sidebarMenu.insertBefore(dashboardLink, listaBtn);
     } else {
         // Se por algum motivo o Transparência não existir, adicione no final
         sidebarMenu.appendChild(dashboardLink);
