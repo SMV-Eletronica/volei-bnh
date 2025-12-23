@@ -590,7 +590,7 @@ table tr:hover {
 }
 
 .expense-item {
-    border-left: 4px solid var(--primary);
+    border-left: 4px solid var(--danger);
 }
 
 .expenseDel-item {
