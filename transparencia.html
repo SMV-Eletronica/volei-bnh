@@ -940,7 +940,8 @@ async function loadDefaulters() {
         const players = playersSnapshot.val() || {};
         const notificationsData = notificationsSnapshot.val() || {};
         const defaulters = {};
-        const selectedYear = yearFilter.value;
+       // const selectedYear = yearFilter.value;
+        const selectedYear = all;
         const selectedMonth = monthFilter.value;
         
         for (const year in paymentsData) {
