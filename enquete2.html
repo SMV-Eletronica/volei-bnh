@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="enquete.css?v=1.2">
+    <link rel="stylesheet" href="enquete.css?v=1.7">
+   
 </head>
 <body>
     <div class="header">
@@ -29,10 +30,11 @@
                     <div id="sidebarUserCategory" class="sidebar-user-position"></div>
                 </div>
             </div>
-            <button id="transparenciaBtn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
-            <button onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Enquetes</button>
+            
             <button id="listaBtn" onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>
-            <button class="logout-btn" onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
+            <button id="transparenciaBtn" onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>
+            <button onclick="window.location.href='enquete.html'"><i class="fas fa-question-circle"></i> Regras / Enquetes</button>            
+            <button onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
         </div>
         <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
     </div>
@@ -48,8 +50,6 @@
             <div class="new-poll-controls" id="newPollControls" style="display: none;">
                 <h3>Criar Nova Enquete</h3>
                 <div class="poll-details">          
-
-
                     <div>
                         <label for="newPollTitle">Título:</label><br>
                         <input type="text" id="newPollTitle" placeholder="Título da enquete">
@@ -73,23 +73,23 @@
                                 <div class="sub-options"></div>
                             </div>
                         </div>
-                        
                     </div>
                     <button id="createPollBtn" style="background: var(--warning);"><i class="fas fa-plus"></i> Criar Enquete</button>
                 </div>
             </div>
 
-            <div class="poll-list">
-                <h3>Enquetes Ativas</h3>
-                <div id="activePolls"></div>
-                <div id="activePollsSpinner" class="loading-spinner"></div>
-            </div>
-
+            <!-- SISTEMA DE TABS REORGANIZADO -->
             <div class="tabs">
-                <div class="tab active" data-tab="approved"><i class="fas fa-check-circle"></i> Aprovadas</div>
+                <div class="tab active" data-tab="active"><i class="fas fa-vote-yea"></i> Ativas</div>
+                <div class="tab" data-tab="approved"><i class="fas fa-check-circle"></i> Aprovadas</div>
                 <div class="tab" data-tab="reproved"><i class="fas fa-times-circle"></i> Reprovadas</div>
             </div>
-            <div id="approvedPolls" class="tab-content poll-list active">
+
+            <!-- CONTEÚDO DAS TABS -->
+            <div id="activePolls" class="tab-content poll-list active">
+                <div id="activePollsSpinner" class="loading-spinner"></div>
+            </div>
+            <div id="approvedPolls" class="tab-content poll-list">
                 <div id="approvedPollsSpinner" class="loading-spinner"></div>
             </div>
             <div id="reprovedPolls" class="tab-content poll-list">
@@ -102,6 +102,7 @@
 
     <footer class="footer">
         © 2025 SMV Eletrônica- Todos os direitos reservados<br>
+        <!--
         <div class="footer-links">
             Powered by:
             <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
@@ -115,6 +116,7 @@
                 OneSignal
             </a>
         </div>
+        -->
     </footer>
 
     <script type="module">
@@ -142,10 +144,6 @@
         const createPollBtn = document.getElementById('createPollBtn');
         const newPollTitle = document.getElementById('newPollTitle');
         const newPollDescription = document.getElementById('newPollDescription');
-        const activePollsDiv = document.getElementById('activePolls');
-        const approvedPollsDiv = document.getElementById('approvedPolls');
-        const reprovedPollsDiv = document.getElementById('reprovedPolls');
-        const transparenciaBtn = document.getElementById('transparenciaBtn');
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -156,7 +154,7 @@
         let allPolls = [];
         let selectedPollId = null;
         let selectedMainOption = null;
-        let activeTab = 'approved';
+        let activeTab = 'active';
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro@msn.com'];
         const defaultImage = 'volei.jpg';
 
@@ -173,9 +171,9 @@
             dashboardLink.addEventListener('click', () => {
                 window.location.href = 'dashboard.html';
             });
-            const transparenciaBtn = document.getElementById('transparenciaBtn');
-            if (transparenciaBtn) {
-                sidebarMenu.insertBefore(dashboardLink, transparenciaBtn);
+            const listaBtn = document.getElementById('listaBtn');
+            if (listaBtn) {
+                sidebarMenu.insertBefore(dashboardLink, listaBtn);
             } else {
                 sidebarMenu.appendChild(dashboardLink);
             }
@@ -218,7 +216,6 @@
             } else {
                 newPollControls.style.display = 'none';
             }
-            transparenciaBtn.style.display = 'inline-block';
         }
 
         function switchTab(tabName) {
@@ -252,9 +249,12 @@
                 }
                 await loadPolls();
                 updateButtonVisibility();
+                
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
                 });
+                
+                switchTab('active');
             }
         });
 
@@ -374,11 +374,10 @@
                     ? '<div style="color: var(--muted); padding: 10px;">Nenhuma enquete reprovada.</div>'
                     : (await Promise.all(reprovedPolls.map((poll, index) => renderPollItem(poll, index + 1).then(res => res.html)))).join('');
 
-                activePollsDiv.innerHTML = activePollsHtml;
-                approvedPollsDiv.innerHTML = approvedPollsHtml;
-                reprovedPollsDiv.innerHTML = reprovedPollsHtml;
+                document.getElementById('activePolls').innerHTML = activePollsHtml;
+                document.getElementById('approvedPolls').innerHTML = approvedPollsHtml;
+                document.getElementById('reprovedPolls').innerHTML = reprovedPollsHtml;
 
-                // Atualizar o resumo da enquete selecionada
                 const pollSummaryDiv = document.getElementById('pollSummary');
                 if (selectedPollId) {
                     const selectedPoll = allPolls.find(poll => poll.id === selectedPollId);
@@ -436,9 +435,9 @@
                 callback();
             } catch (error) {
                 console.error('Erro ao atualizar listas de enquetes:', error);
-                activePollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes ativas.</div>';
-                approvedPollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes aprovadas.</div>';
-                reprovedPollsDiv.innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes reprovadas.</div>';
+                document.getElementById('activePolls').innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes ativas.</div>';
+                document.getElementById('approvedPolls').innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes aprovadas.</div>';
+                document.getElementById('reprovedPolls').innerHTML = '<div style="color: var(--danger); padding: 10px;">Erro ao carregar enquetes reprovadas.</div>';
                 document.getElementById('pollSummary').innerHTML = '';
                 callback();
             }
@@ -541,17 +540,15 @@
                             voteCounts[key] = (voteCounts[key] || 0) + 1;
                         }
                     }
-                    const simCount = voteCounts['option1'] || 0; // Sim
-                    const naoCount = voteCounts['option2'] || 0; // Não
+                    const simCount = voteCounts['option1'] || 0;
+                    const naoCount = voteCounts['option2'] || 0;
                     isApproved = simCount > naoCount;
 
-                    // Determinar a opção principal vencedora
                     const winningOptionKey = isApproved ? 'option1' : 'option2';
                     const winningOptionValue = poll.options[winningOptionKey];
                     const winningCount = voteCounts[winningOptionKey] || 0;
                     const winningPercent = totalVotes ? ((winningCount / totalVotes) * 100).toFixed(1) : 0;
 
-                    // Determinar a subopção vencedora, se houver
                     let winningSubOption = '';
                     if (poll.subOptions && poll.subOptions[winningOptionKey]) {
                         let maxSubCount = 0;
@@ -568,7 +565,6 @@
                         }
                     }
 
-                    // Montar o resumo
                     summary = totalVotes > 0 ? `Venceu: ${winningOptionValue}${winningSubOption} - ${winningPercent}%` : 'Nenhum voto registrado';
 
                     const results = Object.entries(poll.options).map(([key, value]) => {
@@ -670,15 +666,11 @@
                     <div class="poll-item ${isSelected ? 'selected' : ''}" data-poll-id="${poll.id}">
                         <div class="poll-info">
                             <span class="poll-title">${pollNumber}. ${poll.title || 'Sem título'} 
-
-                               
-
-                            <span style="font-size:14px;"><br>👉 Clique para abrir.</span></span>    
-                                                   
+                                <span style="font-size:14px;"><br>👉 Clique para abrir.</span>
+                            </span>    
                             <span class="poll-description">${poll.description || 'Sem descrição'}</span>
                             <span class="poll-creator">Criada por: ${poll.created_by_name || 'Desconhecido'}</span>
                             <span>Data: ${formatDateToBR(poll.created_at)}</span>
-                            
                             
                             ${voteCountHtml}
                             <div id="spinner-${poll.id}" class="loading-spinner"></div>
@@ -690,7 +682,6 @@
                         </div>
                         ${isSelected ? `
                             <div class="poll-actions">
-                                ${!poll.is_active ? '' : ''}
                                 ${isAdmin && poll.is_active ? `
                                     <button class="close-poll-btn" onclick="event.stopPropagation(); closePoll('${poll.id}')">Finalizar Enquete</button>
                                     <button class="delete-poll-btn" onclick="event.stopPropagation(); deletePoll('${poll.id}')">Excluir Enquete</button>
@@ -735,7 +726,6 @@
         }
 
         async function createPoll() {
-            // Verificar se o usuário é administrador ou da categoria MENSAL
             if (!isAdmin && currentUserPlayer?.category !== 'MENSAL') {
                 await Swal.fire({
                     icon: 'error',
@@ -1054,23 +1044,20 @@
 
         createPollBtn.addEventListener('click', createPoll);
 
-        // NOVO E MELHOR listener global de clique
-document.addEventListener('click', function(e) {
-    // Se clicou em qualquer botão de voto (ou subopção), impede abrir a enquete
-    if (e.target.closest('.vote-option-btn')) {
-        e.stopPropagation();
-        return;
-    }
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.vote-option-btn')) {
+                e.stopPropagation();
+                return;
+            }
 
-    // Só abre a enquete se NÃO clicou em botão de voto
-    const pollItem = e.target.closest('.poll-item');
-    if (pollItem) {
-        const pollId = pollItem.dataset.pollId;
-        if (pollId) {
-            selectPoll(pollId);
-        }
-    }
-});
+            const pollItem = e.target.closest('.poll-item');
+            if (pollItem) {
+                const pollId = pollItem.dataset.pollId;
+                if (pollId) {
+                    selectPoll(pollId);
+                }
+            }
+        });
 
         window.addSubOption = addSubOption;
         window.removeSubOption = removeSubOption;
@@ -1081,8 +1068,6 @@ document.addEventListener('click', function(e) {
         window.deletePoll = deletePoll;
         window.selectPoll = selectPoll;
         window.switchTab = switchTab;
-
-
-
+    </script>
 </body>
 </html>
