@@ -895,6 +895,19 @@
                 });
                 updatePollLists(() => {
                     toggleSpinner(null, false, pollId);
+
+                    const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
+              const message = `Enquete recebeu um voto`;
+             //const segments = ["All"];
+              const titulo ="Vôlei BNH - Informações"
+              await sendPushNotification(message, defaultImage, segments, titulo);
+
+
+                    
+                    
+
+
+                    
                 });
             } catch (error) {
                 console.error('Erro ao registrar voto:', error);
@@ -1069,5 +1082,46 @@
         window.selectPoll = selectPoll;
         window.switchTab = switchTab;
     </script>
+
+<script>
+
+// No seu código atual, substitua por:
+const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
+ 
+  async function sendPushNotification(message, imageUrl = null, segments, titulo) {
+    console.log("📤 Enviando notificação...");      
+    console.log("📝 Conteúdo da setor:", titulo);
+    console.log("📝 Conteúdo da mensagem:", message);
+    console.log("🎯 Segmentos:", segments);
+    console.log("🔍 Tipo de titulo:", typeof titulo, "| Valor:", titulo);
+   
+    
+  if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
+
+  try {
+    const response = await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, imageUrl, segments, titulo })
+    });
+
+    const result = await response.json();
+    console.log("📬 Resposta da função:", result);
+
+    if (result.success) {
+      console.log("✅ Notificação enviada com sucesso!");
+     // Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
+    } else {
+      console.warn("⚠️ Falha ao enviar:", result.error);
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error("❌ Erro ao enviar notificação:", error.message);
+    Swal.fire('Erro', error.message, 'error');
+  }
+}
+
+</script>
+    
 </body>
 </html>
