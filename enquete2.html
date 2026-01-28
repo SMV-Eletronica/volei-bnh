@@ -898,7 +898,7 @@
 
                     const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
               const message = `Enquete recebeu um voto`;
-             //const segments = ["All"];
+             const segments = ["All"];
               const titulo ="Vôlei BNH - Informações"
               await sendPushNotification(message, defaultImage, segments, titulo);
 
