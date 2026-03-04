@@ -1842,7 +1842,7 @@ async function addGuest() {
     const result = await Swal.fire({
       icon: 'question',
       title: 'Usar Crédito?',
-      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja usar R$${guestFee.toFixed(2)} para adicionar <strong>${guestName}</strong>?`,
+      html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja deduzir R$${guestFee.toFixed(2)} destes créditos para adicionar <strong>${guestName}</strong>?`,
       showCancelButton: true,
      // confirmButtonText: 'Usar Crédito',
       confirmButtonText: 'SIM',
@@ -2589,7 +2589,7 @@ async function loadGameData(gameId) {
         const result = await Swal.fire({
           icon: 'question',
           title: 'Usar Crédito?',
-          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja usar R$${guestFee.toFixed(2)} para confirmar sua presença?`,
+          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja deduzir R$${guestFee.toFixed(2)} destes créditos para confirmar sua presença?`,
           showCancelButton: true,
           confirmButtonText: 'SIM',
           cancelButtonText: 'NÃO',
