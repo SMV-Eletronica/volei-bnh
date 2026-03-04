@@ -1843,10 +1843,10 @@ async function addGuest() {
       icon: 'question',
       title: 'Usar Crédito?',
       html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja usar R$${guestFee.toFixed(2)} para adicionar <strong>${guestName}</strong>?`,
-      showCancelButton: false,
+      showCancelButton: true,
      // confirmButtonText: 'Usar Crédito',
-      confirmButtonText: 'Usar Isenção DEZ e JAN',
-      cancelButtonText: 'Pagar Normalmente',
+      confirmButtonText: 'SIM',
+      cancelButtonText: 'Pagar c/ PIX',
      
     });
     useCredit = result.isConfirmed;
