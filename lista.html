@@ -260,7 +260,7 @@
     let currentGameId = null;
     let currentGameData = null;
 
-   window.segments = ["All2"]; // Tornar global para o sendPushnotifications o segmento All 
+   window.segments = ["All"]; // Tornar global para o sendPushnotifications o segmento All 
 
 
       // Nova função para criar e inserir o botão Dashboard
@@ -2589,7 +2589,7 @@ async function loadGameData(gameId) {
         const result = await Swal.fire({
           icon: 'question',
           title: 'Usar Crédito?',
-          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos. Deseja deduzir R$${guestFee.toFixed(2)} destes créditos para confirmar sua presença?`,
+          html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja deduzir R$${guestFee.toFixed(2)} destes créditos para confirmar sua presença?`,
           showCancelButton: true,
           confirmButtonText: 'SIM',
           cancelButtonText: 'NÃO',
