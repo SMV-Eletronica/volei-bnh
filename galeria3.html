@@ -1170,19 +1170,28 @@
           let playersHtml = '<div class="players-grid">';
           
           const confirmedPlayers = Object.values(game.confirmedPlayers || {});
-          confirmedPlayers.forEach(player => {
-            const playerData = allPlayers.find(p => p.id === player.id) || player;
-            playersHtml += `
-              <div class="player-avatar-container">
-                <div class="player-avatar">
-                  <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
-                </div>
-                <div class="player-tooltip">
-                  <strong>${playerData.name}</strong><p>${playerData.category}<br>${playerData.position || 'Posição não definida'}
-                </div>
-              </div>
-            `;
-          });
+confirmedPlayers.forEach(player => {
+  const playerData = allPlayers.find(p => p.id === player.id) || player;
+  let tooltipContent = `<strong>${playerData.name}</strong><p>${playerData.category}<br>${playerData.position || 'Posição não definida'}`;
+  
+  // Se for CONVIDADO e tiver invitedByName, adiciona quem convidou
+  if (playerData.category === 'CONVIDADO' && playerData.invitedByName) {
+    tooltipContent += `:<br> ${playerData.invitedByName}`;
+  }
+  
+  tooltipContent += `</p>`; // fechar o parágrafo
+
+  playersHtml += `
+    <div class="player-avatar-container">
+      <div class="player-avatar">
+        <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
+      </div>
+      <div class="player-tooltip">
+        ${tooltipContent}
+      </div>
+    </div>
+  `;
+});
           
           playersHtml += '</div>';
 
