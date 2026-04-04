@@ -703,7 +703,7 @@
             }
         }
 
-        // Função principal corrigida: tabela mostra apenas meses do ano selecionado (ou todos se 'all')
+        // FUNÇÃO CORRIGIDA: tabela respeita ano E mês selecionados
         async function loadFinancialData() {
             document.getElementById('loading-overlay').style.display = 'flex';
 
@@ -726,7 +726,7 @@
                 const expenses = expensesSnapshot.val() || {};
                 const players = playersSnapshot.val() || {};
                 
-                // Objeto para a tabela (apenas meses do ano selecionado ou todos)
+                // Objeto para a tabela (apenas meses que atendem ano E mês)
                 const monthlyData = {};
                 const yearsSet = new Set();
                 
@@ -746,8 +746,10 @@
                         const normalizedMonth = month.padStart(2, '0');
                         yearsSet.add(year);
                         
-                        // Verifica se este ano deve ser exibido na tabela
-                        const showInTable = (currentSelectedYear === 'all' || year === currentSelectedYear);
+                        // Verifica se este mês deve ser exibido na tabela (ano E mês)
+                        const matchesYear = (currentSelectedYear === 'all' || year === currentSelectedYear);
+                        const matchesMonth = (currentSelectedMonth === 'all' || normalizedMonth === currentSelectedMonth);
+                        const showInTable = matchesYear && matchesMonth;
                         
                         // Verifica se deve acumular para o saldo (considera ano/mês <= selecionado)
                         let shouldAccumulate = false;
@@ -772,8 +774,7 @@
                         }
                         
                         // Verifica se está no período filtrado para os cards (totais)
-                        const isInFilterPeriod = (currentSelectedYear === 'all' || year === currentSelectedYear) &&
-                                                 (currentSelectedMonth === 'all' || normalizedMonth === currentSelectedMonth);
+                        const isInFilterPeriod = matchesYear && matchesMonth;
                         
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
@@ -834,9 +835,10 @@
                     const [year, month] = expense.month.split('-');
                     yearsSet.add(year);
                     
-                    const showInTable = (currentSelectedYear === 'all' || year === currentSelectedYear);
-                    const isInFilterPeriod = (currentSelectedYear === 'all' || year === currentSelectedYear) &&
-                                             (currentSelectedMonth === 'all' || month === currentSelectedMonth);
+                    const matchesYear = (currentSelectedYear === 'all' || year === currentSelectedYear);
+                    const matchesMonth = (currentSelectedMonth === 'all' || month === currentSelectedMonth);
+                    const showInTable = matchesYear && matchesMonth;
+                    const isInFilterPeriod = matchesYear && matchesMonth;
                     
                     let shouldAccumulate = false;
                     if (currentSelectedYear === 'all') {
@@ -893,7 +895,7 @@
                 // Atualiza os cards com os totais do período filtrado e saldo acumulado
                 updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, accumulatedIncome - accumulatedExpenses);
                 
-                // Renderiza a tabela apenas com os meses do ano selecionado (ou todos)
+                // Renderiza a tabela apenas com os meses que atendem ano E mês
                 renderFinancialData(monthlyData);
                 
             } catch (error) {
@@ -946,18 +948,20 @@
                 financialData.appendChild(row);
             });
             
-            const totalsRow = document.createElement('tr');
-            totalsRow.className = 'totals-row';
-            totalsRow.innerHTML = `
-                <td><strong>TOTAIS</strong></td>
-                <td><strong>R$${totalIncome.toFixed(2)}</strong></td>
-                <td><strong>R$${totalExpenses.toFixed(2)}</strong></td>
-                <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
-                    <strong>${totalBalance < 0 ? '-' : ''}R$${Math.abs(totalBalance).toFixed(2)}</strong>
-                </td>
-                <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
-            `;
-            financialData.appendChild(totalsRow);
+            if (sortedMonths.length > 0) {
+                const totalsRow = document.createElement('tr');
+                totalsRow.className = 'totals-row';
+                totalsRow.innerHTML = `
+                    <td><strong>TOTAIS</strong></td>
+                    <td><strong>R$${totalIncome.toFixed(2)}</strong></td>
+                    <td><strong>R$${totalExpenses.toFixed(2)}</strong></td>
+                    <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
+                        <strong>${totalBalance < 0 ? '-' : ''}R$${Math.abs(totalBalance).toFixed(2)}</strong>
+                    </td>
+                    <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
+                `;
+                financialData.appendChild(totalsRow);
+            }
         }
 
         function updateCashSummary(income, receivables, expenses, accumulatedBalance) {
