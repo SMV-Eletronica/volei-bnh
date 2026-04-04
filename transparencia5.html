@@ -168,7 +168,7 @@
                     <div>
                         <label for="yearFilter">Ano:</label>
                         <select id="yearFilter">
-                       <!--    <option value="all">Todos</option> -->
+                            <option value="all">Todos</option>
                             <option value="2026">2026</option> 
                         </select>
                     </div>
@@ -258,7 +258,6 @@
                         <label for="yearFilterExpenses">Ano:</label>
                         <select id="yearFilterExpenses">
                            <option value="all">Todos</option>
-                         <!--  <option value="2025">2025</option> -->
                         </select>
                     </div>
                     <div>
@@ -305,7 +304,6 @@
                         <label for="yearFilterProfile">Ano:</label>
                         <select id="yearFilterProfile">
                            <option value="all">Todos</option>  
-                          <!--  <option value="2025">2025</option> -->
                         </select>
                     </div>
                     <div>
@@ -480,113 +478,102 @@
 
         // Função para copiar a chave PIX
         async function copyPixKey() {
-    const pixKey = "fabioluiztx@outlook.com";
-    
-    try {       
-        
-        // Cria um estilo inline temporário para sobrescrever o SweetAlert
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .swal2-popup .swal2-actions {
-                display: flex !important;
-                justify-content: center !important;
-                gap: 10px !important;
-                margin: 1em auto 0 !important;
-                width: 100% !important;
-            }
-            .swal2-popup .swal2-styled {
-                margin: 0 !important;
-                flex: 1 !important;
-                max-width: 200px !important;
-            }
-        `;
-        document.head.appendChild(style);
-        
-        Swal.fire({
-            title: '<i class="fa fa-qrcode" aria-hidden="true"></i> Chave PIX',
-            html: `
-                <div style="text-align: center;">
-                   <p></p>Banco: Inter<br>Fabio Luiz da Silva Teixeira<p><strong>${pixKey}</strong>
-                    <img src="qrcode-pix.png" alt="QR Code PIX" style="max-width: 200px; margin: 10px auto; display: block;">
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-copy"></i> Copiar',
-            cancelButtonText: '<i class="fa fa-times" aria-hidden="true"></i> Fechar',
-            focusConfirm: false,
-            buttonsStyling: false,
-            customClass: {
-                popup: 'custom-swal-popup',
-                actions: 'custom-swal-actions',
-                confirmButton: 'custom-confirm-btn',
-                cancelButton: 'custom-cancel-btn'
-            },
-            width: '90%',
-            showCloseButton: true,
-            didDestroy: () => {
-                // Remove o estilo quando o popup é fechado
-                document.head.removeChild(style);
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-               navigator.clipboard.writeText(pixKey).then(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Chave Copiada!',
-                        text: 'A chave PIX foi copiada.',
-                        timer: 3500,
-                        showConfirmButton: false
-                    });
+            const pixKey = "fabioluiztx@outlook.com";
+            
+            try {       
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    .swal2-popup .swal2-actions {
+                        display: flex !important;
+                        justify-content: center !important;
+                        gap: 10px !important;
+                        margin: 1em auto 0 !important;
+                        width: 100% !important;
+                    }
+                    .swal2-popup .swal2-styled {
+                        margin: 0 !important;
+                        flex: 1 !important;
+                        max-width: 200px !important;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                Swal.fire({
+                    title: '<i class="fa fa-qrcode" aria-hidden="true"></i> Chave PIX',
+                    html: `
+                        <div style="text-align: center;">
+                           <p></p>Banco: Inter<br>Fabio Luiz da Silva Teixeira<p><strong>${pixKey}</strong>
+                            <img src="qrcode-pix.png" alt="QR Code PIX" style="max-width: 200px; margin: 10px auto; display: block;">
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-copy"></i> Copiar',
+                    cancelButtonText: '<i class="fa fa-times" aria-hidden="true"></i> Fechar',
+                    focusConfirm: false,
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'custom-swal-popup',
+                        actions: 'custom-swal-actions',
+                        confirmButton: 'custom-confirm-btn',
+                        cancelButton: 'custom-cancel-btn'
+                    },
+                    width: '90%',
+                    showCloseButton: true,
+                    didDestroy: () => {
+                        document.head.removeChild(style);
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                       navigator.clipboard.writeText(pixKey).then(() => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Chave Copiada!',
+                                text: 'A chave PIX foi copiada.',
+                                timer: 3500,
+                                showConfirmButton: false
+                            });
+                        });
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Erro ao copiar chave PIX:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Não foi possível copiar a chave PIX.',
                 });
             }
-        });
-        
-    } catch (error) {
-        console.error('Erro ao copiar chave PIX:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Não foi possível copiar a chave PIX.',
-        });
-    }
-}
+        }
 
-        // Event listener para o botão Copiar PIX
         copyPixBtn.addEventListener('click', copyPixKey);
 
-        // Função para criar e inserir o botão Dashboard
-function createDashboardButton() {
-    const sidebarMenu = document.querySelector('.sidebar-menu');
-    if (!sidebarMenu) {
-        console.error("Elemento '.sidebar-menu' não encontrado.");
-        return;
-    }
+        function createDashboardButton() {
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (!sidebarMenu) {
+                console.error("Elemento '.sidebar-menu' não encontrado.");
+                return;
+            }
+            const dashboardLink = document.createElement('div');
+            dashboardLink.id = 'dashboardLink';
+            dashboardLink.classList.add('sidebar-btn');
+            dashboardLink.innerHTML = '<i class="fas fa-gear"></i> Administração';
+            dashboardLink.addEventListener('click', () => {
+                window.location.href = 'dashboard.html';
+            });
+            const listaBtn = document.getElementById('listaBtn');
+            if (listaBtn) {
+                sidebarMenu.insertBefore(dashboardLink, listaBtn);
+            } else {
+                sidebarMenu.appendChild(dashboardLink);
+            }
+        }
 
-    const dashboardLink = document.createElement('div');
-    dashboardLink.id = 'dashboardLink';
-    dashboardLink.classList.add('sidebar-btn');
-
-    dashboardLink.innerHTML = '<i class="fas fa-gear"></i> Administração';
-
-    dashboardLink.addEventListener('click', () => {
-        window.location.href = 'dashboard.html';
-    });
-
-    const listaBtn = document.getElementById('listaBtn');
-    if (listaBtn) {
-        sidebarMenu.insertBefore(dashboardLink, listaBtn);
-    } else {
-        sidebarMenu.appendChild(dashboardLink);
-    }
-}
-
-        // Função para abrir/fechar o menu lateral
         function toggleSidebar() {
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
         }
 
-        // Event listeners para o menu
         menuToggle.addEventListener('click', toggleSidebar);
         overlay.addEventListener('click', toggleSidebar);
 
@@ -610,7 +597,7 @@ function createDashboardButton() {
             } else {
                 emailLogado = user.email;
                 isAdmin = adminEmails.includes(emailLogado);
-                const player = await loadCurrentUserPlayer();
+                await loadCurrentUserPlayer();
 
                 if (isAdmin) {
                     createDashboardButton();
@@ -629,7 +616,6 @@ function createDashboardButton() {
                 sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                 
                 updateButtonVisibility(user);
-                await loadCurrentUserPlayer();
                 loadFinancialData();
                 loadDefaulters();
                 loadRecentExpenses();
@@ -701,10 +687,8 @@ function createDashboardButton() {
             });
         });
 
-        // Função para carregar anos nos filtros
         function updateYearFilterOptions(selectElement, years) {
             const currentSelectedYear = selectElement.value;
-            
             selectElement.innerHTML = '<option value="all">Todos</option>';
             years.forEach(year => {
                 const option = document.createElement('option');
@@ -712,7 +696,6 @@ function createDashboardButton() {
                 option.textContent = year;
                 selectElement.appendChild(option);
             });
-            
             if (currentSelectedYear !== 'all' && years.includes(currentSelectedYear)) {
                 selectElement.value = currentSelectedYear;
             } else {
@@ -720,13 +703,14 @@ function createDashboardButton() {
             }
         }
 
-        // FUNÇÃO ALTERADA: Agora acumula saldo até o período selecionado
+        // Função principal corrigida: tabela mostra apenas meses do ano selecionado (ou todos se 'all')
         async function loadFinancialData() {
             document.getElementById('loading-overlay').style.display = 'flex';
 
             const currentSelectedYear = yearFilter.value;
             const currentSelectedMonth = monthFilter.value;
             yearFilter.disabled = true;
+            
             const paymentsRef = ref(database, 'payments');
             const expensesRef = ref(database, 'expenses');
             const playersRef = ref(database, 'players');
@@ -741,120 +725,119 @@ function createDashboardButton() {
                 const paymentsData = paymentsSnapshot.val() || {};
                 const expenses = expensesSnapshot.val() || {};
                 const players = playersSnapshot.val() || {};
-                const monthlyData = {};
-                const years = new Set();
                 
-                // Variáveis para o período filtrado (exibidas nos cards)
+                // Objeto para a tabela (apenas meses do ano selecionado ou todos)
+                const monthlyData = {};
+                const yearsSet = new Set();
+                
+                // Variáveis para os cards (apenas período filtrado)
                 let filteredIncome = 0;
                 let filteredReceivables = 0;
                 let filteredExpenses = 0;
                 
-                // Variáveis para o saldo acumulado (até o ano/mês selecionado)
+                // Variáveis para saldo acumulado (desde o início até o período selecionado)
                 let accumulatedIncome = 0;
                 let accumulatedExpenses = 0;
                 
+                // ---- Processar contribuições ----
                 for (const year in paymentsData) {
                     for (const month in paymentsData[year]) {
                         const payments = paymentsData[year][month];
                         const normalizedMonth = month.padStart(2, '0');
-                        years.add(year);
+                        yearsSet.add(year);
                         
-                        const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
-                        const matchesMonth = currentSelectedMonth === 'all' || normalizedMonth === currentSelectedMonth;
+                        // Verifica se este ano deve ser exibido na tabela
+                        const showInTable = (currentSelectedYear === 'all' || year === currentSelectedYear);
                         
-                        // Verifica se o período está dentro do filtro para os cards
-                        const isInFilterPeriod = matchesYear && matchesMonth;
-                        
-                        // Verifica se o período deve ser acumulado para o saldo
+                        // Verifica se deve acumular para o saldo (considera ano/mês <= selecionado)
                         let shouldAccumulate = false;
                         if (currentSelectedYear === 'all') {
-                            shouldAccumulate = true; // acumula tudo
+                            shouldAccumulate = true;
                         } else {
                             const yearNum = parseInt(year);
                             const selectedYearNum = parseInt(currentSelectedYear);
                             if (yearNum < selectedYearNum) {
-                                shouldAccumulate = true; // anos anteriores sempre acumulam
+                                shouldAccumulate = true;
                             } else if (yearNum === selectedYearNum) {
                                 if (currentSelectedMonth === 'all') {
-                                    shouldAccumulate = true; // ano exato, sem filtro de mês
+                                    shouldAccumulate = true;
                                 } else {
                                     const monthNum = parseInt(normalizedMonth);
                                     const selectedMonthNum = parseInt(currentSelectedMonth);
                                     if (monthNum <= selectedMonthNum) {
-                                        shouldAccumulate = true; // mesmo ano e mês <= selecionado
+                                        shouldAccumulate = true;
                                     }
                                 }
                             }
                         }
                         
+                        // Verifica se está no período filtrado para os cards (totais)
+                        const isInFilterPeriod = (currentSelectedYear === 'all' || year === currentSelectedYear) &&
+                                                 (currentSelectedMonth === 'all' || normalizedMonth === currentSelectedMonth);
+                        
                         for (const paymentId in payments) {
                             const payment = payments[paymentId];
                             if (!payment.month || payment.value === undefined) continue;
                             
-                            // Ignorar jogadores com categoria "INATIVO" para pendências
                             const player = players[payment.playerId];
                             if (player?.category === 'INATIVO' && !payment.date) continue;
                             
                             const paymentValue = parseFloat(payment.value) || 0;
-                            
                             const [paymentYear, paymentMonth] = payment.month.split('-');
-                            const monthKey = `${paymentYear}-${paymentMonth}`;
-                            const monthName = getMonthName(paymentMonth);
                             
-                            if (!monthlyData[monthKey]) {
-                                monthlyData[monthKey] = {
-                                    monthName,
-                                    year: paymentYear,
-                                    month: paymentMonth,
-                                    income: 0,
-                                    receivables: 0,
-                                    expenses: 0,
-                                    paymentsCount: 0,
-                                    lateCount: 0
-                                };
-                            }
-                            
-                            // Dados para o período filtrado (cards)
-                            if (isInFilterPeriod) {
+                            // Para a tabela (apenas se deve mostrar na tabela)
+                            if (showInTable) {
+                                const monthKey = `${paymentYear}-${paymentMonth}`;
+                                if (!monthlyData[monthKey]) {
+                                    monthlyData[monthKey] = {
+                                        monthName: getMonthName(paymentMonth),
+                                        year: paymentYear,
+                                        month: paymentMonth,
+                                        income: 0,
+                                        receivables: 0,
+                                        expenses: 0,
+                                        paymentsCount: 0,
+                                        lateCount: 0
+                                    };
+                                }
                                 if (payment.date) {
-                                    filteredIncome += paymentValue;
+                                    monthlyData[monthKey].income += paymentValue;
                                 } else {
-                                    filteredReceivables += paymentValue;
+                                    monthlyData[monthKey].receivables += paymentValue;
                                     monthlyData[monthKey].lateCount++;
                                 }
                                 monthlyData[monthKey].paymentsCount++;
                             }
                             
-                            // Dados para o saldo acumulado (só contribuições pagas)
-                            if (shouldAccumulate && payment.date) {
-                                accumulatedIncome += paymentValue;
-                            }
-                            
-                            // Preenche os dados da tabela mensal (apenas se estiver no período filtrado)
+                            // Para os cards (apenas período filtrado)
                             if (isInFilterPeriod) {
                                 if (payment.date) {
-                                    monthlyData[monthKey].income += paymentValue;
+                                    filteredIncome += paymentValue;
                                 } else {
-                                    monthlyData[monthKey].receivables += paymentValue;
+                                    filteredReceivables += paymentValue;
                                 }
+                            }
+                            
+                            // Para o saldo acumulado (apenas pagas)
+                            if (shouldAccumulate && payment.date) {
+                                accumulatedIncome += paymentValue;
                             }
                         }
                     }
                 }
                 
-                // Processamento das despesas com a mesma lógica de acumulação
+                // ---- Processar despesas ----
                 for (const expenseId in expenses) {
                     const expense = expenses[expenseId];
                     if (!expense.month || expense.value === undefined) continue;
                     
                     const [year, month] = expense.month.split('-');
-                    years.add(year);
+                    yearsSet.add(year);
                     
-                    const matchesYear = currentSelectedYear === 'all' || year === currentSelectedYear;
-                    const matchesMonth = currentSelectedMonth === 'all' || month === currentSelectedMonth;
-                    const isInFilterPeriod = matchesYear && matchesMonth;
+                    const showInTable = (currentSelectedYear === 'all' || year === currentSelectedYear);
+                    const isInFilterPeriod = (currentSelectedYear === 'all' || year === currentSelectedYear) &&
+                                             (currentSelectedMonth === 'all' || month === currentSelectedMonth);
                     
-                    // Verifica se a despesa deve ser acumulada para o saldo
                     let shouldAccumulate = false;
                     if (currentSelectedYear === 'all') {
                         shouldAccumulate = true;
@@ -878,22 +861,13 @@ function createDashboardButton() {
                     
                     const expenseValue = parseFloat(expense.value) || 0;
                     
-                    if (isInFilterPeriod) {
-                        filteredExpenses += expenseValue;
-                    }
-                    
-                    if (shouldAccumulate) {
-                        accumulatedExpenses += expenseValue;
-                    }
-                    
-                    if (isInFilterPeriod) {
+                    if (showInTable) {
                         const monthKey = `${year}-${month}`;
                         if (!monthlyData[monthKey]) {
-                            const monthName = getMonthName(month);
                             monthlyData[monthKey] = {
-                                monthName,
-                                year,
-                                month,
+                                monthName: getMonthName(month),
+                                year: year,
+                                month: month,
                                 income: 0,
                                 receivables: 0,
                                 expenses: 0,
@@ -903,14 +877,23 @@ function createDashboardButton() {
                         }
                         monthlyData[monthKey].expenses += expenseValue;
                     }
+                    
+                    if (isInFilterPeriod) {
+                        filteredExpenses += expenseValue;
+                    }
+                    
+                    if (shouldAccumulate) {
+                        accumulatedExpenses += expenseValue;
+                    }
                 }
                 
-                // Atualiza os filtros de ano
-                updateYearFilterOptions(yearFilter, Array.from(years).sort().reverse());
+                // Atualiza os anos disponíveis no filtro
+                updateYearFilterOptions(yearFilter, Array.from(yearsSet).sort().reverse());
                 
-                // Exibe os cards com os totais do período filtrado e o saldo acumulado
+                // Atualiza os cards com os totais do período filtrado e saldo acumulado
                 updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, accumulatedIncome - accumulatedExpenses);
                 
+                // Renderiza a tabela apenas com os meses do ano selecionado (ou todos)
                 renderFinancialData(monthlyData);
                 
             } catch (error) {
@@ -929,6 +912,7 @@ function createDashboardButton() {
         function renderFinancialData(monthlyData) {
             financialData.innerHTML = '';
             
+            // Ordena os meses (mais recente primeiro)
             const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
                 const [yearA, monthA] = a.split('-');
                 const [yearB, monthB] = b.split('-');
@@ -943,7 +927,6 @@ function createDashboardButton() {
             sortedMonths.forEach(monthKey => {
                 const data = monthlyData[monthKey];
                 const row = document.createElement('tr');
-                
                 const balance = data.income - data.expenses;
                 
                 totalIncome += data.income;
@@ -954,14 +937,12 @@ function createDashboardButton() {
                 row.innerHTML = `
                     <td>${data.monthName}/${data.year}</td>
                     <td>R$${data.income.toFixed(2)}</td>
-                    
                     <td>R$${data.expenses.toFixed(2)}</td>
                     <td class="${balance >= 0 ? 'positive' : 'negative'}">
                         ${balance < 0 ? '-' : ''}R$${Math.abs(balance).toFixed(2)}
                     </td>
                     <td>R$${data.receivables.toFixed(2)}</td>
                 `;
-                
                 financialData.appendChild(row);
             });
             
@@ -970,27 +951,23 @@ function createDashboardButton() {
             totalsRow.innerHTML = `
                 <td><strong>TOTAIS</strong></td>
                 <td><strong>R$${totalIncome.toFixed(2)}</strong></td>
-                
                 <td><strong>R$${totalExpenses.toFixed(2)}</strong></td>
                 <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
                     <strong>${totalBalance < 0 ? '-' : ''}R$${Math.abs(totalBalance).toFixed(2)}</strong>
                 </td>
                 <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
             `;
-            
             financialData.appendChild(totalsRow);
         }
 
-        // FUNÇÃO ALTERADA: Agora recebe o saldo acumulado
         function updateCashSummary(income, receivables, expenses, accumulatedBalance) {
             totalIncomeElement.textContent = `R$${income.toFixed(2)}`;
             totalReceivablesElement.textContent = `R$${receivables.toFixed(2)}`;
             totalExpensesElement.textContent = `R$${expenses.toFixed(2)}`;
             
-            // Exibe o saldo acumulado
             currentBalanceElement.textContent = `R$${Math.abs(accumulatedBalance).toFixed(2)}`;
             currentBalanceElement.className = `cash-summary-value ${accumulatedBalance >= 0 ? 'positive' : 'negative'}`;
-
+            
             const currentBalanceItem = document.getElementById('currentBalanceItem');
             if (currentBalanceItem) {
                 currentBalanceItem.style.borderLeft = `4px solid ${accumulatedBalance >= 0 ? '#28a745' : 'red'}`;
@@ -1001,70 +978,71 @@ function createDashboardButton() {
             }
         }
 
-async function loadDefaulters() {
-    const paymentsRef = ref(database, 'payments');
-    const playersRef = ref(database, 'players');
-    const notificationsRef = ref(database, 'debtNotificationsGlobal');
-    
-    try {
-        const [paymentsSnapshot, playersSnapshot, notificationsSnapshot] = await Promise.all([
-            get(paymentsRef),
-            get(playersRef),
-            get(notificationsRef)
-        ]);
-        
-        const paymentsData = paymentsSnapshot.val() || {};
-        const players = playersSnapshot.val() || {};
-        const notificationsData = notificationsSnapshot.val() || {};
-        const defaulters = {};
-        const selectedYear = yearFilter.value;        
-        const selectedMonth = monthFilter.value;
-        
-        for (const year in paymentsData) {
-            for (const month in paymentsData[year]) {
-                const payments = paymentsData[year][month];
-                const normalizedMonth = month.padStart(2, '0');
+        async function loadDefaulters() {
+            const paymentsRef = ref(database, 'payments');
+            const playersRef = ref(database, 'players');
+            const notificationsRef = ref(database, 'debtNotificationsGlobal');
+            
+            try {
+                const [paymentsSnapshot, playersSnapshot, notificationsSnapshot] = await Promise.all([
+                    get(paymentsRef),
+                    get(playersRef),
+                    get(notificationsRef)
+                ]);
                 
-                if (selectedYear !== 'all' && year !== selectedYear) continue;
-                if (selectedMonth !== 'all' && normalizedMonth !== selectedMonth) continue;
+                const paymentsData = paymentsSnapshot.val() || {};
+                const players = playersSnapshot.val() || {};
+                const notificationsData = notificationsSnapshot.val() || {};
+                const defaulters = {};
+                const selectedYear = yearFilter.value;        
+                const selectedMonth = monthFilter.value;
                 
-                for (const paymentId in payments) {
-                    const payment = payments[paymentId];
-                    const player = players[payment.playerId];
-                    
-                    // Ignorar jogadores com categoria "INATIVO"
-                    if (player?.category === 'INATIVO') continue;
-                    
-                    if (!payment.date && payment.value > 0) {
-                        if (!defaulters[payment.playerId]) {
-                            defaulters[payment.playerId] = {
-                                name: payment.playerName,
-                                months: [],
-                                photo: player?.imageUrl || null,
-                                hasPendingComprovante: false,
-                                notificationCount: notificationsData[payment.playerId]?.count || 0
-                            };
-                        }
-                        defaulters[payment.playerId].months.push(payment.month);
-                        if (payment.comprovanteStatus === 'pendente') {
-                            defaulters[payment.playerId].hasPendingComprovante = true;
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const payments = paymentsData[year][month];
+                        const normalizedMonth = month.padStart(2, '0');
+                        
+                        if (selectedYear !== 'all' && year !== selectedYear) continue;
+                        if (selectedMonth !== 'all' && normalizedMonth !== selectedMonth) continue;
+                        
+                        for (const paymentId in payments) {
+                            const payment = payments[paymentId];
+                            const player = players[payment.playerId];
+                            
+                            if (player?.category === 'INATIVO') continue;
+                            
+                            if (!payment.date && payment.value > 0) {
+                                if (!defaulters[payment.playerId]) {
+                                    defaulters[payment.playerId] = {
+                                        name: payment.playerName,
+                                        months: [],
+                                        photo: player?.imageUrl || null,
+                                        hasPendingComprovante: false,
+                                        notificationCount: notificationsData[payment.playerId]?.count || 0
+                                    };
+                                }
+                                defaulters[payment.playerId].months.push(payment.month);
+                                if (payment.comprovanteStatus === 'pendente') {
+                                    defaulters[payment.playerId].hasPendingComprovante = true;
+                                }
+                            }
                         }
                     }
                 }
+                
+                renderDefaultersList(defaulters);
+            } catch (error) {
+                console.error("Error loading defaulters:", error);
+                defaultersList.innerHTML = '<div class="no-defaulters">Erro ao carregar inadimplentes</div>';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar inadimplentes.',
+                });
             }
         }
         
-        renderDefaultersList(defaulters);
-    } catch (error) {
-        console.error("Error loading defaulters:", error);
-        defaultersList.innerHTML = '<div class="no-defaulters">Erro ao carregar inadimplentes</div>';
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Erro ao carregar inadimplentes.',
-        });
-    }
-}        function renderDefaultersList(defaulters) {
+        function renderDefaultersList(defaulters) {
             defaultersList.innerHTML = '';
             
             if (Object.keys(defaulters).length === 0) {
@@ -1084,9 +1062,9 @@ async function loadDefaulters() {
                 
                 let notificationMessage = '';
                 if (defaulter.notificationCount === 1) {
-                  notificationMessage = `⚠️`;
+                    notificationMessage = `⚠️`;
                 } else if (defaulter.notificationCount >= 2) {
-                 notificationMessage = `🚫`;
+                    notificationMessage = `🚫`;
                 }
                 
                 defaulterEl.innerHTML = `
@@ -1097,10 +1075,9 @@ async function loadDefaulters() {
                         <div class="defaulter-name">
                             ${defaulter.name}
                             ${notificationMessage ? `<span class="notification-message" style="color: ${defaulter.notificationCount >= 2 ? '#e74c3c' : '#f1c40f'};font-size:12px; font-weight: bold; margin-top: 5px;">${notificationMessage}</span>` : ''}
-                            ${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}</div>
-                          
+                            ${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}
+                        </div>
                         <div class="defaulter-months">${formattedMonths}</div>
-                       
                     </div>
                 `;
                 
@@ -1112,248 +1089,246 @@ async function loadDefaulters() {
             });
         }
 
-async function showDefaulterDetails(playerId, playerName) {
-    const playersRef = ref(database, `players/${playerId}`);
-    const playerSnapshot = await get(playersRef);
-    const player = playerSnapshot.val();
-    
-    if (player?.category === 'INATIVO') {
-        Swal.fire({
-            icon: 'info',
-            title: 'Sem Pendências',
-            text: 'Este integrante está INATIVO e não possui pendências exibidas.',
-            confirmButtonText: 'Fechar'
-        });
-        return;
-    }
-    
-    const paymentsRef = ref(database, 'payments');
-    try {
-        const snapshot = await get(paymentsRef);
-        const paymentsData = snapshot.val() || {};
-        const defaulterPayments = [];
-        
-        for (const year in paymentsData) {
-            for (const month in paymentsData[year]) {
-                const monthPayments = paymentsData[year][month];
-                for (const paymentId in monthPayments) {
-                    const payment = monthPayments[paymentId];
-                    if (payment.playerId === playerId && !payment.date && payment.value > 0) {
-                        const [paymentYear, paymentMonth] = payment.month.includes('-') 
-                            ? payment.month.split('-') 
-                            : [year, month.padStart(2, '0')];
-                            
-                        defaulterPayments.push({ 
-                            paymentId,
-                            year: paymentYear,
-                            month: paymentMonth,
-                            playerId: payment.playerId,
-                            value: payment.value,
-                            comprovanteURL: payment.comprovanteURL,
-                            comprovanteStatus: payment.comprovanteStatus,
-                            comprovanteUploadedAt: payment.comprovanteUploadedAt,
-                            additionalInfo: payment.additionalInfo || null,
-                            paymentType: payment.paymentType || null,
-                            createdAt: payment.createdAt || null,
-                        });
+        async function showDefaulterDetails(playerId, playerName) {
+            const playersRef = ref(database, `players/${playerId}`);
+            const playerSnapshot = await get(playersRef);
+            const player = playerSnapshot.val();
+            
+            if (player?.category === 'INATIVO') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sem Pendências',
+                    text: 'Este integrante está INATIVO e não possui pendências exibidas.',
+                    confirmButtonText: 'Fechar'
+                });
+                return;
+            }
+            
+            const paymentsRef = ref(database, 'payments');
+            try {
+                const snapshot = await get(paymentsRef);
+                const paymentsData = snapshot.val() || {};
+                const defaulterPayments = [];
+                
+                for (const year in paymentsData) {
+                    for (const month in paymentsData[year]) {
+                        const monthPayments = paymentsData[year][month];
+                        for (const paymentId in monthPayments) {
+                            const payment = monthPayments[paymentId];
+                            if (payment.playerId === playerId && !payment.date && payment.value > 0) {
+                                const [paymentYear, paymentMonth] = payment.month.includes('-') 
+                                    ? payment.month.split('-') 
+                                    : [year, month.padStart(2, '0')];
+                                    
+                                defaulterPayments.push({ 
+                                    paymentId,
+                                    year: paymentYear,
+                                    month: paymentMonth,
+                                    playerId: payment.playerId,
+                                    value: payment.value,
+                                    comprovanteURL: payment.comprovanteURL,
+                                    comprovanteStatus: payment.comprovanteStatus,
+                                    comprovanteUploadedAt: payment.comprovanteUploadedAt,
+                                    additionalInfo: payment.additionalInfo || null,
+                                    paymentType: payment.paymentType || null,
+                                    createdAt: payment.createdAt || null,
+                                });
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        const isCurrentUser = currentUserPlayer?.id === playerId;
-        const showUploadButtons = isAdmin || isCurrentUser;
+                const isCurrentUser = currentUserPlayer?.id === playerId;
+                const showUploadButtons = isAdmin || isCurrentUser;
 
-        let detailsHtml = `<h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">Pendências - ${playerName}</h3>`;
-        
-        if (defaulterPayments.length === 0) {
-            detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
-        } else {
-            detailsHtml += `<div style="max-height: 40vh; overflow-y: auto;">
-                <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ref.</th>
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">(R$)</th>
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Descr.</th>
-                            <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Comp.</th>
-                            ${showUploadButtons ? '<th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ações</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            defaulterPayments.forEach(payment => {
-                const monthName = getMonthName(payment.month);
-                const formattedDate = `${monthName}/${payment.year}`;
-                const description = payment.additionalInfo || payment.paymentType || '-';
-                const dia = payment.createdAt ? formatDate(payment.createdAt) : '-';
+                let detailsHtml = `<h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">Pendências - ${playerName}</h3>`;
                 
-                const comprovanteStatus = payment.comprovanteStatus 
-                    ? (payment.comprovanteStatus === 'pendente' 
-                        ? '' 
-                        : payment.comprovanteStatus === 'aprovado' 
-                            ? '👍' 
-                            : `👎 (${payment.comprovanteRejectReason || 'Rejeitado'})`) 
-                    : '👎';
+                if (defaulterPayments.length === 0) {
+                    detailsHtml += '<p>Nenhuma mensalidade inadimplente encontrada.</p>';
+                } else {
+                    detailsHtml += `<div style="max-height: 40vh; overflow-y: auto;">
+                        <table id="defaulterTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ref.</th>
+                                    <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">(R$)</th>
+                                    <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Descr.</th>
+                                    <th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Comp.</th>
+                                    ${showUploadButtons ? '<th style="border: 1px solid #ddd; padding: 2px; text-align: center;">Ações</th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    defaulterPayments.forEach(payment => {
+                        const monthName = getMonthName(payment.month);
+                        const formattedDate = `${monthName}/${payment.year}`;
+                        const description = payment.additionalInfo || payment.paymentType || '-';
+                        const dia = payment.createdAt ? formatDate(payment.createdAt) : '-';
+                        
+                        const comprovanteStatus = payment.comprovanteStatus 
+                            ? (payment.comprovanteStatus === 'pendente' 
+                                ? '' 
+                                : payment.comprovanteStatus === 'aprovado' 
+                                    ? '👍' 
+                                    : `👎 (${payment.comprovanteRejectReason || 'Rejeitado'})`) 
+                            : '👎';
+                        
+                        const comprovanteLink = payment.comprovanteURL 
+                            ? `<a href="${payment.comprovanteURL}" style="text-decoration: none;" target="_blank">🕒 Ver</a>` 
+                            : '';
+                        
+                        const uploadButton = showUploadButtons ? `
+                            <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">
+                                <input type="file" id="comprovante-${payment.paymentId}" 
+                                       style="display: none;" 
+                                       accept="image/*,.pdf">
+                                <button onclick="document.getElementById('comprovante-${payment.paymentId}').click()"
+                                        style="padding: 4px 8px; background: #4CAF50; color: white; 
+                                               border: none; border-radius: 4px; cursor: pointer;
+                                               font-size: 12px;">
+                                    <i class="fas fa-upload"></i> Enviar
+                                </button>
+                                <span id="upload-status-${payment.paymentId}" style="margin-left: 4px; font-size: 10px;"></span>
+                            </td>
+                        ` : '';
+                        
+                        detailsHtml += `
+                            <tr id="payment-row-${payment.paymentId}">
+                                <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${formattedDate}</td>
+                                <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">R$${payment.value.toFixed(2)}</td>
+                                <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${description}<br>${dia}</td>
+                                <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;"> ${comprovanteLink} ${comprovanteStatus}   </td> 
+                                ${uploadButton}
+                            </tr>
+                        `;
+                    });
+                    
+                    detailsHtml += `
+                            </tbody>
+                        </table></div>
+                        <div style="text-align: left; margin-top: 10px;">
+                            <p style="font-size: 14px;">
+                                <strong>Legenda:</strong><br><br>
+                                🕒 Enviado e aguardando aprovação.<br>                        
+                                👎 Comprovante pendente.
+                            </p>
+                        </div>
+                    `;
+                }
                 
-                const comprovanteLink = payment.comprovanteURL 
-                    ? `<a href="${payment.comprovanteURL}" style="text-decoration: none;" target="_blank">🕒 Ver</a>` 
-                    : '';
-                
-                const uploadButton = showUploadButtons ? `
-                    <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">
-                        <input type="file" id="comprovante-${payment.paymentId}" 
-                               style="display: none;" 
-                               accept="image/*,.pdf">
-                        <button onclick="document.getElementById('comprovante-${payment.paymentId}').click()"
-                                style="padding: 4px 8px; background: #4CAF50; color: white; 
-                                       border: none; border-radius: 4px; cursor: pointer;
-                                       font-size: 12px;">
-                            <i class="fas fa-upload"></i> Enviar
-                        </button>
-                        <span id="upload-status-${payment.paymentId}" style="margin-left: 4px; font-size: 10px;"></span>
-                    </td>
-                ` : '';
-                
-                detailsHtml += `
-                    <tr id="payment-row-${payment.paymentId}">
-                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${formattedDate}</td>
-                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">R$${payment.value.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;">${description}<br>${dia}</td>
-                        <td id="comprovante-cell-${payment.paymentId}" style="border: 1px solid #ddd; padding: 10px 3px 10px 3px; text-align: center;"> ${comprovanteLink} ${comprovanteStatus}  </td> 
-                        ${uploadButton}
-                    </tr>
-                `;
-            });
-            
-            detailsHtml += `
-                    </tbody>
-                </table></div>
-                <div style="text-align: left; margin-top: 10px;">
-                    <p style="font-size: 14px;">
-                        <strong>Legenda:</strong><br><br>
-                        🕒 Enviado e aguardando aprovação.<br>                        
-                        👎 Comprovante pendente.
-                    </p>
-                </div>
-                
-            `;
-        }
-        
-        await Swal.fire({
-            title: '',
-            html: detailsHtml,
-            icon: defaulterPayments.length > 0 ? 'warning' : 'info',
-            confirmButtonText: 'Fechar',
-            customClass: {
-                popup: 'swal-wide',
-                htmlContainer: 'swal-content'
-            },
-            width: '90%',
-            showCloseButton: true,
-            allowOutsideClick: true,
-            allowEscapeKey: true,
-            didOpen: () => {
-                defaulterPayments.forEach(payment => {
-                    const input = document.getElementById(`comprovante-${payment.paymentId}`);
-                    if (input) {
-                        input.addEventListener('change', async (e) => {
-                            const file = e.target.files[0];
-                            if (!file) return;
+                await Swal.fire({
+                    title: '',
+                    html: detailsHtml,
+                    icon: defaulterPayments.length > 0 ? 'warning' : 'info',
+                    confirmButtonText: 'Fechar',
+                    customClass: {
+                        popup: 'swal-wide',
+                        htmlContainer: 'swal-content'
+                    },
+                    width: '90%',
+                    showCloseButton: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    didOpen: () => {
+                        defaulterPayments.forEach(payment => {
+                            const input = document.getElementById(`comprovante-${payment.paymentId}`);
+                            if (input) {
+                                input.addEventListener('change', async (e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
 
-                            const statusElement = document.getElementById(`upload-status-${payment.paymentId}`);
-                            statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                            statusElement.style.color = '#333';
+                                    const statusElement = document.getElementById(`upload-status-${payment.paymentId}`);
+                                    statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                                    statusElement.style.color = '#333';
 
-                            try {
-                                if (file.size > 5 * 1024 * 1024) throw new Error("Máximo 5MB");
-                                if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
-                                    throw new Error("Apenas imagens/PDF");
-                                }
-
-                                if (payment.comprovanteURL) {
                                     try {
-                                        const urlParts = payment.comprovanteURL.split('/comprovantes%2F');
-                                        if (urlParts.length > 1) {
-                                            const oldFilePath = decodeURIComponent(urlParts[1].split('?')[0]).replace(/%2F/g, '/');
-                                            const oldFileRef = storageRef(storage, `comprovantes/${oldFilePath}`);
-                                            await deleteObject(oldFileRef);
-                                            console.log('Comprovante anterior deletado com sucesso');
+                                        if (file.size > 5 * 1024 * 1024) throw new Error("Máximo 5MB");
+                                        if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
+                                            throw new Error("Apenas imagens/PDF");
                                         }
-                                    } catch (deleteError) {
-                                        console.warn('Não foi possível deletar o comprovante anterior:', deleteError);
+
+                                        if (payment.comprovanteURL) {
+                                            try {
+                                                const urlParts = payment.comprovanteURL.split('/comprovantes%2F');
+                                                if (urlParts.length > 1) {
+                                                    const oldFilePath = decodeURIComponent(urlParts[1].split('?')[0]).replace(/%2F/g, '/');
+                                                    const oldFileRef = storageRef(storage, `comprovantes/${oldFilePath}`);
+                                                    await deleteObject(oldFileRef);
+                                                    console.log('Comprovante anterior deletado com sucesso');
+                                                }
+                                            } catch (deleteError) {
+                                                console.warn('Não foi possível deletar o comprovante anterior:', deleteError);
+                                            }
+                                        }
+
+                                        const storagePath = `comprovantes/${playerId}/${payment.year}/${payment.month}/${payment.paymentId}_${Date.now()}_${file.name}`;
+                                        const fileRef = storageRef(storage, storagePath);
+                                        await uploadBytes(fileRef, file);
+                                        const downloadURL = await getDownloadURL(fileRef);
+
+                                        await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
+                                            comprovanteURL: downloadURL,
+                                            comprovanteStatus: 'pendente',
+                                            comprovanteUploadedAt: new Date().toISOString()
+                                        });
+
+                                        const comprovanteCell = document.getElementById(`comprovante-cell-${payment.paymentId}`);
+                                        if (comprovanteCell) {
+                                            comprovanteCell.innerHTML = `
+                                                <a href="${downloadURL}" style="text-decoration: none;" target="_blank">Ver</a> 🕒
+                                            `;
+                                        }
+
+                                        const currentPlayer = currentUserPlayer || { name: playerName };
+                                        const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
+                                        const message = `💰 Nova contribuição recebida\n De: ${currentPlayer.name}\n Valor: R$${payment.value.toFixed(2)}\n Referente: ${monthYear}\n Status: 🕒 Pendente de análise`;
+                                        const titulo = "BNH Vôlei - Transparência"
+                                        await sendPushNotification(message, null, segments, titulo);
+
+                                        statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
+                                        await Swal.fire({
+                                            icon: 'success',
+                                            title: 'Sucesso',
+                                            text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+
+                                        await loadDefaulters();
+                                    } catch (error) {
+                                        statusElement.innerHTML = `<i class="fas fa-times" style="color:red"></i> ${error.message}`;
+                                        await Swal.fire({
+                                            icon: 'error',
+                                            title: 'Erro',
+                                            text: 'Erro ao enviar comprovante: ' + error.message,
+                                        });
                                     }
-                                }
-
-                                const storagePath = `comprovantes/${playerId}/${payment.year}/${payment.month}/${payment.paymentId}_${Date.now()}_${file.name}`;
-                                const fileRef = storageRef(storage, storagePath);
-                                await uploadBytes(fileRef, file);
-                                const downloadURL = await getDownloadURL(fileRef);
-
-                                await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
-                                    comprovanteURL: downloadURL,
-                                    comprovanteStatus: 'pendente',
-                                    comprovanteUploadedAt: new Date().toISOString()
-                                });
-
-                                const comprovanteCell = document.getElementById(`comprovante-cell-${payment.paymentId}`);
-                                if (comprovanteCell) {
-                                    comprovanteCell.innerHTML = `
-                                        <a href="${downloadURL}" style="text-decoration: none;" target="_blank">Ver</a> 🕒
-                                    `;
-                                }
-
-                                const currentPlayer = currentUserPlayer || { name: playerName };
-                                const monthYear = `${getMonthName(payment.month)}/${payment.year}`;
-                                const message = `💰 Nova contribuição recebida\n De: ${currentPlayer.name}\n Valor: R$${payment.value.toFixed(2)}\n Referente: ${monthYear}\n Status: 🕒 Pendente de análise`;
-                                const titulo = "BNH Vôlei - Transparência"
-                                await sendPushNotification(message, null, segments, titulo);
-
-                                statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
-                                await Swal.fire({
-                                    icon: 'success',
-                                    title: 'Sucesso',
-                                    text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-
-                                await loadDefaulters();
-                            } catch (error) {
-                                statusElement.innerHTML = `<i class="fas fa-times" style="color:red"></i> ${error.message}`;
-                                await Swal.fire({
-                                    icon: 'error',
-                                    title: 'Erro',
-                                    text: 'Erro ao enviar comprovante: ' + error.message,
                                 });
                             }
                         });
                     }
                 });
+                
+            } catch (error) {
+                console.error("Error loading defaulter details:", error);
+                Swal.fire({
+                    title: 'Erro',
+                    html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
+                    icon: 'error',
+                    confirmButtonText: 'Fechar',
+                    customClass: {
+                        popup: 'swal-wide',
+                        htmlContainer: 'swal-content'
+                    },
+                    width: '90%',
+                    showCloseButton: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
             }
-        });
-        
-    } catch (error) {
-        console.error("Error loading defaulter details:", error);
-        Swal.fire({
-            title: 'Erro',
-            html: `<p>Não foi possível carregar os detalhes: ${error.message}</p>`,
-            icon: 'error',
-            confirmButtonText: 'Fechar',
-            customClass: {
-                popup: 'swal-wide',
-                htmlContainer: 'swal-content'
-            },
-            width: '90%',
-            showCloseButton: true,
-            allowOutsideClick: true,
-            allowEscapeKey: true
-        });
-    }
-}
+        }
 
-        // Modificar a função loadRecentExpenses para usar filtros
         async function loadRecentExpenses() {
             const selectedYear = yearFilterExpenses.value;
             const selectedMonth = monthFilterExpenses.value;
@@ -1373,7 +1348,6 @@ async function showDefaulterDetails(playerId, playerName) {
                 const deletedExpensesData = deletedExpensesSnapshot.val() || {};
                 const years = new Set();
                 
-                // Processar despesas ativas
                 Object.entries(expensesData).forEach(([key, expense]) => {
                     if (!expense.month) return;
                     const [year, month] = expense.month.split('-');
@@ -1391,7 +1365,6 @@ async function showDefaulterDetails(playerId, playerName) {
                     }
                 });
                 
-                // Processar despesas excluídas
                 Object.entries(deletedExpensesData).forEach(([key, expense]) => {
                     if (!expense.month) return;
                     const [year, month] = expense.month.split('-');
@@ -1409,7 +1382,6 @@ async function showDefaulterDetails(playerId, playerName) {
                     }
                 });
                 
-                // Preencher anos no filtro
                 updateYearFilterOptions(yearFilterExpenses, Array.from(years).sort().reverse());
                 
                 activeExpensesData.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
@@ -1559,7 +1531,6 @@ async function showDefaulterDetails(playerId, playerName) {
             }
         }
 
-        // Modificar a função loadPlayerPayments para usar filtros
         async function loadPlayerPayments(playerId) {
             const selectedYear = yearFilterProfile.value;
             const selectedMonth = monthFilterProfile.value;
@@ -1612,7 +1583,6 @@ async function showDefaulterDetails(playerId, playerName) {
                     }
                 }
 
-                // Preencher anos no filtro
                 updateYearFilterOptions(yearFilterProfile, Array.from(years).sort().reverse());
 
                 playerPayments.sort((a, b) => b.month.localeCompare(a.month));
@@ -1739,7 +1709,6 @@ async function showDefaulterDetails(playerId, playerName) {
                 const paymentEl = document.createElement('div');
                 paymentEl.className = `status-item ${isExcluded ? 'excluded' : 'active'}`;
                 paymentEl.innerHTML = `
-                    
                     <div>
                         <span class="status-label">Tipo de Contribuição:</span>
                         <span class="status-value">${payment.paymentType || '-'}</span>
@@ -1915,7 +1884,6 @@ async function showDefaulterDetails(playerId, playerName) {
 
         uploadComprovanteBtn.addEventListener('click', uploadComprovante);
 
-        // Adicionar event listeners para os novos filtros
         yearFilterExpenses.addEventListener('change', loadRecentExpenses);
         monthFilterExpenses.addEventListener('change', loadRecentExpenses);
         
@@ -1970,7 +1938,6 @@ async function showDefaulterDetails(playerId, playerName) {
         });
     </script>
 
-<!-- SDK do OneSignal -->
 <script>
 const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
 
