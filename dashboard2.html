@@ -492,16 +492,12 @@
                         const tdCategory = document.createElement('td');
                         tdCategory.textContent = player.category || '-';
                         // Adicionar cor de fundo leve para diferenciação visual (opcional)
-                        if (player.category === 'MENSAL2') {
-                            tdCategory.style.backgroundColor = '#d4edda';
-                            tdCategory.style.borderRadius = '12px';
-                            tdCategory.style.fontWeight = 'bold';
-                        } else if (player.category === 'DIARIA2') {
-                            tdCategory.style.backgroundColor = '#fff3cd';
-                            tdCategory.style.borderRadius = '12px';
-                        } else if (player.category === 'INATIVO2') {
-                            tdCategory.style.backgroundColor = '#f8d7da';
-                            tdCategory.style.borderRadius = '12px';
+                        if (player.category === 'MENSAL') {
+                           
+                        } else if (player.category === 'DIARIA') {
+                           
+                        } else if (player.category === 'INATIVO') {
+                           
                         }
                         row.appendChild(tdCategory);
                         
