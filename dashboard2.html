@@ -52,11 +52,11 @@
             padding: 1px !important;
             font-weight: bold;
         }
-    </>
+    </style>
 </head>
 <body>
     <div class="header">
-        <center><h2><i class="fas fa-volleyball-ball" ="color:#3498db;"></i> Vôlei-BNH Gestão</h2></center>
+        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i> Vôlei-BNH Gestão</h2></center>
         <div class="button-container">
             <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
             <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
@@ -488,7 +488,26 @@
                         tdPosition.textContent = player.position || '-';
                         row.appendChild(tdPosition);
                         
-                      
+                        // Coluna Categoria
+                        const tdCategory = document.createElement('td');
+                        tdCategory.textContent = player.category || '-';
+                        // Adicionar cor de fundo leve para diferenciação visual (opcional)
+                        if (player.category === 'MENSAL') {
+                            tdCategory.style.backgroundColor = '#d4edda';
+                            tdCategory.style.borderRadius = '12px';
+                            tdCategory.style.fontWeight = 'bold';
+                        } else if (player.category === 'DIARIA') {
+                            tdCategory.style.backgroundColor = '#fff3cd';
+                            tdCategory.style.borderRadius = '12px';
+                        } else if (player.category === 'INATIVO') {
+                            tdCategory.style.backgroundColor = '#f8d7da';
+                            tdCategory.style.borderRadius = '12px';
+                        }
+                        row.appendChild(tdCategory);
+                        
+                        playersTableBody.appendChild(row);
+                        counter++;
+                    });
                 } else {
                     // Nenhum jogador cadastrado
                     const emptyRow = document.createElement('tr');
