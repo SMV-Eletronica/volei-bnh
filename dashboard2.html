@@ -10,223 +10,47 @@
     <link rel="stylesheet" href="styles.css?v=2.0">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f0f2f5;
-        }
-
-        .header {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header h2 {
-            margin: 0 0 10px 0;
-        }
-
-        .button-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .button-container button {
-            background: #3498db;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .button-container button:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
-
-        .logout-btn {
-            background: #e74c3c !important;
-        }
-
-        .logout-btn:hover {
-            background: #c0392b !important;
-        }
-
-        .container {
-            max-width: 1300px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        #userEmail {
-            background: #e8f4fd;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: right;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .section-title {
-            color: #2c3e50;
-            border-left: 5px solid #3498db;
-            padding-left: 15px;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #34495e;
-        }
-
-        input[type="text"], input[type="email"], input[type="tel"], input[type="file"], select {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+   <style>
+        input[type="tel"], input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             width: 100%;
-            font-size: 14px;
-            transition: border 0.3s;
         }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
-        }
-
         .image-preview {
             max-width: 150px;
             max-height: 150px;
             margin-top: 10px;
             display: none;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #3498db;
-            padding: 3px;
         }
-
-        button[type="submit"], #clearBtn, #deleteBtn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin-right: 10px;
-            transition: all 0.3s;
+        .upload-btn {
+            margin-top: 5px;
+            padding: 8px 12px;
+            background-color: #4285f4;
             color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
-
-        button[type="submit"]:hover, #clearBtn:hover, #deleteBtn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.05);
+        .player-count {
+            font-weight: bold;
+            text-align: center;
+            padding: 2px !important;
         }
-
         #playersList {
             overflow-x: auto;
-            border-radius: 8px;
+            max-width: 100%;
         }
-
         #playersList table {
             width: 100%;
-            min-width: 700px;
+            min-width: 600px; /* Garante que a tabela tenha uma largura mínima para ativar o scroll */
             border-collapse: collapse;
-            background: white;
         }
-
-        #playersList th {
-            background: #34495e;
-            color: white;
-            padding: 12px 8px !important;
-            text-align: center;
+        #playersList th, #playersList td {
+        
+            text-align: center !important;
+            padding: 1px !important;
             font-weight: bold;
-        }
-
-        #playersList td {
-            padding: 10px 8px !important;
-            text-align: center;
-            border-bottom: 1px solid #ecf0f1;
-            vertical-align: middle;
-        }
-
-        .player-image {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: 2px solid #bdc3c7;
-        }
-
-        .player-image:hover {
-            transform: scale(1.1);
-            border-color: #3498db;
-        }
-
-        .footer {
-            background: #2c3e50;
-            color: #ecf0f1;
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-            font-size: 14px;
-        }
-
-        .footer-links a {
-            color: #3498db;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
-
-        /* Categoria highlight nas linhas (opcional) */
-        tr:hover {
-            background: #f8f9fa;
-        }
-
-        @media (max-width: 768px) {
-            .button-container button {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-            .section {
-                padding: 15px;
-            }
         }
     </style>
 </head>
