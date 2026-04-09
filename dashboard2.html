@@ -491,18 +491,6 @@
                         // Coluna Categoria
                         const tdCategory = document.createElement('td');
                         tdCategory.textContent = player.category || '-';
-                        // Adicionar cor de fundo leve para diferenciação visual (opcional)
-                        if (player.category === 'MENSAL') {
-                            tdCategory.style.backgroundColor = '#d4edda';
-                            tdCategory.style.borderRadius = '12px';
-                            tdCategory.style.fontWeight = 'bold';
-                        } else if (player.category === 'DIARIA') {
-                            tdCategory.style.backgroundColor = '#fff3cd';
-                            tdCategory.style.borderRadius = '12px';
-                        } else if (player.category === 'INATIVO') {
-                            tdCategory.style.backgroundColor = '#f8d7da';
-                            tdCategory.style.borderRadius = '12px';
-                        }
                         row.appendChild(tdCategory);
                         
                         playersTableBody.appendChild(row);
