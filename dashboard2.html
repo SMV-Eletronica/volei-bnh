@@ -488,22 +488,7 @@
                         tdPosition.textContent = player.position || '-';
                         row.appendChild(tdPosition);
                         
-                        // Coluna Categoria
-                        const tdCategory = document.createElement('td');
-                        tdCategory.textContent = player.category || '-';
-                        // Adicionar cor de fundo leve para diferenciação visual (opcional)
-                        if (player.category === 'MENSAL') {
-                           
-                        } else if (player.category === 'DIARIA') {
-                           
-                        } else if (player.category === 'INATIVO') {
-                           
-                        }
-                        row.appendChild(tdCategory);
-                        
-                        playersTableBody.appendChild(row);
-                        counter++;
-                    });
+                      
                 } else {
                     // Nenhum jogador cadastrado
                     const emptyRow = document.createElement('tr');
