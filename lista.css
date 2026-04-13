@@ -55,6 +55,7 @@ body {
   /* sem background, sem negrito - apenas vermelho puro */
     background: transparent !important;
   background-color: transparent !important;
+    border: none !important;
 }
 
 
