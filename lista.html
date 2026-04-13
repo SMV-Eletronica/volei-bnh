@@ -164,7 +164,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
-    const { DateTime } = window.luxon;
+    const { DateTime } =luxon;
     luxon.Settings.defaultLocale = 'pt-BR';
     
     const customWeekdays = {
