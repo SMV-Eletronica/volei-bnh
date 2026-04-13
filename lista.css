@@ -51,7 +51,7 @@ body {
 }
 
 .horario-vermelho {
-  color: red;
+ /* color: red;
   /* sem background, sem negrito - apenas vermelho puro */
     background: transparent !important;
   background-color: transparent !important;
