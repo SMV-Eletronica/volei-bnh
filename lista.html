@@ -102,8 +102,12 @@
           <div class="guest-controls">
             <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
+
+          
+
+          
           <div class="guest-controls" id="guestControls" style="display: none;">
-            <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados</button>
+            <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados ${horarioAlvoFormatado} </button>
             <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Convidado</button>
           </div>
@@ -311,6 +315,8 @@
       const addGuestBtnElement = document.getElementById('addGuestBtn');
       const guestNameInputElement = document.getElementById('guestNameInput');
       const convidadobtnElement = document.getElementById('convidadobtn');
+
+      const horarioAlvoFormatado = `${window.horaAlvo.toString().padStart(2, '0')}:${window.minutoAlvo.toString().padStart(2, '0')}`;
       
       // Verifica se já passou do horário alvo
       if (horaAtual > window.horaAlvo || (horaAtual === window.horaAlvo && minutoAtual >= window.minutoAlvo)) {
