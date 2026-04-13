@@ -107,7 +107,7 @@
 
           
           <div class="guest-controls" id="guestControls" style="display: none;">
-            <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados ${horarioAlvoFormatado} </button>
+            <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados <span id="horarioConvidados"></span> </button>
             <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
             <button id="addGuestBtn"><i class="fas fa-user-plus"></i> Convidado</button>
           </div>
@@ -317,6 +317,8 @@
       const convidadobtnElement = document.getElementById('convidadobtn');
 
       const horarioAlvoFormatado = `${window.horaAlvo.toString().padStart(2, '0')}:${window.minutoAlvo.toString().padStart(2, '0')}`;
+      const horarioSpan = document.getElementById('horarioConvidados');   
+    horarioSpan.textContent = horarioAlvoFormatado;
       
       // Verifica se já passou do horário alvo
       if (horaAtual > window.horaAlvo || (horaAtual === window.horaAlvo && minutoAtual >= window.minutoAlvo)) {
