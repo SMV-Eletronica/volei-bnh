@@ -50,7 +50,10 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-
+.horario-vermelho {
+  color: red;
+  /* sem background, sem negrito - apenas vermelho puro */
+}
 
 
 .filter-controls {
