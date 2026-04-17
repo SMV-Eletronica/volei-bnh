@@ -218,7 +218,7 @@
     let activeGames = [];
     let currentGameId = null;
     let currentGameData = null;
-    window.segments = ["All"];
+    window.segments = ["All2"];
 
     // Função para criar e inserir o botão Dashboard
     function createDashboardButton() {
@@ -1145,7 +1145,7 @@
       if (!isAdmin && debtInfo.hasDebt) {
         const alertCount = await updateDebtNotification(playerId, currentGameId);
         if (alertCount >= 3) {
-          await Swal.fire({ icon: 'error', title: 'Participação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Você já utilizou a tolerância de 2 jogos com advertências.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
+          await Swal.fire({ icon: 'error', title: 'Participação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Os dois primeiros jogos do mês de tolerância já passaram.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
           return;
         } else {
           const result = await Swal.fire({ icon: 'warning', title: 'Atenção: Pendências Detectadas', html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Essa é sua ${alertCount}ª notificação. Após 2 notificações, você ficará suspenso de confirmar presença.`, showCancelButton: true, confirmButtonText: 'Ciente/Confirmar', cancelButtonText: 'Cancelar' });
