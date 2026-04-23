@@ -1169,7 +1169,7 @@
             useCredit = result.isConfirmed;
           }
           if (!useCredit) {
-            const result = await Swal.fire({ icon: 'warning', title: 'Contribuição diária', html: `<strong>${playerData.name}</strong>, você declara estar ciente de que há uma contribuição de <strong>R$${guestFee.toFixed(2)}</strong>. E de que essa contribuição deverá ser efetuada obrigatoriamente até o momento da entrada em quadra e anexada ao seu registro para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
+            const result = await Swal.fire({ icon: 'warning', title: 'Contribuição diária', html: `<strong>${playerData.name}</strong>, você declara estar ciente de que há uma contribuição de <strong>R$${guestFee.toFixed(2)}</strong><p>Essa contribuição deverá ser efetuada obrigatoriamente até o momento da entrada em quadra e anexada ao seu registro, para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
             if (!result.isConfirmed) return;
           }
         }
@@ -1334,7 +1334,7 @@
         useCredit = result.isConfirmed;
       }
       if (!useCredit) {
-        const result = await Swal.fire({ icon: 'warning', title: 'Contribuição Convidado', html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que há uma contribição no valor de <strong>R$${guestFee.toFixed(2)}</strong>. E de que essa contribuição deverá ser efetuada obrigatoriamente até o momento da entrada em quadra e anexada ao seu registro para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
+        const result = await Swal.fire({ icon: 'warning', title: 'Contribuição Convidado', html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que há uma contribição no valor de <strong>R$${guestFee.toFixed(2)}</strong><p>Essa contribuição deverá ser efetuada obrigatoriamente até o momento da entrada em quadra e anexada ao seu registro, para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
         if (!result.isConfirmed) {
           guestNameInput.value = '';
           return;
