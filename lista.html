@@ -218,7 +218,7 @@
     let activeGames = [];
     let currentGameId = null;
     let currentGameData = null;
-    window.segments = ["All"];
+    window.segments = ["All2"];
 
     // Função para criar e inserir o botão Dashboard
     function createDashboardButton() {
@@ -1148,7 +1148,7 @@
           await Swal.fire({ icon: 'error', title: 'Participação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Os dois primeiros jogos do mês de tolerância já passaram.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
           return;
         } else {
-          const result = await Swal.fire({ icon: 'warning', title: 'Atenção: Pendências Detectadas', html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Essa é sua ${alertCount}ª notificação. Após 2 notificações, você ficará suspenso de confirmar presença.`, showCancelButton: true, confirmButtonText: 'Ciente/Confirmar', cancelButtonText: 'Cancelar' });
+          const result = await Swal.fire({ icon: 'warning', title: 'Pendências Encontradas', html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br><strong>Aviso aos Mensalistas:</strong><br>Nos dois primeiros jogos de cada mês, serão exibidas notificações sobre eventuais pendências, permitindo confirmar sua presença ou adicionar convidados, desde que não haja suspensão vigente. Após esses dois jogos iniciais, independentemente de sua participação, caso as pendências não sejam regularizadas, você será automaticamente suspenso. ${alertCount}`, showCancelButton: true, confirmButtonText: 'Ciente/Confirmar', cancelButtonText: 'Cancelar' });
           if (!result.isConfirmed) return;
         }
       } else if (!isAdmin && !debtInfo.hasDebt) {
@@ -1169,7 +1169,7 @@
             useCredit = result.isConfirmed;
           }
           if (!useCredit) {
-            const result = await Swal.fire({ icon: 'warning', title: 'Atenção', html: `<strong>${playerData.name}</strong>, você declara estar ciente de que é devida uma taxa diária de <strong>R$${guestFee.toFixed(2)}</strong>, sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
+            const result = await Swal.fire({ icon: 'warning', title: 'Contribuição diária', html: `<strong>${playerData.name}</strong>, você declara estar ciente de que há uma contribuição de <strong>R$${guestFee.toFixed(2)}</strong>. E de que essa contribuição deverá ser efetuada obrigatoriamente até o momento da entrada em quadra e anexada ao seu registro para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
             if (!result.isConfirmed) return;
           }
         }
@@ -1309,10 +1309,10 @@
       if (!isAdmin && debtInfo.hasDebt) {
         const alertCount = await updateDebtNotification(window.currentUserPlayer.id, currentGameId);
         if (alertCount >= 3) {
-          await Swal.fire({ icon: 'error', title: 'Ação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Você já utilizou a tolerância de 2 jogos com advertências.<p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
+          await Swal.fire({ icon: 'error', title: 'Ação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
           return;
         } else {
-          const result = await Swal.fire({ icon: 'warning', title: 'Atenção: Pendências Detectadas', html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Essa é sua ${alertCount}ª notificação. Após 2 notificações, você ficará suspenso de adicionar convidados.`, showCancelButton: true, confirmButtonText: 'Ciente/Continuar', cancelButtonText: 'Cancelar' });
+          const result = await Swal.fire({ icon: 'warning', title: 'Pendências Encontradas', html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}<br><br><strong>Aviso aos Mensalistas:</strong><br>Nos dois primeiros jogos de cada mês, serão exibidas notificações sobre eventuais pendências, permitindo confirmar sua presença ou adicionar convidados, desde que não haja suspensão vigente. Após esses dois jogos iniciais, independentemente de sua participação, caso as pendências não sejam regularizadas, você será automaticamente suspenso. ${alertCount}`, showCancelButton: true, confirmButtonText: 'Ciente/Continuar', cancelButtonText: 'Cancelar' });
           if (!result.isConfirmed) return;
         }
       } else if (!isAdmin && !debtInfo.hasDebt) {
@@ -1334,7 +1334,7 @@
         useCredit = result.isConfirmed;
       }
       if (!useCredit) {
-        const result = await Swal.fire({ icon: 'warning', title: 'Atenção', html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que é devida uma "Taxa Convidado" de <strong>R$${guestFee.toFixed(2)}</strong> sendo a mesma inserida em seu registro para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
+        const result = await Swal.fire({ icon: 'warning', title: 'Contribuição Convidado', html: `Você está convidando <strong>${guestName}</strong> e declara estar ciente de que há uma contribição no valor de <strong>R$${guestFee.toFixed(2)}</strong>. E de que essa contribuição deverá ser efetuada obrigatoriamente até o momento da entrada em quadra e anexada ao seu registro para fins de transparência e controle de todos.`, showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' });
         if (!result.isConfirmed) {
           guestNameInput.value = '';
           return;
