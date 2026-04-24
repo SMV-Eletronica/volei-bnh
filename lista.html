@@ -1163,7 +1163,7 @@ async function confirmPlayer(targetPlayerId = null) {
     alertLimit = 2; // DIARIA tem limite de 2 notificações
   }
     if (alertCount >= alertLimit) {
-      await Swal.fire({ icon: 'error', title: 'Participação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Os dois primeiros jogos do mês de tolerância já passaram.<p>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
+      await Swal.fire({ icon: 'error', title: 'Participação Suspensa', html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>Acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, confirmButtonText: 'Entendido' });
       return;
     } else {
       if (playerData.category === 'MENSAL') {
@@ -1185,7 +1185,7 @@ async function confirmPlayer(targetPlayerId = null) {
           <strong>Aviso aos Diaristas:</strong><br>
           💰 Para participar do jogo, é necessário quitar suas pendências até a entrada em quadra.<br><br>
           ⚠️ Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>`,
-          
+
           showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' 
         });
         if (!result.isConfirmed) return;
