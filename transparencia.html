@@ -203,7 +203,7 @@
                             <div id="totalExpenses" class="cash-summary-value" style="color: red" >R$0,00</div>
                         </div>
                         <div class="cash-summary-item" id="currentBalanceItem">
-                            <div class="cash-summary-title">Saldo Caixa</div>
+                            <div class="cash-summary-title">Saldo Atual</div>
                             <div id="currentBalance" class="cash-summary-value">R$0,00</div>
                         </div>
                     </div>
@@ -940,12 +940,12 @@
                 
                 row.innerHTML = `
                     <td>${data.monthName}/${data.year}</td>
-                    <td>R$${data.income.toFixed(2)}</td>
-                    <td>R$${data.expenses.toFixed(2)}</td>
+                    <td style="color:#3498db">R$${data.income.toFixed(2)}</td>
+                    <td style="color:red">R$${data.expenses.toFixed(2)}</td>
                     <td class="${balance >= 0 ? 'positive' : 'negative'}">
                         ${balance < 0 ? '-' : ''}R$${Math.abs(balance).toFixed(2)}
                     </td>
-                    <td>R$${data.receivables.toFixed(2)}</td>
+                    <td style="color:orange">R$${data.receivables.toFixed(2)}</td>
                 `;
                 financialData.appendChild(row);
             });
@@ -955,12 +955,12 @@
                 totalsRow.className = 'totals-row';
                 totalsRow.innerHTML = `
                     <td><strong>TOTAIS</strong></td>
-                    <td><strong>R$${totalIncome.toFixed(2)}</strong></td>
-                    <td><strong>R$${totalExpenses.toFixed(2)}</strong></td>
+                    <td style="color:#3498db"><strong>R$${totalIncome.toFixed(2)}</strong></td>
+                    <td style="color:red"><strong>R$${totalExpenses.toFixed(2)}</strong></td>
                     <td class="${totalBalance >= 0 ? 'positive' : 'negative'}">
                         <strong>${totalBalance < 0 ? '-' : ''}R$${Math.abs(totalBalance).toFixed(2)}</strong>
                     </td>
-                    <td><strong>R$${totalReceivables.toFixed(2)}</strong></td>
+                    <td style="color:orange"><strong>R$${totalReceivables.toFixed(2)}</strong></td>
                 `;
                 financialData.appendChild(totalsRow);
             }
