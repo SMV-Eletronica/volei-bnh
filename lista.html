@@ -1173,9 +1173,11 @@ async function confirmPlayer(targetPlayerId = null) {
           html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}<br><br>
           <strong>Aviso aos Mensalistas:</strong><br>
           📌 Nos dois primeiros jogos de cada mês, serão exibidas notificações sobre eventuais pendências.<br><br>          
-          📌 Após esses dois jogos iniciais, caso as pendências não sejam regularizadas, você será automaticamente suspenso.<br><br>
-          ⚠️ A contribuição convidado deve ser realizada obrigatoriamente até a entrada em quadra.<br><br>`,
-          showCancelButton: true, confirmButtonText: 'Ciente/Continuar', cancelButtonText: 'Cancelar' 
+          📌 Após esses dois jogos iniciais, caso as pendências não sejam regularizadas, a participação será suspensa.<br><br>
+          ⚠️ As contribuições de convidados devem ser realizadas até a entrada em quadra.<br><br>`,
+          showCancelButton: true, 
+          confirmButtonText: 'Ciente/Continuar', 
+          cancelButtonText: 'Cancelar' 
         });
         if (!result.isConfirmed) return;
       } else if (playerData.category === 'DIARIA') {
@@ -1184,9 +1186,12 @@ async function confirmPlayer(targetPlayerId = null) {
           html: `Você já possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}<br><br>
           <strong></strong>
           💰 Como diarista é necessário quitar suas pendências até a entrada em quadra.<br><br>
-          ⚠️ Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>`,
+          📌 Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>
+          ⚠️ As contribuições de convidados devem ser realizadas até a entrada em quadra.<br><br>`,
 
-          showCancelButton: true, confirmButtonText: 'Estou Ciente', cancelButtonText: 'Cancelar' 
+          showCancelButton: true, 
+          confirmButtonText: 'Estou Ciente', 
+          cancelButtonText: 'Cancelar' 
         });
         if (!result.isConfirmed) return;
       }
@@ -1391,7 +1396,7 @@ async function addGuest() {
     if (alertCount >= alertLimit) {
       await Swal.fire({ 
         icon: 'error', 
-        title: 'Ação Suspensa', 
+        title: 'Participação Suspensa', 
         html: `Existem ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><p>Agora acesse MENU / TRANSPARÊNCIA, verifique e regularize suas pendências para poder voltar a participar dos jogos!`, 
         confirmButtonText: 'Entendido' 
       });
@@ -1405,8 +1410,8 @@ async function addGuest() {
           html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}<br><br>
           <strong>Aviso aos Mensalistas:</strong><br>
           📌 Nos dois primeiros jogos de cada mês, serão exibidas notificações sobre eventuais pendências.<br><br>          
-          📌 Após esses dois jogos iniciais, caso as pendências não sejam regularizadas, você será automaticamente suspenso.<br><br>
-          ⚠️ A contribuição convidado deve ser realizada obrigatoriamente até a entrada em quadra.<br><br>`,
+          📌 Após esses dois jogos iniciais, caso as pendências não sejam regularizadas, a participação será suspensa.<br><br>
+          ⚠️ As contribuições de convidados devem ser realizadas até a entrada em quadra.<br><br>`,
           showCancelButton: true, 
           confirmButtonText: 'Ciente/Confirmar', 
           cancelButtonText: 'Cancelar' 
@@ -1419,7 +1424,8 @@ async function addGuest() {
           html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
           <strong></strong>
           💰 Como diarista é necessário quitar suas pendências até a entrada em quadra.<br><br>
-          ⚠️ Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>`,
+          📌 Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>
+          ⚠️ As contribuições de convidados devem ser realizadas até a entrada em quadra.<br><br>`,
           showCancelButton: true, 
           confirmButtonText: 'Estou Ciente', 
           cancelButtonText: 'Cancelar' 
