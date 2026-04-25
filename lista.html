@@ -1182,13 +1182,12 @@ async function confirmPlayer(targetPlayerId = null) {
         if (!result.isConfirmed) return;
       } else if (playerData.category === 'DIARIA') {
         const result = await Swal.fire({ 
-          icon: 'warning', title: 'Pendências Encontradas', 
+          icon: 'warning', 
+          title: 'Pendências Encontradas', 
           html: `Você já possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}<br><br>
           <strong></strong>
-          💰 Como diarista é necessário quitar suas pendências até a entrada em quadra.<br><br>
-          📌 Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>
-          ⚠️ As contribuições de convidados devem ser realizadas até a entrada em quadra.<br><br>`,
-
+          💰 Como diarista ou convidado suas contribuições devem ser quitadas até a entrada em quadra.<br><br>
+          📌 Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>`,
           showCancelButton: true, 
           confirmButtonText: 'Estou Ciente', 
           cancelButtonText: 'Cancelar' 
@@ -1421,11 +1420,10 @@ async function addGuest() {
         const result = await Swal.fire({ 
           icon: 'warning', 
           title: 'Pendências Encontradas', 
-          html: `Você possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
+          html: `Você já possui ${debtInfo.debtCount} pendência(s) no valor total de R$${debtInfo.totalDebt.toFixed(2)}.<br><br>
           <strong></strong>
-          💰 Como diarista é necessário quitar suas pendências até a entrada em quadra.<br><br>
-          📌 Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>
-          ⚠️ As contribuições de convidados devem ser realizadas até a entrada em quadra.<br><br>`,
+          💰 Como diarista ou convidado suas contribuições devem ser quitadas até a entrada em quadra.<br><br>
+          📌 Caso contrário, você não poderá jogar até regularizar sua situação.<br><br>`,
           showCancelButton: true, 
           confirmButtonText: 'Estou Ciente', 
           cancelButtonText: 'Cancelar' 
