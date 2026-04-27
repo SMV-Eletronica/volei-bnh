@@ -338,16 +338,16 @@
                         <div id="categoriaInfo" class="cash-summary-value" style="font-size: 18px;">-</div>
                     </div>
                     
-                    <!-- Card 3: Contato -->
-                    <div class="cash-summary-item" style="flex: 1; min-width: 150px; border-left: 4px solid #2196F3;">
+                   <!-- Card 3: Contato -->
+                    <div class="cash-summary-item" style="flex: 1; min-width: 150px; border-left: 4px solid #358bc4;;">
                         <div class="cash-summary-title">Contato</div>
                         <div id="contatoInfo" class="cash-summary-value" style="font-size: 14px;">-</div>
                     </div>
                     
                     <!-- Card 4: Total em Contribuições (NOVO) -->
-                    <div class="cash-summary-item" style="flex: 1; min-width: 150px; border-left: 4px solid #FF9800;">
+                    <div class="cash-summary-item" style="flex: 1; min-width: 150px; border-left: 4px solid #4CAF50;">
                         <div class="cash-summary-title">Total em Contribuições</div>
-                        <div id="totalContribuicoesIntegrante" class="cash-summary-value" style="font-size: 18px; color: #FF9800;">R$ 0,00</div>
+                        <div id="totalContribuicoesIntegrante" class="cash-summary-value" style="font-size: 18px; color: #4CAF50;">R$ 0,00</div>
                     </div>
                 </div>
 
@@ -1022,7 +1022,7 @@
                 totalBalance += balance;
                 
                 row.innerHTML = `
-                    <tr>${data.monthName}/${data.year}</td>
+                    <td>${data.monthName}/${data.year}</td>
                     <td style="color:#3498db">R$${data.income.toFixed(2)}</td>
                     <td style="color:red">R$${data.expenses.toFixed(2)}</td>
                     <td class="${balance >= 0 ? 'positive' : 'negative'}">
