@@ -753,6 +753,7 @@ table tr:hover {
     margin-top: 15px;
     text-align: center;
     font-weight: bold;
+    margin-bottom: 15px;
 }
 
 .no-pending {
