@@ -325,7 +325,7 @@
                 </div>
 
 
-<div class="search-container">
+                <div class="search-container">
                     <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar integrante...">
                 </div>
 
@@ -337,15 +337,11 @@
                     </div>
                     <div class="profile-details">
                         <h2 id="profileName" class="profile-name">Carregando...</h2>
-                        <div id="pendingStatus" class="pending-alert" style="display: none;">
-                           Integrante possui pendências!
-                        </div>
-                        <div id="noPendingStatus" class="no-pending" style="display: none;">
-                          <i class="fa fa-trophy" style="font-size:18px"></i> Integrante em dia!
-                        </div>
+                        
 
 
-                        </div></div>
+                        </div>
+                    </div>
                         
                 
                 <!-- CARDS - 4 cards no total -->
@@ -370,12 +366,17 @@
                     
                     <!-- Card 4: Total em Contribuições (NOVO) -->
                     <div class="cash-summary-item" style="flex: 1; min-width: 130px; border-left: 4px solid #4CAF50;">
-                        <div class="cash-summary-title">Total em Contribuições</div>
+                        <div class="cash-summary-title">Total em Contribuições <span id="totalContribuicoesAno"></span></div>
                         <div id="totalContribuicoesIntegrante" class="cash-summary-value" style="font-size: 18px; color: #4CAF50;">R$ 0,00</div>
                     </div>
                 </div>
 
-                
+                <div id="pendingStatus" class="pending-alert" style="display: none;">
+                           Integrante possui pendências!
+                        </div>
+                        <div id="noPendingStatus" class="no-pending" style="display: none;">
+                          <i class="fa fa-trophy" style="font-size:18px"></i> Integrante em dia!
+                        </div>
                 
                 <div class="profile-container">
                     
@@ -521,6 +522,16 @@
         async function calcularTotalContribuicoesIntegrante(playerId) {
             const selectedYear = yearFilterProfile.value;
             const selectedMonth = monthFilterProfile.value;
+
+
+            // ✅ ADICIONE ESTA LINHA PARA ATUALIZAR O TÍTULO DO CARD
+    const anoDisplay = selectedYear === 'all' ? '(Todos os Anos)' : selectedYear;
+    const totalContribuicoesAno = document.getElementById('totalContribuicoesAno');
+    if (totalContribuicoesAno) {
+        totalContribuicoesAno.textContent = anoDisplay;
+    }
+
+
             
             if (!playerId) {
                 if (totalContribuicoesIntegrante) totalContribuicoesIntegrante.textContent = "R$ 0,00";
