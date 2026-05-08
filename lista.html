@@ -624,6 +624,9 @@
               title: 'Erro',
               text: 'Nenhum jogador associado a este email. Contate o administrador.',
             });
+            await signOut(auth);
+            window.location.href = 'loginvl.html';
+            
             confirmPlayerBtn.disabled = true;
             guestControls.style.display = 'none';
           } else {
