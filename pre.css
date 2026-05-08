@@ -93,7 +93,7 @@
     .container {   
     
     max-width: 600px;  /* Limita a largura do conteúdo, mas não da tela */
-    max-height: 700px;       
+    max-height: 750px;       
     margin: 0;
     padding: 20px;
     background-color: white;
