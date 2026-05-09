@@ -7,217 +7,86 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="pre.css?v=1.9">
-    <!-- SweetAlert2 CDN -->
+    <link rel="stylesheet" href="pre.css?v=1.0">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Cropper.js CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
-
-    <style>
-        input[type="tel"], input[type="file"] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100%;
-        }
-        .image-preview {
-            max-width: 150px;
-            max-height: 150px;
-            margin-top: 10px;
-            display: none;
-            object-fit: contain;
-        }
-        .upload-btn {
-            margin-top: 5px;
-            padding: 8px 12px;
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .alert {
-            background: #f8f9fa;
-            padding: 10px;
-            margin: 10px 0;
-            text-align: center;
-            border-radius: 4px;
-            border-left: 4px solid #4285f4;
-        }
-        
-        /* Estilos para o editor de imagem embutido */
-        .image-editor-container {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        .image-editor-container h3 {
-            margin: 0 0 10px 0;
-            font-size: 1.2em;
-        }
-        .image-editor-container p {
-            margin: 0 0 10px 0;
-            font-size: 0.9em;
-            color: #555;
-        }
-        #cropper-container {
-            /* Tamanhos ajustados para melhor responsividade */
-            max-height: 400px; 
-            max-width: 100%;
-            min-width: 300px;
-            min-height: 300px;
-            width: 100%;
-            margin: 0 auto;
-        }
-        .editor-tools {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .editor-tools button {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .editor-tools .confirm-btn {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .editor-tools .cancel-btn {
-            background-color: #f44336;
-            color: white;
-        }
-
-        /* Estilos personalizados para o Cropper */
-        .cropper-crop-box, .cropper-view-box {
-            border-radius: 50%; /* Para recorte circular */
-        }
-        .cropper-face {
-            background-color: transparent; /* Remove o fundo cinza */
-        }
-        .cropper-drag-box {
-            background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
-        }
-        .cropper-line {
-            background-color: #4285f4; /* Cor azul para as linhas guia */
-        }
-        .cropper-point {
-            background-color: #4285f4; /* Cor azul para os pontos de redimensionamento */
-            width: 10px;
-            height: 10px;
-        }
-
-        /* Media queries para responsividade */
-        @media (max-width: 768px) {
-            #cropper-container {
-                min-width: 250px;
-                min-height: 250px;
-                max-height: 300px;
-            }
-            
-            .cropper-point {
-                width: 8px;
-                height: 8px;
-            }
-            
-            .image-editor-container {
-                padding: 10px;
-            }
-        }
-
-      
-    </style>
 </head>
 <body>
-        
-   <div class="container2">
-    <div class="container">
-
-         <div class="alert">
-            📢 Cadastro aberto temporariamente.<br>Após o cadastro, você será direcionado para criar sua Senha.
-        </div>
-        
-       <div class="section">
-            <h2 class="section-title"><i class="fas fa-user-edit"></i> Cadastro de Integrante</h2>
-           
-            <form id="playerForm">
-                <div class="form-group">
-                    <label for="name">Nome e Apelido:</label>
-                    <input type="text" id="name" placeholder="Ex: Ronaldo Fenômeno" maxlength="20" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">E-mail:</label>
-                    <input type="email" id="email" required>
-                    <small>Este será usado para criar sua senha depois</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="imageFile">Foto:</label>
-                    <input type="file" id="imageFile" accept="image/*" required>
-                    <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
-                    <div id="editorTrigger" style="display: none;">
-                        <button type="button" class="upload-btn" id="editImageBtn">
-                            <i class="fas fa-edit"></i> Ajustar Imagem
-                        </button>
+    
+    <div class="container2">
+        <div class="container">
+            <div class="header2">          
+    <center><h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2></center>
+  </div>
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-user-edit"></i> Cadastro de Integrante</h2>
+               
+                <form id="playerForm">
+                    <div class="form-group">
+                        <label for="name">Nome e Apelido:</label>
+                        <input type="text" id="name" placeholder="Ex: Ronaldo Fenômeno" maxlength="20" required>
                     </div>
-                    <!-- Editor de imagem embutido -->
-                    <div class="image-editor-container" id="imageEditorContainer">
-                        <h3>Ajuste sua foto</h3>
-                        <p>Mova e redimensione a área de corte como desejar</p>
-                        <div id="cropper-container"></div>
-                        <div class="editor-tools" style="align-items: baseline;">
-                            <button class="cancel-btn" id="cancelEditBtn"><i class="fas fa-times"></i> Cancelar</button>
-                            <button class="confirm-btn" id="confirmEditBtn"><i class="fas fa-check"></i> Confirmar</button>
+                    
+                    <div class="form-group">
+                        <label for="email">E-mail:</label>
+                        <input type="email" id="email" required>
+                        <small>Este será usado para criar sua senha depois</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="imageFile">Foto:</label>
+                        <input type="file" id="imageFile" accept="image/*" required>
+                        <img id="imagePreview" class="image-preview" alt="Pré-visualização da imagem">
+                        <div id="editorTrigger" style="display: none;">
+                            <button type="button" class="upload-btn" id="editImageBtn">
+                                <i class="fas fa-edit"></i> Ajustar Imagem
+                            </button>
+                        </div>
+                        <div class="image-editor-container" id="imageEditorContainer">
+                            <h3>Ajuste sua foto</h3>
+                            <p>Mova e redimensione a área de corte como desejar</p>
+                            <div id="cropper-container"></div>
+                            <div class="editor-tools" style="align-items: baseline;">
+                                <button class="cancel-btn" id="cancelEditBtn"><i class="fas fa-times"></i> Cancelar</button>
+                                <button class="confirm-btn" id="confirmEditBtn"><i class="fas fa-check"></i> Confirmar</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="position">Posição Principal:</label>
-                    <select id="position" required>
-                        <option value="">Selecione uma posição</option>
-                        <option value="Levantador">Levantador</option>
-                        <option value="Ponteiro">Ponteiro</option>
-                        <option value="Oposto">Oposto</option>
-                        <option value="Central">Central</option>
-                        <option value="Líbero">Líbero</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="contact">Telefone (com DDD):</label>
-                    <input type="tel" id="contact" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" placeholder="(99) 99999-9999" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="category">Categoria:</label>
-                    <select id="category" required>
-                        <option value="">Selecione uma categoria</option>                        
-                        <option value="MENSAL">MENSAL</option>
-                        <option value="DIARIA">DIARIA</option>
-                    </select>
-                </div>
-                
-                <input type="hidden" id="playerId">
-                
-                <button type="submit" id="saveBtn" style="background-color: #4285f4; width: auto;"><i class="fas fa-save"></i> Cadastrar</button>                
-                <button type="button" id="clearBtn" style="display: none; background-color: #ff5722;"><i class="fas fa-soap"></i> Limpar</button>
-                <button type="button" id="deleteBtn" style="display: none; background-color: #f44336;"><i class="fas fa-trash"></i> Excluir</button>
-            </form>
+                    
+                    <div class="form-group">
+                        <label for="position">Posição Principal:</label>
+                        <select id="position" required>
+                            <option value="">Selecione uma posição</option>
+                            <option value="Levantador">Levantador</option>
+                            <option value="Ponteiro">Ponteiro</option>
+                            <option value="Oposto">Oposto</option>
+                            <option value="Central">Central</option>
+                            <option value="Líbero">Líbero</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contact">Telefone (com DDD):</label>
+                        <input type="tel" id="contact" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" placeholder="(99) 99999-9999" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Categoria:</label>
+                        <select id="category" required>
+                            <option value="">Selecione uma categoria</option>                        
+                            <option value="MENSAL">MENSAL</option>
+                            <option value="DIARIA">DIARIA</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" id="saveBtn" style="background-color: #4285f4; width: auto;"><i class="fas fa-save"></i> Salvar</button>                
+                    <button type="button" id="clearBtn" style="background-color: #ff5722;"><i class="fas fa-soap"></i> Limpar</button>
+                    <button type="button" id="sairBtn" style="background-color: #4285f4;"><i class="fas fa-times "></i> Voltar</button>
+                </form>
+            </div>
         </div>
     </div>
-</div> 
-  
-</body>
 
-
-    <!-- Cropper.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     
     <script type="module">
@@ -250,8 +119,8 @@
         const imagePreview = document.getElementById('imagePreview');
         const editImageBtn = document.getElementById('editImageBtn');
         const editorTrigger = document.getElementById('editorTrigger');
+        const clearBtn = document.getElementById('clearBtn');
         
-        // Elementos do editor de imagem
         const imageEditorContainer = document.getElementById('imageEditorContainer');
         const cropperContainer = document.getElementById('cropper-container');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -260,7 +129,15 @@
         let cropper;
         let originalImageFile;
 
-        // Formatação do telefone
+   /* comentei pois é mais uma possibilidade
+         document.getElementById("sairBtn").addEventListener("click", function() {
+    window.history.back();
+  });
+*/
+  document.getElementById("sairBtn").addEventListener("click", function() {
+    window.location.href = "login.html";
+  });
+
         contactInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 0) {
@@ -275,7 +152,6 @@
             e.target.value = value;
         });
 
-        // Pré-visualização da imagem e ativação do editor
         imageFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -351,7 +227,6 @@
             }
         });
 
-        // Abrir editor de imagem
         editImageBtn.addEventListener('click', () => {
             if (!originalImageFile) return;
             
@@ -364,32 +239,29 @@
                 imageToCrop.onload = () => {
                     if (cropper) cropper.destroy();
                     
-                    // Configurações do Cropper.js - AQUI VOCÊ PODE AJUSTAR OS TAMANHOS E COMPORTAMENTOS
                     cropper = new Cropper(imageToCrop, {
-                        aspectRatio: 1, // Proporção 1:1 (quadrado)
-                        viewMode: 1, // Modo de visualização restrito ao contêiner
-                        autoCropArea: 0.8, // 80% da imagem coberta inicialmente
-                        responsive: true, // Redimensiona automaticamente
-                        restore: false, // Não restaura a imagem após redimensionamento
-                        checkCrossOrigin: false, // Desativa verificação de cross-origin
-                        checkOrientation: true, // Corrige orientação da imagem
-                        modal: true, // Mostra o modal escuro ao redor da área de recorte
-                        guides: true, // Mostra linhas guia
-                        center: true, // Centraliza as linhas guia
-                        highlight: true, // Destaca a área de recorte
-                        background: true, // Mostra o fundo do contêiner
-                        movable: true, // Permite mover a imagem
-                        rotatable: true, // Permite rotacionar
-                        scalable: true, // Permite escalar
-                        zoomable: true, // Permite zoom
-                        zoomOnTouch: true, // Permite zoom com toque
-                        zoomOnWheel: true, // Permite zoom com roda do mouse
-                        wheelZoomRatio: 0.1, // Sensibilidade do zoom
-                        cropBoxMovable: true, // Permite mover a caixa de recorte
-                        cropBoxResizable: true, // Permite redimensionar a caixa de recorte
-                        toggleDragModeOnDblclick: true, // Alterna modo de arrasto com duplo clique
-                        
-                        // Tamanhos mínimos e máximos (AQUI VOCÊ PODE AJUSTAR OS LIMITES)
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        autoCropArea: 0.8,
+                        responsive: true,
+                        restore: false,
+                        checkCrossOrigin: false,
+                        checkOrientation: true,
+                        modal: true,
+                        guides: true,
+                        center: true,
+                        highlight: true,
+                        background: true,
+                        movable: true,
+                        rotatable: true,
+                        scalable: true,
+                        zoomable: true,
+                        zoomOnTouch: true,
+                        zoomOnWheel: true,
+                        wheelZoomRatio: 0.1,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: true,
                         minCanvasWidth: 100,
                         minCanvasHeight: 100,
                         minCropBoxWidth: 100,
@@ -399,8 +271,6 @@
                         
                         ready() {
                             imageEditorContainer.style.display = 'block';
-                            
-                            // Ajusta o tamanho da crop-box inicial se necessário
                             const containerData = cropper.getContainerData();
                             const cropBoxWidth = Math.min(containerData.width, containerData.height) * 0.8;
                             cropper.setCropBoxData({
@@ -414,7 +284,6 @@
             reader.readAsDataURL(originalImageFile);
         });
 
-        // Controles do editor
         cancelEditBtn.addEventListener('click', () => {
             imageEditorContainer.style.display = 'none';
             if (cropper) {
@@ -426,13 +295,13 @@
         confirmEditBtn.addEventListener('click', async () => {
             if (cropper) {
                 const canvas = cropper.getCroppedCanvas({
-                    width: 300, // Largura final da imagem recortada
-                    height: 300, // Altura final da imagem recortada
-                    minWidth: 256, // Tamanho mínimo
+                    width: 300,
+                    height: 300,
+                    minWidth: 256,
                     minHeight: 256,
-                    maxWidth: 1024, // Tamanho máximo
+                    maxWidth: 1024,
                     maxHeight: 1024,
-                    fillColor: '#fff', // Cor de fundo para áreas transparentes
+                    fillColor: '#fff',
                     imageSmoothingEnabled: true,
                     imageSmoothingQuality: 'high',
                 });
@@ -467,11 +336,35 @@
                         timer: 1500,
                         showConfirmButton: false
                     });
-                }, 'image/jpeg', 0.7); // Qualidade de 70%
+                }, 'image/jpeg', 0.7);
             }
         });
 
-        // Envio do formulário
+        // Função LIMPAR FORMULÁRIO
+        clearBtn.addEventListener('click', () => {
+            playerForm.reset();
+            imagePreview.style.display = 'none';
+            imagePreview.src = '';
+            editorTrigger.style.display = 'none';
+            imageEditorContainer.style.display = 'none';
+            imageFileInput.value = '';
+            
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            originalImageFile = null;
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'Formulário limpo',
+                text: 'Todos os campos foram resetados.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        });
+
         playerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -539,17 +432,6 @@
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
             }
         });
-
-        function clearForm() {
-            playerForm.reset();
-            imagePreview.style.display = 'none';
-            editorTrigger.style.display = 'none';
-            imageEditorContainer.style.display = 'none';
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-        }
     </script>
-
+</body>
 </html>
