@@ -29,7 +29,7 @@
 
   
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="stylesheet" href="lista.css?v=1.4">
+  <link rel="stylesheet" href="lista.css?v=1.0">
 
   <style>
     /* Estilos para o header */
@@ -1077,7 +1077,7 @@
           <div class="player-item">
             <div class="player-info">
               <span class="player-counter">${index + 1}.</span>
-              <img src="${imageUrl}" alt="${player.name}" class="player-photo" onerror="this.src='${defaultImage}'">
+              <img src="${imageUrl}" alt="${player.name}" class="player-photo" style="border: 2px solid #ccc;" onerror="this.src='${defaultImage}'">
               <div>
                 <br>
                 <span class="player-name">${player.name}</span> <br>(${player.category}, ${player.position})
@@ -1085,7 +1085,7 @@
                 <br>
                 <div class="player-status status-aprovado">Contribuições:
                 <span class="player-status status-${player.paymentStatus}">
-                  ${player.paymentStatus === 'pago' ? 'OK' : 'Pendência(s)'}
+                  ${player.paymentStatus === 'pago' ? '✓ OK' : '✗ Pendência(s)'}
                 </span></div>
                 <div class="player-status status-aprovado">Liberação:
                 ${(player.category === 'CONVIDADO' || player.category === 'DIARIA') ? `<span class="player-status status-${player.status}">${player.status === 'approved' ? 'Aprovado' : 'Pendente'}</span>` : 'Não se aplica'}
@@ -1734,7 +1734,7 @@ async function addGuest() {
     function setupGuestControls() {
       addGuestBtn.addEventListener('click', addGuest);
     }
-
+/*
     function updatePlayerLimitDisplay(isAdmin) {
       let playerLimitContainer = document.getElementById('playerLimitContainer');
       if (!playerLimitContainer) {
@@ -1744,6 +1744,26 @@ async function addGuest() {
       }
       playerLimitContainer.innerHTML = `<span>Nº de Participantes: ${playerLimit}</span>`;
     }
+*/
+function updatePlayerLimitDisplay(isAdmin) {
+  const gameListH3 = document.querySelector('.game-list h3');
+  if (gameListH3) {
+    let limitSpan = document.getElementById('playerLimitSpan');
+    if (!limitSpan) {
+      limitSpan = document.createElement('span');
+      limitSpan.id = 'playerLimitSpan';
+      limitSpan.style.cssText = 'float: right; font-size: 0.85rem; padding: 4px 12px; font-weight: 500; border-radius: 20px; background-color:rgb(106 152 211); color: #f8f9fa;';
+      gameListH3.appendChild(limitSpan);
+    }
+    // Mantém a escrita original
+    limitSpan.innerHTML = `Nº de Participantes: ${playerLimit}`;
+    
+    // Garante que o h3 tenha um layout que permita o float
+    gameListH3.style.overflow = 'auto';
+    gameListH3.style.display = 'block';
+  }
+}
+
 
     async function loadGameData(gameId) {
       try {
