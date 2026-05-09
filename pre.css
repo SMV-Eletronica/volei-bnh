@@ -884,7 +884,7 @@ input[type="tel"], input[type="file"] {
 @media (min-width: 992px) {
     .container {
         max-width: 450px;
-        max-height: 650px;
+        max-height: 750px;
     }
 
     .button-container {
