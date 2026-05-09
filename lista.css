@@ -609,7 +609,7 @@ body {
 }
 
 .player-counter {
-    width: 30px;
+    width: 15px;
     font-weight: bold;
     color: var(--primary);
     text-align: right;
@@ -628,19 +628,23 @@ body {
 }
 
 .player-status {
-    font-size: 12px;
-   /*padding: 5px 10px;*/
-    border-radius: 4px;
+   padding: 0px 3px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+   
+  /*  display: inline-block;*/
 }
 
 .status-pago {
     color: var(--success);
     font-weight: bold;
+    background-color: #e8f5e9;
+    
 }
 
 .status-inadimplente {
+    background-color: #ffebee;
     color: var(--danger);
-    font-weight: bold;
 }
 
 .status-pending {
@@ -1204,7 +1208,7 @@ body {
     .player-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
+       
     }
 
     .player-counter {
