@@ -617,8 +617,8 @@ body {
 
 .player-photo {
     aspect-ratio: 1 / 1;
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     object-fit: cover;
     padding: 1px;
