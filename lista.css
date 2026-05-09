@@ -1197,7 +1197,7 @@ body {
 
     */
     .game-selector {
-    margin-bottom: 20px;
+    
     display: flex;
     flex-direction: column;
     gap: 10px;
