@@ -8,7 +8,7 @@
 body {
     background-color: #f5f5f5;
     color: #333;
-    line-height: 1.6;
+   /*line-height: 1.6;*/
      margin: 0;
     padding: 0;
 }
@@ -107,7 +107,7 @@ body {
     max-width: 600px;
     width: 100%;
     max-height: 85vh;        /* não passa de 85% da tela */
-    margin: 20px;
+    margin: 20px 10px;
     background: white;
     border-radius: 8px;
     overflow-y: auto;        /* scroll se necessário */
