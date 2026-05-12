@@ -293,7 +293,7 @@ body {
 .section {
     background-color: white;
     border-radius: 5px;
-    padding: 20px;
+    padding: 5px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
@@ -591,6 +591,7 @@ body {
 }
 
 .player-item {
+     position: relative; /* Importante! */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1190,6 +1191,28 @@ body {
     margin-top: 2px;
 }
 
+
+/* Botão Remover (Discreto) */
+.btn-remove {
+    position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  
+    background: none;
+    border: none;
+    color: #f57878;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.btn-remove:hover {
+    color: var(--danger);
+}
+
 @media (max-width: 768px) {
    /* .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
         flex-direction: column;
@@ -1209,6 +1232,7 @@ body {
 
 
     .player-item {
+         position: relative; /* Importante! */
         flex-direction: column;
         align-items: flex-start;
        
