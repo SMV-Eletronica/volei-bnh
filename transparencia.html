@@ -114,6 +114,54 @@
     font-size: 14px;
     min-width: 120px;
 }
+
+/* Animações para o loading de comprovante */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes progressBar {
+    0% { width: 0%; margin-left: 0%; }
+    50% { width: 70%; margin-left: 15%; }
+    100% { width: 100%; margin-left: 100%; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+}
+/* cancelei as particulas no envio de comprovantes
+@keyframes floatingParticles2 {
+    0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+    /*
+/* cancelei as particulas no envio de comprovantes
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: floatingParticles 2s ease-in-out infinite;
+    pointer-events: none;
+}
+    */
+
+/* Estilo para o container do loading */
+.comprovante-loading-container {
+    position: relative;
+    text-align: center;
+    color: white;
+    background: rgba(0,0,0,0.9);
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    min-width: 300px;
+    overflow: hidden;
+}
 </style>
 <body>
 <!-- cria o loading  -->
@@ -124,6 +172,18 @@
   </div>
 </div>
 <!--termina o código do loading-->
+
+<!-- Loading para upload de comprovante -->
+<div id="comprovante-loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 10000; flex-direction: column;">
+  <div class="comprovante-loading-container">
+    <div class="spinner-pulse" style="width: 60px; height: 60px; border: 6px solid #f3f3f3; border-top: 6px solid #4CAF50; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 25px;"></div>
+    <p id="comprovante-loading-text" style="font-size: 20px; font-weight: bold; margin: 0 0 10px 0;">Enviando comprovante...</p>
+    <p style="font-size: 14px; margin: 0; color: #aaa;">Isso pode levar alguns segundos</p>
+    <div style="width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 20px; overflow: hidden;">
+      <div style="width: 30%; height: 100%; background: linear-gradient(90deg, #4CAF50, #45a049); animation: progressBar 1.5s ease-in-out infinite; border-radius: 2px;"></div>
+    </div>
+  </div>
+</div>
 
     <div class="header">
         <button class="menu-toggle" id="menuToggle" style="font-size: 11px;">
@@ -490,6 +550,41 @@
         let allPlayers = [];
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
         window.segments = ["All2"];
+
+        // Funções para o loading de comprovante
+        function showComprovanteLoading(message = 'Enviando comprovante...') {
+            const overlay = document.getElementById('comprovante-loading-overlay');
+            const text = document.getElementById('comprovante-loading-text');
+            if (overlay && text) {
+                // Adiciona partículas
+                const container = overlay.querySelector('.comprovante-loading-container');
+                if (container) {
+                    // Remove partículas antigas
+                    container.querySelectorAll('.particle').forEach(p => p.remove());
+                    
+                    // Adiciona novas partículas
+                    for (let i = 0; i < 10; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'particle';
+                        particle.style.left = Math.random() * 100 + '%';
+                        particle.style.top = Math.random() * 100 + '%';
+                        particle.style.animationDelay = Math.random() * 2 + 's';
+                        particle.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                        container.appendChild(particle);
+                    }
+                }
+                
+                text.textContent = message;
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function hideComprovanteLoading() {
+            const overlay = document.getElementById('comprovante-loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
 
         // Função para atualizar os cards com os dados do integrante atual
         function atualizarCardsIntegrante(player) {
@@ -1353,9 +1448,14 @@
                                     const file = e.target.files[0];
                                     if (!file) return;
 
+                                    // Mostrar o loading em tela cheia
+                                    showComprovanteLoading('Enviando comprovante...');
+
                                     const statusElement = document.getElementById(`upload-status-${payment.paymentId}`);
-                                    statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                                    statusElement.style.color = '#333';
+                                    if (statusElement) {
+                                        statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                                        statusElement.style.color = '#333';
+                                    }
 
                                     try {
                                         if (file.size > 5 * 1024 * 1024) throw new Error("Máximo 5MB");
@@ -1379,7 +1479,12 @@
 
                                         const storagePath = `comprovantes/${playerId}/${payment.year}/${payment.month}/${payment.paymentId}_${Date.now()}_${file.name}`;
                                         const fileRef = storageRef(storage, storagePath);
+                                        
+                                        // Atualiza o texto do loading
+                                        showComprovanteLoading('Fazendo upload do arquivo...');
                                         await uploadBytes(fileRef, file);
+                                        
+                                        showComprovanteLoading('Processando comprovante...');
                                         const downloadURL = await getDownloadURL(fileRef);
 
                                         await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
@@ -1401,7 +1506,13 @@
                                         const titulo = "BNH Vôlei - Transparência"
                                         await sendPushNotification(message, null, segments, titulo);
 
-                                        statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
+                                        // Esconde o loading ANTES de mostrar o sucesso
+                                        hideComprovanteLoading();
+                                        
+                                        if (statusElement) {
+                                            statusElement.innerHTML = '<i class="fas fa-check" style="color:green"></i>';
+                                        }
+                                        
                                         await Swal.fire({
                                             icon: 'success',
                                             title: 'Sucesso',
@@ -1412,7 +1523,12 @@
 
                                         await loadDefaulters();
                                     } catch (error) {
-                                        statusElement.innerHTML = `<i class="fas fa-times" style="color:red"></i> ${error.message}`;
+                                        // Esconde o loading em caso de erro
+                                        hideComprovanteLoading();
+                                        
+                                        if (statusElement) {
+                                            statusElement.innerHTML = `<i class="fas fa-times" style="color:red"></i> ${error.message}`;
+                                        }
                                         await Swal.fire({
                                             icon: 'error',
                                             title: 'Erro',
@@ -1909,11 +2025,16 @@
                 });
                 return;
             }
+            
+            // Mostrar loading antes de começar o upload
+            showComprovanteLoading('Enviando comprovante...');
+            
             try {
                 const [year, month, paymentId] = paymentPath.split('/');
                 const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
                 const paymentSnapshot = await get(paymentRef);
                 if (!paymentSnapshot.exists()) {
+                    hideComprovanteLoading();
                     Swal.fire({
                         icon: 'error',
                         title: 'Erro',
@@ -1923,6 +2044,7 @@
                 }
                 const payment = paymentSnapshot.val();
                 if (!payment.playerId) {
+                    hideComprovanteLoading();
                     Swal.fire({
                         icon: 'error',
                         title: 'Erro',
@@ -1930,30 +2052,43 @@
                     });
                     return;
                 }
+                
                 const storagePath = `comprovantes/${payment.playerId}/${year}/${month}/${paymentId}_${Date.now()}_${file.name}`;
                 const fileRef = storageRef(storage, storagePath);
+                
+                showComprovanteLoading('Fazendo upload do arquivo...');
                 await uploadBytes(fileRef, file);
+                
+                showComprovanteLoading('Processando comprovante...');
                 const downloadURL = await getDownloadURL(fileRef);
+                
                 const updateData = {
                     comprovanteURL: downloadURL,
                     comprovanteStatus: 'pendente',
                     comprovanteUploadedAt: new Date().toISOString()
                 };
                 await update(paymentRef, updateData);
+                
+                // Esconde o loading antes de mostrar mensagem de sucesso
+                hideComprovanteLoading();
+                
                 uploadMessage.style.display = 'block';
                 uploadMessage.textContent = payment.comprovanteURL ? 'Comprovante substituído com sucesso! Aguardando aprovação.' : 'Comprovante enviado com sucesso! Aguardando aprovação.';
                 uploadMessage.style.color = '#28a745';
                 comprovanteInput.value = '';
                 paymentSelect.value = '';
+                
                 await loadPlayerPayments(currentPlayerIndex < filteredPlayers.length ? filteredPlayers[currentPlayerIndex].id : payment.playerId);
                 await loadPendingPaymentsSelect(currentPlayerIndex < filteredPlayers.length ? filteredPlayers[currentPlayerIndex].id : payment.playerId);
                 await loadDefaulters();
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Sucesso',
                     text: payment.comprovanteURL ? 'Comprovante substituído com sucesso!' : 'Comprovante enviado com sucesso!',
                 });
             } catch (error) {
+                hideComprovanteLoading();
                 console.error("Erro ao enviar comprovante:", error);
                 uploadMessage.style.display = 'block';
                 uploadMessage.textContent = 'Erro ao enviar comprovante.';
