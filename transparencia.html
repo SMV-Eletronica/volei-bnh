@@ -137,8 +137,8 @@
     50% { opacity: 1; }
     100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
 }
-    /*
-/* cancelei as particulas no envio de comprovantes
+    */
+/*
 .particle {
     position: absolute;
     width: 6px;
@@ -148,8 +148,8 @@
     animation: floatingParticles 2s ease-in-out infinite;
     pointer-events: none;
 }
-    */
-
+    
+*/
 /* Estilo para o container do loading */
 .comprovante-loading-container {
     position: relative;
@@ -399,7 +399,9 @@
                     </div>
                     <div class="profile-details">
                         <h2 id="profileName" class="profile-name">Carregando...</h2>
-                        
+                        <span class="cash-summary-title">Créditos:</span>
+    
+                        <span id="totalCreditosIntegrante" class="cash-summary-value" style="font-size: 14px; color: #FF9800;">R$ 0,00</span>
 
 
                         </div>
@@ -431,6 +433,12 @@
                         <div class="cash-summary-title">Total em Contribuições: <b><span id="totalContribuicoesAno"></span></b></div>
                         <div id="totalContribuicoesIntegrante" class="cash-summary-value" style="font-size: 14px; color: #4CAF50;">R$ 0,00</div>
                     </div>
+
+
+                    <!-- Card 5: Total em Créditos (NOVO) -->
+
+
+
                 </div>
 
                 <div id="pendingStatus" class="pending-alert" style="display: none;">
@@ -614,6 +622,82 @@
                 }
             }
         }
+
+
+
+        // Função para calcular o total de créditos do integrante
+async function calcularTotalCreditosIntegrante(playerId) {
+    if (!playerId) {
+        if (document.getElementById('totalCreditosIntegrante')) {
+            document.getElementById('totalCreditosIntegrante').textContent = "R$ 0,00";
+        }
+        return 0;
+    }
+    
+    try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        const paymentsData = snapshot.val() || {};
+        
+        let totalCreditos = 0;
+        let creditosUtilizados = 0;
+        
+        // Percorre todos os pagamentos
+        for (const year in paymentsData) {
+            for (const month in paymentsData[year]) {
+                const payments = paymentsData[year][month];
+                
+                for (const paymentId in payments) {
+                    const payment = payments[paymentId];
+                    
+                    // Verifica se é do integrante e é do tipo crédito
+                    if (payment.playerId === playerId && 
+                        payment.paymentType === 'Creditos' && 
+                        payment.value > 0) {
+                        
+                        // Se o pagamento foi efetivado (tem data), soma como crédito
+                        if (payment.date) {
+                            totalCreditos += parseFloat(payment.value);
+                        }
+                        
+                        // Se tem informação de crédito utilizado, desconta
+                        if (payment.creditoUtilizado) {
+                            creditosUtilizados += parseFloat(payment.creditoUtilizado) || 0;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Calcula o saldo de créditos disponíveis
+        const saldoCreditos = totalCreditos - creditosUtilizados;
+        
+        // Atualiza o card - OPÇÃO 1: Apenas o saldo disponível
+        const totalCreditosElement = document.getElementById('totalCreditosIntegrante');
+        if (totalCreditosElement) {
+            if (totalCreditos > 0) {
+                totalCreditosElement.textContent = `R$ ${saldoCreditos.toFixed(2)}`;
+            } else {
+                totalCreditosElement.textContent = "R$ 0,00";
+            }
+        }
+        
+        return saldoCreditos;
+        
+    } catch (error) {
+        console.error("Erro ao calcular total de créditos:", error);
+        const totalCreditosElement = document.getElementById('totalCreditosIntegrante');
+        if (totalCreditosElement) {
+            totalCreditosElement.textContent = "R$ 0,00";
+        }
+        return 0;
+    }
+}
+
+
+
+
+
 
         // Função para calcular o total de contribuições do integrante atual no período filtrado
         async function calcularTotalContribuicoesIntegrante(playerId) {
@@ -1882,33 +1966,36 @@
             }
         }
 
-        function showPlayer(index) {
-            if (filteredPlayers.length === 0) return;
-            if (index < 0) index = filteredPlayers.length - 1;
-            if (index >= filteredPlayers.length) index = 0;
-            currentPlayerIndex = index;
-            const player = filteredPlayers[currentPlayerIndex];
-            profileName.textContent = player.name || "-";
-            
-            if (player.imageUrl) {
-                profilePhoto.src = player.imageUrl;
-                profilePhoto.style.display = "block";
-            } else {
-                profilePhoto.style.display = "none";
-            }
-            
-            // ATUALIZA OS 4 CARDS
-            atualizarCardsIntegrante(player);
-            
-            // Calcula o total de contribuições
-            calcularTotalContribuicoesIntegrante(player.id);
-            
-            loadPlayerPayments(player.id);
-            loadPendingPaymentsSelect(player.id);
-            uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
-            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
-            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
-        }
+      function showPlayer(index) {
+    if (filteredPlayers.length === 0) return;
+    if (index < 0) index = filteredPlayers.length - 1;
+    if (index >= filteredPlayers.length) index = 0;
+    currentPlayerIndex = index;
+    const player = filteredPlayers[currentPlayerIndex];
+    profileName.textContent = player.name || "-";
+    
+    if (player.imageUrl) {
+        profilePhoto.src = player.imageUrl;
+        profilePhoto.style.display = "block";
+    } else {
+        profilePhoto.style.display = "none";
+    }
+    
+    // ATUALIZA OS CARDS
+    atualizarCardsIntegrante(player);
+    
+    // Calcula o total de contribuições
+    calcularTotalContribuicoesIntegrante(player.id);
+    
+    // NOVO: Calcula o total de créditos
+    calcularTotalCreditosIntegrante(player.id);
+    
+    loadPlayerPayments(player.id);
+    loadPendingPaymentsSelect(player.id);
+    uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
+    prevPlayerBtn.disabled = filteredPlayers.length <= 1;
+    nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+}
 
         function renderPayments(payments) {
             paymentsList.innerHTML = '';
@@ -2136,20 +2223,22 @@
         monthFilterExpenses.addEventListener('change', loadRecentExpenses);
         
         yearFilterProfile.addEventListener('change', () => {
-            if (filteredPlayers.length > 0) {
-                const currentPlayer = filteredPlayers[currentPlayerIndex];
-                loadPlayerPayments(currentPlayer.id);
-                calcularTotalContribuicoesIntegrante(currentPlayer.id);
-            }
-        });
-        
-        monthFilterProfile.addEventListener('change', () => {
-            if (filteredPlayers.length > 0) {
-                const currentPlayer = filteredPlayers[currentPlayerIndex];
-                loadPlayerPayments(currentPlayer.id);
-                calcularTotalContribuicoesIntegrante(currentPlayer.id);
-            }
-        });
+    if (filteredPlayers.length > 0) {
+        const currentPlayer = filteredPlayers[currentPlayerIndex];
+        loadPlayerPayments(currentPlayer.id);
+        calcularTotalContribuicoesIntegrante(currentPlayer.id);
+        calcularTotalCreditosIntegrante(currentPlayer.id); // NOVO
+    }
+});
+
+monthFilterProfile.addEventListener('change', () => {
+    if (filteredPlayers.length > 0) {
+        const currentPlayer = filteredPlayers[currentPlayerIndex];
+        loadPlayerPayments(currentPlayer.id);
+        calcularTotalContribuicoesIntegrante(currentPlayer.id);
+        calcularTotalCreditosIntegrante(currentPlayer.id); // NOVO
+    }
+});
 
         function getMonthName(monthNumber) {
             const months = [
