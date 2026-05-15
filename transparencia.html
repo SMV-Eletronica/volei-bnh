@@ -585,6 +585,19 @@
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
         window.segments = ["All2"];
 
+
+        function getTodayDateOnly() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+
+
+
+
         // Funções para o loading de comprovante
         function showComprovanteLoading(message = 'Enviando comprovante...') {
             const overlay = document.getElementById('comprovante-loading-overlay');
@@ -1733,7 +1746,8 @@ async function calcularTotalCreditosIntegrante(playerId) {
                                             
                                             // Atualiza o pagamento pendente com os dados do comprovante do crédito
                                             await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
-                                                date: new Date().toISOString(),
+                                                // date: new Date().toISOString(),
+                                                date: getTodayDateOnly(),   // agora é apenas "2026-05-15"
                                                 paymentStatus: 'pago',
                                                 comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
                                                 comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || 'pendente',
