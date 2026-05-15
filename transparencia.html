@@ -634,6 +634,41 @@
         }
 
 
+        async function hasCreditCoveringAmount(playerId, requiredAmount) {
+    try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        if (!snapshot.exists()) return false;
+        const paymentsData = snapshot.val();
+        for (const year in paymentsData) {
+            for (const month in paymentsData[year]) {
+                for (const paymentId in paymentsData[year][month]) {
+                    const payment = paymentsData[year][month][paymentId];
+                    if (payment.playerId === playerId &&
+                        payment.paymentType === 'Creditos' &&
+                        payment.paymentStatus === 'pago' &&
+                        !payment.usedAt &&
+                        parseFloat(payment.value) >= requiredAmount) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('Erro ao verificar crédito individual:', error);
+        return false;
+    }
+}
+
+
+
+
+
+
+
+
+
           // Função para verificar saldo de créditos disponíveis
         async function checkCreditBalance(playerId) {
             try {
@@ -668,92 +703,107 @@
         }
 
         // Função para usar crédito do jogador
-        async function usePlayerCredit(playerId, amount, gameId, description) {
-            try {
-                let remainingAmount = amount;
-                const paymentsRef = ref(database, 'payments');
-                const paymentsSnapshot = await get(paymentsRef);
-                
-                if (!paymentsSnapshot.exists()) {
-                    return { success: false, remaining: remainingAmount };
-                }
-                
-                const paymentsData = paymentsSnapshot.val();
-                const usedCredits = [];
-                let comprovanteData = {};
-                
-                for (const year in paymentsData) {
-                    for (const month in paymentsData[year]) {
-                        for (const paymentId in paymentsData[year][month]) {
-                            const payment = paymentsData[year][month][paymentId];
-                            
-                            if (payment.playerId === playerId && 
-                                payment.paymentType === 'Creditos' && 
-                                payment.paymentStatus === 'pago' && 
-                                !payment.usedAt && 
-                                remainingAmount > 0) {
-                                
-                                const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-                                const paymentValue = parseFloat(payment.value);
-                                
-                                // Captura os dados do comprovante do crédito original
-                                if (payment.comprovanteURL) {
-                                    comprovanteData.comprovanteURL = payment.comprovanteURL;
-                                    comprovanteData.comprovanteStatus = payment.comprovanteStatus;
-                                    comprovanteData.comprovanteApprovedAt = payment.comprovanteApprovedAt;
-                                    comprovanteData.comprovanteApprovedBy = payment.comprovanteApprovedBy;
-                                    comprovanteData.comprovanteUploadedAt = payment.comprovanteUploadedAt;
-                                }
-                                
-                                if (paymentValue <= remainingAmount) {
-                                    // Usa o crédito inteiro
-                                    await remove(paymentRef);
-                                    usedCredits.push({ id: paymentId, value: paymentValue, type: 'full' });
-                                    remainingAmount -= paymentValue;
-                                } else {
-                                    // Usa parte do crédito - mantém o comprovante original
-                                    const newValue = paymentValue - remainingAmount;
-                                    await update(paymentRef, { 
-                                        value: newValue, 
-                                        updatedAt: new Date().toISOString() 
-                                    });
-                                    
-                                    const historyRef = ref(database, `payments/${year}/${month}/${paymentId}/history`);
-                                    await push(historyRef, {
-                                        usedAmount: remainingAmount,
-                                        usedAt: new Date().toISOString(),
-                                        usedInGame: gameId,
-                                        description: description,
-                                        previousValue: paymentValue,
-                                        newValue: newValue
-                                    });
-                                    
-                                    usedCredits.push({ 
-                                        id: paymentId, 
-                                        value: remainingAmount, 
-                                        type: 'partial', 
-                                        remaining: newValue 
-                                    });
-                                    remainingAmount = 0;
-                                }
-                            }
-                        }
+    async function usePlayerCredit(playerId, amount, gameId, description) {
+    try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        if (!snapshot.exists()) {
+            return { success: false, remaining: amount };
+        }
+        const paymentsData = snapshot.val();
+        
+        // Coleciona todos os créditos disponíveis do jogador
+        let availableCredits = [];
+        for (const year in paymentsData) {
+            for (const month in paymentsData[year]) {
+                for (const paymentId in paymentsData[year][month]) {
+                    const payment = paymentsData[year][month][paymentId];
+                    if (payment.playerId === playerId &&
+                        payment.paymentType === 'Creditos' &&
+                        payment.paymentStatus === 'pago' &&
+                        !payment.usedAt) {
+                        availableCredits.push({
+                            year, month, paymentId,
+                            value: parseFloat(payment.value),
+                            data: payment
+                        });
                     }
                 }
-                
-                return { 
-                    success: remainingAmount === 0, 
-                    remaining: remainingAmount, 
-                    usedCredits: usedCredits, 
-                    comprovanteData: comprovanteData 
-                };
-            } catch (error) {
-                console.error('Erro ao usar créditos:', error);
-                return { success: false, remaining: amount, error: error.message };
             }
         }
-
-
+        
+        if (availableCredits.length === 0) {
+            return { success: false, remaining: amount };
+        }
+        
+        // Ordena por valor crescente e encontra o primeiro que seja >= amount
+        availableCredits.sort((a, b) => a.value - b.value);
+        let selected = null;
+        for (const credit of availableCredits) {
+            if (credit.value >= amount) {
+                selected = credit;
+                break;
+            }
+        }
+        
+        if (!selected) {
+            // Nenhum crédito individual é suficiente
+            return { success: false, remaining: amount };
+        }
+        
+        const paymentRef = ref(database, `payments/${selected.year}/${selected.month}/${selected.paymentId}`);
+        const paymentValue = selected.value;
+        
+        // Captura dados do comprovante
+        const comprovanteData = {
+            comprovanteURL: selected.data.comprovanteURL || null,
+            comprovanteStatus: selected.data.comprovanteStatus || null,
+            comprovanteApprovedAt: selected.data.comprovanteApprovedAt || null,
+            comprovanteApprovedBy: selected.data.comprovanteApprovedBy || null,
+            comprovanteUploadedAt: selected.data.comprovanteUploadedAt || null
+        };
+        
+        if (paymentValue > amount) {
+            // Usa apenas a parte necessária – reduz o valor do crédito
+            const newValue = paymentValue - amount;
+            await update(paymentRef, { 
+                value: newValue,
+                updatedAt: new Date().toISOString()
+            });
+            
+            // Registra histórico de uso parcial
+            const historyRef = ref(database, `payments/${selected.year}/${selected.month}/${selected.paymentId}/history`);
+            await push(historyRef, {
+                usedAmount: amount,
+                usedAt: new Date().toISOString(),
+                usedInGame: gameId,
+                description: description,
+                previousValue: paymentValue,
+                newValue: newValue
+            });
+            
+            return {
+                success: true,
+                remaining: 0,
+                usedCredits: [{ id: selected.paymentId, value: amount, type: 'partial', remaining: newValue }],
+                comprovanteData: comprovanteData
+            };
+        } else {
+            // Valor exato – remove o crédito completamente
+            await remove(paymentRef);
+            return {
+                success: true,
+                remaining: 0,
+                usedCredits: [{ id: selected.paymentId, value: paymentValue, type: 'full' }],
+                comprovanteData: comprovanteData
+            };
+        }
+        
+    } catch (error) {
+        console.error('Erro ao usar crédito:', error);
+        return { success: false, remaining: amount, error: error.message };
+    }
+}
 
         // Função para atualizar os cards com os dados do integrante atual
         function atualizarCardsIntegrante(player) {
@@ -1696,94 +1746,96 @@ async function calcularTotalCreditosIntegrante(playerId) {
                     allowEscapeKey: true,
                     didOpen: () => {
                         // Verifica créditos e ativa botões
-                        checkCreditBalance(playerId).then(balance => {
-                            defaulterPayments.forEach(payment => {
-                                 const description = payment.additionalInfo || payment.paymentType || '-';
-                                 const dia = payment.createdAt ? formatDate(payment.createdAt) : '-';
-                                const creditBtn = document.getElementById(`use-credit-btn-${payment.paymentId}`);
-                                if (creditBtn && balance >= payment.value) {
-                                    creditBtn.style.display = 'block';
-                                    
-                                    creditBtn.addEventListener('click', async () => {
-                                   
-                                        const result = await Swal.fire({
-                                            icon: 'question',
-                                            title: 'Usar Crédito',
-                                            html: `
-                                                <p>Deseja usar <strong>R$ ${payment.value.toFixed(2)}</strong> 
-                                                dos seus créditos para quitar a pendência do dia <strong>${dia} <small>${description}</small></strong></p>
-                                                <p><small>Seu saldo em créditos: <strong>R$ ${balance.toFixed(2)}</strong></small></p>
-                                                <p></p>
-                                                
-                                                <p><small>O comprovante do crédito original será vinculado a este pagamento.</small></p>
-                                            `,
-                                            showCancelButton: true,
-                                            confirmButtonText: 'Pagar',
-                                            cancelButtonText: 'Cancelar'
-                                        });
-                                        
-                                        if (!result.isConfirmed) return;
-                                        
-                                        showComprovanteLoading('Usando crédito...');
-                                        
-                                        try {
-                                            const creditResult = await usePlayerCredit(
-                                                playerId, 
-                                                payment.value, 
-                                                'transparencia', 
-                                                `Quitação de pendência: ${getMonthName(payment.month)}/${payment.year}`
-                                            );
-                                            
-                                            if (!creditResult.success) {
-                                                hideComprovanteLoading();
-                                                await Swal.fire({
-                                                    icon: 'error',
-                                                    title: 'Erro',
-                                                    text: `Crédito insuficiente. Faltam R$ ${creditResult.remaining.toFixed(2)}.`
-                                                });
-                                                return;
-                                            }
-                                            
-                                            // Atualiza o pagamento pendente com os dados do comprovante do crédito
-                                            await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
-                                                // date: new Date().toISOString(),
-                                                date: getTodayDateOnly(),   // agora é apenas "2026-05-15"
-                                                paymentStatus: 'pago',
-                                                comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
-                                                comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || 'pendente',
-                                                comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || null,
-                                                comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || null,
-                                                comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null,
-                                                pagoComCredito: true,
-                                                creditoOrigem: creditResult.usedCredits.map(c => c.id).join(', ')
-                                            });
-                                            
-                                            hideComprovanteLoading();
-                                            
-                                            await Swal.fire({
-                                                icon: 'success',
-                                                title: 'Sucesso',
-                                                text: 'Pendência quitada com crédito!',
-                                                timer: 1500,
-                                                showConfirmButton: false
-                                            });
-                                            
-                                            // Fecha o popup e recarrega
-                                            Swal.close();
-                                            await loadDefaulters();
-                                            
-                                        } catch (error) {
-                                            hideComprovanteLoading();
-                                            await Swal.fire({
-                                                icon: 'error',
-                                                title: 'Erro',
-                                                text: 'Erro ao usar crédito: ' + error.message
-                                            });
-                                        }
-                                    });
-                                }
+                         // Para cada pendência, verifica se existe UM crédito que cobre o valor
+       defaulterPayments.forEach(payment => {
+        const creditBtn = document.getElementById(`use-credit-btn-${payment.paymentId}`);
+        if (!creditBtn) return;
+        
+        // Define as variáveis necessárias para o modal
+        const dia = payment.createdAt ? formatDate(payment.createdAt) : '-';
+        const description = payment.additionalInfo || payment.paymentType || '-';
+        
+        hasCreditCoveringAmount(playerId, payment.value).then(hasCovering => {
+            if (hasCovering) {
+                creditBtn.style.display = 'block';
+                
+                creditBtn.addEventListener('click', async () => {
+                    // Busca o saldo atual para exibir (opcional)
+                    const saldoAtual = await checkCreditBalance(playerId);
+                    
+                    const result = await Swal.fire({
+                        icon: 'question',
+                        title: 'Usar Crédito',
+                        html: `
+                            <p>Deseja usar <strong>R$ ${payment.value.toFixed(2)}</strong> 
+                            dos seus créditos para quitar a pendência do dia <strong>${dia} <small>${description}</small></strong></p>
+                            <p><small>Seu saldo em créditos: <strong>R$ ${saldoAtual.toFixed(2)}</strong></small></p>
+                            <p><small>O comprovante do crédito original será vinculado a este pagamento.</small></p>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Pagar',
+                        cancelButtonText: 'Cancelar'
+                    });
+                    
+                    if (!result.isConfirmed) return;
+                    
+                    showComprovanteLoading('Usando crédito...');
+                    
+                    try {
+                        const creditResult = await usePlayerCredit(
+                            playerId,
+                            payment.value,
+                            'transparencia',
+                            `Quitação de pendência: ${getMonthName(payment.month)}/${payment.year}`
+                        );
+                        
+                        if (!creditResult.success) {
+                            hideComprovanteLoading();
+                            await Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: `Crédito insuficiente. Faltam R$ ${creditResult.remaining.toFixed(2)}.`
                             });
+                            return;
+                        }
+                        
+                        await update(ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`), {
+                            date: getTodayDateOnly(),
+                            paymentStatus: 'pago',
+                            comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
+                            comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || 'pendente',
+                            comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || null,
+                            comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || null,
+                            comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null,
+                            pagoComCredito: true,
+                            creditoOrigem: creditResult.usedCredits.map(c => c.id).join(', ')
                         });
+                        
+                        hideComprovanteLoading();
+                        
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso',
+                            text: 'Pendência quitada com crédito!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        
+                        Swal.close();
+                        await loadDefaulters();
+                        
+                    } catch (error) {
+                        hideComprovanteLoading();
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Erro ao usar crédito: ' + error.message
+                        });
+                    }
+                });
+            }
+        });
+    });
                         
                         // Mantém o código existente do upload de comprovante
                         defaulterPayments.forEach(payment => {
