@@ -178,7 +178,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
-    margin-top: 4px;
+    margin-top: 14px;
     width: 100%;
     transition: background 0.3s;
 }
@@ -1623,7 +1623,7 @@ async function calcularTotalCreditosIntegrante(playerId) {
                             : '';
                         
                         const uploadButton = showUploadButtons ? `
-                            <td style="border: 1px solid #ddd; padding: 2px; text-align: center;">
+                            <td style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
                                 <input type="file" id="comprovante-${payment.paymentId}" 
                                        style="display: none;" 
                                        accept="image/*,.pdf">
@@ -1635,8 +1635,9 @@ async function calcularTotalCreditosIntegrante(playerId) {
                                 </button>
                                 <button id="use-credit-btn-${payment.paymentId}" 
                                         class="btn-credito" style="display: none;">
-                                    <i class="fas fa-coins"></i> Crédito
+                                    <i class="fas fa-coins"></i> Créditos
                                 </button>
+                               
                                 <span id="upload-status-${payment.paymentId}" style="margin-left: 4px; font-size: 10px;"></span>
                             </td>
                         ` : '';
