@@ -1807,6 +1807,7 @@ async function calcularTotalCreditosIntegrante(playerId) {
                             comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || null,
                             comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || null,
                             comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null,
+                            updatedAt: new Date().toISOString(),
                             pagoComCredito: true,
                             creditoOrigem: creditResult.usedCredits.map(c => c.id).join(', ')
                         });
