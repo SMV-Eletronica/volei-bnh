@@ -212,13 +212,15 @@
     let allPlayers = [];
     let selectedPlayerId = null;
     let currentGameDate = null;
-    let guestFee = 5;
+    let guestFee = 5;    
     let gameTime = "19:00";
     let isAdmin = false;
     let activeGames = [];
     let currentGameId = null;
     let currentGameData = null;
+    const creditosAtivos = false; // mude para true se quiser reativar
     window.segments = ["All2"];
+    
 
     // Função para criar e inserir o botão Dashboard
     function createDashboardButton() {
@@ -1209,7 +1211,7 @@ async function confirmPlayer(targetPlayerId = null) {
   try {
     let useCredit = false;
     if (playerData.category === 'DIARIA') {
-      if (debtInfo.creditBalance >= guestFee) {
+      if (creditosAtivos && debtInfo.creditBalance >= guestFee) {
         const result = await Swal.fire({ icon: 'question', title: 'Usar Crédito?', html: `Você possui R$${debtInfo.creditBalance.toFixed(2)} em créditos, deseja deduzir R$${guestFee.toFixed(2)} destes créditos para confirmar sua presença?`, showCancelButton: true, confirmButtonText: 'SIM', cancelButtonText: 'NÃO' });
         useCredit = result.isConfirmed;
       }
@@ -1455,7 +1457,7 @@ async function addGuest() {
   }
   
   let useCredit = false;
-  if (debtInfo.creditBalance >= guestFee) {
+  if (creditosAtivos && debtInfo.creditBalance >= guestFee) {
     const result = await Swal.fire({ 
       icon: 'question', 
       title: 'Usar Crédito?', 
