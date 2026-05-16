@@ -1080,8 +1080,7 @@
             <div class="player-info">
               <span class="player-counter">${index + 1}.</span>
               <img src="${imageUrl}" alt="${player.name}" class="player-photo" style="border: 2px solid #ccc;" onerror="this.src='${defaultImage}'">
-              <div>
-                <br>
+              <div>                
                 <span class="player-name">${player.name}</span> <br>(${player.category}, ${player.position})
                 ${player.category === 'CONVIDADO' ? `<br><span>Por ${player.invitedByName || 'Desconhecido'}</span>` : ''}
                 <br>
