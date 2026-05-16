@@ -1196,7 +1196,7 @@ body {
 .btn-remove {
     position: absolute;
   top: 8px;
-  right: 8px;
+  right: 18px;
   width: 20px;
   height: 20px;
   cursor: pointer;
@@ -1235,6 +1235,9 @@ body {
          position: relative; /* Importante! */
         flex-direction: column;
         align-items: flex-start;
+        border-radius: 20px;
+        border: 1px outset;
+        border-bottom-color: aliceblue;
        
     }
 
