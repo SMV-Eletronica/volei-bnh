@@ -596,7 +596,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #b6acac;
 }
 
 .player-item:last-child {
