@@ -1199,11 +1199,10 @@ body {
   right: 18px;
   width: 20px;
   height: 20px;
-  cursor: pointer;
-  
+  cursor: pointer;  
     background: none;
     border: none;
-    color: #f58f8f;
+    color: #e9c1c1;
     cursor: pointer;
     padding: 5px;
     transition: color 0.2s;
