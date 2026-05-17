@@ -1757,13 +1757,13 @@ async function addGuest() {
     }
 */
 function updatePlayerLimitDisplay(isAdmin) {
-  const gameListH3 = document.querySelector('.game-list h3');
+  const gameListH3 = document.querySelector('.game-list h4');
   if (gameListH3) {
     let limitSpan = document.getElementById('playerLimitSpan');
     if (!limitSpan) {
       limitSpan = document.createElement('span');
       limitSpan.id = 'playerLimitSpan';
-      limitSpan.style.cssText = 'float: right; font-size: 0.85rem; padding: 4px 12px; font-weight: 500; border-radius: 20px; background-color:var(--primary); color: #f8f9fa;';
+      limitSpan.style.cssText = 'float: right; font-size: 0.75rem; padding: 4px 12px; font-weight: 500; border-radius: 20px; background-color:var(--primary); color: #f8f9fa;';
       gameListH3.appendChild(limitSpan);
     }
     // Mantém a escrita original
