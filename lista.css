@@ -1212,56 +1212,21 @@ body {
     color: var(--danger);
 }
 
-@media (max-width: 768px) {
-   /* .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start;
-    }
 
-    */
-    .game-selector {
+
+.game-select {
     
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
+    width: 100%;
+   max-width: 300px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    cursor: pointer;
+    margin-bottom: 10px;
 }
 
-
-
-    .player-item {
-         position: relative; /* Importante! */
-        flex-direction: column;
-        align-items: flex-start;
-        border-radius: 20px;
-        border: 1px outset;
-        border-bottom-color: aliceblue;
-       
-    }
-
-    .player-counter {
-        text-align: left;
-    }
-
-    .section-title {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    #gameDate {
-        font-size: 18px;
-        font-weight: bold;
-    }
-}
-
-.game-selector {
-   /* margin-bottom: 20px; */
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-}
 
 .new-game-controls {
     background-color: #f8f9fa;
@@ -1330,18 +1295,6 @@ body {
 
 #refreshGamesBtn:hover {
     background-color: #2980b9;
-}
-
-.game-select {
-    width: 100%;
-    max-width: 300px;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-    cursor: pointer;
-    margin-bottom: 10px;
 }
 
 .game-select:focus {
@@ -1419,7 +1372,64 @@ body {
     margin-bottom: 10px;
 }
 
+
 @media (max-width: 768px) {
+   /* .game-controls, .guest-controls, .admin-guest-settings, .admin-time-settings {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    */
+  
+
+.game-selector {
+   /* margin-bottom: 20px; */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+
+.game-select {
+    
+    width: 100%;
+   max-width: none;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+
+    .player-item {
+         position: relative; /* Importante! */
+        flex-direction: column;
+        align-items: flex-start;
+        border-radius: 20px;
+        border: 1px outset;
+        border-bottom-color: aliceblue;
+       
+    }
+
+    .player-counter {
+        text-align: left;
+    }
+
+    .section-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #gameDate {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
     .swal3-popup {
         width: 95%;
         padding: 15px;
