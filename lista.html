@@ -1999,6 +1999,19 @@ function updatePlayerLimitDisplay(isAdmin) {
     // Função unificada para gerenciar notificações (Integrantes Notificados + Notificação Manual)
     async function showUnifiedNotificationManager() {
       // Carrega a lista atualizada de jogadores notificados
+
+      
+       // Mostrar loading enquanto carrega a lista de notificados
+  Swal.fire({
+    title: 'Atualizando...',
+    text: 'Lista de Notificados...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+      
       const notifiedPlayers = await getNotifiedPlayers();
       
       const modalContent = `
