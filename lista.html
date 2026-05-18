@@ -2009,10 +2009,11 @@ function updatePlayerLimitDisplay(isAdmin) {
     didOpen: () => {
       Swal.showLoading();
     }
-  });
-
-      
+  });      
       const notifiedPlayers = await getNotifiedPlayers();
+       // Fecha o loading
+  Swal.close();
+      
       
       const modalContent = `
         <div style="max-height: 500px; overflow-y: auto;">
