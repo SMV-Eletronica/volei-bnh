@@ -1593,6 +1593,13 @@ async function addGuest() {
   }
   
   if (!useCredit) {
+
+     if ('vibrate' in navigator) {
+               navigator.vibrate(800);
+              //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+               console.log("✅ Confirmação vibrada!");
+          }
+    
     const result = await Swal.fire({ 
       icon: 'warning', 
       title: 'Contribuição Convidado', 
