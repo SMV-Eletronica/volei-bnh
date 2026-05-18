@@ -33,6 +33,73 @@
 
   <style>
     /* Estilos para o header */
+    .notified-players-list table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .notified-players-list th, .notified-players-list td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .notified-players-list th {
+       /* background-color: #f2f2f2;*/
+    }
+    .notified-players-list button {
+        margin: 2px;
+        padding: 5px 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+    }
+    .clear-notifications-btn {
+        background-color: #2ecc71;
+        color: white;
+    }
+    .manual-notify-btn {
+        background-color: #f39c12;
+        color: white;
+    }
+   
+    .organiza2 label {
+        width: 150px;
+        font-weight: bold;
+    }
+    
+    .search-notification-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .search-notification-container input {
+        flex: 2;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .search-notification-container button {
+        flex: 1;
+        padding: 10px 15px;
+        background-color: #f39c12;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .search-notification-container button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    .notified-players-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -1929,6 +1996,173 @@ function updatePlayerLimitDisplay(isAdmin) {
       setupGuestControls();
     }
 
+    // Função unificada para gerenciar notificações (Integrantes Notificados + Notificação Manual)
+    async function showUnifiedNotificationManager() {
+      // Carrega a lista atualizada de jogadores notificados
+      const notifiedPlayers = await getNotifiedPlayers();
+      
+      const modalContent = `
+        <div style="max-height: 500px; overflow-y: auto;">
+          <div class="modal-section">
+            <h4>🔍 Pesquisar Jogador </h4>
+            <div class="search-notification-container">
+              <input type="text" id="unifiedPlayerSearch" placeholder="Digite o nome do jogador..." autocomplete="off">
+              <div id="unifiedAutocompleteSuggestions" class="autocomplete-suggestions" style="position: relative; width: 100%;"></div>
+              <button id="unifiedAddNotificationBtn" disabled style="background-color: #f39c12;">
+                <i class="fas fa-bell"></i> Adicionar
+              </button>
+            </div>
+          </div>
+          
+          <div class="modal-section">
+            <h4>📋 Integrantes Notificados (${notifiedPlayers.length})</h4>
+            <div id="unifiedNotifiedList" class="notified-players-list">
+              ${notifiedPlayers.length === 0 ? '<p>Nenhum jogador com notificações ativas</p>' : `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Jogador</th>
+                      <th><i class="fas fa-bell"></i></th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${notifiedPlayers.map(player => `
+                      <tr>
+                        <td><strong>${player.name}</strong><br><small>${player.debtCount} pendência(s) <br> R$ ${player.totalDebt.toFixed(2)}</small></td>
+                        <td style="text-align: center; font-size: 18px; font-weight: bold;">${player.alertCount}</td>
+                        <td>
+                          <button class="clear-notifications-btn" data-player-id="${player.id}" style="background-color: #2ecc71;">
+                            <i class="fas fa-check-circle"></i> Liberar
+                          </button>
+                          <button class="manual-notify-btn" data-player-id="${player.id}" data-player-name="${player.name}" style="background-color: #f39c12; margin-top: 5px;">
+                            <i class="fas fa-bell"></i> +1
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const result = await Swal.fire({
+        title: 'Notificações / Pendências',
+        html: modalContent,
+        width: 'auto',
+        showConfirmButton: true,
+        confirmButtonText: 'Fechar',
+        showCancelButton: false,
+        didOpen: async () => {
+          // Configurar autocomplete para pesquisa de jogador
+          const unifiedPlayerSearch = document.getElementById('unifiedPlayerSearch');
+          const unifiedAutocompleteSuggestions = document.getElementById('unifiedAutocompleteSuggestions');
+          const unifiedAddNotificationBtn = document.getElementById('unifiedAddNotificationBtn');
+          let selectedManualPlayerId = null;
+          
+          if (unifiedPlayerSearch) {
+            unifiedPlayerSearch.addEventListener('input', () => {
+              const query = unifiedPlayerSearch.value.trim().toLowerCase();
+              unifiedAutocompleteSuggestions.innerHTML = '';
+              selectedManualPlayerId = null;
+              unifiedAddNotificationBtn.disabled = true;
+              
+              if (query.length > 0) {
+                const suggestions = allPlayers.filter(player => player.name?.toLowerCase().includes(query)).slice(0, 5);
+                if (suggestions.length > 0) {
+                  suggestions.forEach(player => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-suggestion';
+                    div.style.cssText = 'padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; background: white;';
+                    div.textContent = `${player.name} (${player.category || 'CONVIDADO'})`;
+                    div.addEventListener('click', () => {
+                      unifiedPlayerSearch.value = player.name;
+                      selectedManualPlayerId = player.id;
+                      unifiedAddNotificationBtn.disabled = false;
+                      unifiedAutocompleteSuggestions.style.display = 'none';
+                    });
+                    unifiedAutocompleteSuggestions.appendChild(div);
+                  });
+                  unifiedAutocompleteSuggestions.style.display = 'block';
+                } else {
+                  unifiedAutocompleteSuggestions.style.display = 'none';
+                }
+              } else {
+                unifiedAutocompleteSuggestions.style.display = 'none';
+              }
+            });
+            
+            unifiedPlayerSearch.addEventListener('blur', () => {
+              setTimeout(() => { unifiedAutocompleteSuggestions.style.display = 'none'; }, 200);
+            });
+          }
+          
+          // Adicionar notificação manual para jogador pesquisado
+          if (unifiedAddNotificationBtn) {
+            unifiedAddNotificationBtn.addEventListener('click', async () => {
+              if (!selectedManualPlayerId) {
+                await Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, selecione um jogador.' });
+                return;
+              }
+              await addManualDebtNotification(selectedManualPlayerId, currentGameId);
+              // Recarregar a modal para atualizar a lista
+              Swal.close();
+              showUnifiedNotificationManager();
+            });
+          }
+          
+          // Configurar botões de Liberar e +1 Notificação na lista
+          document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const playerId = e.currentTarget.getAttribute('data-player-id');
+              const player = notifiedPlayers.find(p => p.id === playerId);
+              const resultConfirm = await Swal.fire({
+                icon: 'question',
+                title: 'Confirmar Liberação',
+                text: `Você tem certeza que deseja zerar as notificações de pendências de ${player?.name || 'este jogador'}?`,
+                showCancelButton: true,
+                confirmButtonText: 'Sim, liberar',
+                cancelButtonText: 'Cancelar'
+              });
+              if (resultConfirm.isConfirmed) {
+                const success = await clearDebtNotifications(playerId);
+                if (success) {
+                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: `Notificações de ${player?.name} foram zeradas.` });
+                  Swal.close();
+                  showUnifiedNotificationManager();
+                } else {
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível limpar as notificações. Tente novamente.' });
+                }
+              }
+            });
+          });
+          
+          document.querySelectorAll('.manual-notify-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const playerId = e.currentTarget.getAttribute('data-player-id');
+              const playerName = e.currentTarget.getAttribute('data-player-name');
+              const resultConfirm = await Swal.fire({
+                icon: 'question',
+                title: 'Adicionar Notificação Manual',
+                text: `Você tem certeza que deseja adicionar UMA notificação manual para ${playerName}?`,
+                showCancelButton: true,
+                confirmButtonText: 'Sim, adicionar',
+                cancelButtonText: 'Cancelar'
+              });
+              if (resultConfirm.isConfirmed) {
+                await addManualDebtNotification(playerId, currentGameId);
+                Swal.close();
+                showUnifiedNotificationManager();
+              }
+            });
+          });
+        }
+      });
+    }
+
     function setupAdminFeatures() {
       const adminSettingsBtn = document.getElementById('adminSettingsBtn');
       if (!adminSettingsBtn) return;
@@ -1949,9 +2183,8 @@ function updatePlayerLimitDisplay(isAdmin) {
                     <option value="updateFee">Alterar Taxa</option>
                     <option value="updateTime">Alterar Horário</option>
                     <option value="updateGuestTime">Horário Convidados</option>
-                    <option value="viewNotified">Integrantes Notificados</option>
-                    <option value="addManualNotification">Notificação Manual</option>
-                    <option value="toggleRegistration">Liberar Novos Cadastro</option> <!-- NOVO -->
+                    <option value="manageNotifications">Gerenciar Notificações</option>
+                    <option value="toggleRegistration">Liberar Novos Cadastro</option>
                   </select>
                 </div>
                 <div class="modal-section" id="gameSelectSection">
@@ -1966,7 +2199,6 @@ function updatePlayerLimitDisplay(isAdmin) {
                     <label for="modalNewGameDate">Data:</label>
                     <input type="date" id="modalNewGameDate">
                   </div>
-
                   <div class="organiza2">
                     <label for="modalNewGameTime">Horário:</label>
                     <input type="time" id="modalNewGameTime" value="19:00">
@@ -1977,8 +2209,6 @@ function updatePlayerLimitDisplay(isAdmin) {
                     <button id="modalCreateGameBtn"><i class="fas fa-plus"></i> Criar Lista</button>
                   </div>
                 </div>
-                
-   
                 <div id="updateLimitFields" class="modal-section" style="display: none;">
                   <h4>Alterar Nº de Participantes</h4>
                   <div class="organiza2">
@@ -2015,36 +2245,25 @@ function updatePlayerLimitDisplay(isAdmin) {
                     <button id="modalUpdateGuestTimeBtn"><i class="fas fa-save"></i> Alterar</button>
                   </div>
                 </div>
-                <div id="notifiedPlayersFields" class="modal-section" style="display: none;">
-                  <h4>Integrantes Notificados:</h4>
-                  <div id="notifiedPlayersList" class="notified-players-list"></div>
+                <div id="manageNotificationsFields" class="modal-section" style="display: none;">
+                  <button id="openNotificationManagerBtn" style="width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-bell"></i> Abrir Gerenciador de Notificações
+                  </button>
+                  <p style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;">
+                    Gerencie notificações manuais e visualize integrantes notificados
+                  </p>
                 </div>
-      
-
-
-
-                <div id="addManualNotificationFields" class="modal-section" style="display: none;">
-                  <h4>Adicionar Notificação Manual</h4>
+                <div id="toggleRegistrationFields" class="modal-section" style="display: none;">
+                  <h4>Cadastro de Novos Usuários</h4>
                   <div class="organiza2">
-                    <label for="manualPlayerSearch">Pesquisar Jogador</label>
-                    <input type="text" id="manualPlayerSearch" placeholder="Nome do jogador">
-                    <div class="autocomplete-suggestions" id="manualAutocompleteSuggestions"></div>
-                    <button id="addManualNotificationBtn" disabled><i class="fas fa-plus"></i> Adicionar Notificação</button>
+                    <label for="registrationStatusSelect">Status atual:</label>
+                    <select id="registrationStatusSelect">
+                      <option value="true">✅ Ativo (usuários podem se cadastrar)</option>
+                      <option value="false">❌ Inativo (cadastro bloqueado)</option>
+                    </select>
+                    <button id="saveRegistrationStatusBtn"><i class="fas fa-save"></i> Salvar</button>
                   </div>
                 </div>
-
-
-                <div id="toggleRegistrationFields" class="modal-section" style="display: none;">
-  <h4>Cadastro de Novos Usuários</h4>
-  <div class="organiza2">
-    <label for="registrationStatusSelect">Status atual:</label>
-    <select id="registrationStatusSelect">
-      <option value="true">✅ Ativo (usuários podem se cadastrar)</option>
-      <option value="false">❌ Inativo (cadastro bloqueado)</option>
-    </select>
-    <button id="saveRegistrationStatusBtn"><i class="fas fa-save"></i> Salvar</button>
-  </div>
-</div>
               </div>
             `,
             showConfirmButton: false,
@@ -2075,117 +2294,48 @@ function updatePlayerLimitDisplay(isAdmin) {
                 await loadGameData(currentGameId);
                 document.getElementById('gameSelect').value = currentGameId;
               });
+              
               const modalActionSelect = document.getElementById('modalActionSelect');
               const createGameFields = document.getElementById('createGameFields');
               const updateLimitFields = document.getElementById('updateLimitFields');
               const updateFeeFields = document.getElementById('updateFeeFields');
               const updateTimeFields = document.getElementById('updateTimeFields');
               const updateGuestTimeFields = document.getElementById('updateGuestTimeFields');
-              const notifiedPlayersFields = document.getElementById('notifiedPlayersFields');
-              const addManualNotificationFields = document.getElementById('addManualNotificationFields');
+              const manageNotificationsFields = document.getElementById('manageNotificationsFields');
+              const toggleRegistrationFields = document.getElementById('toggleRegistrationFields');
               const gameSelectSection = document.getElementById('gameSelectSection');
+              
               modalActionSelect.addEventListener('change', async () => {
-              toggleRegistrationFields.style.display = modalActionSelect.value === 'toggleRegistration' ? 'block' : 'none';
                 createGameFields.style.display = modalActionSelect.value === 'createGame' ? 'block' : 'none';
                 updateLimitFields.style.display = modalActionSelect.value === 'updateLimit' ? 'block' : 'none';
                 updateFeeFields.style.display = modalActionSelect.value === 'updateFee' ? 'block' : 'none';
                 updateTimeFields.style.display = modalActionSelect.value === 'updateTime' ? 'block' : 'none';
                 updateGuestTimeFields.style.display = modalActionSelect.value === 'updateGuestTime' ? 'block' : 'none';
-                notifiedPlayersFields.style.display = modalActionSelect.value === 'viewNotified' ? 'block' : 'none';
-                addManualNotificationFields.style.display = modalActionSelect.value === 'addManualNotification' ? 'block' : 'none';
-                gameSelectSection.style.display = ['createGame', 'viewNotified', 'addManualNotification', 'updateGuestTime', 'toggleRegistration'].includes(modalActionSelect.value) ? 'none' : 'block';
-               
-               if (modalActionSelect.value === 'toggleRegistration') {
-  const registrationRef = ref(database, 'settings/registrationEnabled');
-  const snapshot = await get(registrationRef);
-  const currentStatus = snapshot.exists() ? snapshot.val() : true;
-  const statusSelect = document.getElementById('registrationStatusSelect');
-  if (statusSelect) {
-    statusSelect.value = currentStatus ? 'true' : 'false';
-  }
-}
-               
-               
-               
-               
-               if (modalActionSelect.value === 'viewNotified') {
-                  const notifiedPlayers = await getNotifiedPlayers();
-                  const notifiedPlayersList = document.getElementById('notifiedPlayersList');
-                  if (notifiedPlayers.length === 0) {
-                    notifiedPlayersList.innerHTML = '<p>Nenhum jogador com notificações ativas</p>';
-                    return;
+                manageNotificationsFields.style.display = modalActionSelect.value === 'manageNotifications' ? 'block' : 'none';
+                toggleRegistrationFields.style.display = modalActionSelect.value === 'toggleRegistration' ? 'block' : 'none';
+                gameSelectSection.style.display = ['createGame', 'manageNotifications', 'updateGuestTime', 'toggleRegistration'].includes(modalActionSelect.value) ? 'none' : 'block';
+                
+                if (modalActionSelect.value === 'toggleRegistration') {
+                  const registrationRef = ref(database, 'settings/registrationEnabled');
+                  const snapshot = await get(registrationRef);
+                  const currentStatus = snapshot.exists() ? snapshot.val() : true;
+                  const statusSelect = document.getElementById('registrationStatusSelect');
+                  if (statusSelect) {
+                    statusSelect.value = currentStatus ? 'true' : 'false';
                   }
-                  let html = '<table><tr><th>Nome</th><th>N</th><th>Ações</th></tr>';
-                  notifiedPlayers.forEach(player => {
-                    html += `<tr><td>${player.name}</td><td>${player.alertCount}</td><td><button class="clear-notifications-btn" data-player-id="${player.id}"><i class="fas fa-check-circle"></i> Liberar</button></td></tr>`;
-                  });
-                  html += '</table>';
-                  notifiedPlayersList.innerHTML = html;
-                  document.querySelectorAll('.clear-notifications-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                      const playerId = e.currentTarget.getAttribute('data-player-id');
-                      const player = notifiedPlayers.find(p => p.id === playerId);
-                      const result = await Swal.fire({ icon: 'question', title: 'Confirmar Liberação', text: `Você tem certeza que deseja zerar as notificações de pendências de ${player.name}?`, showCancelButton: true, confirmButtonText: 'Sim, liberar', cancelButtonText: 'Cancelar' });
-                      if (result.isConfirmed) {
-                        const success = await clearDebtNotifications(playerId);
-                        if (success) {
-                          await Swal.fire({ icon: 'success', title: 'Sucesso', text: `Notificações de ${player.name} foram zeradas.` });
-                          modalActionSelect.dispatchEvent(new Event('change'));
-                        } else {
-                          await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível limpar as notificações. Tente novamente.' });
-                        }
-                      }
+                }
+                
+                if (modalActionSelect.value === 'manageNotifications') {
+                  const openNotificationManagerBtn = document.getElementById('openNotificationManagerBtn');
+                  if (openNotificationManagerBtn) {
+                    openNotificationManagerBtn.addEventListener('click', () => {
+                      Swal.close();
+                      showUnifiedNotificationManager();
                     });
-                  });
-                } else if (modalActionSelect.value === 'addManualNotification') {
-                  const manualPlayerSearch = document.getElementById('manualPlayerSearch');
-                  const manualAutocompleteSuggestions = document.getElementById('manualAutocompleteSuggestions');
-                  const addManualNotificationBtn = document.getElementById('addManualNotificationBtn');
-                  let selectedManualPlayerId = null;
-                  manualPlayerSearch.addEventListener('input', () => {
-                    const query = manualPlayerSearch.value.trim().toLowerCase();
-                    manualAutocompleteSuggestions.innerHTML = '';
-                    selectedManualPlayerId = null;
-                    addManualNotificationBtn.disabled = true;
-                    if (query.length > 0) {
-                      const suggestions = allPlayers.filter(player => player.name?.toLowerCase().includes(query)).slice(0, 5);
-                      if (suggestions.length > 0) {
-                        suggestions.forEach(player => {
-                          const div = document.createElement('div');
-                          div.className = 'autocomplete-suggestion';
-                          div.textContent = `${player.name} (${player.category || 'CONVIDADO'})`;
-                          div.addEventListener('click', () => {
-                            manualPlayerSearch.value = player.name;
-                            selectedManualPlayerId = player.id;
-                            addManualNotificationBtn.disabled = false;
-                            manualAutocompleteSuggestions.style.display = 'none';
-                          });
-                          manualAutocompleteSuggestions.appendChild(div);
-                        });
-                        manualAutocompleteSuggestions.style.display = 'block';
-                      } else {
-                        manualAutocompleteSuggestions.style.display = 'none';
-                      }
-                    } else {
-                      manualAutocompleteSuggestions.style.display = 'none';
-                    }
-                  });
-                  manualPlayerSearch.addEventListener('blur', () => {
-                    setTimeout(() => { manualAutocompleteSuggestions.style.display = 'none'; }, 200);
-                  });
-                  addManualNotificationBtn.addEventListener('click', async () => {
-                    if (!selectedManualPlayerId) {
-                      await Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, selecione um jogador.' });
-                      return;
-                    }
-                    await addManualDebtNotification(selectedManualPlayerId, currentGameId);
-                    manualPlayerSearch.value = '';
-                    selectedManualPlayerId = null;
-                    addManualNotificationBtn.disabled = true;
-                    modalActionSelect.dispatchEvent(new Event('change'));
-                  });
+                  }
                 }
               });
+              
               const modalCreateGameBtn = document.getElementById('modalCreateGameBtn');
               modalCreateGameBtn.addEventListener('click', async () => {
                 const newGameDateInput = document.getElementById('modalNewGameDate').value;
@@ -2219,6 +2369,7 @@ function updatePlayerLimitDisplay(isAdmin) {
                   await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível criar o jogo. Tente novamente.' });
                 }
               });
+              
               const modalConfirmLimitBtn = document.getElementById('modalConfirmLimitBtn');
               modalConfirmLimitBtn.addEventListener('click', async () => {
                 const newLimit = parseInt(document.getElementById('modalPlayerLimitInput').value);
@@ -2233,6 +2384,7 @@ function updatePlayerLimitDisplay(isAdmin) {
                 Swal.close();
                 await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Número de participantes atualizado!' });
               });
+              
               const modalSaveGuestFeeBtn = document.getElementById('modalSaveGuestFeeBtn');
               modalSaveGuestFeeBtn.addEventListener('click', async () => {
                 const newFee = parseFloat(document.getElementById('modalGuestFeeInput').value);
@@ -2251,6 +2403,7 @@ function updatePlayerLimitDisplay(isAdmin) {
                   await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar a taxa.' });
                 }
               });
+              
               const modalUpdateGameTimeBtn = document.getElementById('modalUpdateGameTimeBtn');
               modalUpdateGameTimeBtn.addEventListener('click', async () => {
                 const newTime = document.getElementById('modalGameTimeInput').value;
@@ -2271,27 +2424,20 @@ function updatePlayerLimitDisplay(isAdmin) {
                 }
               });
 
-
-
               const saveRegistrationBtn = document.getElementById('saveRegistrationStatusBtn');
-if (saveRegistrationBtn) {
-  saveRegistrationBtn.addEventListener('click', async () => {
-    const statusSelect = document.getElementById('registrationStatusSelect');
-    const newStatus = statusSelect.value === 'true';
-    const registrationRef = ref(database, 'settings/registrationEnabled');
-    await set(registrationRef, newStatus);
-    Swal.fire({
-      icon: 'success',
-      title: 'Configuração salva',
-      text: `Cadastro de usuários ${newStatus ? 'ativado' : 'desativado'}.`
-    });
-  });
-}
-
-
-
-
-
+              if (saveRegistrationBtn) {
+                saveRegistrationBtn.addEventListener('click', async () => {
+                  const statusSelect = document.getElementById('registrationStatusSelect');
+                  const newStatus = statusSelect.value === 'true';
+                  const registrationRef = ref(database, 'settings/registrationEnabled');
+                  await set(registrationRef, newStatus);
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Configuração salva',
+                    text: `Cadastro de usuários ${newStatus ? 'ativado' : 'desativado'}.`
+                  });
+                });
+              }
 
               const modalUpdateGuestTimeBtn = document.getElementById('modalUpdateGuestTimeBtn');
               modalUpdateGuestTimeBtn.addEventListener('click', async () => {
@@ -2318,6 +2464,7 @@ if (saveRegistrationBtn) {
                   await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar o horário.' });
                 }
               });
+              
               modalActionSelect.value = 'createGame';
               createGameFields.style.display = 'block';
               gameSelectSection.style.display = 'none';
