@@ -9,7 +9,7 @@
   <title>Lista de Presença - Vôlei BNH</title>  
   
   <!-- Manifesto para Android -->
-  <link rel="manifest" href="site.webmanifest?v=1.5">
+  <link rel="manifest" href="site.webmanifest">
   
   <!-- Favicon padrão para navegadores -->
   <link rel="icon" type="image/png" sizes="16x16" href="windows11/Square44x44Logo.altform-unplated_targetsize-16.png">
@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="stylesheet" href="lista.css?v=1.2">
+  <link rel="stylesheet" href="lista.css">
 
   <style>
     /* Estilos para o header */
@@ -40,6 +40,9 @@
         padding: 8px;
         text-align: left;
       min-width: 50px;
+    }
+    .notified-players-list th {
+       /* background-color: #f2f2f2;*/
     }
     .notified-players-list button {
         margin: 2px;
@@ -95,29 +98,6 @@
         max-height: 300px;
         overflow-y: auto;
     }
-    
-    /* Indicador de carregamento otimizado */
-    .loading-spinner {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #3498db;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    /* Cache indicator (opcional) */
-    .cache-status {
-        font-size: 10px;
-        color: #27ae60;
-        margin-left: 5px;
-    }
   </style>
 </head>
 <body>
@@ -145,7 +125,7 @@
       <button onclick="window.location.href='galeria3.html'"><i class="fas fa-camera"></i> Galeria</button>
     </div>
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
-    <p style="font-size:xx-small; margin: 10px" class="versao">Versão-1.1</p>
+    <p style="font-size:xx-small; margin: 10px" class="versao">Versão-1.0</p>
   </div>
   
   <div class="overlay" id="overlay"></div>
@@ -188,6 +168,9 @@
             <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
 
+          
+
+          
           <div class="guest-controls" id="guestControls" style="display: none;">
             <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados após as:<span class="horario-vermelho" id="horarioConvidados"></span> </button>
             <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
@@ -263,59 +246,36 @@
       7: 'Domingo'
     };
 
-    // ==================== OTIMIZAÇÕES DE CACHE ====================
+    // Variáveis globais para horário de convidados
+    window.horaAlvo = 16;
+    window.minutoAlvo = 0;
+
+    // ==================== OTIMIZAÇÕES ====================
     
     // Cache para jogadores (evita múltiplos downloads)
     let playersCache = null;
     let playersCacheTimestamp = null;
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos de cache
     
-    // Cache para pagamentos (evita verificações repetidas)
+    // Cache para pagamentos
     let paymentsCache = null;
     let paymentsCacheTimestamp = null;
-    
-    // Cache para configurações
-    let settingsCache = {
-      guestFee: 5,
-      guestTime: { hour: 16, minute: 0 },
-      registrationEnabled: true,
-      timestamp: null
-    };
-    
-    // Cache para imagens (já implementado via IndexedDB)
     
     // Controle de listeners ativos
     let currentGameListener = null;
     let currentGameId = null;
-    let activeGamesListener = null;
     let settingsListeners = [];
     
     // Throttle para atualizações de UI
     let updateUITimeout = null;
-    let pendingUpdateData = null;
     
     // Monitor de downloads (para debug)
-    let downloadStats = {
-      count: 0,
-      paths: new Set(),
-      lastReset: Date.now()
-    };
+    let downloadStats = { count: 0, lastReset: Date.now() };
     
     function trackDownload(path) {
       downloadStats.count++;
-      downloadStats.paths.add(path);
-      
-      // Log a cada 50 downloads para monitoramento
       if (downloadStats.count % 50 === 0) {
-        console.warn(`📊 Downloads: ${downloadStats.count} no total. Últimos paths:`, Array.from(downloadStats.paths).slice(-5));
-      }
-      
-      // Reset automático a cada hora
-      if (Date.now() - downloadStats.lastReset > 3600000) {
-        console.log(`📊 Reset de estatísticas. Total de downloads na última hora: ${downloadStats.count}`);
-        downloadStats.count = 0;
-        downloadStats.paths.clear();
-        downloadStats.lastReset = Date.now();
+        console.warn(`📊 Downloads: ${downloadStats.count}`);
       }
     }
     
@@ -350,111 +310,16 @@
       }
     }
     
-    // Função otimizada para buscar pagamentos com cache
-    async function getPayments(forceRefresh = false) {
-      const now = Date.now();
-      
-      if (!forceRefresh && paymentsCache && paymentsCacheTimestamp && (now - paymentsCacheTimestamp) < CACHE_DURATION) {
-        console.log('📦 Usando cache de pagamentos');
-        return paymentsCache;
-      }
-      
-      console.log('🌐 Buscando pagamentos do Firebase');
-      trackDownload('/payments');
-      
-      try {
-        const paymentsRef = ref(database, 'payments');
-        const snapshot = await get(paymentsRef);
-        paymentsCache = snapshot.val() || {};
-        paymentsCacheTimestamp = now;
-        return paymentsCache;
-      } catch (error) {
-        console.error('Erro ao buscar pagamentos:', error);
-        return paymentsCache || {};
-      }
-    }
-    
-    // Função otimizada para verificar débitos de múltiplos jogadores
-    async function checkMultiplePlayersDebts(playerIds) {
-      const payments = await getPayments();
-      const results = {};
-      
-      for (const playerId of playerIds) {
-        let debtCount = 0;
-        let totalDebt = 0;
-        let creditBalance = 0;
-        
-        for (const year in payments) {
-          for (const month in payments[year]) {
-            for (const paymentId in payments[year][month]) {
-              const payment = payments[year][month][paymentId];
-              if (payment && payment.playerId === playerId) {
-                if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
-                    (!payment.date || payment.paymentStatus === 'inadimplente')) {
-                  debtCount += 1;
-                  totalDebt += parseFloat(payment.value || 0);
-                } else if (payment.paymentType === 'Creditos' && payment.paymentStatus === 'pago' && !payment.usedAt) {
-                  creditBalance += parseFloat(payment.value || 0);
-                }
-              }
-            }
-          }
-        }
-        
-        results[playerId] = {
-          hasDebt: debtCount > 0,
-          debtCount: debtCount || 0,
-          totalDebt: totalDebt || 0,
-          creditBalance: creditBalance || 0
-        };
-      }
-      
-      return results;
-    }
-    
-    // Função otimizada para verificar débito individual
-    async function checkPlayerDebts(playerId) {
-      const results = await checkMultiplePlayersDebts([playerId]);
-      return results[playerId] || { hasDebt: false, debtCount: 0, totalDebt: 0, creditBalance: 0 };
-    }
-    
-    // Função otimizada para verificar status de pagamento
-    async function checkPaymentStatus(playerId) {
-      const payments = await getPayments();
-      
-      for (const year in payments) {
-        for (const month in payments[year]) {
-          const monthPayments = payments[year][month] || {};
-          const playerPayments = Object.values(monthPayments).filter(p => p && p.playerId === playerId);
-          
-          if (playerPayments.length === 0) continue;
-          
-          const hasPending = playerPayments.some(p => !p.date && p.value > 0);
-          return hasPending ? 'inadimplente' : 'pago';
-        }
-      }
-      return 'inadimplente';
-    }
-    
-    // Função para invalidar caches quando houver mudanças
+    // Função para invalidar cache
     function invalidateCache(type) {
       if (type === 'players') {
         playersCache = null;
         playersCacheTimestamp = null;
-        console.log('🔄 Cache de jogadores invalidado');
       } else if (type === 'payments') {
         paymentsCache = null;
         paymentsCacheTimestamp = null;
-        console.log('🔄 Cache de pagamentos invalidado');
-      } else if (type === 'settings') {
-        settingsCache.timestamp = null;
-        console.log('🔄 Cache de configurações invalidado');
       }
     }
-
-    // Variáveis globais para horário de convidados
-    window.horaAlvo = 16;
-    window.minutoAlvo = 0;
 
     const contentDiv = document.getElementById('content');
     const confirmPlayerBtn = document.getElementById('confirmPlayer');    
@@ -491,21 +356,6 @@
     const creditosAtivos = false;
     window.segments = ["All2"];
     
-    // Throttle para atualização da UI
-    function throttledUpdateUI(data) {
-      if (updateUITimeout) {
-        clearTimeout(updateUITimeout);
-      }
-      pendingUpdateData = data;
-      updateUITimeout = setTimeout(() => {
-        if (pendingUpdateData) {
-          updateGameList();
-          pendingUpdateData = null;
-        }
-        updateUITimeout = null;
-      }, 100);
-    }
-    
     // Função para criar e inserir o botão Dashboard
     function createDashboardButton() {
       const sidebarMenu = document.querySelector('.sidebar-menu');
@@ -528,6 +378,7 @@
       }
     }
 
+    // Função para abrir/fechar o menu lateral
     function toggleSidebar() {
       sidebar.classList.toggle('active');
       overlay.classList.toggle('active');
@@ -570,15 +421,15 @@
         const formattedDate = formatDateToBR(currentGameData.date);
         const dayNumber = gameDateTime.weekday;
         const dayOfWeek = customWeekdays[dayNumber] || gameDateTime.toFormat('EEEE');
-        if (gameDateSpan) gameDateSpan.textContent = `${formattedDate} (${dayOfWeek})`;
-        if (gameTimeSpan) gameTimeSpan.textContent = currentGameData.time;
+        gameDateSpan.textContent = `${formattedDate} (${dayOfWeek})`;
+        gameTimeSpan.textContent = currentGameData.time;
       } else {
         const today = DateTime.now().setZone('America/Sao_Paulo');
         const formattedDate = formatDateToBR(formatDateToISO(new Date()));
         const dayNumber = today.weekday;
         const dayOfWeek = customWeekdays[dayNumber] || today.toFormat('EEEE');
-        if (gameDateSpan) gameDateSpan.textContent = `${formattedDate} (${dayOfWeek})`;
-        if (gameTimeSpan) gameTimeSpan.textContent = gameTime;
+        gameDateSpan.textContent = `${formattedDate} (${dayOfWeek})`;
+        gameTimeSpan.textContent = gameTime;
       }
     }
 
@@ -591,6 +442,7 @@
       });
     }
 
+    // Função para atualizar visibilidade do botão de convidados baseado no horário
     function updateGuestButtonVisibility() {
       const agora = new Date();
       const horaAtual = agora.getHours();
@@ -602,8 +454,9 @@
 
       const horarioAlvoFormatado = `${window.horaAlvo.toString().padStart(2, '0')}:${window.minutoAlvo.toString().padStart(2, '0')}`;
       const horarioSpan = document.getElementById('horarioConvidados');   
-      if (horarioSpan) horarioSpan.textContent = horarioAlvoFormatado;
+      horarioSpan.textContent = horarioAlvoFormatado;
       
+      // Verifica se já passou do horário alvo
       if (horaAtual > window.horaAlvo || (horaAtual === window.horaAlvo && minutoAtual >= window.minutoAlvo)) {
         if (addGuestBtnElement) addGuestBtnElement.style.display = 'inline-block';
         if (guestNameInputElement) guestNameInputElement.style.display = 'inline-block';
@@ -615,6 +468,7 @@
       }
     }
 
+    // Carregar configurações de horário do Firebase
     async function loadGuestTimeSettings() {
       try {
         const settingsRef = ref(database, 'settings/guestTime');
@@ -624,7 +478,6 @@
           const data = snapshot.val();
           window.horaAlvo = data.hour;
           window.minutoAlvo = data.minute;
-          settingsCache.guestTime = { hour: data.hour, minute: data.minute };
         } else {
           window.horaAlvo = 16;
           window.minutoAlvo = 0;
@@ -637,6 +490,7 @@
       }
     }
 
+    // Listener em tempo real para mudanças no horário
     function setupGuestTimeListener() {
       const settingsRef = ref(database, 'settings/guestTime');
       const listener = onValue(settingsRef, (snapshot) => {
@@ -645,28 +499,26 @@
           const data = snapshot.val();
           window.horaAlvo = data.hour;
           window.minutoAlvo = data.minute;
-          settingsCache.guestTime = { hour: data.hour, minute: data.minute };
           updateGuestButtonVisibility();
         }
       });
       settingsListeners.push(listener);
     }
 
-    // IndexedDB para cache de imagens (otimizado)
+    // Funções de IndexedDB para cache de imagens
     function openDB() {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open('VoleiBNHImages', 2);
+        const request = indexedDB.open('VoleiBNHImages', 1);
         request.onupgradeneeded = event => {
           const db = event.target.result;
-          if (!db.objectStoreNames.contains('images')) {
-            db.createObjectStore('images', { keyPath: 'url' });
-          }
-          if (!db.objectStoreNames.contains('metadata')) {
-            db.createObjectStore('metadata', { keyPath: 'key' });
-          }
+          db.createObjectStore('images', { keyPath: 'url' });
         };
-        request.onsuccess = event => resolve(event.target.result);
-        request.onerror = event => reject(event.target.error);
+        request.onsuccess = event => {
+          resolve(event.target.result);
+        };
+        request.onerror = event => {
+          reject(event.target.error);
+        };
       });
     }
 
@@ -675,12 +527,7 @@
         const db = await openDB();
         const transaction = db.transaction(['images'], 'readwrite');
         const store = transaction.objectStore('images');
-        store.put({ url, blob, timestamp: Date.now() });
-        
-        // Salvar metadata
-        const metaTransaction = db.transaction(['metadata'], 'readwrite');
-        const metaStore = metaTransaction.objectStore('metadata');
-        metaStore.put({ key: `img_${url}`, lastUsed: Date.now() });
+        store.put({ url, blob });
       } catch (error) {
         console.error('Erro ao salvar imagem no IndexedDB:', error);
       }
@@ -694,17 +541,11 @@
         return new Promise((resolve, reject) => {
           const request = store.get(url);
           request.onsuccess = () => {
-            if (request.result) {
-              // Atualizar metadata de uso
-              const metaTransaction = db.transaction(['metadata'], 'readwrite');
-              const metaStore = metaTransaction.objectStore('metadata');
-              metaStore.put({ key: `img_${url}`, lastUsed: Date.now() });
-              resolve(request.result.blob);
-            } else {
-              resolve(null);
-            }
+            resolve(request.result ? request.result.blob : null);
           };
-          request.onerror = () => reject(request.error);
+          request.onerror = () => {
+            reject(request.error);
+          };
         });
       } catch (error) {
         console.error('Erro ao recuperar imagem do IndexedDB:', error);
@@ -720,7 +561,6 @@
         return URL.createObjectURL(cachedBlob);
       }
       
-      // Timeout para não travar
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
@@ -734,6 +574,49 @@
         return defaultImage;
       } finally {
         clearTimeout(timeoutId);
+      }
+    }
+
+    async function checkPlayerDebts(playerId) {
+      try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        trackDownload('/payments');
+        let debtCount = 0;
+        let totalDebt = 0;
+        let creditBalance = 0;
+
+        if (snapshot.exists()) {
+          const paymentsData = snapshot.val();
+          for (const year in paymentsData) {
+            for (const month in paymentsData[year]) {
+              for (const paymentId in paymentsData[year][month]) {
+                const payment = paymentsData[year][month][paymentId];
+                if (payment && payment.playerId === playerId) {
+                  if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
+                      (!payment.date || payment.paymentStatus === 'inadimplente')) {
+                    debtCount += 1;
+                    totalDebt += parseFloat(payment.value || 0);
+                  } else if (payment.paymentType === 'Creditos' && payment.paymentStatus === 'pago' && !payment.usedAt) {
+                    const creditValue = parseFloat(payment.value);
+                    if (!isNaN(creditValue)) {
+                      creditBalance += creditValue;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return {
+          hasDebt: debtCount > 0,
+          debtCount: debtCount || 0,
+          totalDebt: totalDebt || 0,
+          creditBalance: creditBalance || 0
+        };
+      } catch (error) {
+        console.error('Erro ao verificar débitos e créditos:', error);
+        return { hasDebt: false, debtCount: 0, totalDebt: 0, creditBalance: 0 };
       }
     }
 
@@ -774,7 +657,6 @@
         await set(notificationsRef, null);
         const globalRef = ref(database, `debtNotificationsGlobal/${playerId}`);
         await set(globalRef, null);
-        invalidateCache('players');
         return true;
       } catch (error) {
         console.error('Erro ao limpar notificações de pendência:', error);
@@ -790,7 +672,6 @@
         const globalData = globalSnapshot.val() || {};
         const players = await getPlayers();
         const notifiedPlayers = [];
-        
         for (const playerId in globalData) {
           if (globalData[playerId].count > 0) {
             const playerInfo = players.find(p => p.id === playerId) || {};
@@ -874,7 +755,7 @@
           document.querySelector('.sidebar-user-info').appendChild(creditDisplay);
         }
 
-        // Pré-carregar imagens em background (sem bloquear)
+        // Pré-carregar imagens em background
         setTimeout(() => {
           allPlayers
             .filter(player => player.imageUrl && player.imageUrl !== defaultImage)
@@ -922,7 +803,6 @@
           const value = parseFloat(snapshot.val());
           if (!isNaN(value) && value >= 0) {
             guestFee = value;
-            settingsCache.guestFee = value;
           } else {
             guestFee = 5;
           }
@@ -951,7 +831,6 @@
         };
         const historyRef = ref(database, `gameHistory/${year}/${month}/${gameId}`);
         await set(historyRef, historyData);
-        
         const confirmedPlayerIds = Object.keys(gameData.confirmed || {});
         const playerUpdates = {};
         for (const playerId of confirmedPlayerIds) {
@@ -980,37 +859,51 @@
     }
 
     async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
-      const payments = await getPayments();
-      
-      for (const year in payments) {
-        for (const month in payments[year]) {
-          const monthPayments = payments[year][month] || {};
-          for (const paymentId in monthPayments) {
-            const payment = monthPayments[paymentId];
-            if (payment.playerId === playerId && 
-                payment.gameId === gameId && 
-                payment.paymentType === paymentType && 
-                payment.additionalInfo === additionalInfo) {
-              return { paymentId, ...payment, year, month };
+      try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        trackDownload('/payments');
+        if (!snapshot.exists()) return null;
+        const years = snapshot.val() || {};
+        let matchingPayment = null;
+        for (const year in years) {
+          for (const month in years[year]) {
+            const payments = years[year][month] || {};
+            const playerPayments = Object.entries(payments)
+              .map(([id, payment]) => ({ paymentId: id, ...payment }))
+              .filter(p => p.playerId === playerId && p.gameId === gameId && p.paymentType === paymentType && p.additionalInfo === additionalInfo);
+            if (playerPayments.length > 0) {
+              matchingPayment = playerPayments[0];
+              matchingPayment.year = year;
+              matchingPayment.month = month;
+              break;
             }
           }
+          if (matchingPayment) break;
         }
+        return matchingPayment;
+      } catch (error) {
+        console.error('Erro ao buscar pagamento existente:', error);
+        return null;
       }
-      return null;
     }
 
     async function usePlayerCredit(playerId, amount, gameId, description) {
       try {
         let remainingAmount = amount;
-        const payments = await getPayments(true); // Force refresh for credit usage
-        
+        const paymentsRef = ref(database, 'payments');
+        const paymentsSnapshot = await get(paymentsRef);
+        trackDownload('/payments');
+        if (!paymentsSnapshot.exists()) {
+          return { success: false, remaining: remainingAmount };
+        }
+        const paymentsData = paymentsSnapshot.val();
         const usedCredits = [];
         let comprovanteData = {};
-        
-        for (const year in payments) {
-          for (const month in payments[year]) {
-            for (const paymentId in payments[year][month]) {
-              const payment = payments[year][month][paymentId];
+        for (const year in paymentsData) {
+          for (const month in paymentsData[year]) {
+            for (const paymentId in paymentsData[year][month]) {
+              const payment = paymentsData[year][month][paymentId];
               if (payment.playerId === playerId && 
                   payment.paymentType === 'Creditos' && 
                   payment.paymentStatus === 'pago' && 
@@ -1018,7 +911,6 @@
                   remainingAmount > 0) {
                 const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
                 const paymentValue = parseFloat(payment.value);
-                
                 if (payment.comprovanteURL) {
                   comprovanteData.comprovanteURL = payment.comprovanteURL;
                   comprovanteData.comprovanteStatus = payment.comprovanteStatus;
@@ -1026,7 +918,6 @@
                   comprovanteData.comprovanteApprovedBy = payment.comprovanteApprovedBy;
                   comprovanteData.comprovanteUploadedAt = payment.comprovanteUploadedAt;
                 }
-                
                 if (paymentValue <= remainingAmount) {
                   await remove(paymentRef);
                   usedCredits.push({ id: paymentId, value: paymentValue, type: 'full' });
@@ -1050,12 +941,33 @@
             }
           }
         }
-        
         invalidateCache('payments');
         return { success: remainingAmount === 0, remaining: remainingAmount, usedCredits: usedCredits, comprovanteData: comprovanteData };
       } catch (error) {
         console.error('Erro ao usar créditos:', error);
         return { success: false, remaining: amount, error: error.message };
+      }
+    }
+
+    async function checkPaymentStatus(playerId) {
+      try {
+        const paymentsRef = ref(database, 'payments');
+        const snapshot = await get(paymentsRef);
+        trackDownload('/payments');
+        const payments = snapshot.val() || {};
+        let playerPayments = [];
+        for (const year in payments) {
+          for (const month in payments[year]) {
+            const monthPayments = payments[year][month] || {};
+            playerPayments.push(...Object.values(monthPayments).filter(p => p && p.playerId === playerId));
+          }
+        }
+        if (playerPayments.length === 0) return 'inadimplente';
+        const hasPending = playerPayments.some(p => !p.date && p.value > 0);
+        return hasPending ? 'inadimplente' : 'pago';
+      } catch (error) {
+        console.error('Erro ao verificar status de pagamento:', error);
+        return 'inadimplente';
       }
     }
 
@@ -1105,12 +1017,10 @@
           });
           return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
         });
-        
         if (!playerData) {
           await Swal.fire({ icon: 'warning', title: 'Jogador Não Encontrado', text: 'Jogador não encontrado.' });
           return;
         }
-        
         if (guestFee > 0) {
           const paymentData = {
             additionalInfo: playerData.additionalInfo || playerData.name,
@@ -1128,7 +1038,6 @@
           };
           const existingPayment = await findExistingPayment(paymentData.playerId, currentGameId, paymentData.paymentType, paymentData.additionalInfo);
           const [year, month] = (paymentData.month || getBrazilMonthYear()).split('-');
-          
           if (existingPayment) {
             const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
             await update(paymentRef, { paymentStatus: playerData.paymentStatus, date: paymentData.date, value: paymentValue, updatedAt: getBrazilDateTimeISO() });
@@ -1139,7 +1048,6 @@
           }
           invalidateCache('payments');
         }
-        
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
         const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
         const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
@@ -1167,7 +1075,6 @@
       }
       const result = await Swal.fire({ icon: 'question', title: 'Confirmar Remoção', html: `Você tem certeza que deseja remover <strong>${player.name}</strong> da lista?`, showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar' });
       if (!result.isConfirmed) return;
-      
       try {
         const gameRef = ref(database, `activeGames/${currentGameId}`);
         await runTransaction(gameRef, (currentGameData) => {
@@ -1209,14 +1116,12 @@
           });
           return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
         });
-        
         let existingPayment = null;
         if (player.category === 'CONVIDADO') {
           existingPayment = await findExistingPayment(player.invitedById || window.currentUserPlayer.id, currentGameId, 'CONVIDADO', player.name);
         } else if (player.category === 'DIARIA') {
           existingPayment = await findExistingPayment(playerId, currentGameId, 'DIARIA', player.name);
         }
-        
         if (existingPayment && existingPayment.paymentStatus === 'pago') {
           const [year, month] = getBrazilMonthYear().split('-');
           const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
@@ -1246,7 +1151,6 @@
           await remove(paymentRef);
           invalidateCache('payments');
         }
-        
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
         const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
         await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, "Vôlei BNH - Informações");
@@ -1303,13 +1207,21 @@
       }
     }
 
+    // Função throttled para atualização da UI
+    function throttledUpdateUI() {
+      if (updateUITimeout) clearTimeout(updateUITimeout);
+      updateUITimeout = setTimeout(() => {
+        updateGameList();
+        updateUITimeout = null;
+      }, 100);
+    }
+
     async function updateGameList() {
       const isAdmin = adminEmails.includes(emailLogado);
       const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) || waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
       if (confirmPlayerBtn) {
         confirmPlayerBtn.innerHTML = isPlayerInList ? '<i class="fas fa-eye"></i> Ver Quadra' : '<i class="fas fa-sign-in"></i> Entrar em Quadra';
       }
-      
       const confirmedHTML = await Promise.all(confirmedPlayers.map(async (player, index) => {
         const imageUrl = await preloadImage(player.imageUrl || defaultImage);
         return `
@@ -1343,7 +1255,6 @@
         `;
       }));
       confirmedPlayersDiv.innerHTML = confirmedHTML.length === 0 ? '<div style="color: var(--text); padding: 10px;">Nenhum jogador confirmado.</div>' : confirmedHTML.join('');
-      
       const waitlistHTML = await Promise.all(waitlistPlayers.map(async (player, index) => {
         const imageUrl = await preloadImage(player.imageUrl || defaultImage);
         return `
@@ -1909,17 +1820,14 @@
         const snapshot = await get(activeGamesRef);
         trackDownload('/activeGames');
         activeGames = [];
-        
         if (snapshot.exists()) {
           Object.entries(snapshot.val()).forEach(([id, game]) => {
             activeGames.push({ id, date: game.date, time: game.time, playerLimit: game.playerLimit || 16, createdAt: game.createdAt });
           });
           activeGames.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
         }
-        
         const gameSelect = document.getElementById('gameSelect');
         gameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
-        
         if (activeGames.length === 0) {
           gameSelect.innerHTML = '<option value="">Nenhum jogo programado</option>';
         } else {
@@ -1937,18 +1845,9 @@
           });
         }
         
-        gameSelect.addEventListener('change', async () => {
-          const newGameId = gameSelect.value;
-          if (newGameId !== currentGameId) {
-            // Limpar listener anterior
-            if (currentGameListener) {
-              off(ref(database, `activeGames/${currentGameId}`));
-              currentGameListener = null;
-            }
-            currentGameId = newGameId;
-            await loadGameData(currentGameId);
-          }
-        });
+        // Remove listener anterior antes de adicionar novo
+        gameSelect.removeEventListener('change', handleGameChange);
+        gameSelect.addEventListener('change', handleGameChange);
         
         if (activeGames.length > 0 && !currentGameId) {
           currentGameId = activeGames[0].id;
@@ -1963,6 +1862,19 @@
         await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível carregar os jogos ativos.' });
       }
     }
+    
+    function handleGameChange() {
+      const gameSelect = document.getElementById('gameSelect');
+      const newGameId = gameSelect.value;
+      if (newGameId !== currentGameId) {
+        if (currentGameListener) {
+          off(ref(database, `activeGames/${currentGameId}`));
+          currentGameListener = null;
+        }
+        currentGameId = newGameId;
+        loadGameData(currentGameId);
+      }
+    }
 
     function setupPlayerSearch() {
       playerSearch.addEventListener('input', () => {
@@ -1970,7 +1882,6 @@
         autocompleteSuggestions.innerHTML = '';
         selectedPlayerId = null;
         addPlayerBtn.disabled = true;
-        
         if (query.length > 0) {
           const suggestions = allPlayers.filter(player => player.name?.toLowerCase().includes(query)).slice(0, 5);
           if (suggestions.length > 0) {
@@ -1994,11 +1905,9 @@
           autocompleteSuggestions.style.display = 'none';
         }
       });
-      
       playerSearch.addEventListener('blur', () => {
         setTimeout(() => { autocompleteSuggestions.style.display = 'none'; }, 200);
       });
-      
       addPlayerBtn.addEventListener('click', () => {
         if (selectedPlayerId) confirmPlayer(selectedPlayerId);
       });
@@ -2038,14 +1947,12 @@
         
         const gameRef = ref(database, `activeGames/${gameId}`);
         
-        // Remover listener anterior se existir
         if (currentGameListener) {
           off(gameRef);
           currentGameListener = null;
         }
         
-        // Configurar novo listener
-        currentGameListener = onValue(gameRef, async (snapshot) => {
+        currentGameListener = onValue(gameRef, (snapshot) => {
           trackDownload(`/activeGames/${gameId} (listener)`);
           
           if (!snapshot.exists()) {
@@ -2091,27 +1998,6 @@
             };
           });
           
-          // Otimizado: verificar status apenas para não-convidados
-          const nonGuestConfirmed = confirmedPlayers.filter(p => p.category !== 'CONVIDADO' && p.category !== 'DIARIA');
-          if (nonGuestConfirmed.length > 0) {
-            const debtResults = await checkMultiplePlayersDebts(nonGuestConfirmed.map(p => p.id));
-            for (const player of nonGuestConfirmed) {
-              if (debtResults[player.id]) {
-                player.paymentStatus = debtResults[player.id].hasDebt ? 'inadimplente' : 'pago';
-              }
-            }
-          }
-          
-          const nonGuestWaitlist = waitlistPlayers.filter(p => p.category !== 'CONVIDADO' && p.category !== 'DIARIA');
-          if (nonGuestWaitlist.length > 0) {
-            const debtResults = await checkMultiplePlayersDebts(nonGuestWaitlist.map(p => p.id));
-            for (const player of nonGuestWaitlist) {
-              if (debtResults[player.id]) {
-                player.paymentStatus = debtResults[player.id].hasDebt ? 'inadimplente' : 'pago';
-              }
-            }
-          }
-          
           confirmedPlayers = sortPlayers(confirmedPlayers);
           waitlistPlayers = sortPlayers(waitlistPlayers);
           
@@ -2133,38 +2019,22 @@
 
     async function initializeGameList() {
       await loadActiveGames();
-      
       finalizeGameBtn.addEventListener('click', async () => {
         if (!currentGameId) {
           await Swal.fire({ icon: 'error', title: 'Erro', text: 'Selecione um jogo ativo para finalizar.' });
           return;
         }
-        
-        const result = await Swal.fire({ 
-          icon: 'question', 
-          title: 'Finalizar Lista', 
-          text: 'Deseja salvar a lista no histórico ou descartá-la?', 
-          showCancelButton: true, 
-          showDenyButton: true, 
-          confirmButtonText: 'Salvar no Histórico', 
-          denyButtonText: 'Descartar', 
-          cancelButtonText: 'Cancelar' 
-        });
-        
+        const result = await Swal.fire({ icon: 'question', title: 'Finalizar Lista', text: 'Deseja salvar a lista no histórico ou descartá-la?', showCancelButton: true, showDenyButton: true, confirmButtonText: 'Salvar no Histórico', denyButtonText: 'Descartar', cancelButtonText: 'Cancelar' });
         if (result.isDismissed) return;
-        
         try {
           const gameRef = ref(database, `activeGames/${currentGameId}`);
           const snapshot = await get(gameRef);
           trackDownload(`/activeGames/${currentGameId}`);
-          
           if (!snapshot.exists()) {
             await Swal.fire({ icon: 'error', title: 'Jogo Não Encontrado', text: 'O jogo selecionado não foi encontrado.' });
             return;
           }
-          
           const gameData = snapshot.val();
-          
           if (result.isConfirmed) {
             await saveGameToHistory(currentGameId, gameData);
             await set(gameRef, null);
@@ -2173,37 +2043,21 @@
             const confirmedPlayerIds = Object.keys(gameData.confirmed || {});
             const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
             const allPlayerIds = [...confirmedPlayerIds, ...waitlistPlayerIds];
-            
             for (const playerId of allPlayerIds) {
               const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
               if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
-                const payment = await findExistingPayment(
-                  player.category === 'CONVIDADO' ? player.invitedById : playerId, 
-                  currentGameId, 
-                  player.category, 
-                  player.additionalInfo || player.name
-                );
-                
+                const payment = await findExistingPayment(player.category === 'CONVIDADO' ? player.invitedById : playerId, currentGameId, player.category, player.additionalInfo || player.name);
                 if (payment) {
                   if (payment.paymentStatus === 'pago') {
                     const [year, month] = getBrazilMonthYear().split('-');
                     const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
                     const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
                     await set(newPaymentRef, {
-                      additionalInfo: `Crédito por cancelamento do jogo`, 
-                      createdAt: getBrazilDateTimeISO(), 
-                      month: getBrazilMonthYear(),
-                      paymentType: 'Creditos', 
-                      playerId: payment.playerId, 
-                      playerName: payment.playerName, 
-                      value: parseFloat(payment.value),
-                      gameId: currentGameId, 
-                      date: formatDateToISO(new Date()), 
-                      paymentStatus: 'pago',
-                      comprovanteApprovedAt: payment.comprovanteApprovedAt || null, 
-                      comprovanteApprovedBy: payment.comprovanteApprovedBy || null,
-                      comprovanteStatus: payment.comprovanteStatus || null, 
-                      comprovanteURL: payment.comprovanteURL || null,
+                      additionalInfo: `Crédito por cancelamento do jogo`, createdAt: getBrazilDateTimeISO(), month: getBrazilMonthYear(),
+                      paymentType: 'Creditos', playerId: payment.playerId, playerName: payment.playerName, value: parseFloat(payment.value),
+                      gameId: currentGameId, date: formatDateToISO(new Date()), paymentStatus: 'pago',
+                      comprovanteApprovedAt: payment.comprovanteApprovedAt || null, comprovanteApprovedBy: payment.comprovanteApprovedBy || null,
+                      comprovanteStatus: payment.comprovanteStatus || null, comprovanteURL: payment.comprovanteURL || null,
                       comprovanteUploadedAt: payment.comprovanteUploadedAt || null
                     });
                   }
@@ -2212,17 +2066,13 @@
                 }
               }
             }
-            
             await set(gameRef, null);
             invalidateCache('payments');
             await Swal.fire({ icon: 'success', title: 'Lista Descartada', text: 'A lista foi descartada. Diaristas e Convidados pagos foram convertidos em créditos e os não pagos foram removidos.' });
-            
             const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
             const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado.\n Diárias foram convertidas em créditos.`;
             await sendPushNotification(message, undefined, segments, "Vôlei BNH - Informações");
           }
-          
-          // Limpar listener e resetar estado
           if (currentGameListener) {
             off(ref(database, `activeGames/${currentGameId}`));
             currentGameListener = null;
@@ -2234,19 +2084,12 @@
           await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível processar a finalização do jogo.' });
         }
       });
-      
       confirmPlayerBtn.addEventListener('click', () => abrirQuadra());
       setupGuestControls();
     }
 
     async function showUnifiedNotificationManager() {
-      Swal.fire({
-        title: 'Atualizando...',
-        text: 'Lista de Notificados...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-      });
-      
+      Swal.fire({ title: 'Atualizando...', text: 'Lista de Notificados...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
       const notifiedPlayers = await getNotifiedPlayers();
       Swal.close();
       
@@ -2262,18 +2105,13 @@
               </button>
             </div>
           </div>
-          
           <div class="modal-section">
             <h4>📋 Integrantes Notificados (${notifiedPlayers.length})</h4>
             <div id="unifiedNotifiedList" class="notified-players-list">
               ${notifiedPlayers.length === 0 ? '<p>Nenhum jogador com notificações ativas</p>' : `
                 <table>
                   <thead>
-                    <tr>
-                      <th>Jogador</th>
-                      <th><i class="fas fa-bell"></i></th>
-                      <th>Ações</th>
-                    </tr>
+                    <tr><th>Jogador</th><th><i class="fas fa-bell"></i></th><th>Ações</th></tr>
                   </thead>
                   <tbody>
                     ${notifiedPlayers.map(player => `
@@ -2298,7 +2136,7 @@
         </div>
       `;
       
-      const result = await Swal.fire({
+      await Swal.fire({
         title: 'Notificações / Pendências',
         html: modalContent,
         width: 'auto',
@@ -2317,7 +2155,6 @@
               unifiedAutocompleteSuggestions.innerHTML = '';
               selectedManualPlayerId = null;
               unifiedAddNotificationBtn.disabled = true;
-              
               if (query.length > 0) {
                 const suggestions = allPlayers.filter(player => player.name?.toLowerCase().includes(query)).slice(0, 5);
                 if (suggestions.length > 0) {
@@ -2342,7 +2179,6 @@
                 unifiedAutocompleteSuggestions.style.display = 'none';
               }
             });
-            
             unifiedPlayerSearch.addEventListener('blur', () => {
               setTimeout(() => { unifiedAutocompleteSuggestions.style.display = 'none'; }, 200);
             });
@@ -2411,12 +2247,10 @@
     function setupAdminFeatures() {
       const adminSettingsBtn = document.getElementById('adminSettingsBtn');
       if (!adminSettingsBtn) return;
-      
       if (isAdmin) {
         adminSettingsBtn.style.display = 'inline-block';
         adminSearchContainer.style.display = 'flex';
         finalizeGameBtn.style.display = 'inline-block';
-        
         adminSettingsBtn.addEventListener('click', () => {
           Swal.fire({
             title: 'Configurações',
@@ -2496,17 +2330,14 @@
                   <button id="openNotificationManagerBtn" style="width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
                     <i class="fas fa-bell"></i> Abrir Gerenciador de Notificações
                   </button>
-                  <p style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;">
-                    Gerencie notificações manuais e visualize integrantes notificados
-                  </p>
                 </div>
                 <div id="toggleRegistrationFields" class="modal-section" style="display: none;">
                   <h4>Cadastro de Novos Usuários</h4>
                   <div class="organiza2">
                     <label for="registrationStatusSelect">Status atual:</label>
                     <select id="registrationStatusSelect">
-                      <option value="true">✅ Ativo (usuários podem se cadastrar)</option>
-                      <option value="false">❌ Inativo (cadastro bloqueado)</option>
+                      <option value="true">✅ Ativo</option>
+                      <option value="false">❌ Inativo</option>
                     </select>
                     <button id="saveRegistrationStatusBtn"><i class="fas fa-save"></i> Salvar</button>
                   </div>
@@ -2520,7 +2351,6 @@
               document.getElementById('modalNewGameDate').value = DateTime.now().setZone('America/Sao_Paulo').toISODate();
               const modalGameSelect = document.getElementById('modalGameSelect');
               modalGameSelect.innerHTML = '<option value="">Selecione um jogo</option>';
-              
               if (activeGames.length === 0) {
                 modalGameSelect.innerHTML = '<option value="">Nenhum jogo programado</option>';
               } else {
@@ -2537,7 +2367,6 @@
                   modalGameSelect.appendChild(option);
                 });
               }
-              
               modalGameSelect.addEventListener('change', async () => {
                 if (currentGameListener) {
                   off(ref(database, `activeGames/${currentGameId}`));
@@ -2568,16 +2397,6 @@
                 toggleRegistrationFields.style.display = modalActionSelect.value === 'toggleRegistration' ? 'block' : 'none';
                 gameSelectSection.style.display = ['createGame', 'manageNotifications', 'updateGuestTime', 'toggleRegistration'].includes(modalActionSelect.value) ? 'none' : 'block';
                 
-                if (modalActionSelect.value === 'toggleRegistration') {
-                  const registrationRef = ref(database, 'settings/registrationEnabled');
-                  const snapshot = await get(registrationRef);
-                  const currentStatus = snapshot.exists() ? snapshot.val() : true;
-                  const statusSelect = document.getElementById('registrationStatusSelect');
-                  if (statusSelect) {
-                    statusSelect.value = currentStatus ? 'true' : 'false';
-                  }
-                }
-                
                 if (modalActionSelect.value === 'manageNotifications') {
                   const openNotificationManagerBtn = document.getElementById('openNotificationManagerBtn');
                   if (openNotificationManagerBtn) {
@@ -2594,18 +2413,15 @@
                 const newGameDateInput = document.getElementById('modalNewGameDate').value;
                 const newGameTimeInput = document.getElementById('modalNewGameTime').value;
                 const newGameLimitInput = document.getElementById('modalNewGameLimit').value;
-                
                 if (!newGameDateInput || !newGameTimeInput || !newGameLimitInput) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, preencha todos os campos (data, horário e número de participantes).' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Preencha todos os campos.' });
                   return;
                 }
-                
                 const newGameLimit = parseInt(newGameLimitInput);
                 if (isNaN(newGameLimit) || newGameLimit < 1) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'O número de participantes deve ser um valor válido maior que 0.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Número de participantes inválido.' });
                   return;
                 }
-                
                 try {
                   const gameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                   const gameRef = ref(database, `activeGames/${gameId}`);
@@ -2614,7 +2430,6 @@
                   const formattedTime = newGameTimeInput;
                   const newGame = { date: formattedDate, time: formattedTime, playerLimit: newGameLimit, createdAt: getBrazilDateTimeISO(), confirmed: {}, waitlist: {} };
                   await set(gameRef, newGame);
-                  
                   const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
                   const message = `Novo jogo criado para ${formattedDateDisplay} às ${formattedTime}. Limite: ${newGameLimit} jogadores.`;
                   await sendPushNotification(message, defaultImage, segments, "Vôlei BNH - Informações");
@@ -2623,7 +2438,7 @@
                   await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Jogo criado com sucesso!' });
                 } catch (error) {
                   console.error('Erro ao criar jogo:', error);
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível criar o jogo. Tente novamente.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível criar o jogo.' });
                 }
               });
               
@@ -2631,7 +2446,7 @@
               modalConfirmLimitBtn.addEventListener('click', async () => {
                 const newLimit = parseInt(document.getElementById('modalPlayerLimitInput').value);
                 if (isNaN(newLimit) || newLimit < 1) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, insira um número válido de participantes.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Número inválido.' });
                   return;
                 }
                 playerLimit = newLimit;
@@ -2639,26 +2454,25 @@
                 await updateFirebaseLists();
                 updatePlayerLimitDisplay(isAdmin);
                 Swal.close();
-                await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Número de participantes atualizado!' });
+                await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Limite atualizado!' });
               });
               
               const modalSaveGuestFeeBtn = document.getElementById('modalSaveGuestFeeBtn');
               modalSaveGuestFeeBtn.addEventListener('click', async () => {
                 const newFee = parseFloat(document.getElementById('modalGuestFeeInput').value);
                 if (isNaN(newFee) || newFee < 0) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, insira um valor válido para a taxa.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Valor inválido.' });
                   return;
                 }
                 try {
                   const settingsRef = ref(database, 'settings/guestFee');
                   await set(settingsRef, newFee);
                   guestFee = newFee;
-                  settingsCache.guestFee = newFee;
                   Swal.close();
-                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Taxa de convidado atualizada!' });
+                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Taxa atualizada!' });
                 } catch (error) {
                   console.error('Erro ao atualizar taxa:', error);
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar a taxa.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar.' });
                 }
               });
               
@@ -2666,7 +2480,7 @@
               modalUpdateGameTimeBtn.addEventListener('click', async () => {
                 const newTime = document.getElementById('modalGameTimeInput').value;
                 if (!newTime) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, insira um horário válido.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Horário inválido.' });
                   return;
                 }
                 try {
@@ -2675,10 +2489,10 @@
                   gameTime = newTime;
                   await updateFirebaseLists();
                   Swal.close();
-                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Horário do jogo atualizado!' });
+                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Horário atualizado!' });
                 } catch (error) {
                   console.error('Erro ao atualizar horário:', error);
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar o horário.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar.' });
                 }
               });
 
@@ -2689,12 +2503,7 @@
                   const newStatus = statusSelect.value === 'true';
                   const registrationRef = ref(database, 'settings/registrationEnabled');
                   await set(registrationRef, newStatus);
-                  settingsCache.registrationEnabled = newStatus;
-                  Swal.fire({
-                    icon: 'success',
-                    title: 'Configuração salva',
-                    text: `Cadastro de usuários ${newStatus ? 'ativado' : 'desativado'}.`
-                  });
+                  Swal.fire({ icon: 'success', title: 'Configuração salva', text: `Cadastro ${newStatus ? 'ativado' : 'desativado'}.` });
                 });
               }
 
@@ -2702,28 +2511,25 @@
               modalUpdateGuestTimeBtn.addEventListener('click', async () => {
                 const newHour = parseInt(document.getElementById('modalGuestHourInput').value);
                 const newMinute = parseInt(document.getElementById('modalGuestMinuteInput').value);
-                
                 if (isNaN(newHour) || newHour < 0 || newHour > 23) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Hora inválida. Use um valor entre 0 e 23.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Hora inválida.' });
                   return;
                 }
                 if (isNaN(newMinute) || newMinute < 0 || newMinute > 59) {
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Minuto inválido. Use um valor entre 0 e 59.' });
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Minuto inválido.' });
                   return;
                 }
-                
                 try {
                   const settingsRef = ref(database, 'settings/guestTime');
                   await set(settingsRef, { hour: newHour, minute: newMinute });
                   window.horaAlvo = newHour;
                   window.minutoAlvo = newMinute;
-                  settingsCache.guestTime = { hour: newHour, minute: newMinute };
                   updateGuestButtonVisibility();
                   Swal.close();
-                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: `Horário para convidados atualizado para ${newHour.toString().padStart(2, '0')}:${newMinute.toString().padStart(2, '0')}!` });
+                  await Swal.fire({ icon: 'success', title: 'Sucesso', text: `Horário atualizado para ${newHour.toString().padStart(2, '0')}:${newMinute.toString().padStart(2, '0')}!` });
                 } catch (error) {
-                  console.error('Erro ao atualizar horário de convidados:', error);
-                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar o horário.' });
+                  console.error('Erro ao atualizar horário:', error);
+                  await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível atualizar.' });
                 }
               });
               
@@ -2733,7 +2539,6 @@
             }
           });
         });
-        
         setupPlayerSearch();
         setupGuestControls();
       } else {
@@ -2742,18 +2547,15 @@
         finalizeGameBtn.style.display = 'none';
         updatePlayerLimitDisplay(isAdmin);
       }
-      
       guestControls.style.display = window.currentUserPlayer ? 'flex' : 'none';
     }
 
     async function abrirQuadra() {
       Swal.fire({ title: 'Carregando Quadra...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
-      
       if (!currentGameId) {
         Swal.fire({ icon: 'info', title: 'Que pena, nenhum jogo Programado!', timer: 1500 });
         return;
       }
-      
       const defaultImg = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fexclama.jpg?alt=media&token=51fef838-cac2-4021-8021-2dc7edc76f49';
       const sortedPlayers = sortPlayers([...confirmedPlayers]);
       const playerPositions = [
@@ -2763,18 +2565,15 @@
         { top: '22%', left: '120%' }, { top: '70%', left: '-20%' }, { top: '32%', left: '120%' }, { top: '80%', left: '-20%' },
         { top: '42%', left: '120%' }, { top: '90%', left: '-20%' }, { top: '52%', left: '120%' }, { top: '100%', left: '-20%' }
       ];
-      
       const playersHTML = await Promise.all(playerPositions.map(async (position, index) => {
         const player = sortedPlayers[index];
         if (!player) return '';
         const imageUrl = await preloadImage(player.imageUrl || defaultImg);
         return `<div class="player" style="top: ${position.top}; left: ${position.left};" data-player-id="${player.id}" data-posicao="${player.position}" data-index="${index}" title="${player.name}"><img src="${imageUrl}" alt="${player.name}" onerror="this.src='${defaultImg}'"/></div>`;
       }));
-      
       const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) || waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
       const gameDateTime = currentGameData ? DateTime.fromISO(`${currentGameData.date}T${currentGameData.time}`, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' }) : DateTime.now().setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy, HH:mm, cccc', { locale: 'pt-BR' });
       const quadraHTML = `<h3>Quadra Virtual</h3><div class="quadra-container"><div class="linha-meio0"></div><div class="linha-meio1"></div><div class="linha-meio2"></div><div class="linha-meio3"></div><div class="linha-meio4"></div><div class="linha-3m-cima"></div><div class="linha-3m-baixo"></div>${playersHTML.join('')}</div><button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; width:200px; height: 40px; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">Confirmar Presença ✅</button><div class="info"><p><strong>Jogo do dia:</strong> ${gameDateTime}<br><strong>Lista limitada a ${playerLimit} jogadores</strong></p><p><strong> </strong> A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p></div>`;
-      
       setTimeout(() => {
         Swal.close();
         Swal.fire({ html: quadraHTML, showCloseButton: true, showConfirmButton: true, confirmButtonText: 'FECHAR', showCancelButton: false, width: 'auto', didOpen: () => {
@@ -2836,7 +2635,6 @@
     const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
     async function sendPushNotification(message, imageUrl = null, segments, titulo) {
       console.log("📤 Enviando notificação...");
-      if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
       try {
         const response = await fetch(FUNCTION_URL, {
           method: 'POST',
@@ -2848,7 +2646,6 @@
           console.log("✅ Notificação enviada com sucesso!");
         } else {
           console.warn("⚠️ Falha ao enviar:", result.error);
-          throw new Error(result.error);
         }
       } catch (error) {
         console.error("❌ Erro ao enviar notificação:", error.message);
@@ -2858,7 +2655,6 @@
     onAuthStateChanged(auth, async (user) => {
       console.log('onAuthStateChanged disparado, usuário:', user);
       document.getElementById('loading-overlay').style.display = 'flex';
-      
       if (!user) {
         await Swal.fire({ icon: 'error', title: 'Acesso Negado', text: 'Você precisa estar logado para acessar esta página.' });
         window.location.href = 'loginvl.html';
@@ -2866,7 +2662,6 @@
         emailLogado = user.email;
         isAdmin = adminEmails.includes(emailLogado);
         await loadCurrentUserPlayer();
-        
         if (window.currentUserPlayer?.name) {
           const userId = window.currentUserPlayer.id;
           const userName = window.currentUserPlayer.name;
@@ -2875,38 +2670,32 @@
           const tenMinutesAgo = now.minus({ minutes: 30 });
           const lastAccessKey = `lastAccess_${userId}`;
           const lastAccess = localStorage.getItem(lastAccessKey);
-          
           if (lastAccess && DateTime.fromISO(lastAccess) >= tenMinutesAgo) {
-            console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos (localStorage).`);
+            console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos.`);
           } else {
             const activitiesRef = ref(database, `userActivity/${year}/${month}`);
             try {
               const snapshot = await get(activitiesRef);
               trackDownload(`/userActivity/${year}/${month}`);
               let lastActivity = null;
-              
               if (snapshot.exists()) {
                 const activities = Object.values(snapshot.val() || {}).filter(activity => activity.userName === userName);
                 if (activities.length > 0) {
                   lastActivity = activities.reduce((latest, current) => new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest);
                 }
               }
-              
               if (!lastActivity || DateTime.fromISO(lastActivity.timestamp) < tenMinutesAgo) {
                 const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
                 await set(activityRef, { userName: userName + " v2", timestamp: getBrazilDateTimeISO() });
                 localStorage.setItem(lastAccessKey, now.toISO());
                 console.log(`Acesso registrado para ${userName} em ${now.toISO()}`);
-              } else {
-                console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos.`);
               }
             } catch (error) {
               console.error('Erro ao registrar acesso:', error);
             }
           }
         }
-        
         if (isAdmin) createDashboardButton();
         await loadGuestFee();
         await loadGuestTimeSettings();
@@ -2914,11 +2703,7 @@
         await initializeGameList();
         setupAdminFeatures();
         document.getElementById('loading-overlay').style.display = 'none';
-        
-        // Log de estatísticas de download (para monitoramento)
-        setTimeout(() => {
-          console.log(`📊 Estatísticas de download: ${downloadStats.count} downloads no total`);
-        }, 5000);
+        console.log(`📊 Total de downloads durante inicialização: ${downloadStats.count}`);
       }
     });
 
@@ -2927,7 +2712,6 @@
       logoutBtn.addEventListener('click', async () => {
         Swal.fire({ title: 'Saindo...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
         try {
-          // Limpar listeners antes de sair
           if (currentGameListener) {
             off(ref(database, `activeGames/${currentGameId}`));
             currentGameListener = null;
@@ -2938,13 +2722,12 @@
             }
           }
           settingsListeners = [];
-          
           await signOut(auth);
           await Swal.fire({ icon: 'success', title: 'Logout', text: 'Você saiu com sucesso.', timer: 1500, showConfirmButton: false });
           window.location.assign('loginvl.html');
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
-          await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível fazer logout. Tente novamente.' });
+          await Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível fazer logout.' });
         }
       });
     }
