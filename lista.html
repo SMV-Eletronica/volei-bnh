@@ -1211,7 +1211,6 @@
     }
 
 async function confirmPlayer(targetPlayerId = null) {
-
   
     // Feedback tátil para confirmação
 if ('vibrate' in navigator) {
@@ -1257,6 +1256,12 @@ if ('vibrate' in navigator) {
       return;
     } else {
       if (playerData.category === 'MENSAL') {
+
+        if ('vibrate' in navigator) {
+               navigator.vibrate(800);
+              //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+               console.log("✅ Confirmação vibrada!");
+          }
         const result = await Swal.fire({ 
           icon: 'warning',
           title: 'Pendências Encontradas', 
@@ -1271,7 +1276,14 @@ if ('vibrate' in navigator) {
           cancelButtonText: 'Cancelar' 
         });
         if (!result.isConfirmed) return;
-      } else if (playerData.category === 'DIARIA') {
+      }
+      
+      else if (playerData.category === 'DIARIA') {
+        if ('vibrate' in navigator) {
+               navigator.vibrate(800);
+              //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+               console.log("✅ Confirmação vibrada!");
+          }
         const result = await Swal.fire({ 
           icon: 'warning', 
           title: 'Pendências Encontradas', 
@@ -1486,6 +1498,13 @@ async function addGuest() {
   }
 
     if (alertCount >= alertLimit) {
+
+      if ('vibrate' in navigator) {
+               navigator.vibrate(800);
+              //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+               console.log("✅ Confirmação vibrada!");
+          }
+
       await Swal.fire({ 
         icon: 'error', 
         title: 'Participação Suspensa', 
@@ -1493,9 +1512,18 @@ async function addGuest() {
         confirmButtonText: 'Entendido' 
       });
       return;
-    } else {
+    } 
+    
+    else {
       // NOTIFICAÇÃO BASEADA NA CATEGORIA
       if (playerData.category === 'MENSAL') {
+        
+        if ('vibrate' in navigator) {
+               navigator.vibrate(800);
+              //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+               console.log("✅ Confirmação vibrada!");
+          }
+
         const result = await Swal.fire({ 
           icon: 'warning', 
           title: 'Pendências Encontradas', 
@@ -1507,9 +1535,18 @@ async function addGuest() {
           showCancelButton: true, 
           confirmButtonText: 'Ciente/Confirmar', 
           cancelButtonText: 'Cancelar' 
-        });
+        });    
         if (!result.isConfirmed) return;
-      } else if (playerData.category === 'DIARIA') {
+      } 
+      
+      else if (playerData.category === 'DIARIA') {
+
+         if ('vibrate' in navigator) {
+               navigator.vibrate(800);
+              //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+               console.log("✅ Confirmação vibrada!");
+          }
+
         const result = await Swal.fire({ 
           icon: 'warning', 
           title: 'Pendências Encontradas', 
@@ -1524,6 +1561,8 @@ async function addGuest() {
         if (!result.isConfirmed) return;
       }
     }
+
+
   } else if (!isAdmin && !debtInfo.hasDebt) {
     await clearDebtNotifications(window.currentUserPlayer.id);
   }
