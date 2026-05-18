@@ -1141,7 +1141,16 @@
     }
 
 async function confirmPlayer(targetPlayerId = null) {
-  Swal.fire({ title: 'Confirmando...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
+
+  
+    // Feedback tátil para confirmação
+if ('vibrate' in navigator) {
+    navigator.vibrate(200);
+    //alert("✅ Confirmação vibrada!"); // Isso aparece no celular
+    console.log("✅ Confirmação vibrada!");
+}
+
+ Swal.fire({ title: 'Verificando Pendências...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
   if (!currentGameId) {
     await Swal.fire({ icon: 'info', title: 'Que pena, nenhum jogo Programado!', timer: 1500 });
     return;
@@ -1355,7 +1364,8 @@ async function confirmPlayer(targetPlayerId = null) {
       addPlayerBtn.disabled = true;
       autocompleteSuggestions.style.display = 'none';
     }
-    abrirQuadra();
+   Swal.close();
+//    abrirQuadra();
   } catch (error) {
     console.error('Erro ao confirmar jogador:', error);
     await Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao processar confirmação.' });
@@ -2326,7 +2336,7 @@ if (saveRegistrationBtn) {
     }
 
     async function abrirQuadra() {
-      Swal.fire({ title: 'Entrando...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
+     Swal.fire({ title: 'Carregando Quadra...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
       if (!currentGameId) {
         Swal.fire({ icon: 'info', title: 'Que pena, nenhum jogo Programado!', timer: 1500 });
         return;
@@ -2351,7 +2361,7 @@ if (saveRegistrationBtn) {
       const quadraHTML = `<h3>Quadra Virtual</h3><div class="quadra-container"><div class="linha-meio0"></div><div class="linha-meio1"></div><div class="linha-meio2"></div><div class="linha-meio3"></div><div class="linha-meio4"></div><div class="linha-3m-cima"></div><div class="linha-3m-baixo"></div>${playersHTML.join('')}</div><button id="btn-confirmar" style="margin-top:12px; padding: 10px 18px; background: #27ae60; width:200px; height: 40px; color: white; border: none; border-radius: 6px; cursor: pointer; ${isPlayerInList ? 'display: none;' : ''}">Confirmar Presença ✅</button><div class="info"><p><strong>Jogo do dia:</strong> ${gameDateTime}<br><strong>Lista limitada a ${playerLimit} jogadores</strong></p><p><strong> </strong> A quadra virtual não apresenta os integrantes da <strong>LISTA DE ESPERA</strong></p></div>`;
       setTimeout(() => {
         Swal.close();
-        Swal.fire({ html: quadraHTML, showCloseButton: true, showConfirmButton: true, confirmButtonText: 'OK', showCancelButton: false, width: 'auto', didOpen: () => {
+        Swal.fire({ html: quadraHTML, showCloseButton: true, showConfirmButton: true, confirmButtonText: 'FECHAR', showCancelButton: false, width: 'auto', didOpen: () => {
           let currentPopup = null;
           const botao = document.getElementById('btn-confirmar');
           if (botao && !isPlayerInList) {
