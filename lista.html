@@ -628,11 +628,13 @@
           lastUpdated: getBrazilDateTimeISO()
         });
         const player = allPlayers.find(p => p.id === playerId);
+        /*
         await Swal.fire({
           icon: 'success',
           title: 'Notificação Adicionada',
           text: `Notificação manual adicionada para ${player?.name || 'Jogador'}. Total de notificações: ${currentCount + 1}.`,
         });
+        */
         return currentCount + 1;
       } catch (error) {
         console.error('Erro ao adicionar notificação manual:', error);
