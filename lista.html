@@ -506,22 +506,33 @@
       settingsListeners.push(listener);
     }
 
-    // Funções de IndexedDB para cache de imagens
-    function openDB() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open('VoleiBNHImages', 1);
-        request.onupgradeneeded = event => {
-          const db = event.target.result;
-          db.createObjectStore('images', { keyPath: 'url' });
-        };
-        request.onsuccess = event => {
-          resolve(event.target.result);
-        };
-        request.onerror = event => {
-          reject(event.target.error);
-        };
-      });
-    }
+   function openDB() {
+  return new Promise((resolve, reject) => {
+    const DB_NAME = 'VoleiBNHImages';
+    const DB_VERSION = 2; // Versão atual
+    
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      // Só cria o object store se ele não existir
+      if (!db.objectStoreNames.contains('images')) {
+        db.createObjectStore('images', { keyPath: 'url' });
+        console.log('✅ ObjectStore "images" criado com sucesso');
+      }
+    };
+    
+    request.onsuccess = event => {
+      console.log('✅ Banco de dados IndexedDB aberto com sucesso');
+      resolve(event.target.result);
+    };
+    
+    request.onerror = event => {
+      console.error('❌ Erro ao abrir IndexedDB:', event.target.error);
+      reject(event.target.error);
+    };
+  });
+}
 
     async function saveImageToDB(url, blob) {
       try {
