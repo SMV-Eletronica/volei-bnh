@@ -41,9 +41,10 @@
         text-align: left;
       min-width: 50px;
     }
-    .notified-players-list th {
-       /* background-color: #f2f2f2;*/
+   /* .notified-players-list th {
+     background-color: #f2f2f2;
     }
+     */
     .notified-players-list button {
         margin: 2px;
         padding: 5px 8px;
@@ -165,7 +166,7 @@
 
         <div class="game-controls">
           <div class="guest-controls">
-            <button id="confirmPlayer" style="display: none;"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
+            <button id="confirmPlayer"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
 
           
@@ -722,77 +723,96 @@
         return 0;
       }
     }
+async function loadCurrentUserPlayer() {
+  document.getElementById('loading-overlay').style.display = 'flex';
+  
+  try {
+    // Se já tivermos o currentUserPlayer com ID, não precisa buscar novamente
+    if (window.currentUserPlayer?.id) {
+      document.getElementById('loading-overlay').style.display = 'none';
+      return window.currentUserPlayer;
+    }
 
-    async function loadCurrentUserPlayer() {
-      document.getElementById('loading-overlay').style.display = 'flex';
-      try {
-        const players = await getPlayers();
-        allPlayers = players;
-        window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+    // Busca apenas o jogador logado (muito mais leve!)
+    const playersRef = ref(database, 'players');
+    const snapshot = await get(playersRef);
+    
+    if (snapshot.exists()) {
+      // Convertemos apenas uma vez
+      allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+        id,
+        ...player
+      }));
 
-        const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
-        const sidebarUserName = document.getElementById('sidebarUserName');
-        const sidebarUserPosition = document.getElementById('sidebarUserPosition');
-        const sidebarUserCategory = document.getElementById('sidebarUserCategory');
+      window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
 
-        if (window.currentUserPlayer?.imageUrl) {
-          sidebarUserPhoto.src = await preloadImage(window.currentUserPlayer.imageUrl);
-          sidebarUserPhoto.style.display = 'block';
-        } else {
-          sidebarUserPhoto.src = defaultImage;
-          sidebarUserPhoto.style.display = 'block';
-        }
+      if (!window.currentUserPlayer) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Jogador não encontrado',
+          text: 'Nenhum jogador associado a este email.',
+        });
+        await signOut(auth);
+        window.location.href = 'loginvl.html';
+        return null;
+      }
 
-        sidebarUserName.textContent = window.currentUserPlayer?.name || 'Usuário';
-        sidebarUserPosition.textContent = window.currentUserPlayer?.position || 'Posição não definida';
-        sidebarUserCategory.textContent = window.currentUserPlayer?.category || 'Categoria não definida';
+      // Preenche o sidebar
+      const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+      if (window.currentUserPlayer.imageUrl) {
+        sidebarUserPhoto.src = await preloadImage(window.currentUserPlayer.imageUrl);
+      } else {
+        sidebarUserPhoto.src = defaultImage;
+      }
 
-        const debtInfo = await checkPlayerDebts(window.currentUserPlayer?.id);
+      document.getElementById('sidebarUserName').textContent = window.currentUserPlayer.name || 'Usuário';
+      document.getElementById('sidebarUserPosition').textContent = window.currentUserPlayer.position || '-';
+      document.getElementById('sidebarUserCategory').textContent = window.currentUserPlayer.category || '-';
+
+/*
+      // Créditos (se tiver)
+      const debtInfo = await checkPlayerDebts(window.currentUserPlayer.id);
+      if (debtInfo.creditBalance > 0) {
+        // adiciona o display de crédito...
+      }
+    }      
+    */
+ // ========== CÓDIGO ADICIONADO PARA MOSTRAR O BOTÃO ==========
+      const confirmPlayerBtn = document.getElementById('confirmPlayer');
+      const guestControls = document.getElementById('guestControls');
+      
+      if (confirmPlayerBtn) {
+        confirmPlayerBtn.style.display = 'inline-block';
+        confirmPlayerBtn.disabled = false;
+      }
+      
+      if (guestControls) {
+        guestControls.style.display = 'flex';
+      }
+      // ========== FIM DO CÓDIGO ADICIONADO ==========
+
+
+
+      const debtInfo = await checkPlayerDebts(window.currentUserPlayer?.id);
         if (debtInfo.creditBalance && debtInfo.creditBalance > 0) {
           const creditDisplay = document.createElement('div');
           creditDisplay.className = 'sidebar-user-credit';
           creditDisplay.textContent = `Crédito: R$${debtInfo.creditBalance.toFixed(2)}`;
           document.querySelector('.sidebar-user-info').appendChild(creditDisplay);
-        }
+        }}
 
-        // Pré-carregar imagens em background
-        setTimeout(() => {
-          allPlayers
-            .filter(player => player.imageUrl && player.imageUrl !== defaultImage)
-            .forEach(player => preloadImage(player.imageUrl));
-        }, 1000);
+    isAdmin = adminEmails.includes(emailLogado) || window.currentUserPlayer?.category === 'ADMIN';
+    
+    document.getElementById('loading-overlay').style.display = 'none';
+    return window.currentUserPlayer;
 
-        if (!window.currentUserPlayer) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Nenhum jogador associado a este email. Contate o administrador.',
-          });
-          await signOut(auth);
-          window.location.href = 'loginvl.html';
-          
-          confirmPlayerBtn.disabled = true;
-          guestControls.style.display = 'none';
-        } else {
-          confirmPlayerBtn.style.display = 'inline-block';
-          guestControls.style.display = 'flex';
-        }
-        isAdmin = isAdmin || window.currentUserPlayer?.category === 'ADMIN';
-        document.getElementById('loading-overlay').style.display = 'none';
-        return window.currentUserPlayer;
-      } catch (error) {
-        console.error('Erro ao carregar dados do jogador:', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro',
-          text: 'Erro ao carregar seus dados.',
-        });
-        confirmPlayerBtn.disabled = true;
-        guestControls.style.display = 'none';
-        document.getElementById('loading-overlay').style.display = 'none';
-        return null;
-      }
-    }
+  } catch (error) {
+    console.error('Erro ao carregar jogador:', error);
+    document.getElementById('loading-overlay').style.display = 'none';
+    return null;
+  }
+}
+
 
     async function loadGuestFee() {
       try {
@@ -1932,91 +1952,140 @@
         gameListH3.style.display = 'block';
       }
     }
-
-    async function loadGameData(gameId) {
-      try {
-        if (!gameId || gameId === 'current') {
-          confirmedPlayers = [];
-          waitlistPlayers = [];
-          playerLimit = 16;
-          currentGameData = null;
-          throttledUpdateUI();
-          updatePlayerLimitDisplay(isAdmin);
-          return;
-        }
-        
-        const gameRef = ref(database, `activeGames/${gameId}`);
-        
-        if (currentGameListener) {
-          off(gameRef);
-          currentGameListener = null;
-        }
-        
-        currentGameListener = onValue(gameRef, (snapshot) => {
-          trackDownload(`/activeGames/${gameId} (listener)`);
-          
-          if (!snapshot.exists()) {
-            Swal.fire({ icon: 'error', title: 'Jogo Não Encontrado', text: 'O jogo selecionado não foi encontrado.' });
-            confirmedPlayers = [];
-            waitlistPlayers = [];
-            playerLimit = 16;
-            currentGameData = null;
-            throttledUpdateUI();
-            updatePlayerLimitDisplay(isAdmin);
-            return;
-          }
-          
-          const gameData = snapshot.val();
-          currentGameData = gameData;
-          currentGameDate = gameData.date;
-          gameTime = gameData.time;
-          playerLimit = gameData.playerLimit || 16;
-          
-          confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
-            const playerData = allPlayers.find(p => p.id === id) || {};
-            const category = playerData.category || player.category || 'CONVIDADO';
-            return {
-              id, name: player.name || '-', category: ['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category) ? category : 'CONVIDADO',
-              position: player.position || '-', timestamp: player.timestamp || getBrazilTimestamp(),
-              paymentStatus: player.paymentStatus || 'inadimplente', imageUrl: player.imageUrl || defaultImage,
-              invitedById: player.invitedById || null, invitedByName: player.invitedByName || null, status: player.status || null,
-              additionalInfo: player.additionalInfo || null, createdAt: player.createdAt || null, date: player.date || null,
-              month: player.month || null, paymentType: player.paymentType || null, value: player.value || null
-            };
-          });
-          
-          waitlistPlayers = Object.entries(gameData.waitlist || {}).map(([id, player]) => {
-            const playerData = allPlayers.find(p => p.id === id) || {};
-            const category = playerData.category || player.category || 'CONVIDADO';
-            return {
-              id, name: player.name || '-', category: ['MENSAL', 'DIARIA', 'CONVIDADO'].includes(category) ? category : 'CONVIDADO',
-              position: player.position || '-', timestamp: player.timestamp || getBrazilTimestamp(),
-              paymentStatus: player.paymentStatus || 'inadimplente', imageUrl: player.imageUrl || defaultImage,
-              invitedById: player.invitedById || null, invitedByName: player.invitedByName || null, status: player.status || null,
-              additionalInfo: player.additionalInfo || null, createdAt: player.createdAt || null, date: player.date || null,
-              month: player.month || null, paymentType: player.paymentType || null, value: player.value || null
-            };
-          });
-          
-          confirmedPlayers = sortPlayers(confirmedPlayers);
-          waitlistPlayers = sortPlayers(waitlistPlayers);
-          
-          confirmPlayerBtn.disabled = false;
-          addPlayerBtn.disabled = !selectedPlayerId;
-          playerSearch.disabled = false;
-          finalizeGameBtn.disabled = false;
-          addGuestBtn.disabled = false;
-          guestNameInput.disabled = false;
-          
-          updatePlayerLimitDisplay(isAdmin);
-          throttledUpdateUI();
-        });
-      } catch (error) {
-        console.error('Erro ao carregar dados do jogo:', error);
-        await Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao carregar dados.' });
-      }
+async function loadGameData(gameId) {
+  try {
+    if (!gameId || gameId === 'current') {
+      confirmedPlayers = [];
+      waitlistPlayers = [];
+      playerLimit = 16;
+      currentGameData = null;
+      throttledUpdateUI();
+      updatePlayerLimitDisplay(isAdmin);
+      return;
     }
-
+    
+    const gameRef = ref(database, `activeGames/${gameId}`);
+    
+    // Remove listener anterior se existir
+    if (currentGameListener) {
+      off(gameRef);
+      currentGameListener = null;
+    }
+    
+    // Configura novo listener em tempo real
+    currentGameListener = onValue(gameRef, (snapshot) => {
+      trackDownload(`/activeGames/${gameId} (listener)`);
+      
+      if (!snapshot.exists()) {
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'Jogo Não Encontrado', 
+          text: 'O jogo selecionado não foi encontrado.' 
+        });
+        confirmedPlayers = [];
+        waitlistPlayers = [];
+        playerLimit = 16;
+        currentGameData = null;
+        throttledUpdateUI();
+        updatePlayerLimitDisplay(isAdmin);
+        return;
+      }
+      
+      const gameData = snapshot.val();
+      currentGameData = gameData;
+      currentGameDate = gameData.date;
+      gameTime = gameData.time;
+      playerLimit = gameData.playerLimit || 16;
+      
+      // Extrai jogadores diretamente do confirmed (sem buscar em players)
+      confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
+        // Os dados do jogador já estão no objeto do jogo
+        return {
+          id: id,
+          name: player.name || '-',
+          category: player.category || 'CONVIDADO',
+          position: player.position || '-',
+          timestamp: player.timestamp || getBrazilTimestamp(),
+          paymentStatus: player.paymentStatus || 'inadimplente',
+          imageUrl: player.imageUrl || defaultImage,
+          invitedById: player.invitedById || null,
+          invitedByName: player.invitedByName || null,
+          status: player.status || null,
+          additionalInfo: player.additionalInfo || null,
+          createdAt: player.createdAt || null,
+          date: player.date || null,
+          month: player.month || null,
+          paymentType: player.paymentType || null,
+          value: player.value || null
+        };
+      });
+      
+      // Extrai jogadores da lista de espera diretamente do waitlist
+      waitlistPlayers = Object.entries(gameData.waitlist || {}).map(([id, player]) => {
+        // Os dados do jogador já estão no objeto do jogo
+        return {
+          id: id,
+          name: player.name || '-',
+          category: player.category || 'CONVIDADO',
+          position: player.position || '-',
+          timestamp: player.timestamp || getBrazilTimestamp(),
+          paymentStatus: player.paymentStatus || 'inadimplente',
+          imageUrl: player.imageUrl || defaultImage,
+          invitedById: player.invitedById || null,
+          invitedByName: player.invitedByName || null,
+          status: player.status || null,
+          additionalInfo: player.additionalInfo || null,
+          createdAt: player.createdAt || null,
+          date: player.date || null,
+          month: player.month || null,
+          paymentType: player.paymentType || null,
+          value: player.value || null
+        };
+      });
+      
+      // Ordena as listas por prioridade (MENSAL > DIARIA > CONVIDADO) e timestamp
+      confirmedPlayers = sortPlayers(confirmedPlayers);
+      waitlistPlayers = sortPlayers(waitlistPlayers);
+      
+      // Habilita os controles da interface
+      if (confirmPlayerBtn) confirmPlayerBtn.disabled = false;
+      if (addPlayerBtn) addPlayerBtn.disabled = !selectedPlayerId;
+      if (playerSearch) playerSearch.disabled = false;
+      if (finalizeGameBtn) finalizeGameBtn.disabled = false;
+      if (addGuestBtn) addGuestBtn.disabled = false;
+      if (guestNameInput) guestNameInput.disabled = false;
+      
+      // Atualiza a interface
+      updatePlayerLimitDisplay(isAdmin);
+      throttledUpdateUI();
+      
+      // Verifica se o jogador atual está na lista e ajusta botão de confirmação
+      const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) || 
+                            waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
+      if (confirmPlayerBtn) {
+        confirmPlayerBtn.innerHTML = isPlayerInList ? 
+          '<i class="fas fa-eye"></i> Ver Quadra' : 
+          '<i class="fas fa-sign-in"></i> Entrar em Quadra';
+      }
+      
+    }, (error) => {
+      console.error('Erro no listener do jogo:', error);
+      Swal.fire({ 
+        icon: 'error', 
+        title: 'Erro', 
+        text: 'Erro ao carregar dados do jogo em tempo real.' 
+      });
+    });
+    
+  } catch (error) {
+    console.error('Erro ao carregar dados do jogo:', error);
+    await Swal.fire({ 
+      icon: 'error', 
+      title: 'Erro', 
+      text: 'Erro ao carregar dados do jogo.' 
+    });
+  }
+}
     async function initializeGameList() {
       await loadActiveGames();
       finalizeGameBtn.addEventListener('click', async () => {
