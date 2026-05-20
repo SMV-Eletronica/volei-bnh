@@ -175,9 +175,9 @@
         <div id="userEmail"></div>
         
         <div class="section">
-            <h2 class="section-title">Lançamento e Controle de Contribuições</h2>
+            <h2 class="section-title">Lançamento/Edição de Contribuições</h2>
             <div class="admin-actions">
-                <h3><i class="fas fa-users"></i> Gerar Contribuições Mensais</h3>
+                <h3><i class="fas fa-users"></i> Gerar Contribuições Mensalistas</h3>
                 <form id="generateMonthlyForm">
                     <div class="form-group">
                         <label for="generateMonth">Mês/Ano:</label>
@@ -195,10 +195,11 @@
             <div id="message" class="message"></div>
         </div>
         
-        <h3 class="section-title"><i class="fas fa-money-bill-wave"></i> Registrar Pagamentos em Geral</h3>
+        
         <div id="playerSection" class="section" style="display: none;">
+            
             <div class="admin-actions">
-                <h3 class="admin-actions"><i class="fas fa-user"></i> Dados do Integrante</h3>
+                <h3 class="section-title"><i class="fas fa-user"></i> Dados do Integrante</h3>
                 <div class="player-info">
                     <img id="playerPhoto" class="player-photo" src="" alt="Foto do jogador" style="display: none;">
                     <div class="player-details">
@@ -213,6 +214,8 @@
                     <input type="text" id="searchName" placeholder="Digite o nome para pesquisar" autocomplete="off">
                     <div id="searchResults" class="search-results"></div>
                 </div>
+
+                <h3 style="margin-top: 22px;"><i class="fas fa-money-bill-wave"></i> Lançamentos e baixas em Geral</h3>
                 <form id="paymentForm">
                     <div class="form-group">
                         <label for="paymentMonth">Mês/Ano:</label>
@@ -243,6 +246,7 @@
                     </div>
                     <input type="hidden" id="playerId">
                     <input type="hidden" id="editingPaymentId">
+                    <input type="hidden" id="editingPaymentSource">
                     <input type="hidden" id="editingPaymentYear">
                     <input type="hidden" id="editingPaymentMonth">
                     <div class="form-buttons">
@@ -255,7 +259,7 @@
         </div>
         
         <div id="paymentsSection" class="section" style="display: none;">
-            <h2 class="section-title"><i class="fas fa-history"></i> Histórico de Contribuições </h2>
+            <h2 class="section-title"><i class="fas fa-history"></i> Histórico de Pendências </h2>
             <div id="paymentsList"></div>
         </div>
     </div>
@@ -315,6 +319,7 @@
         const guestFieldLabel = document.getElementById('guestFieldLabel');
         const playerIdInput = document.getElementById('playerId');
         const editingPaymentIdInput = document.getElementById('editingPaymentId');
+        const editingPaymentSourceInput = document.getElementById('editingPaymentSource');
         const editingPaymentYearInput = document.getElementById('editingPaymentYear');
         const editingPaymentMonthInput = document.getElementById('editingPaymentMonth');
         const paymentsSection = document.getElementById('paymentsSection');
@@ -325,6 +330,7 @@
         const generateValueInput = document.getElementById('generateValue');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const deletePaymentBtn = document.getElementById('deletePaymentBtn');
+        const savePaymentBtn = document.getElementById('savePaymentBtn');
 
         let isAdmin = false;
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro@msn.com'];
@@ -495,6 +501,10 @@
             }
         });
 
+        // ============================================
+        // 1. GERAR CONTRIBUIÇÕES MENSAIS - MODIFICADO
+        // Cria em debts/{playerId} com paymentStatus: 'pendente'
+        // ============================================
         generateMonthlyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -532,27 +542,46 @@
 
                 for (const [playerId, player] of Object.entries(players)) {
                     if (player.category === 'MENSAL') {
-                        const paymentsRef = ref(database, `payments/${year}/${month}`);
-                        const paymentsSnapshot = await get(paymentsRef);
-                        const payments = paymentsSnapshot.val() || {};
-
-                        let paymentExists = false;
-                        for (const payment of Object.values(payments)) {
-                            if (payment.playerId === playerId && payment.paymentType === 'Mensal') {
-                                paymentExists = true;
-                                break;
+                        // Verificar se já existe débito em debts
+                        let alreadyExists = false;
+                        const debtsRef = ref(database, `debts/${playerId}`);
+                        const debtsSnapshot = await get(debtsRef);
+                        if (debtsSnapshot.exists()) {
+                            const debts = debtsSnapshot.val();
+                            for (const debt of Object.values(debts)) {
+                                if (debt.month === `${year}-${month}` && debt.paymentType === 'Mensal') {
+                                    alreadyExists = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Verificar se já foi pago (está em payments)
+                        if (!alreadyExists) {
+                            const paymentsRef = ref(database, `payments/${year}/${month}`);
+                            const paymentsSnapshot = await get(paymentsRef);
+                            if (paymentsSnapshot.exists()) {
+                                const payments = paymentsSnapshot.val();
+                                for (const payment of Object.values(payments)) {
+                                    if (payment.playerId === playerId && payment.paymentType === 'Mensal') {
+                                        alreadyExists = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
 
-                        if (!paymentExists) {
-                            const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
-                            await set(newPaymentRef, {
+                        if (!alreadyExists) {
+                            // Criar em debts em vez de payments
+                            const newDebtRef = push(ref(database, `debts/${playerId}`));
+                            await set(newDebtRef, {
                                 month: `${year}-${month}`,
                                 value: debtValue,
                                 date: null,
                                 playerId: playerId,
                                 playerName: player.name,
                                 paymentType: 'Mensal',
+                                paymentStatus: 'pendente',
                                 createdAt: new Date().toISOString()
                             });
                             createdCount++;
@@ -605,11 +634,21 @@
             loadPayments(playerId);
         }
 
-        
-        paymentForm.addEventListener('submit', async (e) => {
+        // ============================================
+        // 2. REGISTRAR PAGAMENTOS - MODIFICADO
+        // Com data => payments/{year}/{month}
+        // Sem data => debts/{playerId}
+        // ============================================
+// ============================================
+// 2. REGISTRAR PAGAMENTOS - CORRIGIDO (preserva comprovante)
+// ============================================
+
+// ============================================
+// 2. REGISTRAR PAGAMENTOS - CORRIGIDO (preserva comprovante e registra quem aprovou)
+// ============================================
+paymentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Adicionar popup de confirmação
     const isEditing = editingPaymentIdInput.value ? true : false;
     const confirmResult = await Swal.fire({
         icon: 'question',
@@ -622,66 +661,142 @@
         cancelButtonText: 'Cancelar',
     });
 
-    if (!confirmResult.isConfirmed) {
-        return;
-    }
+    if (!confirmResult.isConfirmed) return;
 
-    const year = editingPaymentIdInput.value ? editingPaymentYearInput.value : paymentMonthInput.value.split('-')[0];
-    const month = editingPaymentIdInput.value ? editingPaymentMonthInput.value : paymentMonthInput.value.split('-')[1];
-    const paymentData = {
-        month: paymentMonthInput.value,
-        value: parseFloat(paymentValueInput.value),
-        date: paymentValueInput.value > 0 && paymentDateInput.value ? paymentDateInput.value : null,
-        playerId: playerIdInput.value,
-        playerName: playerNameSpan.textContent,
-        paymentType: paymentTypeSelect.value,
-        createdAt: new Date().toISOString()
-    };
-
-    // LÓGICA PARA ATUALIZAR O STATUS DE PAGAMENTO
-    if (paymentDateInput.value && paymentValueInput.value > 0) {
-        paymentData.paymentStatus = 'pago';
-    } else if (!paymentDateInput.value && paymentValueInput.value > 0) {
-        paymentData.paymentStatus = 'pendente';
-    } else {
-        paymentData.paymentStatus = 'nao_aplicavel';
-    }
-
-    if (paymentTypeSelect.value === 'CONVIDADO' || paymentTypeSelect.value === 'Outros') {
-        paymentData.additionalInfo = guestNameInput.value;
-    }
-
-    // Check if this is an edit and the payment has a comprovanteURL with pendente status
-    if (editingPaymentIdInput.value && paymentDateInput.value && isAdmin) {
-        const paymentRef = ref(database, `payments/${year}/${month}/${editingPaymentIdInput.value}`);
-        const snapshot = await get(paymentRef);
-        if (snapshot.exists() && snapshot.val().comprovanteURL && snapshot.val().comprovanteStatus === 'pendente') {
-            paymentData.comprovanteStatus = 'aprovado';
-            paymentData.comprovanteApprovedAt = new Date().toISOString();
-            paymentData.comprovanteApprovedBy = auth.currentUser.email;
-        }
-    }
+    const hasPaymentDate = paymentDateInput.value && paymentDateInput.value !== '';
 
     try {
-        if (editingPaymentIdInput.value) {
-            await update(ref(database, `payments/${year}/${month}/${editingPaymentIdInput.value}`), paymentData);
-            await Swal.fire({
-                icon: 'success',
-                title: 'Sucesso',
-                text: paymentData.comprovanteStatus === 'aprovado' ? 'Pagamento atualizado e comprovante aprovado com sucesso!' : 'Pagamento atualizado com sucesso!',
-                timer: 1500,
-                showConfirmButton: false,
-            });
+        if (isEditing) {
+            // EDITAR - precisa saber se está em debts ou payments
+            const oldSource = editingPaymentSourceInput.value;
+            const oldId = editingPaymentIdInput.value;
+            let oldData = null;
+            
+            // Buscar os dados antigos para preservar campos como comprovante
+            if (oldSource === 'debts') {
+                const oldDebtRef = ref(database, `debts/${playerIdInput.value}/${oldId}`);
+                const oldSnapshot = await get(oldDebtRef);
+                if (oldSnapshot.exists()) {
+                    oldData = oldSnapshot.val();
+                }
+                await remove(oldDebtRef);
+            } else if (oldSource === 'payments') {
+                const oldPaymentRef = ref(database, `payments/${editingPaymentYearInput.value}/${editingPaymentMonthInput.value}/${oldId}`);
+                const oldSnapshot = await get(oldPaymentRef);
+                if (oldSnapshot.exists()) {
+                    oldData = oldSnapshot.val();
+                }
+                await remove(oldPaymentRef);
+            }
+            
+            if (hasPaymentDate) {
+                // Mover para PAYMENTS - PRESERVAR TODOS OS CAMPOS DO DEBT
+                const [year, month] = paymentMonthInput.value.split('-');
+                const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+                
+                // Criar o novo pagamento PRESERVANDO os dados antigos
+                const newPaymentData = {
+                    // Dados atuais do formulário
+                    month: paymentMonthInput.value,
+                    value: parseFloat(paymentValueInput.value),
+                    playerId: playerIdInput.value,
+                    playerName: playerNameSpan.textContent,
+                    paymentType: paymentTypeSelect.value,
+                    createdAt: oldData?.createdAt || new Date().toISOString(),
+                    date: paymentDateInput.value,
+                    paymentStatus: 'pago',
+                    // Preservar campos do comprovante se existirem
+                    comprovanteURL: oldData?.comprovanteURL || null,
+                    comprovanteStatus: 'aprovado',
+                    comprovanteApprovedAt: new Date().toISOString(),
+                    comprovanteApprovedBy: auth.currentUser?.email || null,
+                    comprovanteUploadedAt: oldData?.comprovanteUploadedAt || null,
+                    // Preservar campos adicionais
+                    additionalInfo: oldData?.additionalInfo || guestNameInput.value || null,
+                    guestName: oldData?.guestName || null,
+                    gameId: oldData?.gameId || null
+                };
+                
+                await set(newPaymentRef, newPaymentData);
+                
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Pagamento confirmado com sucesso! Os dados do comprovante foram preservados.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            } else {
+                // Voltar para DEBTS (caso remova a data)
+                const newDebtData = {
+                    month: paymentMonthInput.value,
+                    value: parseFloat(paymentValueInput.value),
+                    playerId: playerIdInput.value,
+                    playerName: playerNameSpan.textContent,
+                    paymentType: paymentTypeSelect.value,
+                    createdAt: oldData?.createdAt || new Date().toISOString(),
+                    paymentStatus: 'pendente',
+                    comprovanteURL: oldData?.comprovanteURL || null,
+                    comprovanteStatus: oldData?.comprovanteStatus || null,
+                    comprovanteUploadedAt: oldData?.comprovanteUploadedAt || null,
+                    additionalInfo: oldData?.additionalInfo || guestNameInput.value || null,
+                    guestName: oldData?.guestName || null
+                };
+                const newDebtRef = push(ref(database, `debts/${playerIdInput.value}`));
+                await set(newDebtRef, newDebtData);
+                
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Débito atualizado com sucesso!',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
         } else {
-            const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
-            await set(newPaymentRef, paymentData);
-            await Swal.fire({
-                icon: 'success',
-                title: 'Sucesso',
-                text: 'Pagamento registrado com sucesso!',
-                timer: 1500,
-                showConfirmButton: false,
-            });
+            // NOVO REGISTRO
+            const paymentData = {
+                month: paymentMonthInput.value,
+                value: parseFloat(paymentValueInput.value),
+                playerId: playerIdInput.value,
+                playerName: playerNameSpan.textContent,
+                paymentType: paymentTypeSelect.value,
+                createdAt: new Date().toISOString()
+            };
+
+            if (hasPaymentDate) {
+                paymentData.date = paymentDateInput.value;
+                paymentData.paymentStatus = 'pago';
+            } else {
+                paymentData.paymentStatus = 'pendente';
+            }
+
+            if (paymentTypeSelect.value === 'CONVIDADO' || paymentTypeSelect.value === 'Outros') {
+                paymentData.additionalInfo = guestNameInput.value;
+            }
+
+            if (hasPaymentDate) {
+                const [year, month] = paymentMonthInput.value.split('-');
+                const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+                await set(newPaymentRef, paymentData);
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Pagamento registrado com sucesso!',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            } else {
+                const newDebtRef = push(ref(database, `debts/${playerIdInput.value}`));
+                await set(newDebtRef, paymentData);
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Débito registrado com sucesso!',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
         }
 
         resetForm();
@@ -698,19 +813,19 @@
         });
     }
 });
-   
-   
-   
+
+
+
         cancelEditBtn.addEventListener('click', () => {
             resetForm();
         });
 
         deletePaymentBtn.addEventListener('click', async () => {
-            if (!editingPaymentIdInput.value || !editingPaymentYearInput.value || !editingPaymentMonthInput.value) {
+            if (!editingPaymentIdInput.value) {
                 await Swal.fire({
                     icon: 'error',
                     title: 'Erro',
-                    text: 'Nenhum pagamento selecionado para exclusão.',
+                    text: 'Nenhum registro selecionado para exclusão.',
                     timer: 1500,
                     showConfirmButton: false,
                 });
@@ -743,14 +858,15 @@
                         reason,
                         auth.currentUser ? auth.currentUser.email : '',
                         editingPaymentYearInput.value,
-                        editingPaymentMonthInput.value
+                        editingPaymentMonthInput.value,
+                        editingPaymentSourceInput.value
                     );
                 } catch (error) {
-                    console.error("Error deleting payment:", error);
+                    console.error("Error deleting:", error);
                     await Swal.fire({
                         icon: 'error',
                         title: 'Erro',
-                        text: 'Erro ao excluir pagamento: ' + error.message,
+                        text: 'Erro ao excluir registro: ' + error.message,
                         timer: 1500,
                         showConfirmButton: false,
                     });
@@ -828,6 +944,7 @@
         function resetForm() {
             paymentForm.reset();
             editingPaymentIdInput.value = '';
+            editingPaymentSourceInput.value = '';
             editingPaymentYearInput.value = '';
             editingPaymentMonthInput.value = '';
             guestFieldContainer.style.display = 'none';
@@ -838,9 +955,30 @@
             paymentDateInput.valueAsDate = new Date();
         }
 
+        // ============================================
+        // 3. LOAD PAYMENTS - MODIFICADO (busca debts + payments)
+        // ============================================
         function loadPayments(playerId) {
             paymentsList.innerHTML = '';
             let playerPayments = [];
+
+            const loadDebts = async () => {
+                const debtsRef = ref(database, `debts/${playerId}`);
+                const snapshot = await get(debtsRef);
+                if (snapshot.exists()) {
+                    const debts = snapshot.val();
+                    for (const [debtId, debt] of Object.entries(debts)) {
+                        playerPayments.push({ 
+                            id: debtId, 
+                            source: 'debts',
+                            ...debt, 
+                            isDeleted: false 
+                        });
+                    }
+                }
+            };
+
+            /* comentei para não apresentar os pagamentos realizados 
 
             const loadActivePayments = async () => {
                 const paymentsRef = ref(database, 'payments');
@@ -853,14 +991,21 @@
                             for (const [paymentId, payment] of Object.entries(payments)) {
                                 if (payment.playerId === playerId) {
                                     const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
-                                    playerPayments.push({ id: paymentId, year, month: normalizedMonth, ...payment, isDeleted: false });
+                                    playerPayments.push({ 
+                                        id: paymentId, 
+                                        source: 'payments',
+                                        year, 
+                                        month: normalizedMonth, 
+                                        ...payment, 
+                                        isDeleted: false 
+                                    });
                                 }
                             }
                         }
                     }
                 }
             };
-
+*/
             const loadDeletedPayments = async () => {
                 const deletedPaymentsRef = ref(database, 'deletedPayments');
                 const snapshot = await get(deletedPaymentsRef);
@@ -868,15 +1013,21 @@
                     const deletedPayments = snapshot.val();
                     for (const [paymentId, payment] of Object.entries(deletedPayments)) {
                         if (payment.playerId === playerId) {
-                            playerPayments.push({ id: paymentId, ...payment, isDeleted: true });
+                            playerPayments.push({ 
+                                id: paymentId, 
+                                source: 'deleted',
+                                ...payment, 
+                                isDeleted: true 
+                            });
                         }
                     }
                 }
             };
-
-            Promise.all([loadActivePayments(), loadDeletedPayments()])
+// basta trocar o que tá comentado pelo não comentado
+      //      Promise.all([loadDebts(), loadActivePayments(), loadDeletedPayments()])
+        Promise.all([loadDebts(), loadDeletedPayments()])
                 .then(() => {
-                    playerPayments.sort((a, b) => b.month.localeCompare(a.month));
+                    playerPayments.sort((a, b) => b.month?.localeCompare(a.month) || 0);
                     renderPayments(playerPayments);
                 })
                 .catch(async (error) => {
@@ -892,16 +1043,149 @@
                 });
         }
 
+        // ============================================
+        // 4. EDIT PAYMENT - MODIFICADO (suporta debts e payments)
+        // ============================================
+        async function editPayment(paymentId, year, month, source) {
+            const normalizedMonth = month?.includes('-') ? month.split('-')[1] : month?.padStart(2, '0');
+            try {
+                let paymentData;
+                
+                if (source === 'debts') {
+                    const debtRef = ref(database, `debts/${playerIdInput.value}/${paymentId}`);
+                    const snapshot = await get(debtRef);
+                    paymentData = snapshot.val();
+                } else if (source === 'payments') {
+                    const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
+                    const snapshot = await get(paymentRef);
+                    paymentData = snapshot.val();
+                } else {
+                    return;
+                }
+                
+                if (paymentData) {
+                    paymentMonthInput.value = paymentData.month;
+                    paymentValueInput.value = paymentData.value;
+                    paymentDateInput.value = paymentData.date || '';
+                    paymentTypeSelect.value = paymentData.paymentType || '';
+                    editingPaymentIdInput.value = paymentId;
+                    editingPaymentYearInput.value = year;
+                    editingPaymentMonthInput.value = normalizedMonth;
+                    editingPaymentSourceInput.value = source;
+                    
+                    if (paymentData.paymentType === 'CONVIDADO' || paymentData.paymentType === 'Outros') {
+                        guestFieldContainer.style.display = 'block';
+                        guestNameInput.value = paymentData.additionalInfo || '';
+                        guestFieldLabel.textContent = paymentData.paymentType === 'CONVIDADO' ? 'Nome do Convidado:' : 'Especificação:';
+                        guestNameInput.placeholder = paymentData.paymentType === 'CONVIDADO' ? 'Digite o nome do convidado' : 'Digite a razão do pagamento';
+                    } else {
+                        guestFieldContainer.style.display = 'none';
+                    }
+                    
+                    savePaymentBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+                    cancelEditBtn.style.display = 'inline-block';
+                    deletePaymentBtn.style.display = 'inline-block';
+                    paymentForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Registro não encontrado.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading for edit:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao carregar registro para edição: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        }
+
+        // ============================================
+        // 5. DELETE PAYMENT - MODIFICADO (suporta debts e payments)
+        // ============================================
+        async function deletePayment(paymentId, reason, deletedBy, year, month, source) {
+            const normalizedMonth = month?.includes('-') ? month.split('-')[1] : month?.padStart(2, '0');
+            try {
+                let paymentRef;
+                
+                if (source === 'debts') {
+                    paymentRef = ref(database, `debts/${playerIdInput.value}/${paymentId}`);
+                } else if (source === 'payments') {
+                    paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
+                } else {
+                    return;
+                }
+                
+                const snapshot = await get(paymentRef);
+                
+                if (!snapshot.exists()) {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Registro não encontrado.',
+                        timer: 3500,
+                        showConfirmButton: false,
+                    });
+                    return;
+                }
+                
+                const paymentData = snapshot.val();
+
+                const deletedPaymentRef = push(ref(database, 'deletedPayments'));
+                await set(deletedPaymentRef, {
+                    ...paymentData,
+                    deleteReason: reason,
+                    deletedBy: deletedBy,
+                    deletedAt: new Date().toISOString(),
+                    originalSource: source,
+                    originalYear: year,
+                    originalMonth: normalizedMonth
+                });
+                await remove(paymentRef);
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso',
+                    text: 'Registro excluído com sucesso!',
+                    timer: 3500,
+                    showConfirmButton: false,
+                });
+                
+                if (editingPaymentIdInput.value === paymentId) {
+                    resetForm();
+                }
+                loadPayments(playerIdInput.value);
+            } catch (error) {
+                console.error("Error deleting:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Erro ao excluir registro: ' + error.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        }
+
+        // ============================================
+        // 6. RENDER PAYMENTS - MODIFICADO (adiciona source para edit)
+        // ============================================
         function renderPayments(payments) {
             paymentsList.innerHTML = '';
             if (payments.length === 0) {
-                paymentsList.innerHTML = "<div>Nenhum pagamento registrado</div>";
+                paymentsList.innerHTML = "<div>Nenhuma contribuição pendente</div>";
                 return;
             }
             for (const payment of payments) {
                 const isPaid = payment.date && payment.value > 0 && !payment.isDeleted;
                 const isExcluded = payment.isDeleted;
-                const [year, month] = payment.month.split('-');
+                const [year, month] = payment.month ? payment.month.split('-') : ['', ''];
                 const monthName = getMonthName(month);
                 const paymentEl = document.createElement('div');
                 paymentEl.className = `status-item ${isExcluded ? 'excluded' : 'active'}`;
@@ -978,7 +1262,7 @@
                 if (!payment.isDeleted) {
                     paymentEl.addEventListener('click', (e) => {
                         if (!e.target.closest('.admin-buttons')) {
-                            editPayment(payment.id, payment.year, payment.month);
+                            editPayment(payment.id, payment.year, payment.month, payment.source);
                         }
                     });
                 }
@@ -993,136 +1277,6 @@
                 paymentsList.appendChild(paymentEl);
             }
         }
-
-
-async function editPayment(paymentId, year, month) {
-    const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
-    try {
-        const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
-        const snapshot = await get(paymentRef);
-        
-        if (snapshot.exists()) {
-            const paymentData = snapshot.val();
-            
-            paymentMonthInput.value = paymentData.month;
-            paymentValueInput.value = paymentData.value;
-            paymentDateInput.value = paymentData.date || '';
-            paymentTypeSelect.value = paymentData.paymentType || '';
-            editingPaymentIdInput.value = paymentId;
-            editingPaymentYearInput.value = year;
-            editingPaymentMonthInput.value = normalizedMonth;
-            
-            if (paymentData.paymentType === 'CONVIDADO' || paymentData.paymentType === 'Outros') {
-                guestFieldContainer.style.display = 'block';
-                guestNameInput.value = paymentData.additionalInfo || '';
-                guestFieldLabel.textContent = paymentData.paymentType === 'CONVIDADO' ? 'Nome do Convidado:' : 'Especificação:';
-                guestNameInput.placeholder = paymentData.paymentType === 'CONVIDADO' ? 'Digite o nome do convidado' : 'Digite a razão do pagamento';
-            } else {
-                guestFieldContainer.style.display = 'none';
-            }
-            
-            // VERIFIQUE E ATUALIZE O STATUS SE NECESSÁRIO
-            if (paymentDateInput.value && !paymentData.paymentStatus) {
-                // Se estiver editando e já existe uma data de pagamento mas não tem status, atualize o status
-                await update(paymentRef, {
-                    paymentStatus: 'pago'
-                });
-                // Recarregue os dados atualizados
-                const updatedSnapshot = await get(paymentRef);
-                if (updatedSnapshot.exists()) {
-                    const updatedData = updatedSnapshot.val();
-                    // Atualize visualmente se necessário
-                    console.log('Status de pagamento atualizado para: pago');
-                }
-            } else if (paymentDateInput.value && paymentData.paymentStatus !== 'pago') {
-                // Se tem data mas o status não está como pago, corrija
-                await update(paymentRef, {
-                    paymentStatus: 'pago'
-                });
-                console.log('Status de pagamento corrigido para: pago');
-            } else if (!paymentDateInput.value && paymentData.paymentStatus === 'pago') {
-                // Se não tem data mas o status está como pago, corrija para pendente
-                await update(paymentRef, {
-                    paymentStatus: 'pendente'
-                });
-                console.log('Status de pagamento corrigido para: pendente');
-            }
-            
-            savePaymentBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
-            cancelEditBtn.style.display = 'inline-block';
-            deletePaymentBtn.style.display = 'inline-block';
-            paymentForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        } else {
-            await Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: 'Pagamento não encontrado. Verifique se os dados foram migrados corretamente.',
-                timer: 1500,
-                showConfirmButton: false,
-            });
-        }
-    } catch (error) {
-        console.error("Error loading payment for edit:", error);
-        await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Erro ao carregar pagamento para edição: ' + error.message,
-            timer: 1500,
-            showConfirmButton: false,
-        });
-    }
-}
-
-
-
-      async function deletePayment(paymentId, reason, deletedBy, year, month) {
-    const normalizedMonth = month.includes('-') ? month.split('-')[1] : month.padStart(2, '0');
-    try {
-        const paymentRef = ref(database, `payments/${year}/${normalizedMonth}/${paymentId}`);
-        const snapshot = await get(paymentRef);
-        
-        if (!snapshot.exists()) {
-            await Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: 'Pagamento não encontrado.',
-                timer: 3500,
-                showConfirmButton: false,
-            });
-            return;
-        }
-
-        const deletedPaymentRef = push(ref(database, 'deletedPayments'));
-        await set(deletedPaymentRef, {
-            ...snapshot.val(), // Usar snapshot.val() em vez de paymentData
-            deleteReason: reason,
-            deletedBy: deletedBy,
-            deletedAt: new Date().toISOString()
-        });
-        await remove(paymentRef);
-        await Swal.fire({
-            icon: 'success',
-            title: 'Sucesso',
-            text: 'Pagamento excluído com sucesso!',
-            timer: 3500,
-            showConfirmButton: false,
-        });
-        
-        if (editingPaymentIdInput.value === paymentId) {
-            resetForm();
-        }
-        loadPayments(playerIdInput.value);
-    } catch (error) {
-        console.error("Error deleting payment:", error);
-        await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Erro ao excluir pagamento: ' + error.message,
-            timer: 1500,
-            showConfirmButton: false,
-        });
-    }
-}
 
         function formatDate(dateString) {
             if (!dateString) return '-';
