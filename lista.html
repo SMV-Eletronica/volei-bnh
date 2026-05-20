@@ -41,10 +41,6 @@
         text-align: left;
       min-width: 50px;
     }
-   /* .notified-players-list th {
-     background-color: #f2f2f2;
-    }
-     */
     .notified-players-list button {
         margin: 2px;
         padding: 5px 8px;
@@ -169,9 +165,6 @@
             <button id="confirmPlayer"><i class="fas fa-sign-in"></i> Entrar em Quadra</button>          
           </div>
 
-          
-
-          
           <div class="guest-controls" id="guestControls" style="display: none;">
             <button id="convidadobtn"><i class="fa-regular fa-clock"></i> Convidados após as:<span class="horario-vermelho" id="horarioConvidados"></span> </button>
             <input type="text" id="guestNameInput" placeholder="Nome do Convidado" maxlength="15">
@@ -258,9 +251,9 @@
     let playersCacheTimestamp = null;
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos de cache
     
-    // Cache para pagamentos
-    let paymentsCache = null;
-    let paymentsCacheTimestamp = null;
+    // Cache para débitos
+    let debtsCache = null;
+    let debtsCacheTimestamp = null;
     
     // Controle de listeners ativos
     let currentGameListener = null;
@@ -316,9 +309,9 @@
       if (type === 'players') {
         playersCache = null;
         playersCacheTimestamp = null;
-      } else if (type === 'payments') {
-        paymentsCache = null;
-        paymentsCacheTimestamp = null;
+      } else if (type === 'debts') {
+        debtsCache = null;
+        debtsCacheTimestamp = null;
       }
     }
 
@@ -589,37 +582,54 @@
       }
     }
 
+    // ============================================
+    // FUNÇÃO ATUALIZADA: Buscar débitos em debts
+    // ============================================
     async function checkPlayerDebts(playerId) {
       try {
-        const paymentsRef = ref(database, 'payments');
-        const snapshot = await get(paymentsRef);
-        trackDownload('/payments');
+        const debtsRef = ref(database, `debts/${playerId}`);
+        const snapshot = await get(debtsRef);
+        trackDownload(`/debts/${playerId}`);
+        
         let debtCount = 0;
         let totalDebt = 0;
         let creditBalance = 0;
-
+        
+        // Processar débitos pendentes
         if (snapshot.exists()) {
-          const paymentsData = snapshot.val();
+          const debts = snapshot.val();
+          for (const debtId in debts) {
+            const debt = debts[debtId];
+            if (debt && ['CONVIDADO', 'DIARIA', 'Mensal'].includes(debt.paymentType)) {
+              debtCount += 1;
+              totalDebt += parseFloat(debt.value || 0);
+            }
+          }
+        }
+        
+        // Buscar créditos em payments
+        const paymentsRef = ref(database, 'payments');
+        const paymentsSnapshot = await get(paymentsRef);
+        if (paymentsSnapshot.exists()) {
+          const paymentsData = paymentsSnapshot.val();
           for (const year in paymentsData) {
             for (const month in paymentsData[year]) {
               for (const paymentId in paymentsData[year][month]) {
                 const payment = paymentsData[year][month][paymentId];
-                if (payment && payment.playerId === playerId) {
-                  if (['CONVIDADO', 'DIARIA', 'Mensal'].includes(payment.paymentType) && 
-                      (!payment.date || payment.paymentStatus === 'inadimplente')) {
-                    debtCount += 1;
-                    totalDebt += parseFloat(payment.value || 0);
-                  } else if (payment.paymentType === 'Creditos' && payment.paymentStatus === 'pago' && !payment.usedAt) {
-                    const creditValue = parseFloat(payment.value);
-                    if (!isNaN(creditValue)) {
-                      creditBalance += creditValue;
-                    }
+                if (payment && payment.playerId === playerId && 
+                    payment.paymentType === 'Creditos' && 
+                    payment.paymentStatus === 'pago' && 
+                    !payment.usedAt) {
+                  const creditValue = parseFloat(payment.value);
+                  if (!isNaN(creditValue)) {
+                    creditBalance += creditValue;
                   }
                 }
               }
             }
           }
         }
+        
         return {
           hasDebt: debtCount > 0,
           debtCount: debtCount || 0,
@@ -734,96 +744,107 @@
         return 0;
       }
     }
-async function loadCurrentUserPlayer() {
-  document.getElementById('loading-overlay').style.display = 'flex';
-  
-  try {
-    // Se já tivermos o currentUserPlayer com ID, não precisa buscar novamente
-    if (window.currentUserPlayer?.id) {
-      document.getElementById('loading-overlay').style.display = 'none';
-      return window.currentUserPlayer;
-    }
 
-    // Busca apenas o jogador logado (muito mais leve!)
-    const playersRef = ref(database, 'players');
-    const snapshot = await get(playersRef);
-    
-    if (snapshot.exists()) {
-      // Convertemos apenas uma vez
-      allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
-        id,
-        ...player
-      }));
-
-      window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
-
-      if (!window.currentUserPlayer) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Jogador não encontrado',
-          text: 'Nenhum jogador associado a este email.',
-        });
-        await signOut(auth);
-        window.location.href = 'loginvl.html';
+    // ============================================
+    // FUNÇÃO ATUALIZADA: findExistingDebt - Buscar débito em debts
+    // ============================================
+    async function findExistingDebt(playerId, gameId, paymentType, additionalInfo) {
+      try {
+        const debtsRef = ref(database, `debts/${playerId}`);
+        const snapshot = await get(debtsRef);
+        trackDownload(`/debts/${playerId}`);
+        if (!snapshot.exists()) return null;
+        
+        const debts = snapshot.val();
+        for (const debtId in debts) {
+          const debt = debts[debtId];
+          if (debt.gameId === gameId && 
+              debt.paymentType === paymentType && 
+              debt.additionalInfo === additionalInfo) {
+            return { debtId, ...debt };
+          }
+        }
+        return null;
+      } catch (error) {
+        console.error('Erro ao buscar débito existente:', error);
         return null;
       }
+    }
 
-      // Preenche o sidebar
-      const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
-      if (window.currentUserPlayer.imageUrl) {
-        sidebarUserPhoto.src = await preloadImage(window.currentUserPlayer.imageUrl);
-      } else {
-        sidebarUserPhoto.src = defaultImage;
-      }
-
-      document.getElementById('sidebarUserName').textContent = window.currentUserPlayer.name || 'Usuário';
-      document.getElementById('sidebarUserPosition').textContent = window.currentUserPlayer.position || '-';
-      document.getElementById('sidebarUserCategory').textContent = window.currentUserPlayer.category || '-';
-
-/*
-      // Créditos (se tiver)
-      const debtInfo = await checkPlayerDebts(window.currentUserPlayer.id);
-      if (debtInfo.creditBalance > 0) {
-        // adiciona o display de crédito...
-      }
-    }      
-    */
- // ========== CÓDIGO ADICIONADO PARA MOSTRAR O BOTÃO ==========
-      const confirmPlayerBtn = document.getElementById('confirmPlayer');
-      const guestControls = document.getElementById('guestControls');
+    async function loadCurrentUserPlayer() {
+      document.getElementById('loading-overlay').style.display = 'flex';
       
-      if (confirmPlayerBtn) {
-        confirmPlayerBtn.style.display = 'inline-block';
-        confirmPlayerBtn.disabled = false;
+      try {
+        if (window.currentUserPlayer?.id) {
+          document.getElementById('loading-overlay').style.display = 'none';
+          return window.currentUserPlayer;
+        }
+
+        const playersRef = ref(database, 'players');
+        const snapshot = await get(playersRef);
+        
+        if (snapshot.exists()) {
+          allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+            id,
+            ...player
+          }));
+
+          window.currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+
+          if (!window.currentUserPlayer) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Jogador não encontrado',
+              text: 'Nenhum jogador associado a este email.',
+            });
+            await signOut(auth);
+            window.location.href = 'loginvl.html';
+            return null;
+          }
+
+          const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+          if (window.currentUserPlayer.imageUrl) {
+            sidebarUserPhoto.src = await preloadImage(window.currentUserPlayer.imageUrl);
+          } else {
+            sidebarUserPhoto.src = defaultImage;
+          }
+
+          document.getElementById('sidebarUserName').textContent = window.currentUserPlayer.name || 'Usuário';
+          document.getElementById('sidebarUserPosition').textContent = window.currentUserPlayer.position || '-';
+          document.getElementById('sidebarUserCategory').textContent = window.currentUserPlayer.category || '-';
+
+          const confirmPlayerBtn = document.getElementById('confirmPlayer');
+          const guestControls = document.getElementById('guestControls');
+          
+          if (confirmPlayerBtn) {
+            confirmPlayerBtn.style.display = 'inline-block';
+            confirmPlayerBtn.disabled = false;
+          }
+          
+          if (guestControls) {
+            guestControls.style.display = 'flex';
+          }
+
+          const debtInfo = await checkPlayerDebts(window.currentUserPlayer?.id);
+          if (debtInfo.creditBalance && debtInfo.creditBalance > 0) {
+            const creditDisplay = document.createElement('div');
+            creditDisplay.className = 'sidebar-user-credit';
+            creditDisplay.textContent = `Crédito: R$${debtInfo.creditBalance.toFixed(2)}`;
+            document.querySelector('.sidebar-user-info').appendChild(creditDisplay);
+          }
+        }
+
+        isAdmin = adminEmails.includes(emailLogado) || window.currentUserPlayer?.category === 'ADMIN';
+        
+        document.getElementById('loading-overlay').style.display = 'none';
+        return window.currentUserPlayer;
+
+      } catch (error) {
+        console.error('Erro ao carregar jogador:', error);
+        document.getElementById('loading-overlay').style.display = 'none';
+        return null;
       }
-      
-      if (guestControls) {
-        guestControls.style.display = 'flex';
-      }
-      // ========== FIM DO CÓDIGO ADICIONADO ==========
-
-
-
-      const debtInfo = await checkPlayerDebts(window.currentUserPlayer?.id);
-        if (debtInfo.creditBalance && debtInfo.creditBalance > 0) {
-          const creditDisplay = document.createElement('div');
-          creditDisplay.className = 'sidebar-user-credit';
-          creditDisplay.textContent = `Crédito: R$${debtInfo.creditBalance.toFixed(2)}`;
-          document.querySelector('.sidebar-user-info').appendChild(creditDisplay);
-        }}
-
-    isAdmin = adminEmails.includes(emailLogado) || window.currentUserPlayer?.category === 'ADMIN';
-    
-    document.getElementById('loading-overlay').style.display = 'none';
-    return window.currentUserPlayer;
-
-  } catch (error) {
-    console.error('Erro ao carregar jogador:', error);
-    document.getElementById('loading-overlay').style.display = 'none';
-    return null;
-  }
-}
-
+    }
 
     async function loadGuestFee() {
       try {
@@ -886,36 +907,6 @@ async function loadCurrentUserPlayer() {
       } catch (error) {
         console.error('Erro ao salvar jogo no histórico:', error);
         throw error;
-      }
-    }
-
-    async function findExistingPayment(playerId, gameId, paymentType, additionalInfo) {
-      try {
-        const paymentsRef = ref(database, 'payments');
-        const snapshot = await get(paymentsRef);
-        trackDownload('/payments');
-        if (!snapshot.exists()) return null;
-        const years = snapshot.val() || {};
-        let matchingPayment = null;
-        for (const year in years) {
-          for (const month in years[year]) {
-            const payments = years[year][month] || {};
-            const playerPayments = Object.entries(payments)
-              .map(([id, payment]) => ({ paymentId: id, ...payment }))
-              .filter(p => p.playerId === playerId && p.gameId === gameId && p.paymentType === paymentType && p.additionalInfo === additionalInfo);
-            if (playerPayments.length > 0) {
-              matchingPayment = playerPayments[0];
-              matchingPayment.year = year;
-              matchingPayment.month = month;
-              break;
-            }
-          }
-          if (matchingPayment) break;
-        }
-        return matchingPayment;
-      } catch (error) {
-        console.error('Erro ao buscar pagamento existente:', error);
-        return null;
       }
     }
 
@@ -982,26 +973,28 @@ async function loadCurrentUserPlayer() {
 
     async function checkPaymentStatus(playerId) {
       try {
-        const paymentsRef = ref(database, 'payments');
-        const snapshot = await get(paymentsRef);
-        trackDownload('/payments');
-        const payments = snapshot.val() || {};
-        let playerPayments = [];
-        for (const year in payments) {
-          for (const month in payments[year]) {
-            const monthPayments = payments[year][month] || {};
-            playerPayments.push(...Object.values(monthPayments).filter(p => p && p.playerId === playerId));
+        const debtsRef = ref(database, `debts/${playerId}`);
+        const snapshot = await get(debtsRef);
+        trackDownload(`/debts/${playerId}`);
+        if (!snapshot.exists()) return 'pago';
+        
+        const debts = snapshot.val();
+        for (const debtId in debts) {
+          const debt = debts[debtId];
+          if (debt && ['CONVIDADO', 'DIARIA', 'Mensal'].includes(debt.paymentType)) {
+            return 'inadimplente';
           }
         }
-        if (playerPayments.length === 0) return 'inadimplente';
-        const hasPending = playerPayments.some(p => !p.date && p.value > 0);
-        return hasPending ? 'inadimplente' : 'pago';
+        return 'pago';
       } catch (error) {
         console.error('Erro ao verificar status de pagamento:', error);
         return 'inadimplente';
       }
     }
 
+    // ============================================
+    // FUNÇÃO ATUALIZADA: approvePlayer - Mover de debts para payments
+    // ============================================
     async function approvePlayer(playerId, fromConfirmed = true, isPaid = true) {
       if (!isAdmin) {
         await Swal.fire({ icon: 'error', title: 'Permissão Negada', text: 'Você não tem permissão para aprovar jogadores.' });
@@ -1048,37 +1041,91 @@ async function loadCurrentUserPlayer() {
           });
           return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
         });
+        
         if (!playerData) {
           await Swal.fire({ icon: 'warning', title: 'Jogador Não Encontrado', text: 'Jogador não encontrado.' });
           return;
         }
-        if (guestFee > 0) {
-          const paymentData = {
-            additionalInfo: playerData.additionalInfo || playerData.name,
-            createdAt: playerData.createdAt || getBrazilDateTimeISO(),
-            month: playerData.month || getBrazilMonthYear(),
-            paymentType: playerData.paymentType || (playerData.category === 'CONVIDADO' ? 'CONVIDADO' : 'DIARIA'),
-            playerId: playerData.category === 'CONVIDADO' ? playerData.invitedById || playerData.id : playerData.id,
-            playerName: playerData.category === 'CONVIDADO' ? playerData.invitedByName || playerData.name : playerData.name,
-            value: paymentValue,
-            gameId: currentGameId,
-            date: isPaid ? (playerData.date || formatDateToISO(new Date())) : null,
-            paymentStatus: playerData.paymentStatus,
-            guestId: playerData.category === 'CONVIDADO' ? playerData.id : null,
-            guestName: playerData.category === 'CONVIDADO' ? playerData.name : null
-          };
-          const existingPayment = await findExistingPayment(paymentData.playerId, currentGameId, paymentData.paymentType, paymentData.additionalInfo);
-          const [year, month] = (paymentData.month || getBrazilMonthYear()).split('-');
-          if (existingPayment) {
-            const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-            await update(paymentRef, { paymentStatus: playerData.paymentStatus, date: paymentData.date, value: paymentValue, updatedAt: getBrazilDateTimeISO() });
-          } else {
-            const paymentId = `payment_${playerData.id}_${currentGameId}_${paymentData.paymentType}_${Date.now()}`;
-            const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+        
+
+         // ============================================
+    // COMENTAR ESTA PARTE PARA NÃO MEXER EM DEBTS/PAYMENTS
+    // ============================================
+    /*
+
+
+        if (guestFee > 0 && (playerData.category === 'CONVIDADO' || playerData.category === 'DIARIA')) {
+          // Buscar o débito existente em debts
+          const existingDebt = await findExistingDebt(
+            playerData.category === 'CONVIDADO' ? playerData.invitedById : playerData.id,
+            currentGameId,
+            playerData.category,
+            playerData.additionalInfo || playerData.name
+          );
+          
+          const [year, month] = getBrazilMonthYear().split('-');
+          
+          if (existingDebt) {
+            if (isPaid) {
+              // Mover de debts para payments
+              const paymentData = {
+                month: existingDebt.month || getBrazilMonthYear(),
+                value: existingDebt.value,
+                playerId: existingDebt.playerId,
+                playerName: existingDebt.playerName,
+                paymentType: existingDebt.paymentType,
+                createdAt: existingDebt.createdAt,
+                date: formatDateToISO(new Date()),
+                paymentStatus: 'pago',
+                additionalInfo: existingDebt.additionalInfo,
+                guestName: existingDebt.guestName,
+                gameId: currentGameId,
+                comprovanteURL: existingDebt.comprovanteURL || null,
+                comprovanteStatus: existingDebt.comprovanteStatus ? 'aprovado' : null,
+                comprovanteApprovedAt: existingDebt.comprovanteURL ? new Date().toISOString() : null,
+                comprovanteApprovedBy: existingDebt.comprovanteURL ? auth.currentUser?.email : null,
+                comprovanteUploadedAt: existingDebt.comprovanteUploadedAt || null
+              };
+              
+              const paymentRef = push(ref(database, `payments/${year}/${month}`));
+              await set(paymentRef, paymentData);
+              
+              // Remover de debts
+              const debtRef = ref(database, `debts/${existingDebt.playerId}/${existingDebt.debtId}`);
+              await remove(debtRef);
+              
+              invalidateCache('debts');
+            } else {
+              // Apenas atualizar o status do débito (continua em debts)
+              const debtRef = ref(database, `debts/${existingDebt.playerId}/${existingDebt.debtId}`);
+              await update(debtRef, { 
+                paymentStatus: 'inadimplente',
+                approvedAt: new Date().toISOString(),
+                approvedBy: auth.currentUser?.email
+              });
+            }
+          } else if (isPaid) {
+            // Criar diretamente em payments (caso não exista débito)
+            const paymentData = {
+              month: getBrazilMonthYear(),
+              value: paymentValue,
+              playerId: playerData.category === 'CONVIDADO' ? playerData.invitedById : playerData.id,
+              playerName: playerData.category === 'CONVIDADO' ? playerData.invitedByName : playerData.name,
+              paymentType: playerData.category,
+              createdAt: getBrazilDateTimeISO(),
+              date: formatDateToISO(new Date()),
+              paymentStatus: 'pago',
+              additionalInfo: playerData.additionalInfo || playerData.name,
+              guestName: playerData.category === 'CONVIDADO' ? playerData.name : null,
+              gameId: currentGameId
+            };
+            const paymentRef = push(ref(database, `payments/${year}/${month}`));
             await set(paymentRef, paymentData);
           }
-          invalidateCache('payments');
         }
+        */
+
+
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
         const statusText = isPaid ? 'Liberado (pago)' : 'Liberado (débito)';
         const message = `${playerData.name} foi ${statusText} para o jogo ${formattedDate}.`;
@@ -1090,107 +1137,193 @@ async function loadCurrentUserPlayer() {
       }
     }
 
-    async function removePlayer(playerId, fromConfirmed = true) {
-      if (!currentGameId) {
-        await Swal.fire({ icon: 'error', title: 'Erro', text: 'Selecione um jogo ativo para remover jogadores.' });
-        return;
-      }
-      const player = fromConfirmed ? confirmedPlayers.find(p => p.id === playerId) : waitlistPlayers.find(p => p.id === playerId);
-      if (!player) {
-        await Swal.fire({ icon: 'warning', title: 'Jogador Não Encontrado', text: 'Jogador ou convidado não encontrado.' });
-        return;
-      }
-      if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
-        await Swal.fire({ icon: 'error', title: 'Permissão Negada', text: 'Você só pode remover sua própria presença ou seus convidados.' });
-        return;
-      }
-      const result = await Swal.fire({ icon: 'question', title: 'Confirmar Remoção', html: `Você tem certeza que deseja remover <strong>${player.name}</strong> da lista?`, showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar' });
-      if (!result.isConfirmed) return;
-      try {
-        const gameRef = ref(database, `activeGames/${currentGameId}`);
-        await runTransaction(gameRef, (currentGameData) => {
-          if (!currentGameData) return null;
-          confirmedPlayers = Object.entries(currentGameData.confirmed || {}).map(([id, player]) => ({ id, ...player }));
-          waitlistPlayers = Object.entries(currentGameData.waitlist || {}).map(([id, player]) => ({ id, ...player }));
-          if (fromConfirmed) {
-            confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
-            if (confirmedPlayers.length < playerLimit && waitlistPlayers.length > 0) {
-              const slotsAvailable = playerLimit - confirmedPlayers.length;
-              const playersToPromote = sortPlayers([...waitlistPlayers]).slice(0, slotsAvailable);
-              waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.some(m => m.id === p.id));
-              confirmedPlayers.push(...playersToPromote);
-            }
-          } else {
-            waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
-          }
-          confirmedPlayers = sortPlayers(confirmedPlayers);
-          waitlistPlayers = sortPlayers(waitlistPlayers);
-          const confirmedData = {};
-          confirmedPlayers.forEach(player => {
-            confirmedData[player.id] = {
-              name: player.name, category: player.category, position: player.position, timestamp: player.timestamp,
-              paymentStatus: player.paymentStatus, imageUrl: player.imageUrl, invitedById: player.invitedById || null,
-              invitedByName: player.invitedByName || null, status: player.status || null, additionalInfo: player.additionalInfo || null,
-              createdAt: player.createdAt || null, date: player.date || null, month: player.month || null,
-              paymentType: player.paymentType || null, value: player.value || null
-            };
-          });
-          const waitlistData = {};
-          waitlistPlayers.forEach(player => {
-            waitlistData[player.id] = {
-              name: player.name, category: player.category, position: player.position, timestamp: player.timestamp,
-              paymentStatus: player.paymentStatus, imageUrl: player.imageUrl, invitedById: player.invitedById || null,
-              invitedByName: player.invitedByName || null, status: player.status || null, additionalInfo: player.additionalInfo || null,
-              createdAt: player.createdAt || null, date: player.date || null, month: player.month || null,
-              paymentType: player.paymentType || null, value: player.value || null
-            };
-          });
-          return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
-        });
-        let existingPayment = null;
-        if (player.category === 'CONVIDADO') {
-          existingPayment = await findExistingPayment(player.invitedById || window.currentUserPlayer.id, currentGameId, 'CONVIDADO', player.name);
-        } else if (player.category === 'DIARIA') {
-          existingPayment = await findExistingPayment(playerId, currentGameId, 'DIARIA', player.name);
+async function removePlayer(playerId, fromConfirmed = true) {
+  if (!currentGameId) {
+    await Swal.fire({ icon: 'error', title: 'Erro', text: 'Selecione um jogo ativo para remover jogadores.' });
+    return;
+  }
+  const player = fromConfirmed ? confirmedPlayers.find(p => p.id === playerId) : waitlistPlayers.find(p => p.id === playerId);
+  if (!player) {
+    await Swal.fire({ icon: 'warning', title: 'Jogador Não Encontrado', text: 'Jogador ou convidado não encontrado.' });
+    return;
+  }
+  if (!isAdmin && playerId !== window.currentUserPlayer?.id && player.invitedById !== window.currentUserPlayer?.id) {
+    await Swal.fire({ icon: 'error', title: 'Permissão Negada', text: 'Você só pode remover sua própria presença ou seus convidados.' });
+    return;
+  }
+  const result = await Swal.fire({ icon: 'question', title: 'Confirmar Remoção', html: `Você tem certeza que deseja remover <strong>${player.name}</strong> da lista?`, showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar' });
+  if (!result.isConfirmed) return;
+  
+  try {
+    const gameRef = ref(database, `activeGames/${currentGameId}`);
+    await runTransaction(gameRef, (currentGameData) => {
+      if (!currentGameData) return null;
+      confirmedPlayers = Object.entries(currentGameData.confirmed || {}).map(([id, p]) => ({ id, ...p }));
+      waitlistPlayers = Object.entries(currentGameData.waitlist || {}).map(([id, p]) => ({ id, ...p }));
+      if (fromConfirmed) {
+        confirmedPlayers = confirmedPlayers.filter(p => p.id !== playerId);
+        if (confirmedPlayers.length < playerLimit && waitlistPlayers.length > 0) {
+          const slotsAvailable = playerLimit - confirmedPlayers.length;
+          const playersToPromote = sortPlayers([...waitlistPlayers]).slice(0, slotsAvailable);
+          waitlistPlayers = waitlistPlayers.filter(p => !playersToPromote.some(m => m.id === p.id));
+          confirmedPlayers.push(...playersToPromote);
         }
-        if (existingPayment && existingPayment.paymentStatus === 'pago') {
+      } else {
+        waitlistPlayers = waitlistPlayers.filter(p => p.id !== playerId);
+      }
+      confirmedPlayers = sortPlayers(confirmedPlayers);
+      waitlistPlayers = sortPlayers(waitlistPlayers);
+      const confirmedData = {};
+      confirmedPlayers.forEach(p => { confirmedData[p.id] = { ...p, invitedById: p.invitedById || null, invitedByName: p.invitedByName || null }; });
+      const waitlistData = {};
+      waitlistPlayers.forEach(p => { waitlistData[p.id] = { ...p, invitedById: p.invitedById || null, invitedByName: p.invitedByName || null }; });
+      return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
+    });
+    
+    // ============================================
+    // LÓGICA OTIMIZADA: Verificar paymentStatus
+    // ============================================
+    if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFee > 0) {
+      
+      // Verificar se já foi PAGO (pelo paymentStatus)
+      const foiPago = player.paymentStatus === 'pago' || player.status === 'approved';
+      
+      if (foiPago) {
+        // CASO 1: JÁ FOI PAGO - Buscar o pagamento em payments e converter em CRÉDITO
+        console.log(`💰 ${player.name} já havia pago. Convertendo em crédito...`);
+        
+        const debtPlayerId = player.category === 'CONVIDADO' ? player.invitedById : playerId;
+        const debtPlayerName = player.category === 'CONVIDADO' ? player.invitedByName : player.name;
+        
+        // Buscar o pagamento específico em payments
+        const paymentsRef = ref(database, 'payments');
+        const paymentsSnapshot = await get(paymentsRef);
+        trackDownload('/payments');
+        
+        let paymentFound = false;
+        let paymentValue = parseFloat(player.value || guestFee);
+        let paymentPath = null;
+        let comprovanteData = {};
+        
+        if (paymentsSnapshot.exists()) {
+          const paymentsData = paymentsSnapshot.val();
+          // Procurar pagamento relacionado a este jogo
+          for (const year in paymentsData) {
+            for (const month in paymentsData[year]) {
+              for (const paymentId in paymentsData[year][month]) {
+                const payment = paymentsData[year][month][paymentId];
+                if (payment.gameId === currentGameId && 
+                    payment.paymentType === player.category) {
+                  
+                  if (player.category === 'CONVIDADO' && payment.guestName === player.name) {
+                    paymentFound = true;
+                    paymentValue = parseFloat(payment.value);
+                    paymentPath = `payments/${year}/${month}/${paymentId}`;
+                    comprovanteData = {
+                      comprovanteURL: payment.comprovanteURL,
+                      comprovanteStatus: payment.comprovanteStatus,
+                      comprovanteApprovedAt: payment.comprovanteApprovedAt,
+                      comprovanteApprovedBy: payment.comprovanteApprovedBy,
+                      comprovanteUploadedAt: payment.comprovanteUploadedAt
+                    };
+                    break;
+                  }
+                  if (player.category === 'DIARIA' && payment.playerId === playerId) {
+                    paymentFound = true;
+                    paymentValue = parseFloat(payment.value);
+                    paymentPath = `payments/${year}/${month}/${paymentId}`;
+                    comprovanteData = {
+                      comprovanteURL: payment.comprovanteURL,
+                      comprovanteStatus: payment.comprovanteStatus,
+                      comprovanteApprovedAt: payment.comprovanteApprovedAt,
+                      comprovanteApprovedBy: payment.comprovanteApprovedBy,
+                      comprovanteUploadedAt: payment.comprovanteUploadedAt
+                    };
+                    break;
+                  }
+                }
+              }
+              if (paymentFound) break;
+            }
+            if (paymentFound) break;
+          }
+        }
+        
+        if (paymentFound) {
+          // Criar CRÉDITO
           const [year, month] = getBrazilMonthYear().split('-');
-          const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
-          const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
+          const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+          
           await set(newPaymentRef, {
-            additionalInfo: `Crédito por remoção de (${player.name}) do jogo.`,
+            additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo`,
             createdAt: getBrazilDateTimeISO(),
             month: getBrazilMonthYear(),
             paymentType: 'Creditos',
-            playerId: existingPayment.playerId,
-            playerName: existingPayment.playerName,
-            value: parseFloat(existingPayment.value),
+            playerId: debtPlayerId,
+            playerName: debtPlayerName,
+            value: paymentValue,
             gameId: currentGameId,
             date: formatDateToISO(new Date()),
             paymentStatus: 'pago',
-            comprovanteApprovedAt: existingPayment.comprovanteApprovedAt || null,
-            comprovanteApprovedBy: existingPayment.comprovanteApprovedBy || null,
-            comprovanteStatus: existingPayment.comprovanteStatus || null,
-            comprovanteURL: existingPayment.comprovanteURL || null,
-            comprovanteUploadedAt: existingPayment.comprovanteUploadedAt || null
+            ...comprovanteData,
+            originalPaymentPath: paymentPath,
+            creditedAt: getBrazilDateTimeISO(),
+            creditedFromGame: currentGameId,
+            creditedFromPlayer: player.name
           });
-          const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-          await remove(paymentRef);
+          
+          // Remover pagamento original
+          const originalPaymentRef = ref(database, paymentPath);
+          await remove(originalPaymentRef);
+          
+          console.log(`✅ Crédito de R$${paymentValue} criado para ${debtPlayerName}`);
           invalidateCache('payments');
-        } else if (existingPayment) {
-          const paymentRef = ref(database, `payments/${existingPayment.year}/${existingPayment.month}/${existingPayment.paymentId}`);
-          await remove(paymentRef);
-          invalidateCache('payments');
+          
+          await Swal.fire({ 
+            icon: 'success', 
+            title: 'Crédito Gerado', 
+            text: `${player.name} foi removido e R$${paymentValue.toFixed(2)} foi convertido em crédito para ${debtPlayerName}.` 
+          });
+        } else {
+          console.log(`⚠️ Pagamento não encontrado em payments para ${player.name}, mas status estava como pago`);
         }
-        const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
-        const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
-        await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, "Vôlei BNH - Informações");
-        await Swal.fire({ icon: 'success', title: 'Sucesso', html: `<strong>${player.name}</strong> foi removido da lista com sucesso, caso haja contribuição de <strong>DIÁRIA</strong> a mesma será convertida em crédito` });
-      } catch (error) {
-        console.error('Erro ao remover jogador:', error);
-        await Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao remover presença.' });
+        
+      } else {
+        // CASO 2: NÃO FOI PAGO - Apenas remover de debts
+        console.log(`🗑️ ${player.name} não havia pago. Removendo apenas da lista.`);
+        
+        const debtPlayerId = player.category === 'CONVIDADO' ? player.invitedById : playerId;
+        const debtsRef = ref(database, `debts/${debtPlayerId}`);
+        const debtsSnapshot = await get(debtsRef);
+        trackDownload(`/debts/${debtPlayerId}`);
+        
+        if (debtsSnapshot.exists()) {
+          const debts = debtsSnapshot.val();
+          for (const debtId in debts) {
+            const debt = debts[debtId];
+            if (debt.gameId === currentGameId && debt.paymentType === player.category) {
+              // Encontrou o débito, remover
+              const debtRef = ref(database, `debts/${debtPlayerId}/${debtId}`);
+              await remove(debtRef);
+              console.log(`🗑️ Débito removido para ${player.name}`);
+              invalidateCache('debts');
+              break;
+            }
+          }
+        }
       }
     }
+    
+    const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
+    const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
+    await sendPushNotification(message, window.currentUserPlayer?.imageUrl || defaultImage, segments, "Vôlei BNH - Informações");
+    
+  } catch (error) {
+    console.error('Erro ao remover jogador:', error);
+    await Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao remover presença.' });
+  }
+}
+
 
     async function adjustConfirmedPlayers() {
       if (confirmedPlayers.length > playerLimit) {
@@ -1472,18 +1605,22 @@ async function loadCurrentUserPlayer() {
           return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
         });
 
+        // ============================================
+        // CRIAR DÉBITO EM DEBTS PARA DIARISTA
+        // ============================================
         if (!isAdmin && playerData.category === 'DIARIA' && !useCredit && guestFee > 0) {      
           alertCount = await updateDebtNotification(playerId, currentGameId);
         }
 
         if (playerObj.category === 'DIARIA' && guestFee > 0) {
-          const [year, month] = getBrazilMonthYear().split('-');
           if (useCredit) {
             const creditResult = await usePlayerCredit(playerId, guestFee, currentGameId, `Diarista: ${playerObj.name}`);
             if (!creditResult.success) {
               await Swal.fire({ icon: 'error', title: 'Crédito Insuficiente', text: `Saldo de crédito insuficiente. Faltam R$${creditResult.remaining.toFixed(2)}.` });
               return;
             }
+            // Criar pagamento em payments (já que usou crédito)
+            const [year, month] = getBrazilMonthYear().split('-');
             const paymentId = `payment_${playerId}_${currentGameId}_credito_${Date.now()}`;
             const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
             await set(paymentRef, {
@@ -1497,15 +1634,23 @@ async function loadCurrentUserPlayer() {
               comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null
             });
           } else {
-            const paymentId = `payment_${playerId}_${currentGameId}_DIARIA_${Date.now()}`;
-            const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-            await set(paymentRef, {
-              additionalInfo: playerObj.name, createdAt: getBrazilDateTimeISO(), month: getBrazilMonthYear(), paymentType: 'DIARIA',
-              playerId: playerId, playerName: playerObj.name, value: parseFloat(guestFee.toFixed(2)), gameId: currentGameId,
-              date: null, paymentStatus: 'inadimplente'
+            // Criar DÉBITO em debts
+            const debtRef = push(ref(database, `debts/${playerId}`));
+            await set(debtRef, {
+              month: getBrazilMonthYear(),
+              value: parseFloat(guestFee.toFixed(2)),
+              playerId: playerId,
+              playerName: playerData.name,
+              paymentType: 'DIARIA',
+              paymentStatus: 'pendente',
+              additionalInfo: playerData.name,
+              gameId: currentGameId,
+              createdAt: getBrazilDateTimeISO(),
+              comprovanteURL: null,
+              comprovanteStatus: null
             });
+            invalidateCache('debts');
           }
-          invalidateCache('payments');
         }
         
         const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
@@ -1550,6 +1695,9 @@ async function loadCurrentUserPlayer() {
       }
     }
 
+    // ============================================
+    // FUNÇÃO ATUALIZADA: addGuest - Criar débito em debts
+    // ============================================
     async function addGuest() {
       Swal.fire({ title: 'Adicionando Convidado...', text: 'Por favor, aguarde.', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => { Swal.showLoading(); } });
       
@@ -1759,14 +1907,18 @@ async function loadCurrentUserPlayer() {
           return { ...currentGameData, confirmed: confirmedData, waitlist: waitlistData, playerLimit };
         });
         
+        // ============================================
+        // CRIAR DÉBITO EM DEBTS PARA CONVIDADO
+        // ============================================
         if (guestFee > 0) {
-          const [year, month] = getBrazilMonthYear().split('-');
           if (useCredit) {
             const creditResult = await usePlayerCredit(window.currentUserPlayer.id, guestFee, currentGameId, `Convidado: ${guestName}`);
             if (!creditResult.success) {
               await Swal.fire({ icon: 'error', title: 'Crédito Insuficiente', text: `Saldo de crédito insuficiente. Faltam R$${creditResult.remaining.toFixed(2)}.` });
               return;
             }
+            // Criar pagamento em payments (já que usou crédito)
+            const [year, month] = getBrazilMonthYear().split('-');
             const paymentId = `payment_${guestId}_${currentGameId}_credito_${Date.now()}`;
             const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
             await set(paymentRef, {
@@ -1789,24 +1941,24 @@ async function loadCurrentUserPlayer() {
               comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null
             });
           } else {
-            const paymentId = `payment_${guestId}_${currentGameId}_CONVIDADO_${Date.now()}`;
-            const paymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
-            await set(paymentRef, {
-              additionalInfo: guestName, 
-              createdAt: getBrazilDateTimeISO(), 
-              month: getBrazilMonthYear(), 
-              paymentType: 'CONVIDADO',
-              playerId: window.currentUserPlayer.id, 
-              playerName: window.currentUserPlayer.name, 
+            // Criar DÉBITO em debts
+            const debtRef = push(ref(database, `debts/${window.currentUserPlayer.id}`));
+            await set(debtRef, {
+              month: getBrazilMonthYear(),
               value: parseFloat(guestFee.toFixed(2)),
-              gameId: currentGameId, 
-              date: null, 
-              paymentStatus: 'inadimplente', 
-              guestId: guestId, 
-              guestName: guestName
+              playerId: window.currentUserPlayer.id,
+              playerName: window.currentUserPlayer.name,
+              paymentType: 'CONVIDADO',
+              paymentStatus: 'pendente',
+              additionalInfo: guestName,
+              guestName: guestName,
+              gameId: currentGameId,
+              createdAt: getBrazilDateTimeISO(),
+              comprovanteURL: null,
+              comprovanteStatus: null
             });
+            invalidateCache('debts');
           }
-          invalidateCache('payments');
         }
         
         if (!isAdmin && !useCredit && guestFee > 0) {
@@ -1963,140 +2115,140 @@ async function loadCurrentUserPlayer() {
         gameListH3.style.display = 'block';
       }
     }
-async function loadGameData(gameId) {
-  try {
-    if (!gameId || gameId === 'current') {
-      confirmedPlayers = [];
-      waitlistPlayers = [];
-      playerLimit = 16;
-      currentGameData = null;
-      throttledUpdateUI();
-      updatePlayerLimitDisplay(isAdmin);
-      return;
-    }
-    
-    const gameRef = ref(database, `activeGames/${gameId}`);
-    
-    // Remove listener anterior se existir
-    if (currentGameListener) {
-      off(gameRef);
-      currentGameListener = null;
-    }
-    
-    // Configura novo listener em tempo real
-    currentGameListener = onValue(gameRef, (snapshot) => {
-      trackDownload(`/activeGames/${gameId} (listener)`);
-      
-      if (!snapshot.exists()) {
-        Swal.fire({ 
-          icon: 'error', 
-          title: 'Jogo Não Encontrado', 
-          text: 'O jogo selecionado não foi encontrado.' 
+
+    async function loadGameData(gameId) {
+      try {
+        if (!gameId || gameId === 'current') {
+          confirmedPlayers = [];
+          waitlistPlayers = [];
+          playerLimit = 16;
+          currentGameData = null;
+          throttledUpdateUI();
+          updatePlayerLimitDisplay(isAdmin);
+          return;
+        }
+        
+        const gameRef = ref(database, `activeGames/${gameId}`);
+        
+        // Remove listener anterior se existir
+        if (currentGameListener) {
+          off(gameRef);
+          currentGameListener = null;
+        }
+        
+        // Configura novo listener em tempo real
+        currentGameListener = onValue(gameRef, (snapshot) => {
+          trackDownload(`/activeGames/${gameId} (listener)`);
+          
+          if (!snapshot.exists()) {
+            Swal.fire({ 
+              icon: 'error', 
+              title: 'Jogo Não Encontrado', 
+              text: 'O jogo selecionado não foi encontrado.' 
+            });
+            confirmedPlayers = [];
+            waitlistPlayers = [];
+            playerLimit = 16;
+            currentGameData = null;
+            throttledUpdateUI();
+            updatePlayerLimitDisplay(isAdmin);
+            return;
+          }
+          
+          const gameData = snapshot.val();
+          currentGameData = gameData;
+          currentGameDate = gameData.date;
+          gameTime = gameData.time;
+          playerLimit = gameData.playerLimit || 16;
+          
+          // Extrai jogadores diretamente do confirmed (sem buscar em players)
+          confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
+            return {
+              id: id,
+              name: player.name || '-',
+              category: player.category || 'CONVIDADO',
+              position: player.position || '-',
+              timestamp: player.timestamp || getBrazilTimestamp(),
+              paymentStatus: player.paymentStatus || 'inadimplente',
+              imageUrl: player.imageUrl || defaultImage,
+              invitedById: player.invitedById || null,
+              invitedByName: player.invitedByName || null,
+              status: player.status || null,
+              additionalInfo: player.additionalInfo || null,
+              createdAt: player.createdAt || null,
+              date: player.date || null,
+              month: player.month || null,
+              paymentType: player.paymentType || null,
+              value: player.value || null
+            };
+          });
+          
+          // Extrai jogadores da lista de espera diretamente do waitlist
+          waitlistPlayers = Object.entries(gameData.waitlist || {}).map(([id, player]) => {
+            return {
+              id: id,
+              name: player.name || '-',
+              category: player.category || 'CONVIDADO',
+              position: player.position || '-',
+              timestamp: player.timestamp || getBrazilTimestamp(),
+              paymentStatus: player.paymentStatus || 'inadimplente',
+              imageUrl: player.imageUrl || defaultImage,
+              invitedById: player.invitedById || null,
+              invitedByName: player.invitedByName || null,
+              status: player.status || null,
+              additionalInfo: player.additionalInfo || null,
+              createdAt: player.createdAt || null,
+              date: player.date || null,
+              month: player.month || null,
+              paymentType: player.paymentType || null,
+              value: player.value || null
+            };
+          });
+          
+          // Ordena as listas por prioridade (MENSAL > DIARIA > CONVIDADO) e timestamp
+          confirmedPlayers = sortPlayers(confirmedPlayers);
+          waitlistPlayers = sortPlayers(waitlistPlayers);
+          
+          // Habilita os controles da interface
+          if (confirmPlayerBtn) confirmPlayerBtn.disabled = false;
+          if (addPlayerBtn) addPlayerBtn.disabled = !selectedPlayerId;
+          if (playerSearch) playerSearch.disabled = false;
+          if (finalizeGameBtn) finalizeGameBtn.disabled = false;
+          if (addGuestBtn) addGuestBtn.disabled = false;
+          if (guestNameInput) guestNameInput.disabled = false;
+          
+          // Atualiza a interface
+          updatePlayerLimitDisplay(isAdmin);
+          throttledUpdateUI();
+          
+          // Verifica se o jogador atual está na lista e ajusta botão de confirmação
+          const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) || 
+                                waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
+          if (confirmPlayerBtn) {
+            confirmPlayerBtn.innerHTML = isPlayerInList ? 
+              '<i class="fas fa-eye"></i> Ver Quadra' : 
+              '<i class="fas fa-sign-in"></i> Entrar em Quadra';
+          }
+          
+        }, (error) => {
+          console.error('Erro no listener do jogo:', error);
+          Swal.fire({ 
+            icon: 'error', 
+            title: 'Erro', 
+            text: 'Erro ao carregar dados do jogo em tempo real.' 
+          });
         });
-        confirmedPlayers = [];
-        waitlistPlayers = [];
-        playerLimit = 16;
-        currentGameData = null;
-        throttledUpdateUI();
-        updatePlayerLimitDisplay(isAdmin);
-        return;
+        
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogo:', error);
+        await Swal.fire({ 
+          icon: 'error', 
+          title: 'Erro', 
+          text: 'Erro ao carregar dados do jogo.' 
+        });
       }
-      
-      const gameData = snapshot.val();
-      currentGameData = gameData;
-      currentGameDate = gameData.date;
-      gameTime = gameData.time;
-      playerLimit = gameData.playerLimit || 16;
-      
-      // Extrai jogadores diretamente do confirmed (sem buscar em players)
-      confirmedPlayers = Object.entries(gameData.confirmed || {}).map(([id, player]) => {
-        // Os dados do jogador já estão no objeto do jogo
-        return {
-          id: id,
-          name: player.name || '-',
-          category: player.category || 'CONVIDADO',
-          position: player.position || '-',
-          timestamp: player.timestamp || getBrazilTimestamp(),
-          paymentStatus: player.paymentStatus || 'inadimplente',
-          imageUrl: player.imageUrl || defaultImage,
-          invitedById: player.invitedById || null,
-          invitedByName: player.invitedByName || null,
-          status: player.status || null,
-          additionalInfo: player.additionalInfo || null,
-          createdAt: player.createdAt || null,
-          date: player.date || null,
-          month: player.month || null,
-          paymentType: player.paymentType || null,
-          value: player.value || null
-        };
-      });
-      
-      // Extrai jogadores da lista de espera diretamente do waitlist
-      waitlistPlayers = Object.entries(gameData.waitlist || {}).map(([id, player]) => {
-        // Os dados do jogador já estão no objeto do jogo
-        return {
-          id: id,
-          name: player.name || '-',
-          category: player.category || 'CONVIDADO',
-          position: player.position || '-',
-          timestamp: player.timestamp || getBrazilTimestamp(),
-          paymentStatus: player.paymentStatus || 'inadimplente',
-          imageUrl: player.imageUrl || defaultImage,
-          invitedById: player.invitedById || null,
-          invitedByName: player.invitedByName || null,
-          status: player.status || null,
-          additionalInfo: player.additionalInfo || null,
-          createdAt: player.createdAt || null,
-          date: player.date || null,
-          month: player.month || null,
-          paymentType: player.paymentType || null,
-          value: player.value || null
-        };
-      });
-      
-      // Ordena as listas por prioridade (MENSAL > DIARIA > CONVIDADO) e timestamp
-      confirmedPlayers = sortPlayers(confirmedPlayers);
-      waitlistPlayers = sortPlayers(waitlistPlayers);
-      
-      // Habilita os controles da interface
-      if (confirmPlayerBtn) confirmPlayerBtn.disabled = false;
-      if (addPlayerBtn) addPlayerBtn.disabled = !selectedPlayerId;
-      if (playerSearch) playerSearch.disabled = false;
-      if (finalizeGameBtn) finalizeGameBtn.disabled = false;
-      if (addGuestBtn) addGuestBtn.disabled = false;
-      if (guestNameInput) guestNameInput.disabled = false;
-      
-      // Atualiza a interface
-      updatePlayerLimitDisplay(isAdmin);
-      throttledUpdateUI();
-      
-      // Verifica se o jogador atual está na lista e ajusta botão de confirmação
-      const isPlayerInList = confirmedPlayers.some(p => p.id === window.currentUserPlayer?.id) || 
-                            waitlistPlayers.some(p => p.id === window.currentUserPlayer?.id);
-      if (confirmPlayerBtn) {
-        confirmPlayerBtn.innerHTML = isPlayerInList ? 
-          '<i class="fas fa-eye"></i> Ver Quadra' : 
-          '<i class="fas fa-sign-in"></i> Entrar em Quadra';
-      }
-      
-    }, (error) => {
-      console.error('Erro no listener do jogo:', error);
-      Swal.fire({ 
-        icon: 'error', 
-        title: 'Erro', 
-        text: 'Erro ao carregar dados do jogo em tempo real.' 
-      });
-    });
-    
-  } catch (error) {
-    console.error('Erro ao carregar dados do jogo:', error);
-    await Swal.fire({ 
-      icon: 'error', 
-      title: 'Erro', 
-      text: 'Erro ao carregar dados do jogo.' 
-    });
-  }
-}
+    }
+
     async function initializeGameList() {
       await loadActiveGames();
       finalizeGameBtn.addEventListener('click', async () => {
@@ -2126,28 +2278,46 @@ async function loadGameData(gameId) {
             for (const playerId of allPlayerIds) {
               const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
               if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
-                const payment = await findExistingPayment(player.category === 'CONVIDADO' ? player.invitedById : playerId, currentGameId, player.category, player.additionalInfo || player.name);
-                if (payment) {
-                  if (payment.paymentStatus === 'pago') {
+                // Buscar débito existente em debts
+                const existingDebt = await findExistingDebt(
+                  player.category === 'CONVIDADO' ? player.invitedById : playerId,
+                  currentGameId,
+                  player.category,
+                  player.additionalInfo || player.name
+                );
+                
+                if (existingDebt) {
+                  if (existingDebt.paymentStatus === 'pago' || existingDebt.comprovanteURL) {
+                    // Converter em crédito
                     const [year, month] = getBrazilMonthYear().split('-');
                     const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
-                    const newPaymentRef = ref(database, `payments/${year}/${month}/${newPaymentId}`);
+                    const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
                     await set(newPaymentRef, {
-                      additionalInfo: `Crédito por cancelamento do jogo`, createdAt: getBrazilDateTimeISO(), month: getBrazilMonthYear(),
-                      paymentType: 'Creditos', playerId: payment.playerId, playerName: payment.playerName, value: parseFloat(payment.value),
-                      gameId: currentGameId, date: formatDateToISO(new Date()), paymentStatus: 'pago',
-                      comprovanteApprovedAt: payment.comprovanteApprovedAt || null, comprovanteApprovedBy: payment.comprovanteApprovedBy || null,
-                      comprovanteStatus: payment.comprovanteStatus || null, comprovanteURL: payment.comprovanteURL || null,
-                      comprovanteUploadedAt: payment.comprovanteUploadedAt || null
+                      additionalInfo: `Crédito por cancelamento do jogo`, 
+                      createdAt: getBrazilDateTimeISO(), 
+                      month: getBrazilMonthYear(),
+                      paymentType: 'Creditos', 
+                      playerId: existingDebt.playerId, 
+                      playerName: existingDebt.playerName, 
+                      value: parseFloat(existingDebt.value),
+                      gameId: currentGameId, 
+                      date: formatDateToISO(new Date()), 
+                      paymentStatus: 'pago',
+                      comprovanteApprovedAt: existingDebt.comprovanteApprovedAt || null, 
+                      comprovanteApprovedBy: existingDebt.comprovanteApprovedBy || null,
+                      comprovanteStatus: existingDebt.comprovanteStatus || null, 
+                      comprovanteURL: existingDebt.comprovanteURL || null,
+                      comprovanteUploadedAt: existingDebt.comprovanteUploadedAt || null
                     });
                   }
-                  const paymentRef = ref(database, `payments/${payment.year}/${payment.month}/${payment.paymentId}`);
-                  await remove(paymentRef);
+                  // Remover débito
+                  const debtRef = ref(database, `debts/${existingDebt.playerId}/${existingDebt.debtId}`);
+                  await remove(debtRef);
                 }
               }
             }
             await set(gameRef, null);
-            invalidateCache('payments');
+            invalidateCache('debts');
             await Swal.fire({ icon: 'success', title: 'Lista Descartada', text: 'A lista foi descartada. Diaristas e Convidados pagos foram convertidos em créditos e os não pagos foram removidos.' });
             const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
             const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado.\n Diárias foram convertidas em créditos.`;
