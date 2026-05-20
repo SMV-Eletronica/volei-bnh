@@ -978,7 +978,7 @@ paymentForm.addEventListener('submit', async (e) => {
                 }
             };
 
-            /* comentei para não apresentar os pagamentos realizados 
+            /* comentei para não apresentar os pagamentos realizados */
 
             const loadActivePayments = async () => {
                 const paymentsRef = ref(database, 'payments');
@@ -1005,7 +1005,7 @@ paymentForm.addEventListener('submit', async (e) => {
                     }
                 }
             };
-*/
+/* aqui*/
             const loadDeletedPayments = async () => {
                 const deletedPaymentsRef = ref(database, 'deletedPayments');
                 const snapshot = await get(deletedPaymentsRef);
@@ -1024,8 +1024,8 @@ paymentForm.addEventListener('submit', async (e) => {
                 }
             };
 // basta trocar o que tá comentado pelo não comentado
-      //      Promise.all([loadDebts(), loadActivePayments(), loadDeletedPayments()])
-        Promise.all([loadDebts(), loadDeletedPayments()])
+           Promise.all([loadDebts(), loadActivePayments(), loadDeletedPayments()])
+       // Promise.all([loadDebts(), loadDeletedPayments()])
                 .then(() => {
                     playerPayments.sort((a, b) => b.month?.localeCompare(a.month) || 0);
                     renderPayments(playerPayments);
