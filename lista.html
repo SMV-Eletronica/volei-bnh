@@ -692,7 +692,7 @@
         const globalSnapshot = await get(globalRef);
         trackDownload('/debtNotificationsGlobal');
         const globalData = globalSnapshot.val() || {};
-        const players = await getPlayers();
+        const players = allPlayers;
         const notifiedPlayers = [];
         for (const playerId in globalData) {
           if (globalData[playerId].count > 0) {
@@ -730,7 +730,7 @@
           count: currentCount + 1,
           lastUpdated: getBrazilDateTimeISO()
         });
-        const players = await getPlayers();
+        const players = allPlayers;
         const player = players.find(p => p.id === playerId);
         invalidateCache('players');
         return currentCount + 1;
@@ -1468,7 +1468,7 @@ async function removePlayer(playerId, fromConfirmed = true) {
         return;
       }
       
-      const players = await getPlayers();
+      const players = allPlayers;
       const playerData = players.find(p => p.id === playerId);
       if (!playerData) {
         await Swal.fire({ icon: 'error', title: 'Jogador Não Encontrado', text: 'Jogador não encontrado.' });
@@ -1714,7 +1714,7 @@ async function removePlayer(playerId, fromConfirmed = true) {
         return;
       }
       
-      const players = await getPlayers();
+      const players = allPlayers;
       const playerData = players.find(p => p.id === playerId);
       
       if (!playerData) {
