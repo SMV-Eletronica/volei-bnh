@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="stylesheet" href="lista.css">
+  <link rel="stylesheet" href="lista.css?v=1.0">
 
   <style>
     /* Estilos para o header */
@@ -96,6 +96,95 @@
         max-height: 300px;
         overflow-y: auto;
     }
+
+/* Estilo para a seção online */
+.online-section {
+  margin-top: 20px;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+}
+
+.online-section h4 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.online-users-list {
+  height: 100px;
+  overflow-y: auto;
+  background-color: #364553;
+  padding: 10px;
+  scrollbar-width: none; /* remove a barra */
+  -ms-overflow-style: none;
+ 
+}
+
+.online-user-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.online-user-photo {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.online-user-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.online-user-status {
+  width: 8px;
+  height: 8px;
+  background-color: #2ecc71;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  animation: pulse 2s infinite;
+}
+
+
+/* Indicador no topo */
+.online-indicator {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  background: rgba(46, 204, 113, 0.2);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.online-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Loading */
+.loading-text {
+  color: #999;
+  font-size: 12px;
+  text-align: center;
+  padding: 10px;
+}
   </style>
 </head>
 <body>
@@ -124,6 +213,15 @@
     </div>
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
     <p style="font-size:xx-small; margin: 10px" class="versao">Versão-1.0</p>
+
+    <div class="online-section" id="onlineSection" style="display: none;">  
+       <h4><i class="fas fa-circle" style="color: #2ecc71; font-size: 12px;"></i> Integrante(s) Visualizando Lista: <span id="onlineCount">0</span></h4>
+     <div id="onlineUsersList" class="online-users-list">
+        <div class="loading-text">Carregando...</div>
+    </div>
+   </div>
+
+
   </div>
   
   <div class="overlay" id="overlay"></div>
@@ -139,9 +237,10 @@
     <div id="game-list" class="tab-content active">
       <div id="content" class="section">
         <div class="section-title">          
-          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Configurações</button>
-        </div>
-        
+          <button id="adminSettingsBtn" style="display: none;" class="settings-btn"><i class="fas fa-cog"></i> Configurações</button>       
+        </div> 
+
+
         <div class="game-selector">
           <h3 style="color: #2c3e50"><i class="fas fa-users"></i> Jogadores Confirmados</h3>
         </div>
@@ -211,7 +310,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue, push, update, remove, runTransaction, off } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getDatabase, ref, get, set, onValue, push, update, remove, runTransaction, off, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -390,6 +489,10 @@
     };
     const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
 
+
+// ========== FUNÇÕES AUXILIARES ==========
+// Coloque nesta região, junto com as outras funções
+
     function formatDateToISO(date) {
       return DateTime.fromJSDate(date, { zone: 'America/Sao_Paulo' }).toISODate();
     }
@@ -409,6 +512,18 @@
     function getBrazilMonthYear() {
       return DateTime.now().setZone('America/Sao_Paulo').toFormat('yyyy-MM');
     }
+
+    // 🔥 ADICIONE AQUI (junto com as outras funções auxiliares)
+function serverTimestamp() {
+  // Para Realtime Database, usamos ServerValue.TIMESTAMP
+  return { '.sv': 'timestamp' };
+}
+
+// ========== FIM DAS FUNÇÕES AUXILIARES ==========
+
+
+
+
 
     function updateGameDateDisplay() {
       if (currentGameData) {
@@ -2903,60 +3018,131 @@ async function removePlayer(playerId, fromConfirmed = true) {
       }
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      console.log('onAuthStateChanged disparado, usuário:', user);
-      document.getElementById('loading-overlay').style.display = 'flex';
-      if (!user) {
-        await Swal.fire({ icon: 'error', title: 'Acesso Negado', text: 'Você precisa estar logado para acessar esta página.' });
-        window.location.href = 'loginvl.html';
+
+onAuthStateChanged(auth, async (user) => {
+  console.log('onAuthStateChanged disparado, usuário:', user);
+  document.getElementById('loading-overlay').style.display = 'flex';
+  
+  if (!user) {
+    await Swal.fire({ icon: 'error', title: 'Acesso Negado', text: 'Você precisa estar logado para acessar esta página.' });
+    window.location.href = 'loginvl.html';
+  } else {
+    emailLogado = user.email;
+    isAdmin = adminEmails.includes(emailLogado);
+    await loadCurrentUserPlayer();
+    
+    // ========== SISTEMA DE PRESENÇA (ONLINE/OFFLINE) ==========
+    const userId = user.uid;
+    const userStatusRef = ref(database, `online/${userId}`);
+    
+    const connectedRef = ref(database, '.info/connected');
+    onValue(connectedRef, (snapshot) => {
+      if (snapshot.val() === true) {
+        // Usuário ficou online - salva no banco
+        set(userStatusRef, {
+          name: window.currentUserPlayer?.name || userId,
+         /* email: emailLogado,*/
+          timestamp: serverTimestamp(),
+          playerId: window.currentUserPlayer?.id || null
+        });
+        
+        // Quando desconectar, remove automaticamente
+        onDisconnect(userStatusRef).remove();
+        console.log(`✅ ${window.currentUserPlayer?.name || userId} está online`);
       } else {
-        emailLogado = user.email;
-        isAdmin = adminEmails.includes(emailLogado);
-        await loadCurrentUserPlayer();
-        if (window.currentUserPlayer?.name) {
-          const userId = window.currentUserPlayer.id;
-          const userName = window.currentUserPlayer.name;
-          const [year, month] = getBrazilMonthYear().split('-');
-          const now = DateTime.now().setZone('America/Sao_Paulo');
-          const tenMinutesAgo = now.minus({ minutes: 30 });
-          const lastAccessKey = `lastAccess_${userId}`;
-          const lastAccess = localStorage.getItem(lastAccessKey);
-          if (lastAccess && DateTime.fromISO(lastAccess) >= tenMinutesAgo) {
-            console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos.`);
-          } else {
-            const activitiesRef = ref(database, `userActivity/${year}/${month}`);
-            try {
-              const snapshot = await get(activitiesRef);
-              trackDownload(`/userActivity/${year}/${month}`);
-              let lastActivity = null;
-              if (snapshot.exists()) {
-                const activities = Object.values(snapshot.val() || {}).filter(activity => activity.userName === userName);
-                if (activities.length > 0) {
-                  lastActivity = activities.reduce((latest, current) => new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest);
-                }
-              }
-              if (!lastActivity || DateTime.fromISO(lastActivity.timestamp) < tenMinutesAgo) {
-                const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
-                await set(activityRef, { userName: userName + " v2", timestamp: getBrazilDateTimeISO() });
-                localStorage.setItem(lastAccessKey, now.toISO());
-                console.log(`Acesso registrado para ${userName} em ${now.toISO()}`);
-              }
-            } catch (error) {
-              console.error('Erro ao registrar acesso:', error);
-            }
-          }
-        }
-        if (isAdmin) createDashboardButton();
-        await loadGuestFee();
-        await loadGuestTimeSettings();
-        setupGuestTimeListener();
-        await initializeGameList();
-        setupAdminFeatures();
-        document.getElementById('loading-overlay').style.display = 'none';
-        console.log(`📊 Total de downloads durante inicialização: ${downloadStats.count}`);
+        console.log(`🔴 Usuário desconectado do Firebase`);
       }
     });
+    
+    // Admin pode ver quantos estão online
+if (isAdmin) {
+  const onlineRef = ref(database, 'online');
+  onValue(onlineRef, (snapshot) => {
+    const onlineUsers = snapshot.val() || {};
+    const count = Object.keys(onlineUsers).length;
+    
+    // Mostra a seção online (para admin)
+    const onlineSection = document.getElementById('onlineSection');
+    if (onlineSection) {
+      onlineSection.style.display = 'block';
+    }
+    
+    // Mostra o contador
+    const onlineCountSpan = document.getElementById('onlineCount');
+    if (onlineCountSpan) {
+      onlineCountSpan.textContent = count;
+    }
+    
+    // Mostra a lista de usuários online
+    const onlineList = document.getElementById('onlineUsersList');
+    if (onlineList) {
+      if (count === 0) {
+        onlineList.innerHTML = '<div class="loading-text">Ninguém online no momento</div>';
+      } else {
+        onlineList.innerHTML = Object.entries(onlineUsers)
+          .map(([uid, data]) => `
+            <div class="online-user-item">
+              <div class="online-user-status"></div>
+              
+              <span class="online-user-name" title="${data.name || uid}">${data.name || uid}</span>
+            </div>
+          `)
+          .join('');
+      }
+    }
+    
+    console.log(`👥 ${count} pessoa(s) online agora`);
+  });
+}
+    // ========== FIM DO SISTEMA DE PRESENÇA ==========
+    
+    if (window.currentUserPlayer?.name) {
+      const userId = window.currentUserPlayer.id;
+      const userName = window.currentUserPlayer.name;
+      const [year, month] = getBrazilMonthYear().split('-');
+      const now = DateTime.now().setZone('America/Sao_Paulo');
+      const tenMinutesAgo = now.minus({ minutes: 30 });
+      const lastAccessKey = `lastAccess_${userId}`;
+      const lastAccess = localStorage.getItem(lastAccessKey);
+      if (lastAccess && DateTime.fromISO(lastAccess) >= tenMinutesAgo) {
+        console.log(`Acesso não registrado: último acesso de ${userName} foi há menos de 30 minutos.`);
+      } else {
+        const activitiesRef = ref(database, `userActivity/${year}/${month}`);
+        try {
+          const snapshot = await get(activitiesRef);
+          trackDownload(`/userActivity/${year}/${month}`);
+          let lastActivity = null;
+          if (snapshot.exists()) {
+            const activities = Object.values(snapshot.val() || {}).filter(activity => activity.userName === userName);
+            if (activities.length > 0) {
+              lastActivity = activities.reduce((latest, current) => new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest);
+            }
+          }
+          if (!lastActivity || DateTime.fromISO(lastActivity.timestamp) < tenMinutesAgo) {
+            const activityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const activityRef = ref(database, `userActivity/${year}/${month}/${activityId}`);
+            await set(activityRef, { userName: userName + " v2", timestamp: getBrazilDateTimeISO() });
+            localStorage.setItem(lastAccessKey, now.toISO());
+            console.log(`Acesso registrado para ${userName} em ${now.toISO()}`);
+          }
+        } catch (error) {
+          console.error('Erro ao registrar acesso:', error);
+        }
+      }
+    }
+    
+    if (isAdmin) createDashboardButton();
+    await loadGuestFee();
+    await loadGuestTimeSettings();
+    setupGuestTimeListener();
+    await initializeGameList();
+    setupAdminFeatures();
+    document.getElementById('loading-overlay').style.display = 'none';
+    console.log(`📊 Total de downloads durante inicialização: ${downloadStats.count}`);
+  }
+});
+
+
 
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
