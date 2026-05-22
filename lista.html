@@ -1362,8 +1362,7 @@ if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFe
     
     if (paymentsSnapshot.exists()) {
       const paymentsData = paymentsSnapshot.val();
-      const dataJogoISO = currentGameData?.date;  // "2026-05-30"
-        const dataJogo = formatDateToBRDash(dataJogoISO);  // "30-05-2026"
+      
       
       for (const year in paymentsData) {
         for (const month in paymentsData[year]) {
@@ -1405,7 +1404,8 @@ if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFe
     }
     
     if (paymentFound) {
-      
+       const dataJogoISO = currentGameData?.date;  // "2026-05-30"
+        const dataJogo = formatDateToBRDash(dataJogoISO);  // "30-05-2026"
       // ✅ USAR A FUNÇÃO criarCredito
       await criarCredito({
        additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo Data: ${dataJogo}`,
