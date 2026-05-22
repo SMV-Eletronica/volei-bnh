@@ -1842,103 +1842,96 @@ console.log('📌 debtData.gameId:', debtData.gameId);
 console.log('📌 playerId:', playerId);
 console.log('📌 guestName:', debtData.guestName);
 
+
+// ============================================
+// FIM DA NOVA PARTE CORRIGIDA
+// ============================================
+
+// ============================================
+// VERSÃO SIMPLIFICADA - USANDO SÓ O NOME
+// ============================================
+
 if (debtData.gameId) {
     try {
-        // Buscar o jogo ativo
         const gameRef = ref(database, `activeGames/${debtData.gameId}`);
         const gameSnapshot = await get(gameRef);
         
         if (gameSnapshot.exists()) {
             const gameData = gameSnapshot.val();
-            
-            // CRIAR CÓPIAS LIMPAS (sem undefined)
             const updatedConfirmed = gameData.confirmed ? { ...gameData.confirmed } : {};
             const updatedWaitlist = gameData.waitlist ? { ...gameData.waitlist } : {};
             let updated = false;
             
-            // Verificar nos confirmados
-            if (updatedConfirmed) {
-                for (const [playerKey, playerData] of Object.entries(updatedConfirmed)) {
-                    // Para CONVIDADO: verificar pelo invitedById + nome
-                    if (playerData && playerData.category === 'CONVIDADO' && 
-                        playerData.invitedById === playerId && 
-                        playerData.name === debtData.guestName) {
-                        
-                        // ATUALIZAR OS CAMPOS!
-                        playerData.paymentStatus = 'pago';
-                        playerData.status = 'approved';
-                        updated = true;
-                        break;
-                    }
-                    
-                    // Para DIARIA: verificar pelo ID
-                    if (playerData && playerData.category === 'DIARIA' && playerKey === playerId) {
-                        playerData.paymentStatus = 'pago';
-                        playerData.status = 'approved';
-                        updated = true;
-                        break;
-                    }
-                }
-            }
+            const isPayingForGuest = debtData.guestName && debtData.guestName.trim() !== '';
             
-            // Se não achou nos confirmados, procurar na lista de espera
-            if (!updated && updatedWaitlist) {
-                for (const [playerKey, playerData] of Object.entries(updatedWaitlist)) {
-                    if (playerData && playerData.category === 'CONVIDADO' && 
-                        playerData.invitedById === playerId && 
-                        playerData.name === debtData.guestName) {
-                        
-                        playerData.paymentStatus = 'pago';
-                        playerData.status = 'approved';
+            if (isPayingForGuest) {
+                // ✅ SIMPLES: procura pelo nome do convidado
+                console.log(`🎯 Procurando convidado: ${debtData.guestName}`);
+                
+                // Buscar nos confirmados
+                for (const [key, data] of Object.entries(updatedConfirmed)) {
+                    if (data?.category === 'CONVIDADO' && data.name === debtData.guestName) {
+                        console.log(`✅ Convidado encontrado nos confirmados`);
+                        data.paymentStatus = 'pago';
+                        data.status = 'approved';
                         updated = true;
                         break;
                     }
-                    
-                    if (playerData && playerData.category === 'DIARIA' && playerKey === playerId) {
-                        playerData.paymentStatus = 'pago';
-                        playerData.status = 'approved';
-                        updated = true;
-                        break;
-                    }
-                }
-            }
-            
-            // Salvar as alterações no Firebase - APENAS se algo foi atualizado
-            if (updated) {
-                // Construir objeto de update apenas com campos que existem
-                const updateData = {};
-                if (Object.keys(updatedConfirmed).length > 0) {
-                    updateData.confirmed = updatedConfirmed;
-                }
-                if (Object.keys(updatedWaitlist).length > 0) {
-                    updateData.waitlist = updatedWaitlist;
                 }
                 
-                // Executar o update
-                await update(gameRef, updateData);
-                console.log(`✅ activeGames atualizado para o jogo ${debtData.gameId}`);
+                // Buscar na waitlist se não encontrou
+                if (!updated) {
+                    for (const [key, data] of Object.entries(updatedWaitlist)) {
+                        if (data?.category === 'CONVIDADO' && data.name === debtData.guestName) {
+                            console.log(`✅ Convidado encontrado na waitlist`);
+                            data.paymentStatus = 'pago';
+                            data.status = 'approved';
+                            updated = true;
+                            break;
+                        }
+                    }
+                }
+                
             } else {
-                console.log(`⚠️ Jogador não encontrado no activeGames para o jogo ${debtData.gameId}`);
+                // Pagamento próprio (DIARIA)
+                console.log(`🎯 Procurando jogador: ${playerId}`);
+                
+                for (const [key, data] of Object.entries(updatedConfirmed)) {
+                    if (data?.category === 'DIARIA' && key === playerId) {
+                        console.log(`✅ Jogador encontrado nos confirmados`);
+                        data.paymentStatus = 'pago';
+                        data.status = 'approved';
+                        updated = true;
+                        break;
+                    }
+                }
+                
+                if (!updated) {
+                    for (const [key, data] of Object.entries(updatedWaitlist)) {
+                        if (data?.category === 'DIARIA' && key === playerId) {
+                            console.log(`✅ Jogador encontrado na waitlist`);
+                            data.paymentStatus = 'pago';
+                            data.status = 'approved';
+                            updated = true;
+                            break;
+                        }
+                    }
+                }
             }
-        } else {
-            console.log(`⚠️ Jogo ${debtData.gameId} não encontrado em activeGames`);
+            
+            // Salvar se atualizou
+            if (updated) {
+                const updateData = {};
+                if (Object.keys(updatedConfirmed).length > 0) updateData.confirmed = updatedConfirmed;
+                if (Object.keys(updatedWaitlist).length > 0) updateData.waitlist = updatedWaitlist;
+                await update(gameRef, updateData);
+                console.log(`✅ activeGames atualizado`);
+            }
         }
-    } catch (gameError) {
-        console.error('Erro ao atualizar activeGames:', gameError);
-        // Continua mesmo se falhar, não interrompe o fluxo principal
-        // Mostra um aviso mas não para o processo
-        await Swal.fire({
-            icon: 'warning',
-            title: 'Aviso',
-            text: 'Pendência quitada, mas houve um erro ao atualizar o status no jogo. O administrador foi notificado.',
-            timer: 3000,
-            showConfirmButton: false
-        });
+    } catch (error) {
+        console.error('Erro:', error);
     }
 }
-// ============================================
-// FIM DA NOVA PARTE CORRIGIDA
-// ============================================
             // ============================================
             // FIM DA NOVA PARTE
             // ============================================
