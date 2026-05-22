@@ -547,6 +547,19 @@ async function criarCredito(dados) {
   return credito;
 }
 
+
+
+function formatDateToBRDash(dateISO) {
+  if (!dateISO) return 'data não definida';
+  const partes = dateISO.split('-');
+  return `${partes[2]}-${partes[1]}-${partes[0]}`;  // 2026-05-30 → 30-05-2026
+}
+
+
+  
+
+
+    
 // ========== FIM DAS FUNÇÕES AUXILIARES ==========
 
 
@@ -1349,6 +1362,9 @@ if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFe
     
     if (paymentsSnapshot.exists()) {
       const paymentsData = paymentsSnapshot.val();
+      const dataJogoISO = currentGameData?.date;  // "2026-05-30"
+        const dataJogo = formatDateToBRDash(dataJogoISO);  // "30-05-2026"
+      
       for (const year in paymentsData) {
         for (const month in paymentsData[year]) {
           for (const paymentId in paymentsData[year][month]) {
@@ -1391,7 +1407,7 @@ if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFe
     if (paymentFound) {
       // ✅ USAR A FUNÇÃO criarCredito
       await criarCredito({
-        additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo`,
+       additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo Data: ${dataJogo}`,
         ...comprovanteData,
         playerId: debtPlayerId,
         playerName: debtPlayerName,
@@ -2415,6 +2431,8 @@ if (result.isDenied) {
       
       if (paymentsSnapshot.exists()) {
         const paymentsData = paymentsSnapshot.val();
+        const dataJogoISO = currentGameData?.date;  // "2026-05-30"
+        const dataJogo = formatDateToBRDash(dataJogoISO);  // "30-05-2026"
         
         for (const year in paymentsData) {
           for (const month in paymentsData[year]) {
@@ -2429,7 +2447,7 @@ if (result.isDenied) {
                   
                   // ✅ USAR A FUNÇÃO criarCredito
                   await criarCredito({
-                    additionalInfo: `Crédito por cancelamento do jogo - ${player.name}`,
+                    additionalInfo: `Crédito por cancelamento da Lista do Dia: ${dataJogo} - ${player.category} (${player.name}) `,
                     comprovanteURL: payment.comprovanteURL,
                     comprovanteStatus: payment.comprovanteStatus,
                     comprovanteApprovedAt: payment.comprovanteApprovedAt,
