@@ -519,6 +519,34 @@ function serverTimestamp() {
   return { '.sv': 'timestamp' };
 }
 
+
+// ========== FUNÇÃO PARA CRIAR CRÉDITO ==========
+async function criarCredito(dados) {
+  const [year, month] = getBrazilMonthYear().split('-');
+  const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+  
+  const credito = {
+    additionalInfo: dados.additionalInfo || 'Crédito gerado automaticamente',
+    comprovanteApprovedAt: dados.comprovanteApprovedAt || null,
+    comprovanteApprovedBy: dados.comprovanteApprovedBy || null,
+    comprovanteStatus: dados.comprovanteStatus || null,
+    comprovanteURL: dados.comprovanteURL || null,
+    comprovanteUploadedAt: dados.comprovanteUploadedAt || null,
+    createdAt: getBrazilDateTimeISO(),
+    date: formatDateToISO(new Date()),
+    month: getBrazilMonthYear(),
+    paymentStatus: 'pago',
+    paymentType: 'Creditos',
+    playerId: dados.playerId,
+    playerName: dados.playerName,
+    value: dados.value
+  };
+  
+  await set(newPaymentRef, credito);
+  console.log(`✅ Crédito de R$${dados.value} criado para ${dados.playerName}`);
+  return credito;
+}
+
 // ========== FIM DAS FUNÇÕES AUXILIARES ==========
 
 
@@ -1299,136 +1327,113 @@ async function removePlayer(playerId, fromConfirmed = true) {
     // ============================================
     // LÓGICA OTIMIZADA: Verificar paymentStatus
     // ============================================
-    if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFee > 0) {
-      
-      // Verificar se já foi PAGO (pelo paymentStatus)
-      const foiPago = player.paymentStatus === 'pago' || player.status === 'approved';
-      
-      if (foiPago) {
-        // CASO 1: JÁ FOI PAGO - Buscar o pagamento em payments e converter em CRÉDITO
-        console.log(`💰 ${player.name} já havia pago. Convertendo em crédito...`);
-        
-        const debtPlayerId = player.category === 'CONVIDADO' ? player.invitedById : playerId;
-        const debtPlayerName = player.category === 'CONVIDADO' ? player.invitedByName : player.name;
-        
-        // Buscar o pagamento específico em payments
-        const paymentsRef = ref(database, 'payments');
-        const paymentsSnapshot = await get(paymentsRef);
-        trackDownload('/payments');
-        
-        let paymentFound = false;
-        let paymentValue = parseFloat(player.value || guestFee);
-        let paymentPath = null;
-        let comprovanteData = {};
-        
-        if (paymentsSnapshot.exists()) {
-          const paymentsData = paymentsSnapshot.val();
-          // Procurar pagamento relacionado a este jogo
-          for (const year in paymentsData) {
-            for (const month in paymentsData[year]) {
-              for (const paymentId in paymentsData[year][month]) {
-                const payment = paymentsData[year][month][paymentId];
-                if (payment.gameId === currentGameId && 
-                    payment.paymentType === player.category) {
-                  
-                  if (player.category === 'CONVIDADO' && payment.guestName === player.name) {
-                    paymentFound = true;
-                    paymentValue = parseFloat(payment.value);
-                    paymentPath = `payments/${year}/${month}/${paymentId}`;
-                    comprovanteData = {
-                      comprovanteURL: payment.comprovanteURL,
-                      comprovanteStatus: payment.comprovanteStatus,
-                      comprovanteApprovedAt: payment.comprovanteApprovedAt,
-                      comprovanteApprovedBy: payment.comprovanteApprovedBy,
-                      comprovanteUploadedAt: payment.comprovanteUploadedAt
-                    };
-                    break;
-                  }
-                  if (player.category === 'DIARIA' && payment.playerId === playerId) {
-                    paymentFound = true;
-                    paymentValue = parseFloat(payment.value);
-                    paymentPath = `payments/${year}/${month}/${paymentId}`;
-                    comprovanteData = {
-                      comprovanteURL: payment.comprovanteURL,
-                      comprovanteStatus: payment.comprovanteStatus,
-                      comprovanteApprovedAt: payment.comprovanteApprovedAt,
-                      comprovanteApprovedBy: payment.comprovanteApprovedBy,
-                      comprovanteUploadedAt: payment.comprovanteUploadedAt
-                    };
-                    break;
-                  }
-                }
+    // Dentro da função removePlayer, onde tem a lógica de conversão
+if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFee > 0) {
+  
+  const foiPago = player.paymentStatus === 'pago' || player.status === 'approved';
+  
+  if (foiPago) {
+    console.log(`💰 ${player.name} já havia pago. Convertendo em crédito...`);
+    
+    const debtPlayerId = player.category === 'CONVIDADO' ? player.invitedById : playerId;
+    const debtPlayerName = player.category === 'CONVIDADO' ? player.invitedByName : player.name;
+    let paymentValue = parseFloat(player.value || guestFee);
+    
+    // Buscar o pagamento específico em payments
+    const paymentsRef = ref(database, 'payments');
+    const paymentsSnapshot = await get(paymentsRef);
+    
+    let paymentFound = false;
+    let comprovanteData = {};
+    let paymentPath = null;
+    
+    if (paymentsSnapshot.exists()) {
+      const paymentsData = paymentsSnapshot.val();
+      for (const year in paymentsData) {
+        for (const month in paymentsData[year]) {
+          for (const paymentId in paymentsData[year][month]) {
+            const payment = paymentsData[year][month][paymentId];
+            if (payment.gameId === currentGameId && payment.paymentType === player.category) {
+              if (player.category === 'CONVIDADO' && payment.guestName === player.name) {
+                paymentFound = true;
+                paymentValue = parseFloat(payment.value);
+                paymentPath = `payments/${year}/${month}/${paymentId}`;
+                comprovanteData = {
+                  comprovanteURL: payment.comprovanteURL,
+                  comprovanteStatus: payment.comprovanteStatus,
+                  comprovanteApprovedAt: payment.comprovanteApprovedAt,
+                  comprovanteApprovedBy: payment.comprovanteApprovedBy,
+                  comprovanteUploadedAt: payment.comprovanteUploadedAt
+                };
+                break;
               }
-              if (paymentFound) break;
-            }
-            if (paymentFound) break;
-          }
-        }
-        
-        if (paymentFound) {
-          // Criar CRÉDITO
-          const [year, month] = getBrazilMonthYear().split('-');
-          const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
-          
-          await set(newPaymentRef, {
-            additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo`,
-            createdAt: getBrazilDateTimeISO(),
-            month: getBrazilMonthYear(),
-            paymentType: 'Creditos',
-            playerId: debtPlayerId,
-            playerName: debtPlayerName,
-            value: paymentValue,
-            gameId: currentGameId,
-            date: formatDateToISO(new Date()),
-            paymentStatus: 'pago',
-            ...comprovanteData,
-            originalPaymentPath: paymentPath,
-            creditedAt: getBrazilDateTimeISO(),
-            creditedFromGame: currentGameId,
-            creditedFromPlayer: player.name
-          });
-          
-          // Remover pagamento original
-          const originalPaymentRef = ref(database, paymentPath);
-          await remove(originalPaymentRef);
-          
-          console.log(`✅ Crédito de R$${paymentValue} criado para ${debtPlayerName}`);
-          invalidateCache('payments');
-          
-          await Swal.fire({ 
-            icon: 'success', 
-            title: 'Crédito Gerado', 
-            text: `${player.name} foi removido e R$${paymentValue.toFixed(2)} foi convertido em crédito para ${debtPlayerName}.` 
-          });
-        } else {
-          console.log(`⚠️ Pagamento não encontrado em payments para ${player.name}, mas status estava como pago`);
-        }
-        
-      } else {
-        // CASO 2: NÃO FOI PAGO - Apenas remover de debts
-        console.log(`🗑️ ${player.name} não havia pago. Removendo apenas da lista.`);
-        
-        const debtPlayerId = player.category === 'CONVIDADO' ? player.invitedById : playerId;
-        const debtsRef = ref(database, `debts/${debtPlayerId}`);
-        const debtsSnapshot = await get(debtsRef);
-        trackDownload(`/debts/${debtPlayerId}`);
-        
-        if (debtsSnapshot.exists()) {
-          const debts = debtsSnapshot.val();
-          for (const debtId in debts) {
-            const debt = debts[debtId];
-            if (debt.gameId === currentGameId && debt.paymentType === player.category) {
-              // Encontrou o débito, remover
-              const debtRef = ref(database, `debts/${debtPlayerId}/${debtId}`);
-              await remove(debtRef);
-              console.log(`🗑️ Débito removido para ${player.name}`);
-              invalidateCache('debts');
-              break;
+              if (player.category === 'DIARIA' && payment.playerId === playerId) {
+                paymentFound = true;
+                paymentValue = parseFloat(payment.value);
+                paymentPath = `payments/${year}/${month}/${paymentId}`;
+                comprovanteData = {
+                  comprovanteURL: payment.comprovanteURL,
+                  comprovanteStatus: payment.comprovanteStatus,
+                  comprovanteApprovedAt: payment.comprovanteApprovedAt,
+                  comprovanteApprovedBy: payment.comprovanteApprovedBy,
+                  comprovanteUploadedAt: payment.comprovanteUploadedAt
+                };
+                break;
+              }
             }
           }
+          if (paymentFound) break;
+        }
+        if (paymentFound) break;
+      }
+    }
+    
+    if (paymentFound) {
+      // ✅ USAR A FUNÇÃO criarCredito
+      await criarCredito({
+        additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo`,
+        ...comprovanteData,
+        playerId: debtPlayerId,
+        playerName: debtPlayerName,
+        value: paymentValue
+      });
+      
+      // Remove pagamento original
+      if (paymentPath) {
+        const originalPaymentRef = ref(database, paymentPath);
+        await remove(originalPaymentRef);
+      }
+      
+      await Swal.fire({ 
+        icon: 'success', 
+        title: 'Crédito Gerado', 
+        text: `${player.name} foi removido e R$${paymentValue.toFixed(2)} foi convertido em crédito para ${debtPlayerName}.` 
+      });
+    } else {
+      console.log(`⚠️ Pagamento não encontrado para ${player.name}`);
+    }
+    
+  } else {
+    // Não foi pago - apenas remover débito
+    console.log(`🗑️ ${player.name} não havia pago. Removendo apenas da lista.`);
+    const debtPlayerId = player.category === 'CONVIDADO' ? player.invitedById : playerId;
+    const debtsRef = ref(database, `debts/${debtPlayerId}`);
+    const debtsSnapshot = await get(debtsRef);
+    
+    if (debtsSnapshot.exists()) {
+      const debts = debtsSnapshot.val();
+      for (const debtId in debts) {
+        const debt = debts[debtId];
+        if (debt.gameId === currentGameId && debt.paymentType === player.category) {
+          const debtRef = ref(database, `debts/${debtPlayerId}/${debtId}`);
+          await remove(debtRef);
+          console.log(`🗑️ Débito removido para ${player.name}`);
+          break;
         }
       }
     }
+  }
+}
     
     const formattedDate = currentGameData ? DateTime.fromISO(currentGameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy') : 'data não definida';
     const message = `${player.name} saiu da lista do jogo ${formattedDate}`;
@@ -2387,58 +2392,140 @@ async function removePlayer(playerId, fromConfirmed = true) {
             await saveGameToHistory(currentGameId, gameData);
             await set(gameRef, null);
             await Swal.fire({ icon: 'success', title: 'Lista Finalizada', text: 'A lista foi finalizada e salva no histórico de presenças.' });
-          } else if (result.isDenied) {
-            const confirmedPlayerIds = Object.keys(gameData.confirmed || {});
-            const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
-            const allPlayerIds = [...confirmedPlayerIds, ...waitlistPlayerIds];
-            for (const playerId of allPlayerIds) {
-              const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
-              if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
-                // Buscar débito existente em debts
-                const existingDebt = await findExistingDebt(
-                  player.category === 'CONVIDADO' ? player.invitedById : playerId,
-                  currentGameId,
-                  player.category,
-                  player.additionalInfo || player.name
-                );
+          } else 
+          
+          
+ // Dentro do finalizeGameBtn, quando result.isDenied for true
+if (result.isDenied) {
+  const confirmedPlayerIds = Object.keys(gameData.confirmed || {});
+  const waitlistPlayerIds = Object.keys(gameData.waitlist || {});
+  const allPlayerIds = [...confirmedPlayerIds, ...waitlistPlayerIds];
+  
+  for (const playerId of allPlayerIds) {
+    const player = gameData.confirmed?.[playerId] || gameData.waitlist?.[playerId];
+    if (player && (player.category === 'CONVIDADO' || player.category === 'DIARIA')) {
+      
+      const playerWhoPaid = player.category === 'CONVIDADO' ? player.invitedById : playerId;
+      const playerName = player.category === 'CONVIDADO' ? player.invitedByName : player.name;
+      let creditConverted = false;
+      
+      // ========== 1º TENTAR EM PAYMENTS ==========
+      const paymentsRef = ref(database, 'payments');
+      const paymentsSnapshot = await get(paymentsRef);
+      
+      if (paymentsSnapshot.exists()) {
+        const paymentsData = paymentsSnapshot.val();
+        
+        for (const year in paymentsData) {
+          for (const month in paymentsData[year]) {
+            for (const paymentId in paymentsData[year][month]) {
+              const payment = paymentsData[year][month][paymentId];
+              
+              if (payment.gameId === currentGameId && payment.paymentType === player.category) {
                 
-                if (existingDebt) {
-                  if (existingDebt.paymentStatus === 'pago' || existingDebt.comprovanteURL) {
-                    // Converter em crédito
-                    const [year, month] = getBrazilMonthYear().split('-');
-                    const newPaymentId = `payment_${playerId}_${currentGameId}_Creditos_${Date.now()}`;
-                    const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
-                    await set(newPaymentRef, {
-                      additionalInfo: `Crédito por cancelamento do jogo`, 
-                      createdAt: getBrazilDateTimeISO(), 
-                      month: getBrazilMonthYear(),
-                      paymentType: 'Creditos', 
-                      playerId: existingDebt.playerId, 
-                      playerName: existingDebt.playerName, 
-                      value: parseFloat(existingDebt.value),
-                      gameId: currentGameId, 
-                      date: formatDateToISO(new Date()), 
-                      paymentStatus: 'pago',
-                      comprovanteApprovedAt: existingDebt.comprovanteApprovedAt || null, 
-                      comprovanteApprovedBy: existingDebt.comprovanteApprovedBy || null,
-                      comprovanteStatus: existingDebt.comprovanteStatus || null, 
-                      comprovanteURL: existingDebt.comprovanteURL || null,
-                      comprovanteUploadedAt: existingDebt.comprovanteUploadedAt || null
-                    });
-                  }
-                  // Remover débito
-                  const debtRef = ref(database, `debts/${existingDebt.playerId}/${existingDebt.debtId}`);
-                  await remove(debtRef);
+                // Para convidado
+                if (player.category === 'CONVIDADO' && payment.guestName === player.name) {
+                  creditConverted = true;
+                  
+                  // ✅ USAR A FUNÇÃO criarCredito
+                  await criarCredito({
+                    additionalInfo: `Crédito por cancelamento do jogo - ${player.name}`,
+                    comprovanteURL: payment.comprovanteURL,
+                    comprovanteStatus: payment.comprovanteStatus,
+                    comprovanteApprovedAt: payment.comprovanteApprovedAt,
+                    comprovanteApprovedBy: payment.comprovanteApprovedBy,
+                    comprovanteUploadedAt: payment.comprovanteUploadedAt,
+                    playerId: playerWhoPaid,
+                    playerName: playerName,
+                    value: parseFloat(payment.value)
+                  });
+                  
+                  // Remove pagamento original
+                  const originalPaymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+                  await remove(originalPaymentRef);
+                  break;
+                }
+                
+                // Para diarista
+                if (player.category === 'DIARIA' && payment.playerId === playerId) {
+                  creditConverted = true;
+                  
+                  // ✅ USAR A FUNÇÃO criarCredito
+                  await criarCredito({
+                    additionalInfo: `Crédito por cancelamento do jogo - ${player.name}`,
+                    comprovanteURL: payment.comprovanteURL,
+                    comprovanteStatus: payment.comprovanteStatus,
+                    comprovanteApprovedAt: payment.comprovanteApprovedAt,
+                    comprovanteApprovedBy: payment.comprovanteApprovedBy,
+                    comprovanteUploadedAt: payment.comprovanteUploadedAt,
+                    playerId: playerWhoPaid,
+                    playerName: playerName,
+                    value: parseFloat(payment.value)
+                  });
+                  
+                  // Remove pagamento original
+                  const originalPaymentRef = ref(database, `payments/${year}/${month}/${paymentId}`);
+                  await remove(originalPaymentRef);
+                  break;
                 }
               }
             }
-            await set(gameRef, null);
-            invalidateCache('debts');
-            await Swal.fire({ icon: 'success', title: 'Lista Descartada', text: 'A lista foi descartada. Diaristas e Convidados pagos foram convertidos em créditos e os não pagos foram removidos.' });
-            const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
-            const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado.\n Diárias foram convertidas em créditos.`;
-            await sendPushNotification(message, undefined, segments, "Vôlei BNH - Informações");
+            if (creditConverted) break;
           }
+          if (creditConverted) break;
+        }
+      }
+      
+      // ========== 2º SE NÃO ACHOU, TENTAR EM DEBTS ==========
+      if (!creditConverted) {
+        const existingDebt = await findExistingDebt(
+          playerWhoPaid,
+          currentGameId,
+          player.category,
+          player.category === 'CONVIDADO' ? player.name : player.additionalInfo
+        );
+        
+        if (existingDebt && (existingDebt.paymentStatus === 'pago' || existingDebt.comprovanteURL)) {
+          // ✅ USAR A FUNÇÃO criarCredito
+          await criarCredito({
+            additionalInfo: `Crédito por cancelamento do jogo - ${existingDebt.additionalInfo || existingDebt.guestName || player.name}`,
+            comprovanteURL: existingDebt.comprovanteURL,
+            comprovanteStatus: existingDebt.comprovanteStatus,
+            comprovanteApprovedAt: existingDebt.comprovanteApprovedAt,
+            comprovanteApprovedBy: existingDebt.comprovanteApprovedBy,
+            comprovanteUploadedAt: existingDebt.comprovanteUploadedAt,
+            playerId: existingDebt.playerId,
+            playerName: existingDebt.playerName,
+            value: parseFloat(existingDebt.value)
+          });
+        }
+        
+        // Remove o débito (se existir)
+        if (existingDebt) {
+          const debtRef = ref(database, `debts/${existingDebt.playerId}/${existingDebt.debtId}`);
+          await remove(debtRef);
+          console.log(`🗑️ Débito removido para ${player.name}`);
+        }
+      }
+    }
+  }
+  
+  await set(gameRef, null);
+  invalidateCache('debts');
+  invalidateCache('payments');
+  
+  await Swal.fire({ 
+    icon: 'success', 
+    title: 'Lista Descartada', 
+    text: 'A lista foi descartada. Diaristas e Convidados pagos foram convertidos em créditos e os não pagos foram removidos.' 
+  });
+  
+  const formattedDate = DateTime.fromISO(gameData.date, { zone: 'America/Sao_Paulo' }).toFormat('dd/MM/yyyy');
+  const message = `O jogo de ${formattedDate} às ${gameData.time} foi cancelado.\n Diárias foram convertidas em créditos.`;
+  await sendPushNotification(message, undefined, segments, "Vôlei BNH - Informações");
+}
+
+
           if (currentGameListener) {
             off(ref(database, `activeGames/${currentGameId}`));
             currentGameListener = null;
