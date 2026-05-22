@@ -1405,6 +1405,7 @@ if ((player.category === 'CONVIDADO' || player.category === 'DIARIA') && guestFe
     }
     
     if (paymentFound) {
+      
       // ✅ USAR A FUNÇÃO criarCredito
       await criarCredito({
        additionalInfo: `Crédito por remoção de ${player.category} (${player.name}) do jogo Data: ${dataJogo}`,
