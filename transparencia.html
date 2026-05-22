@@ -1774,113 +1774,235 @@ async function showDefaulterDetails(playerId, playerName) {
                     hasCreditCoveringAmount(playerId, payment.value).then(hasCovering => {
                         if (hasCovering) {
                             creditBtn.style.display = 'block';
-                            
-                            creditBtn.addEventListener('click', async () => {
-                                const saldoAtual = await checkCreditBalance(playerId);
-                                
-                                const result = await Swal.fire({
-                                    icon: 'question',
-                                    title: 'Usar Crédito',
-                                    html: `
-                                        <p>Deseja usar <strong>R$ ${payment.value.toFixed(2)}</strong> 
-                                        dos seus créditos para quitar a pendência do dia <strong>${dia} <small>${description}</small></strong></p>
-                                        <p><small>Seu saldo em créditos: <strong>R$ ${saldoAtual.toFixed(2)}</strong></small></p>
-                                        <p><small>O comprovante do crédito original será vinculado a este pagamento.</small></p>
-                                    `,
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Pagar',
-                                    cancelButtonText: 'Cancelar'
-                                });
-                                
-                                if (!result.isConfirmed) return;
-                                
-                                showComprovanteLoading('Usando crédito...');
-                                
-                                try {
-                                    const creditResult = await usePlayerCredit(
-                                        playerId,
-                                        payment.value,
-                                        'transparencia',
-                                        `Quitação de pendência: ${getMonthName(payment.month)}/${payment.year}`
-                                    );
-                                    
-                                    if (!creditResult.success) {
-                                        hideComprovanteLoading();
-                                        await Swal.fire({
-                                            icon: 'error',
-                                            title: 'Erro',
-                                            text: `Crédito insuficiente. Faltam R$ ${creditResult.remaining.toFixed(2)}.`
-                                        });
-                                        return;
-                                    }
-                                    
-                                    // Buscar o débito atual em debts
-                                    const debtRef = ref(database, `debts/${playerId}/${payment.paymentId}`);
-                                    const debtSnapshot = await get(debtRef);
-                                    
-                                    if (debtSnapshot.exists()) {
-                                        const debtData = debtSnapshot.val();
-                                        
-                                        // Criar pagamento em payments (como era feito antes)
-                                        const [year, month] = debtData.month.split('-');
-                                        const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
-                                        await set(newPaymentRef, {
-                                            month: debtData.month,
-                                            value: debtData.value,
-                                            playerId: playerId,
-                                            playerName: debtData.playerName,
-                                            paymentType: debtData.paymentType,
-                                            createdAt: debtData.createdAt,
-                                            date: getTodayDateOnly(),
-                                            paymentStatus: 'pago',
-                                            additionalInfo: debtData.additionalInfo || null,
-                                            guestName: debtData.guestName || null,
-                                            gameId: debtData.gameId || null,
-                                            // Vincular comprovante do crédito usado
-                                            comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
-                                            comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || 'aprovado',
-                                            comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || new Date().toISOString(),
-                                            comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || auth.currentUser?.email,
-                                            comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null,
-                                            pagoComCredito: true,
-                                            updatedAt: new Date().toISOString(),
-                                            creditoOrigem: creditResult.usedCredits.map(c => c.id).join(', ')
-                                        });
-                                        
-                                        // Remover de debts
-                                        await remove(debtRef);
-                                        
-                                        hideComprovanteLoading();
-                                        
-                                        await Swal.fire({
-                                            icon: 'success',
-                                            title: 'Sucesso',
-                                            text: 'Pendência quitada com crédito!',
-                                            timer: 1500,
-                                            showConfirmButton: false
-                                        });
-                                        
-                                        Swal.close();
-                                        await loadDefaulters();
-                                        
-                                    } else {
-                                        hideComprovanteLoading();
-                                        await Swal.fire({
-                                            icon: 'error',
-                                            title: 'Erro',
-                                            text: 'Débito não encontrado.'
-                                        });
-                                    }
-                                    
-                                } catch (error) {
-                                    hideComprovanteLoading();
-                                    await Swal.fire({
-                                        icon: 'error',
-                                        title: 'Erro',
-                                        text: 'Erro ao usar crédito: ' + error.message
-                                    });
-                                }
-                            });
+                           
+                            // Dentro de showDefaulterDetails(), no evento do botão de crédito
+creditBtn.addEventListener('click', async () => {
+    const saldoAtual = await checkCreditBalance(playerId);
+    
+    const result = await Swal.fire({
+        icon: 'question',
+        title: 'Usar Crédito',
+        html: `
+            <p>Deseja usar <strong>R$ ${payment.value.toFixed(2)}</strong> 
+            dos seus créditos para quitar a pendência do dia <strong>${dia} <small>${description}</small></strong></p>
+            <p><small>Seu saldo em créditos: <strong>R$ ${saldoAtual.toFixed(2)}</strong></small></p>
+            <p><small>O comprovante do crédito original será vinculado a este pagamento.</small></p>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Pagar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    showComprovanteLoading('Usando crédito...');
+    
+    try {
+        const creditResult = await usePlayerCredit(
+            playerId,
+            payment.value,
+            'transparencia',
+            `Quitação de pendência: ${getMonthName(payment.month)}/${payment.year}`
+        );
+        
+        if (!creditResult.success) {
+            hideComprovanteLoading();
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: `Crédito insuficiente. Faltam R$ ${creditResult.remaining.toFixed(2)}.`
+            });
+            return;
+        }
+        
+        // Buscar o débito atual em debts
+        const debtRef = ref(database, `debts/${playerId}/${payment.paymentId}`);
+        const debtSnapshot = await get(debtRef);
+        
+        if (debtSnapshot.exists()) {
+            const debtData = debtSnapshot.val();
+            
+            // ============================================
+            // 🔥 NOVA PARTE: ATUALIZAR activeGames
+            // ============================================
+
+            console.log('🔍 Iniciando atualização do activeGames');
+console.log('📌 debtData.gameId:', debtData.gameId);
+console.log('📌 playerId:', playerId);
+console.log('📌 guestName:', debtData.guestName);
+
+
+
+          // ============================================
+// 🔥 NOVA PARTE: ATUALIZAR activeGames (CORRIGIDA)
+// ============================================
+
+console.log('🔍 Iniciando atualização do activeGames');
+console.log('📌 debtData.gameId:', debtData.gameId);
+console.log('📌 playerId:', playerId);
+console.log('📌 guestName:', debtData.guestName);
+
+if (debtData.gameId) {
+    try {
+        // Buscar o jogo ativo
+        const gameRef = ref(database, `activeGames/${debtData.gameId}`);
+        const gameSnapshot = await get(gameRef);
+        
+        if (gameSnapshot.exists()) {
+            const gameData = gameSnapshot.val();
+            
+            // CRIAR CÓPIAS LIMPAS (sem undefined)
+            const updatedConfirmed = gameData.confirmed ? { ...gameData.confirmed } : {};
+            const updatedWaitlist = gameData.waitlist ? { ...gameData.waitlist } : {};
+            let updated = false;
+            
+            // Verificar nos confirmados
+            if (updatedConfirmed) {
+                for (const [playerKey, playerData] of Object.entries(updatedConfirmed)) {
+                    // Para CONVIDADO: verificar pelo invitedById + nome
+                    if (playerData && playerData.category === 'CONVIDADO' && 
+                        playerData.invitedById === playerId && 
+                        playerData.name === debtData.guestName) {
+                        
+                        // ATUALIZAR OS CAMPOS!
+                        playerData.paymentStatus = 'pago';
+                        playerData.status = 'approved';
+                        updated = true;
+                        break;
+                    }
+                    
+                    // Para DIARIA: verificar pelo ID
+                    if (playerData && playerData.category === 'DIARIA' && playerKey === playerId) {
+                        playerData.paymentStatus = 'pago';
+                        playerData.status = 'approved';
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Se não achou nos confirmados, procurar na lista de espera
+            if (!updated && updatedWaitlist) {
+                for (const [playerKey, playerData] of Object.entries(updatedWaitlist)) {
+                    if (playerData && playerData.category === 'CONVIDADO' && 
+                        playerData.invitedById === playerId && 
+                        playerData.name === debtData.guestName) {
+                        
+                        playerData.paymentStatus = 'pago';
+                        playerData.status = 'approved';
+                        updated = true;
+                        break;
+                    }
+                    
+                    if (playerData && playerData.category === 'DIARIA' && playerKey === playerId) {
+                        playerData.paymentStatus = 'pago';
+                        playerData.status = 'approved';
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Salvar as alterações no Firebase - APENAS se algo foi atualizado
+            if (updated) {
+                // Construir objeto de update apenas com campos que existem
+                const updateData = {};
+                if (Object.keys(updatedConfirmed).length > 0) {
+                    updateData.confirmed = updatedConfirmed;
+                }
+                if (Object.keys(updatedWaitlist).length > 0) {
+                    updateData.waitlist = updatedWaitlist;
+                }
+                
+                // Executar o update
+                await update(gameRef, updateData);
+                console.log(`✅ activeGames atualizado para o jogo ${debtData.gameId}`);
+            } else {
+                console.log(`⚠️ Jogador não encontrado no activeGames para o jogo ${debtData.gameId}`);
+            }
+        } else {
+            console.log(`⚠️ Jogo ${debtData.gameId} não encontrado em activeGames`);
+        }
+    } catch (gameError) {
+        console.error('Erro ao atualizar activeGames:', gameError);
+        // Continua mesmo se falhar, não interrompe o fluxo principal
+        // Mostra um aviso mas não para o processo
+        await Swal.fire({
+            icon: 'warning',
+            title: 'Aviso',
+            text: 'Pendência quitada, mas houve um erro ao atualizar o status no jogo. O administrador foi notificado.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    }
+}
+// ============================================
+// FIM DA NOVA PARTE CORRIGIDA
+// ============================================
+            // ============================================
+            // FIM DA NOVA PARTE
+            // ============================================
+            
+            // Criar pagamento em payments
+            const [year, month] = debtData.month.split('-');
+            const newPaymentRef = push(ref(database, `payments/${year}/${month}`));
+            await set(newPaymentRef, {
+                month: debtData.month,
+                value: debtData.value,
+                playerId: playerId,
+                playerName: debtData.playerName,
+                paymentType: debtData.paymentType,
+                createdAt: debtData.createdAt,
+                date: getTodayDateOnly(),
+                paymentStatus: 'pago',
+                additionalInfo: debtData.additionalInfo || null,
+                guestName: debtData.guestName || null,
+                gameId: debtData.gameId || null,
+                comprovanteURL: creditResult.comprovanteData.comprovanteURL || null,
+                comprovanteStatus: creditResult.comprovanteData.comprovanteStatus || 'aprovado',
+                comprovanteApprovedAt: creditResult.comprovanteData.comprovanteApprovedAt || new Date().toISOString(),
+                comprovanteApprovedBy: creditResult.comprovanteData.comprovanteApprovedBy || auth.currentUser?.email,
+                comprovanteUploadedAt: creditResult.comprovanteData.comprovanteUploadedAt || null,
+                pagoComCredito: true,
+                updatedAt: new Date().toISOString(),
+                creditoOrigem: creditResult.usedCredits.map(c => c.id).join(', ')
+            });
+            
+            // Remover de debts
+            await remove(debtRef);
+            
+            hideComprovanteLoading();
+            
+            await Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: 'Pendência quitada com crédito!',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            Swal.close();
+            await loadDefaulters();
+            
+        } else {
+            hideComprovanteLoading();
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Débito não encontrado.'
+            });
+        }
+        
+    } catch (error) {
+        hideComprovanteLoading();
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Erro ao usar crédito: ' + error.message
+        });
+    }
+});
+                        
                         }
                     });
                 });
