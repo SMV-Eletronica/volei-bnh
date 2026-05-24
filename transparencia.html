@@ -576,7 +576,20 @@
     return `${year}-${month}-${day}`;
 }
 
+// Função auxiliar para montar URL da imagem
+function getFullImageUrl(imageFileName) {
+    if (!imageFileName) return null;
+    const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+    return `${baseUrl}${encodeURIComponent(imageFileName)}?alt=media`;
+}
 
+// Função para extrair nome do arquivo (para compatibilidade)
+function getFileNameFromUrl(url) {
+    if (!url) return null;
+    if (!url.startsWith('http')) return url;
+    const match = url.match(/players%2F([^?]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
 
 
 
@@ -1086,9 +1099,12 @@ async function calcularTotalCreditosIntegrante(playerId) {
                 const sidebarUserName = document.getElementById('sidebarUserName');
                 
                 if (currentUserPlayer?.imageUrl) {
-                    sidebarUserPhoto.src = currentUserPlayer.imageUrl;
-                    sidebarUserPhoto.style.display = "block";
-                } else {
+    const imageFileName = getFileNameFromUrl(currentUserPlayer.imageUrl);
+    sidebarUserPhoto.src = getFullImageUrl(imageFileName);
+    sidebarUserPhoto.style.display = "block";
+}
+                
+                else {
                     sidebarUserPhoto.style.display = "none";
                 }
                 
@@ -1123,38 +1139,44 @@ async function calcularTotalCreditosIntegrante(playerId) {
             }
         });
 
-        async function loadCurrentUserPlayer() {
-            try {
-                const playersRef = ref(database, 'players');
-                const snapshot = await get(playersRef);
-                if (snapshot.exists()) {
-                    allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
-                        id,
-                        ...player
-                    }));
-                    currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
+      async function loadCurrentUserPlayer() {
+    try {
+        const playersRef = ref(database, 'players');
+        const snapshot = await get(playersRef);
+        if (snapshot.exists()) {
+            allPlayers = Object.entries(snapshot.val()).map(([id, player]) => ({
+                id,
+                ...player
+            }));
+            currentUserPlayer = allPlayers.find(player => player.email === emailLogado);
 
-                    const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
-                    const sidebarUserName = document.getElementById('sidebarUserName');
-                    const sidebarUserPosition = document.getElementById('sidebarUserPosition');
-                    const sidebarUserCategory = document.getElementById('sidebarUserCategory');
+            const sidebarUserPhoto = document.getElementById('sidebarUserPhoto');
+            const sidebarUserName = document.getElementById('sidebarUserName');
+            const sidebarUserPosition = document.getElementById('sidebarUserPosition');
+            const sidebarUserCategory = document.getElementById('sidebarUserCategory');
 
-                    if (currentUserPlayer?.imageUrl) {
-                        sidebarUserPhoto.src = currentUserPlayer.imageUrl;
-                        sidebarUserPhoto.style.display = "block";
-                    } else {
-                        sidebarUserPhoto.style.display = "none";
-                    }
-
-                    sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
-                    sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
-                    sidebarUserCategory.textContent = currentUserPlayer?.category || "Categoria não definida";
-                }
-            } catch (error) {
-                console.error('Erro ao carregar dados do jogador:', error);
+            if (currentUserPlayer?.imageUrl) {
+                // 🔥 CONVERTER para URL completa
+                const imageFileName = getFileNameFromUrl(currentUserPlayer.imageUrl);
+                sidebarUserPhoto.src = getFullImageUrl(imageFileName);
+                sidebarUserPhoto.style.display = "block";
+            } else {
+                sidebarUserPhoto.style.display = "none";
             }
+
+            sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
+            sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
+            sidebarUserCategory.textContent = currentUserPlayer?.category || "Categoria não definida";
         }
-       
+    } catch (error) {
+        console.error('Erro ao carregar dados do jogador:', error);
+    }
+}
+      
+      
+      
+      
+      
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
@@ -1544,54 +1566,64 @@ async function calcularTotalCreditosIntegrante(playerId) {
             }
         }
         
-        function renderDefaultersList(defaulters) {
-            defaultersList.innerHTML = '';
-            
-            if (Object.keys(defaulters).length === 0) {
-                defaultersList.innerHTML = '<div class="no-defaulters">Nenhum integrante inadimplente no período selecionado</div>';
-                return;
-            }
-            
-            Object.entries(defaulters).forEach(([playerId, defaulter]) => {
-                const defaulterEl = document.createElement('div');
-                defaulterEl.className = 'defaulter-item';
-                defaulterEl.style.cursor = 'pointer';
-                
-                const formattedMonths = defaulter.months.map(month => {
-                    const [year, monthNum] = month.split('-');
-                    return `${getMonthName(monthNum)}/${year}`;
-                }).join(', ');
-                
-                let notificationMessage = '';
-                if (defaulter.notificationCount === 1) {
-                    notificationMessage = `⚠️`;
-                } else if (defaulter.notificationCount >= 2) {
-                    notificationMessage = `🚫`;
-                }
-                
-                defaulterEl.innerHTML = `
-                    ${defaulter.photo ? 
-                        `<img src="${defaulter.photo}" class="defaulter-photo" alt="${defaulter.name}">` : 
-                        '<div class="defaulter-photo" style="background:#eee;"></div>'} 
-                    <div class="defaulter-info">
-                        <div class="defaulter-name">
-                            ${defaulter.name}
-                            ${notificationMessage ? `<span class="notification-message" style="color: ${defaulter.notificationCount >= 2 ? '#e74c3c' : '#f1c40f'};font-size:12px; font-weight: bold; margin-top: 5px;">${notificationMessage}</span>` : ''}
-                            ${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}
-                        </div>
-                        <div class="defaulter-months">${formattedMonths}</div>
-                    </div>
-                `;
-                
-                defaulterEl.addEventListener('click', () => {
-                    showDefaulterDetails(playerId, defaulter.name);
-                });
-                
-                defaultersList.appendChild(defaulterEl);
-            });
-        }
 
-function getISOWithOffset(date) {
+        function renderDefaultersList(defaulters) {
+    defaultersList.innerHTML = '';
+    
+    if (Object.keys(defaulters).length === 0) {
+        defaultersList.innerHTML = '<div class="no-defaulters">Nenhum integrante inadimplente no período selecionado</div>';
+        return;
+    }
+    
+    Object.entries(defaulters).forEach(([playerId, defaulter]) => {
+        const defaulterEl = document.createElement('div');
+        defaulterEl.className = 'defaulter-item';
+        defaulterEl.style.cursor = 'pointer';
+        
+        const formattedMonths = defaulter.months.map(month => {
+            const [year, monthNum] = month.split('-');
+            return `${getMonthName(monthNum)}/${year}`;
+        }).join(', ');
+        
+        let notificationMessage = '';
+        if (defaulter.notificationCount === 1) {
+            notificationMessage = `⚠️`;
+        } else if (defaulter.notificationCount >= 2) {
+            notificationMessage = `🚫`;
+        }
+        
+        // 🔥 CONVERTER imagem para URL
+        let photoUrl = '';
+        if (defaulter.photo) {
+            const fileName = getFileNameFromUrl(defaulter.photo);
+            photoUrl = getFullImageUrl(fileName);
+        }
+        
+        defaulterEl.innerHTML = `
+            ${photoUrl ? 
+                `<img src="${photoUrl}" class="defaulter-photo" alt="${defaulter.name}">` : 
+                '<div class="defaulter-photo" style="background:#eee;"></div>'} 
+            <div class="defaulter-info">
+                <div class="defaulter-name">
+                    ${defaulter.name}
+                    ${notificationMessage ? `<span class="notification-message" style="color: ${defaulter.notificationCount >= 2 ? '#e74c3c' : '#f1c40f'};font-size:12px; font-weight: bold; margin-top: 5px;">${notificationMessage}</span>` : ''}
+                    ${defaulter.hasPendingComprovante ? '<i class="fas fa-file-upload pending-comprovante-icon" title="Comprovante(s) pendente(s)"></i>' : ''}
+                </div>
+                <div class="defaulter-months">${formattedMonths}</div>
+            </div>
+        `;
+        
+        defaulterEl.addEventListener('click', () => {
+            showDefaulterDetails(playerId, defaulter.name);
+        });
+        
+        defaultersList.appendChild(defaulterEl);
+    });
+}
+
+
+
+        function getISOWithOffset(date) {
     const offset = -date.getTimezoneOffset(); // offset em minutos (negativo se for -03:00)
     const offsetHours = Math.floor(Math.abs(offset) / 60);
     const offsetMinutes = Math.abs(offset) % 60;
@@ -2464,7 +2496,7 @@ if (debtData.gameId) {
             }
         }
 
-      function showPlayer(index) {
+ function showPlayer(index) {
     if (filteredPlayers.length === 0) return;
     if (index < 0) index = filteredPlayers.length - 1;
     if (index >= filteredPlayers.length) index = 0;
@@ -2473,21 +2505,17 @@ if (debtData.gameId) {
     profileName.textContent = player.name || "-";
     
     if (player.imageUrl) {
-        profilePhoto.src = player.imageUrl;
+        // 🔥 CONVERTER para URL completa
+        const imageFileName = getFileNameFromUrl(player.imageUrl);
+        profilePhoto.src = getFullImageUrl(imageFileName);
         profilePhoto.style.display = "block";
     } else {
         profilePhoto.style.display = "none";
     }
     
-    // ATUALIZA OS CARDS
     atualizarCardsIntegrante(player);
-    
-    // Calcula o total de contribuições
     calcularTotalContribuicoesIntegrante(player.id);
-    
-    // NOVO: Calcula o total de créditos
     calcularTotalCreditosIntegrante(player.id);
-    
     loadPlayerPayments(player.id);
     loadPendingPaymentsSelect(player.id);
     uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
@@ -2495,7 +2523,7 @@ if (debtData.gameId) {
     nextPlayerBtn.disabled = filteredPlayers.length <= 1;
 }
 
-        function renderPayments(payments) {
+function renderPayments(payments) {
             paymentsList.innerHTML = '';
             if (payments.length === 0) {
                 paymentsList.innerHTML = "<div>Nenhuma Contribuição registrada</div>";
@@ -2693,31 +2721,34 @@ if (debtData.gameId) {
         };
         
         // Sobrescrever showPlayer
-        showPlayer = function(index) {
-            if (filteredPlayers.length === 0) return;
-            if (index < 0) index = filteredPlayers.length - 1;
-            if (index >= filteredPlayers.length) index = 0;
-            currentPlayerIndex = index;
-            const player = filteredPlayers[currentPlayerIndex];
-            playerIdInput.value = player.id;
-            profileName.textContent = player.name || "-";
-            
-            if (player.imageUrl) {
-                profilePhoto.src = player.imageUrl;
-                profilePhoto.style.display = "block";
-            } else {
-                profilePhoto.style.display = "none";
-            }
-            
-            atualizarCardsIntegrante(player);
-            calcularTotalContribuicoesIntegrante(player.id);
-            calcularTotalCreditosIntegrante(player.id);
-            loadPlayerPayments(player.id);
-            loadPendingPaymentsSelect(player.id);
-            uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
-            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
-            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
-        };
+       // Sobrescrever showPlayer (versão corrigida)
+showPlayer = function(index) {
+    if (filteredPlayers.length === 0) return;
+    if (index < 0) index = filteredPlayers.length - 1;
+    if (index >= filteredPlayers.length) index = 0;
+    currentPlayerIndex = index;
+    const player = filteredPlayers[currentPlayerIndex];
+    playerIdInput.value = player.id;
+    profileName.textContent = player.name || "-";
+    
+    if (player.imageUrl) {
+        // 🔥 CORREÇÃO: converter para URL completa
+        const imageFileName = getFileNameFromUrl(player.imageUrl);
+        profilePhoto.src = getFullImageUrl(imageFileName);
+        profilePhoto.style.display = "block";
+    } else {
+        profilePhoto.style.display = "none";
+    }
+    
+    atualizarCardsIntegrante(player);
+    calcularTotalContribuicoesIntegrante(player.id);
+    calcularTotalCreditosIntegrante(player.id);
+    loadPlayerPayments(player.id);
+    loadPendingPaymentsSelect(player.id);
+    uploadComprovanteSection.style.display = (isAdmin || (currentUserPlayer && currentUserPlayer.id === player.id)) ? 'none' : 'none';
+    prevPlayerBtn.disabled = filteredPlayers.length <= 1;
+    nextPlayerBtn.disabled = filteredPlayers.length <= 1;
+};
 
         prevPlayerBtn.addEventListener('click', () => {
             showPlayer(currentPlayerIndex - 1);
