@@ -716,28 +716,32 @@ function formatDateToBRDash(dateISO) {
     }
 
     async function preloadImage(imageUrl) {
-      if (!imageUrl || imageUrl === defaultImage) return defaultImage;
-      
-      const cachedBlob = await getImageFromDB(imageUrl);
-      if (cachedBlob) {
+    if (!imageUrl || imageUrl === defaultImage) return defaultImage;
+    
+    // Monta a URL completa a partir do nome do arquivo
+    const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+    const fullUrl = `${baseUrl}${encodeURIComponent(imageUrl)}?alt=media`;
+    
+    const cachedBlob = await getImageFromDB(fullUrl);
+    if (cachedBlob) {
         return URL.createObjectURL(cachedBlob);
-      }
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      try {
-        const response = await fetch(imageUrl, { signal: controller.signal });
-        const blob = await response.blob();
-        await saveImageToDB(imageUrl, blob);
-        return URL.createObjectURL(blob);
-      } catch (error) {
-        console.warn(`Erro ao carregar imagem ${imageUrl}:`, error);
-        return defaultImage;
-      } finally {
-        clearTimeout(timeoutId);
-      }
     }
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    try {
+        const response = await fetch(fullUrl, { signal: controller.signal });
+        const blob = await response.blob();
+        await saveImageToDB(fullUrl, blob);
+        return URL.createObjectURL(blob);
+    } catch (error) {
+        console.warn(`Erro ao carregar imagem ${fullUrl}:`, error);
+        return defaultImage;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
 
     // ============================================
     // FUNÇÃO ATUALIZADA: Buscar débitos em debts
