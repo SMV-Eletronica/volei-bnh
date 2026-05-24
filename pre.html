@@ -440,73 +440,82 @@
             });
         });
 
-        playerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+       playerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-            const saveBtn = document.getElementById('saveBtn');
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
 
-            Swal.fire({
-                title: 'Aguarde...',
-                text: 'Realizando o pré-cadastro...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+    Swal.fire({
+        title: 'Aguarde...',
+        text: 'Realizando o pré-cadastro...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
-            try {
-                const file = imageFileInput.files[0];
-                let imageUrl = null;
+    try {
+        const file = imageFileInput.files[0];
+        let imageFileName = null;  // ← Mudei de imageUrl para imageFileName
 
-                if (file) {
-                    const storagePath = `players/${Date.now()}_${file.name}`;
-                    const fileRef = storageRef(storage, storagePath);
-                    await uploadBytes(fileRef, file);
-                    imageUrl = await getDownloadURL(fileRef);
-                }
+        if (file) {
+            // Gera o nome do arquivo (sem a URL completa)
+            const fileExtension = file.name.split('.').pop();            
+            // Se quiser manter alguma referência ao nome, mas ainda curto:            
+            const nomeAbreviado = nameInput.value.replace(/\s/g, '').toLowerCase().substring(0, 6);
+            const uniqueFileName = `${Date.now().toString(36)}_${nomeAbreviado}.${fileExtension}`;// Exemplo: "g5x2q9_marcio.jpeg"
+            const storagePath = `players/${uniqueFileName}`;
+            const fileRef = storageRef(storage, storagePath);
+            
+            // Faz o upload
+            await uploadBytes(fileRef, file);
+            
+            // Salva APENAS o nome do arquivo, não a URL completa
+            imageFileName = uniqueFileName;  // ← Aqui só o nome do arquivo
+        }
 
-                const playerData = {
-                    name: nameInput.value,
-                    email: emailInput.value.trim(),
-                    imageUrl: imageUrl,
-                    position: positionInput.value,
-                    contact: contactInput.value,
-                    category: categoryInput.value,
-                    pendingAccount: true,
-                    createdAt: new Date().toISOString()
-                };
+        const playerData = {
+            name: nameInput.value,
+            email: emailInput.value.trim(),
+            imageUrl: imageFileName,  // ← Agora salva só o nome do arquivo
+            position: positionInput.value,
+            contact: contactInput.value,
+            category: categoryInput.value,
+            pendingAccount: true,
+            createdAt: new Date().toISOString()
+        };
 
-                const newPlayerRef = push(ref(database, 'players'));
-                await set(newPlayerRef, playerData);
+        const newPlayerRef = push(ref(database, 'players'));
+        await set(newPlayerRef, playerData);
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso!',
-                    text: 'Pré-cadastro realizado com sucesso! Redirecionando para criar senha...',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-                setTimeout(() => {
-                    window.location.href = `criar_login.html?email=${encodeURIComponent(playerData.email)}`;
-                }, 1500);
-
-            } catch (error) {
-                console.error("Erro no pré-cadastro:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Falha no pré-cadastro: ' + error.message,
-                    confirmButtonText: 'OK'
-                });
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
-            }
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Pré-cadastro realizado com sucesso! Redirecionando para criar senha...',
+            timer: 1500,
+            showConfirmButton: false
         });
+
+        setTimeout(() => {
+            window.location.href = `criar_login.html?email=${encodeURIComponent(playerData.email)}`;
+        }, 1500);
+
+    } catch (error) {
+        console.error("Erro no pré-cadastro:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Falha no pré-cadastro: ' + error.message,
+            confirmButtonText: 'OK'
+        });
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
+    }
+});
     </script>
 </body>
 </html>
