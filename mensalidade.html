@@ -337,6 +337,23 @@
 
         paymentDateInput.valueAsDate = new Date();
 
+        // Função auxiliar para montar URL da imagem
+function getFullImageUrl(imageFileName) {
+    if (!imageFileName) return null;
+    const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+    return `${baseUrl}${encodeURIComponent(imageFileName)}?alt=media`;
+}
+
+// Função para extrair nome do arquivo
+function getFileNameFromUrl(url) {
+    if (!url) return null;
+    if (!url.startsWith('http')) return url;
+    const match = url.match(/players%2F([^?]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+        
+        
+        
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'loginvl.html';
@@ -464,12 +481,21 @@
                         const player = players[key];
                         if (player.name.toLowerCase().includes(searchTerm)) {
                             hasResults = true;
-                            const playerItem = document.createElement('div');
-                            playerItem.className = 'search-item';
-                            playerItem.innerHTML = `
-                                ${player.imageUrl ? `<img src="${player.imageUrl}" class="search-item-photo" alt="${player.name}">` : '<div class="search-item-photo" style="background:#eee;"></div>'}
-                                <span>${player.name}</span>
-                            `;
+                          // Dentro do addEventListener, onde cria o playerItem
+const playerItem = document.createElement('div');
+playerItem.className = 'search-item';
+
+// 🔥 CONVERTER a imagem para URL
+let photoUrl = '';
+if (player.imageUrl) {
+    const fileName = getFileNameFromUrl(player.imageUrl);
+    photoUrl = getFullImageUrl(fileName);
+}
+
+playerItem.innerHTML = `
+    ${photoUrl ? `<img src="${photoUrl}" class="search-item-photo" alt="${player.name}">` : '<div class="search-item-photo" style="background:#eee;"></div>'}
+    <span>${player.name}</span>
+`;
                             playerItem.addEventListener('click', () => {
                                 selectPlayer(key, player);
                                 searchResultsDiv.style.display = 'none';
@@ -613,27 +639,28 @@
             }
         });
 
-        function selectPlayer(playerId, playerData) {
-            playerNameSpan.textContent = playerData.name;
-            playerPositionSpan.textContent = playerData.position;
-            playerCategorySpan.textContent = playerData.category;
-            playerContactSpan.textContent = playerData.contact;
-            playerIdInput.value = playerId;
-            
-            if (playerData.imageUrl) {
-                playerPhoto.src = playerData.imageUrl;
-                playerPhoto.style.display = 'block';
-            } else {
-                playerPhoto.style.display = 'none';
-            }
-            
-            playerSection.style.display = 'block';
-            paymentsSection.style.display = 'block';
-            
-            resetForm();
-            loadPayments(playerId);
-        }
-
+      function selectPlayer(playerId, playerData) {
+    playerNameSpan.textContent = playerData.name;
+    playerPositionSpan.textContent = playerData.position;
+    playerCategorySpan.textContent = playerData.category;
+    playerContactSpan.textContent = playerData.contact;
+    playerIdInput.value = playerId;
+    
+    if (playerData.imageUrl) {
+        // 🔥 CONVERTER para URL completa
+        const imageFileName = getFileNameFromUrl(playerData.imageUrl);
+        playerPhoto.src = getFullImageUrl(imageFileName);
+        playerPhoto.style.display = 'block';
+    } else {
+        playerPhoto.style.display = 'none';
+    }
+    
+    playerSection.style.display = 'block';
+    paymentsSection.style.display = 'block';
+    
+    resetForm();
+    loadPayments(playerId);
+}
         // ============================================
         // 2. REGISTRAR PAGAMENTOS - MODIFICADO
         // Com data => payments/{year}/{month}
