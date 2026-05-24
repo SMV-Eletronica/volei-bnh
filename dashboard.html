@@ -60,9 +60,9 @@
         <div class="button-container">
             <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
             <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
-            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-file-invoice-dollar"></i> Despesas</button>
-            <button onclick="window.location.href='transparencia.html'"><i class="fas fa-hand-holding-usd"></i> Transparência</button>    
-            <button onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Lista</button>            
+            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-chart-line"></i> Financeiro</button>
+            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>    
+            <button onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>            
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>  
     </div>
@@ -112,7 +112,6 @@
                         <option value="">Selecione uma categoria</option>                        
                         <option value="MENSAL">MENSAL</option>
                         <option value="DIARIA">DIARIA</option>
-                        <option value="INATIVO">INATIVO</option>
                     </select>
                 </div>
                 
@@ -284,148 +283,133 @@
             });
         });
 
-        playerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            try {
-                let imageUrl = null;
-                const file = imageFileInput.files[0];
+     // Função auxiliar para montar URL da imagem
+function getFullImageUrl(imageFileName) {
+    if (!imageFileName) return null;
+    const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+    return `${baseUrl}${encodeURIComponent(imageFileName)}?alt=media`;
+}
+
+// Função para extrair nome do arquivo de uma URL (útil para migração)
+function getFileNameFromUrl(url) {
+    if (!url) return null;
+    // Se já for o novo formato (apenas nome do arquivo)
+    if (!url.startsWith('http')) return url;
+    // Se for URL antiga, extrai o nome
+    const match = url.match(/players%2F([^?]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+playerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+        let imageFileName = null;
+        const file = imageFileInput.files[0];
+        
+        if (playerIdInput.value) {
+            // Modo de atualização
+            const playerRef = ref(database, `players/${playerIdInput.value}`);
+            const snapshot = await get(playerRef);
+            if (snapshot.exists()) {
+                const existingPlayer = snapshot.val();
                 
-                if (playerIdInput.value) {
-                    // Modo de atualização
-                    const playerRef = ref(database, `players/${playerIdInput.value}`);
-                    const snapshot = await get(playerRef);
-                    if (snapshot.exists()) {
-                        const existingPlayer = snapshot.val();
-                        imageUrl = existingPlayer.imageUrl; // Manter a imagem atual por padrão
-                        
-                        if (file) {
-                            // Se uma nova imagem for fornecida, excluir a antiga e fazer upload da nova
-                            if (file.size > 5 * 1024 * 1024) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Erro',
-                                    text: 'A imagem deve ter no máximo 5MB.',
-                                    confirmButtonText: 'OK'
-                                });
-                                return;
-                            }
-                            if (!file.type.startsWith('image/')) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Erro',
-                                    text: 'Por favor, selecione um arquivo de imagem.',
-                                    confirmButtonText: 'OK'
-                                });
-                                return;
-                            }
-
-                            if (existingPlayer.imageUrl) {
-                                const oldImageRef = storageRef(storage, existingPlayer.imageUrl);
-                                await deleteObject(oldImageRef).catch((error) => {
-                                    console.warn("Erro ao excluir imagem antiga:", error.code, error.message);
-                                });
-                            }
-
-                            const storagePath = `players/${Date.now()}_${file.name}`;
-                            const fileRef = storageRef(storage, storagePath);
-                            console.log('Iniciando upload para:', storagePath);
-                            await uploadBytes(fileRef, file);
-                            console.log('Upload concluído, obtendo URL...');
-                            imageUrl = await getDownloadURL(fileRef);
-                            console.log('URL da imagem:', imageUrl);
-                        }
-
-                        const playerData = {
-                            name: nameInput.value,
-                            email: emailInput.value || null,
-                            imageUrl: imageUrl || null,
-                            position: positionInput.value,
-                            contact: contactInput.value,
-                            category: categoryInput.value,
-                            createdAt: existingPlayer.createdAt // Manter a data de criação original
-                        };
-
-                        const updates = {};
-                        updates['players/' + playerIdInput.value] = playerData;
-                        await update(ref(database), updates);
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Sucesso',
-                            text: 'Integrante atualizado com sucesso!',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro',
-                            text: 'Jogador não encontrado no banco de dados.',
-                            confirmButtonText: 'OK'
-                        });
+                // Mantém o nome do arquivo existente por padrão
+                imageFileName = getFileNameFromUrl(existingPlayer.imageUrl);
+                
+                if (file) {
+                    // Se uma nova imagem for fornecida
+                    if (file.size > 5 * 1024 * 1024) {
+                        Swal.fire({ icon: 'error', title: 'Erro', text: 'A imagem deve ter no máximo 5MB.' });
                         return;
                     }
-                } else {
-                    // Modo de cadastro
-                    if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Erro',
-                                text: 'A imagem deve ter no máximo 5MB.',
-                                confirmButtonText: 'OK'
-                            });
-                            return;
-                        }
-                        if (!file.type.startsWith('image/')) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Erro',
-                                text: 'Por favor, selecione um arquivo de imagem.',
-                                confirmButtonText: 'OK'
-                            });
-                            return;
-                        }
-
-                        const storagePath = `players/${Date.now()}_${file.name}`;
-                        const fileRef = storageRef(storage, storagePath);
-                        console.log('Iniciando upload para:', storagePath);
-                        await uploadBytes(fileRef, file);
-                        console.log('Upload concluído, obtendo URL...');
-                        imageUrl = await getDownloadURL(fileRef);
-                        console.log('URL da imagem:', imageUrl);
+                    if (!file.type.startsWith('image/')) {
+                        Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, selecione um arquivo de imagem.' });
+                        return;
                     }
 
-                    const playerData = {
-                        name: nameInput.value,
-                        email: emailInput.value || null,
-                        imageUrl: imageUrl || null,
-                        position: positionInput.value,
-                        contact: contactInput.value,
-                        category: categoryInput.value,
-                        createdAt: new Date().toISOString()
-                    };
+                    // Excluir imagem antiga se existir
+                    if (existingPlayer.imageUrl) {
+                        const oldFileName = getFileNameFromUrl(existingPlayer.imageUrl);
+                        if (oldFileName) {
+                            const oldImageRef = storageRef(storage, `players/${oldFileName}`);
+                            await deleteObject(oldImageRef).catch((error) => {
+                                console.warn("Erro ao excluir imagem antiga:", error);
+                            });
+                        }
+                    }
 
-                    const newPlayerRef = push(ref(database, 'players'));
-                    await set(newPlayerRef, playerData);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sucesso',
-                        text: 'Integrante cadastrado com sucesso!',
-                        confirmButtonText: 'OK'
-                    });
+                    // Gera nome único para a nova imagem
+                    const fileExtension = file.name.split('.').pop();
+                    const nomeAbreviado = nameInput.value.replace(/\s/g, '').toLowerCase().substring(0, 6);
+                    const uniqueFileName = `${Date.now().toString(36)}_${nomeAbreviado}.${fileExtension}`;
+                    const storagePath = `players/${uniqueFileName}`;
+                    const fileRef = storageRef(storage, storagePath);
+                    
+                    await uploadBytes(fileRef, file);
+                    imageFileName = uniqueFileName; // Salva APENAS o nome do arquivo
                 }
+
+                const playerData = {
+                    name: nameInput.value,
+                    email: emailInput.value || null,
+                    imageUrl: imageFileName, // ← Agora salva só o nome do arquivo
+                    position: positionInput.value,
+                    contact: contactInput.value,
+                    category: categoryInput.value,
+                    createdAt: existingPlayer.createdAt
+                };
+
+                await update(ref(database), { [`players/${playerIdInput.value}`]: playerData });
                 
-                clearForm();
-            } catch (error) {
-                console.error("Erro ao salvar jogador:", error.code, error.message);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao salvar integrante: ' + error.message,
-                    confirmButtonText: 'OK'
-                });
+                Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Integrante atualizado com sucesso!' });
             }
-        });
+        } else {
+            // Modo de cadastro
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire({ icon: 'error', title: 'Erro', text: 'A imagem deve ter no máximo 5MB.' });
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire({ icon: 'error', title: 'Erro', text: 'Por favor, selecione um arquivo de imagem.' });
+                    return;
+                }
+
+                // Gera nome único para a imagem
+                const fileExtension = file.name.split('.').pop();
+                const nomeAbreviado = nameInput.value.replace(/\s/g, '').toLowerCase().substring(0, 6);
+                const uniqueFileName = `${Date.now().toString(36)}_${nomeAbreviado}.${fileExtension}`;
+                const storagePath = `players/${uniqueFileName}`;
+                const fileRef = storageRef(storage, storagePath);
+                
+                await uploadBytes(fileRef, file);
+                imageFileName = uniqueFileName; // Salva APENAS o nome do arquivo
+            }
+
+            const playerData = {
+                name: nameInput.value,
+                email: emailInput.value || null,
+                imageUrl: imageFileName, // ← Agora salva só o nome do arquivo
+                position: positionInput.value,
+                contact: contactInput.value,
+                category: categoryInput.value,
+                createdAt: new Date().toISOString()
+            };
+
+            const newPlayerRef = push(ref(database, 'players'));
+            await set(newPlayerRef, playerData);
+            
+            Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Integrante cadastrado com sucesso!' });
+        }
+        
+        clearForm();
+        loadPlayers(); // Recarregar lista
+    } catch (error) {
+        console.error("Erro ao salvar jogador:", error);
+        Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao salvar integrante: ' + error.message });
+    }
+});
 
         deleteBtn.addEventListener('click', () => {
             if (playerIdInput.value) {
@@ -457,20 +441,24 @@
                     Object.keys(players).forEach((key) => {
                         const player = players[key];
                         const rowClass = player.category === 'MENSAL' ? 'category-mensal' : 'category-diaria';
-                        const row = `
-                            <tr>
-                                <td>${counter}</td>
-                                <td>
-                                    ${player.imageUrl ? 
-                                        `<img src="${player.imageUrl}" class="player-image" alt="${player.name}" data-id="${key}" style="cursor:pointer;">` : 
-                                        `<span data-id="${key}" style="cursor:pointer;">Sem foto</span>`}
-                                </td>
-                                <td class="player-count">${player.name}</td>
-                                <td>${player.contact || '-'}</td>
-                                <td>${player.position}</td>                               
-                                <td>${player.category}</td>
-                            </tr>
-                        `;
+                        
+                       // Dentro do onValue, onde monta a linha da tabela
+const imageSrc = player.imageUrl ? getFullImageUrl(getFileNameFromUrl(player.imageUrl)) : '';
+
+const row = `
+    <tr>
+        <td>${counter}</td>
+        <td>
+            ${imageSrc ? 
+                `<img src="${imageSrc}" class="player-image" alt="${player.name}" data-id="${key}" style="cursor:pointer; width:40px; height:40px; border-radius:50%; object-fit:cover;">` : 
+                `<span data-id="${key}" style="cursor:pointer;">Sem foto</span>`}
+        </td>
+        <td class="player-count">${player.name}</td>
+        <td>${player.contact || '-'}</td>
+        <td>${player.position}</td>                               
+        <td>${player.category}</td>
+    </tr>
+`;
                         playersTableBody.innerHTML += row;
                         counter++; // Incrementa o contador para o próximo integrante
                     });
@@ -493,78 +481,87 @@
         }
 
         async function editPlayer(id) {
-            try {
-                const playerRef = ref(database, `players/${id}`);
-                const snapshot = await get(playerRef);
+    try {
+        const playerRef = ref(database, `players/${id}`);
+        const snapshot = await get(playerRef);
+        
+        if (snapshot.exists()) {
+            const player = snapshot.val();
+            nameInput.value = player.name;
+            emailInput.value = player.email || '';
+            positionInput.value = player.position;
+            contactInput.value = player.contact || '';
+            categoryInput.value = player.category;
+            playerIdInput.value = id;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Salvar';
+            deleteBtn.style.display = 'inline-block';
+            clearBtn.style.display = 'inline-block';
+            
+            if (player.imageUrl) {
+                // 🔥 CORREÇÃO AQUI: Converter nome do arquivo para URL
+                const imageUrl = getFullImageUrl(getFileNameFromUrl(player.imageUrl));
+                imagePreview.src = imageUrl;
+                imagePreview.style.display = 'block';
+            } else {
+                imagePreview.style.display = 'none';
+            }
+            imageFileInput.value = '';
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Jogador não encontrado no banco de dados.',
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        console.error("Erro ao editar jogador:", error.code, error.message);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Erro ao editar integrante: ' + error.message,
+            confirmButtonText: 'OK'
+        });
+    }
+}
+        
+async function deletePlayer(id) {
+    const result = await Swal.fire({
+        icon: 'question',
+        title: 'Confirmar Exclusão',
+        text: 'Tem certeza que deseja excluir este integrante?',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (result.isConfirmed) {
+        try {
+            const playerRef = ref(database, `players/${id}`);
+            const snapshot = await get(playerRef);
+            
+            if (snapshot.exists()) {
+                const player = snapshot.val();
+                const imageFileName = getFileNameFromUrl(player.imageUrl);
                 
-                if (snapshot.exists()) {
-                    const player = snapshot.val();
-                    nameInput.value = player.name;
-                    emailInput.value = player.email || '';
-                    positionInput.value = player.position;
-                    contactInput.value = player.contact || '';
-                    categoryInput.value = player.category;
-                    playerIdInput.value = id;
-                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Salvar';
-                    deleteBtn.style.display = 'inline-block';
-                    clearBtn.style.display = 'inline-block';
-                    
-                    if (player.imageUrl) {
-                        imagePreview.src = player.imageUrl;
-                        imagePreview.style.display = 'block';
-                    } else {
-                        imagePreview.style.display = 'none';
-                    }
-                    imageFileInput.value = '';
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: 'Jogador não encontrado no banco de dados.',
-                        confirmButtonText: 'OK'
+                // Excluir imagem do Storage se existir
+                if (imageFileName) {
+                    const imageRef = storageRef(storage, `players/${imageFileName}`);
+                    await deleteObject(imageRef).catch((error) => {
+                        console.warn("Erro ao excluir imagem:", error);
                     });
                 }
-            } catch (error) {
-                console.error("Erro ao editar jogador:", error.code, error.message);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao editar integrante: ' + error.message,
-                    confirmButtonText: 'OK'
-                });
+                
+                await remove(playerRef);
+                Swal.fire({ icon: 'success', title: 'Sucesso', text: 'Integrante excluído com sucesso!' });
+                clearForm();
             }
+        } catch (error) {
+            console.error("Erro ao excluir jogador:", error);
+            Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao excluir integrante: ' + error.message });
         }
-
-        async function deletePlayer(id) {
-            if (confirm("Tem certeza que deseja excluir este integrante?")) {
-                try {
-                    const playerRef = ref(database, `players/${id}`);
-                    const snapshot = await get(playerRef);
-                    if (snapshot.exists() && snapshot.val().imageUrl) {
-                        const imageRef = storageRef(storage, snapshot.val().imageUrl);
-                        await deleteObject(imageRef).catch((error) => {
-                            console.warn("Erro ao excluir imagem:", error.code, error.message);
-                        });
-                    }
-                    await remove(playerRef);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sucesso',
-                        text: 'Integrante excluído com sucesso!',
-                        confirmButtonText: 'OK'
-                    });
-                    clearForm();
-                } catch (error) {
-                    console.error("Erro ao excluir jogador:", error.code, error.message);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: 'Erro ao excluir integrante: ' + error.message,
-                        confirmButtonText: 'OK'
-                    });
-                }
-            }
-        }
+    }
+}        
     </script>
 </body>
 </html>
