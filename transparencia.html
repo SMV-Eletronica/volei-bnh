@@ -270,7 +270,9 @@
                             <div id="totalExpenses" class="cash-summary-value" style="color: red" >R$0,00</div>
                         </div>
                         <div class="cash-summary-item" id="currentBalanceItem">
-                            <div class="cash-summary-title">Saldo Caixa</div>
+                            <div class="cash-summary-title">Saldo Caixa
+                             <span id="currentBalanceYear" style="font-size: 11px; display: block; color: #666;"></span>
+                            </div>
                             <div id="currentBalance" class="cash-summary-value">R$0,00</div>
                         </div>
                     </div>
@@ -567,8 +569,21 @@
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
         window.segments = ["All2"];
 
+function updateCurrentBalanceYear() {
+    const balanceTitle = document.querySelector('#currentBalanceItem .cash-summary-title');
+    if (balanceTitle) {
+        const selectedYear = yearFilter.value;
+        if (selectedYear === 'all') {
+            balanceTitle.innerHTML = 'Saldo Caixa <span style="font-size: 11px; display: block; color: #666;">(Todos os anos)</span>';
+        } else {
+            balanceTitle.innerHTML = `Saldo Caixa <span style="font-size: 11px; display: block; color: #666;">${selectedYear}</span>`;
+        }
+    }
+}
 
-        function getTodayDateOnly() {
+
+    
+    function getTodayDateOnly() {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -1405,6 +1420,7 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
         const yearBalance = filteredIncome - filteredExpenses;
         updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, yearBalance);
         renderFinancialData(monthlyData);
+         updateCurrentBalanceYear();  // coloca o ano do select no card saldo caixa
         
     } catch (error) {
         console.error("Error loading financial data:", error);
