@@ -158,6 +158,32 @@
         const adminEmails = ['mvvasques@msn.com', 'fabioluiztx1@outlook.com', 'evandro@msn.com'];
         const defaultImage = 'volei.jpg';
 
+
+// Função para montar URL completa da imagem
+function getFullImageUrl(imageFileName) {
+    if (!imageFileName) return null;
+    const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+    return `${baseUrl}${encodeURIComponent(imageFileName)}?alt=media`;
+}
+
+// Função para extrair nome do arquivo da URL (para compatibilidade)
+function getFileNameFromUrl(url) {
+    if (!url) return null;
+    if (!url.startsWith('http')) return url;
+    const match = url.match(/players%2F([^?]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+
+
+
+
+
+
+
+
+
+
         function createDashboardButton() {
             const sidebarMenu = document.querySelector('.sidebar-menu');
             if (!sidebarMenu) {
@@ -293,12 +319,16 @@
                     const sidebarUserName = document.getElementById('sidebarUserName');
                     const sidebarUserPosition = document.getElementById('sidebarUserPosition');
                     const sidebarUserCategory = document.getElementById('sidebarUserCategory');
+                  
                     if (currentUserPlayer?.imageUrl) {
-                        sidebarUserPhoto.src = currentUserPlayer.imageUrl;
-                        sidebarUserPhoto.style.display = "block";
+                        const imageFileName = getFileNameFromUrl(currentUserPlayer.imageUrl);
+    sidebarUserPhoto.src = getFullImageUrl(imageFileName);
+    sidebarUserPhoto.style.display = "block";
                     } else {
                         sidebarUserPhoto.style.display = "none";
                     }
+
+
                     sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                     sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
                     sidebarUserCategory.textContent = currentUserPlayer?.category || "Categoria não definida";
@@ -502,7 +532,7 @@
                 if (poll.is_active && hasVoted && isSelected) {
                     const voterHtml = `
                         <div class="voter-item">
-                            <img src="${currentUserPlayer?.imageUrl || defaultImage}" alt="${currentUserPlayer?.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
+                            <img src="${currentUserPlayer?.imageUrl ? getFullImageUrl(getFileNameFromUrl(currentUserPlayer.imageUrl)) : defaultImage}" alt="${currentUserPlayer?.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
                             <div class="voter-info">
                                 ${currentUserPlayer?.name || '-'} (${currentUserPlayer?.position || '-'})
                             </div>
@@ -597,8 +627,8 @@
                                 votersByOption[voteKey] = [];
                             }
                             votersByOption[voteKey].push(`
-                                <div class="voter-item">
-                                    <img src="${player.imageUrl || defaultImage}" alt="${player.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
+                                <div class="voter-item">                                    
+                                  <img src="${player.imageUrl ? getFullImageUrl(getFileNameFromUrl(player.imageUrl)) : defaultImage}" alt="${player.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
                                     <div class="voter-info">
                                         ${player.name || '-'} (${player.position || '-'})
                                     </div>
