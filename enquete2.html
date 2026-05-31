@@ -155,8 +155,34 @@
         let selectedPollId = null;
         let selectedMainOption = null;
         let activeTab = 'active';
-        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro@msn.com'];
+        const adminEmails = ['mvvasques@msn.com', 'fabioluiztx1@outlook.com', 'evandro@msn.com'];
         const defaultImage = 'volei.jpg';
+
+
+// Função para montar URL completa da imagem
+function getFullImageUrl(imageFileName) {
+    if (!imageFileName) return null;
+    const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+    return `${baseUrl}${encodeURIComponent(imageFileName)}?alt=media`;
+}
+
+// Função para extrair nome do arquivo da URL (para compatibilidade)
+function getFileNameFromUrl(url) {
+    if (!url) return null;
+    if (!url.startsWith('http')) return url;
+    const match = url.match(/players%2F([^?]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+
+
+
+
+
+
+
+
+
 
         function createDashboardButton() {
             const sidebarMenu = document.querySelector('.sidebar-menu');
@@ -293,12 +319,16 @@
                     const sidebarUserName = document.getElementById('sidebarUserName');
                     const sidebarUserPosition = document.getElementById('sidebarUserPosition');
                     const sidebarUserCategory = document.getElementById('sidebarUserCategory');
+                  
                     if (currentUserPlayer?.imageUrl) {
-                        sidebarUserPhoto.src = currentUserPlayer.imageUrl;
-                        sidebarUserPhoto.style.display = "block";
+                        const imageFileName = getFileNameFromUrl(currentUserPlayer.imageUrl);
+    sidebarUserPhoto.src = getFullImageUrl(imageFileName);
+    sidebarUserPhoto.style.display = "block";
                     } else {
                         sidebarUserPhoto.style.display = "none";
                     }
+
+
                     sidebarUserName.textContent = currentUserPlayer?.name || "Usuário";
                     sidebarUserPosition.textContent = currentUserPlayer?.position || "Posição não definida";
                     sidebarUserCategory.textContent = currentUserPlayer?.category || "Categoria não definida";
@@ -502,7 +532,7 @@
                 if (poll.is_active && hasVoted && isSelected) {
                     const voterHtml = `
                         <div class="voter-item">
-                            <img src="${currentUserPlayer?.imageUrl || defaultImage}" alt="${currentUserPlayer?.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
+                            <img src="${currentUserPlayer?.imageUrl ? getFullImageUrl(getFileNameFromUrl(currentUserPlayer.imageUrl)) : defaultImage}" alt="${currentUserPlayer?.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
                             <div class="voter-info">
                                 ${currentUserPlayer?.name || '-'} (${currentUserPlayer?.position || '-'})
                             </div>
@@ -597,8 +627,8 @@
                                 votersByOption[voteKey] = [];
                             }
                             votersByOption[voteKey].push(`
-                                <div class="voter-item">
-                                    <img src="${player.imageUrl || defaultImage}" alt="${player.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
+                                <div class="voter-item">                                    
+                                  <img src="${player.imageUrl ? getFullImageUrl(getFileNameFromUrl(player.imageUrl)) : defaultImage}" alt="${player.name || '-'}" class="voter-photo" onerror="this.src='${defaultImage}'">
                                     <div class="voter-info">
                                         ${player.name || '-'} (${player.position || '-'})
                                     </div>
@@ -895,19 +925,6 @@
                 });
                 updatePollLists(() => {
                     toggleSpinner(null, false, pollId);
-
-                    const formattedDateDisplay = gameDateTime.toFormat('dd/MM/yyyy');
-              const message = `Enquete recebeu um voto`;
-             const segments = ["All"];
-              const titulo ="Vôlei BNH - Informações"
-              await sendPushNotification(message, defaultImage, segments, titulo);
-
-
-                    
-                    
-
-
-                    
                 });
             } catch (error) {
                 console.error('Erro ao registrar voto:', error);
@@ -1082,46 +1099,5 @@
         window.selectPoll = selectPoll;
         window.switchTab = switchTab;
     </script>
-
-<script>
-
-// No seu código atual, substitua por:
-const FUNCTION_URL = 'https://sendnotification-276wqcg2yq-rj.a.run.app';
- 
-  async function sendPushNotification(message, imageUrl = null, segments, titulo) {
-    console.log("📤 Enviando notificação...");      
-    console.log("📝 Conteúdo da setor:", titulo);
-    console.log("📝 Conteúdo da mensagem:", message);
-    console.log("🎯 Segmentos:", segments);
-    console.log("🔍 Tipo de titulo:", typeof titulo, "| Valor:", titulo);
-   
-    
-  if (imageUrl) console.log("🖼️ Imagem incluída:", imageUrl);
-
-  try {
-    const response = await fetch(FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, imageUrl, segments, titulo })
-    });
-
-    const result = await response.json();
-    console.log("📬 Resposta da função:", result);
-
-    if (result.success) {
-      console.log("✅ Notificação enviada com sucesso!");
-     // Swal.fire('Sucesso!', 'Notificação enviada!', 'success');
-    } else {
-      console.warn("⚠️ Falha ao enviar:", result.error);
-      throw new Error(result.error);
-    }
-  } catch (error) {
-    console.error("❌ Erro ao enviar notificação:", error.message);
-    Swal.fire('Erro', error.message, 'error');
-  }
-}
-
-</script>
-    
 </body>
 </html>
