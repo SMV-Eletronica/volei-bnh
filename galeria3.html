@@ -328,6 +328,28 @@
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
     const adminBtn = document.getElementById('adminBtn');
+
+
+
+        // Função para montar URL completa da imagem do jogador
+    function getFullImageUrl(imageFileName) {
+        if (!imageFileName) return null;
+        const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+        return `${baseUrl}${encodeURIComponent(imageFileName)}?alt=media`;
+    }
+
+    // Função para extrair nome do arquivo da URL (para compatibilidade)
+    function getFileNameFromUrl(url) {
+        if (!url) return null;
+        if (!url.startsWith('http')) return url;
+        const match = url.match(/players%2F([^?]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
+
+
+
+
     
     function toggleSidebar() {
       sidebar.classList.toggle('active');
@@ -452,8 +474,10 @@
             document.getElementById('sidebarUserCategory').textContent = currentUserPlayer.category || 'Categoria não definida';
             
             if (currentUserPlayer.imageUrl) {
-              document.getElementById('sidebarUserPhoto').src = currentUserPlayer.imageUrl;
-            }
+                  const imageFileName = getFileNameFromUrl(currentUserPlayer.imageUrl);
+                  document.getElementById('sidebarUserPhoto').src = getFullImageUrl(imageFileName);
+              }
+
             isAdmin = adminEmails.includes(currentUser.email) || currentUserPlayer.category === 'ADMIN';
             console.log('Usuário é admin?', isAdmin, 'Email:', currentUser.email);
             updateSidebarVisibility();
@@ -1170,7 +1194,8 @@
           let playersHtml = '<div class="players-grid">';
           
           const confirmedPlayers = Object.values(game.confirmedPlayers || {});
-confirmedPlayers.forEach(player => {
+
+   confirmedPlayers.forEach(player => {
   const playerData = allPlayers.find(p => p.id === player.id) || player;
   let tooltipContent = `<strong>${playerData.name}</strong><p>${playerData.category}<br>${playerData.position || 'Posição não definida'}`;
   
@@ -1181,10 +1206,17 @@ confirmedPlayers.forEach(player => {
   
   tooltipContent += `</p>`; // fechar o parágrafo
 
+  // 🔥 CONVERTER imagem do jogador
+  let playerImageUrl = defaultImage;
+  if (playerData.imageUrl) {
+    const imageFileName = getFileNameFromUrl(playerData.imageUrl);
+    playerImageUrl = getFullImageUrl(imageFileName);
+  }
+
   playersHtml += `
     <div class="player-avatar-container">
       <div class="player-avatar">
-        <img src="${playerData.imageUrl || defaultImage}" alt="${playerData.name}">
+        <img src="${playerImageUrl}" alt="${playerData.name}">
       </div>
       <div class="player-tooltip">
         ${tooltipContent}
