@@ -446,7 +446,7 @@ button:hover {
         .filter-controls {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin: 15px 15px 15px 0;
             align-items: center;
             flex-wrap: wrap;
         }
