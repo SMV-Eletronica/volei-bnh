@@ -271,7 +271,6 @@
                         </div>
                         <div class="cash-summary-item" id="currentBalanceItem">
                             <div class="cash-summary-title">Saldo Caixa
-                             <span id="currentBalanceYear" style="font-size: 11px; display: block; color: #666;"></span>
                             </div>
                             <div id="currentBalance" class="cash-summary-value">R$0,00</div>
                         </div>
@@ -576,7 +575,7 @@ function updateCurrentBalanceYear() {
         if (selectedYear === 'all') {
             balanceTitle.innerHTML = 'Saldo Caixa <span style="font-size: 11px; display: block; color: #666;">(Todos os anos)</span>';
         } else {
-            balanceTitle.innerHTML = `Saldo Caixa <span style="font-size: 11px; display: block; color: #666;">${selectedYear}</span>`;
+            balanceTitle.innerHTML = `Saldo Caixa <span style="font-size: 11px; display: block; color: #666;"></span>`;
         }
     }
 }
@@ -639,6 +638,48 @@ function getFileNameFromUrl(url) {
                 overlay.style.display = 'none';
             }
         }
+
+
+
+
+        // ============================================
+// FUNÇÃO ATUALIZADA PARA BUSCAR ABERTURA DE CAIXA
+// ============================================
+async function getPreviousYearBalance(selectedYear, selectedMonth) {
+    // Se for "todos" ou não tem ano específico, retorna 0
+    if (selectedYear === 'all' || !selectedYear) return 0;
+    
+    const targetYear = parseInt(selectedYear);
+    let openingBalance = 0;
+    
+    try {
+        // 🔥 Buscar abertura de caixa no settings/openingBalances
+        const openingBalanceRef = ref(database, `settings/openingBalances/${targetYear}`);
+        const snapshot = await get(openingBalanceRef);
+        
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            openingBalance = data.value || 0;
+            console.log(`✅ Abertura de caixa para ${targetYear}: R$ ${openingBalance}`);
+        } else {
+            console.log(`ℹ️ Nenhuma abertura de caixa definida para ${targetYear}`);
+        }
+        
+        return openingBalance;
+        
+    } catch (error) {
+        console.error('Erro ao buscar abertura de caixa:', error);
+        return 0;
+    }
+}
+
+
+
+
+
+
+
+
 
 async function hasCreditCoveringAmount(playerId, requiredAmount) {
     if (!playerId || requiredAmount <= 0) return false;
@@ -1230,8 +1271,7 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
         }
 
         // FUNÇÃO CORRIGIDA: tabela respeita ano E mês selecionados
-        
-        async function loadFinancialData() {
+ async function loadFinancialData() {
     document.getElementById('loading-overlay').style.display = 'flex';
 
     const selectedYear = yearFilter.value;
@@ -1244,7 +1284,6 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
     try {
         let paymentsSnapshot;
         
-        // 🔥 OTIMIZAÇÃO: Buscar apenas o ano selecionado
         if (selectedYear !== 'all') {
             paymentsSnapshot = await get(ref(database, `payments/${selectedYear}`));
         } else {
@@ -1257,7 +1296,6 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
             get(playersRef)
         ]);
         
-        // Ajusta estrutura se for apenas um ano
         let paymentsData = {};
         if (paymentsSnapshot.exists()) {
             if (selectedYear !== 'all') {
@@ -1367,7 +1405,7 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
             }
         }
         
-        // Processar despesas (mantido igual)
+        // Processar despesas
         for (const expenseId in expenses) {
             const expense = expenses[expenseId];
             if (!expense.month) continue;
@@ -1416,11 +1454,14 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
         }
         
         updateYearFilterOptions(yearFilter, Array.from(yearsSet).sort().reverse());
-       // Saldo apenas do ano selecionado (ano vigente no filtro)
-        const yearBalance = filteredIncome - filteredExpenses;
-        updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, yearBalance);
+        
+        // 🔥 CORREÇÃO AQUI: NÃO somar openingBalance aqui
+        const yearBalance = filteredIncome - filteredExpenses; // Apenas o resultado do ano
+        
+        // Passa o yearBalance (sem abertura) para o updateCashSummary
+        await updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, yearBalance);
         renderFinancialData(monthlyData);
-         updateCurrentBalanceYear();  // coloca o ano do select no card saldo caixa
+        updateCurrentBalanceYear();
         
     } catch (error) {
         console.error("Error loading financial data:", error);
@@ -1429,8 +1470,6 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
         document.getElementById('loading-overlay').style.display = 'none';
     }
 }
-
-
 
         function renderFinancialData(monthlyData) {
             financialData.innerHTML = '';
@@ -1486,28 +1525,80 @@ async function calcularTotalContribuicoesIntegrante(playerId) {
         }
 
 
-
-function updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, yearBalance) {
+async function updateCashSummary(filteredIncome, filteredReceivables, filteredExpenses, totalBalance) {
+    const selectedYear = yearFilter.value;
+    const selectedMonth = monthFilter.value;
+    
     // Valores do período filtrado
     totalIncomeElement.textContent = `R$${filteredIncome.toFixed(2)}`;
     totalReceivablesElement.textContent = `R$${filteredReceivables.toFixed(2)}`;
     totalExpensesElement.textContent = `R$${filteredExpenses.toFixed(2)}`;
     
-    // 🔥 NOVO: Saldo Caixa = Apenas do ano/mês selecionado
-    currentBalanceElement.textContent = `R$${Math.abs(yearBalance).toFixed(2)}`;
-    currentBalanceElement.className = `cash-summary-value ${yearBalance >= 0 ? 'positive' : 'negative'}`;
+    // Buscar abertura de caixa e a nota (ano de origem)
+    let openingBalance = 0;
+    let openingNote = '';
+    
+    if (selectedYear !== 'all') {
+        try {
+            const openingBalanceRef = ref(database, `settings/openingBalances/${selectedYear}`);
+            const snapshot = await get(openingBalanceRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                openingBalance = data.value || 0;
+                openingNote = data.note || ''; // Ex: "2025"
+            }
+        } catch (error) {
+            console.error('Erro ao buscar abertura:', error);
+        }
+    }
+    
+    // Saldo total incluindo a abertura
+    const finalBalance = totalBalance + openingBalance;
+    
+    // Construir o texto do saldo com a conta amostra
+    let balanceHtml = '';
+    
+    if (selectedYear === 'all') {
+        balanceHtml = `R$${Math.abs(finalBalance).toFixed(2)}`;
+    } else if (openingBalance !== 0) {
+        // Exibe a conta: 310,26 + saldo = soma
+        const signal = openingBalance > 0 ? '' : '';
+        const operation = `${signal}R$${openingBalance.toFixed(2)} + R$${totalBalance.toFixed(2)}`;
+        
+        balanceHtml = `
+            <div style="font-size: 24px;">R$${finalBalance.toFixed(2)}</div>
+            <small style="font-size: 10px; color: #888; display: block;">
+                ${operation} 
+            </small>
+        `;
+        
+        // Se tiver nota (ano de origem), exibe
+        if (openingNote) {
+            balanceHtml += `<small style="font-size: 10px; color: #FF9800; display: block;">
+                            
+                ⚠️ Saldo remanescente de ${openingNote} + Saldo ${selectedYear}
+            </small>`;
+        }
+    } else {
+        balanceHtml = `R$${Math.abs(finalBalance).toFixed(2)}`;
+        balanceHtml += `<small style="font-size: 10px; color: #999; display: block;">(Nenhuma abertura definida)</small>`;
+    }
+    
+    currentBalanceElement.innerHTML = balanceHtml;
+    currentBalanceElement.className = `cash-summary-value ${finalBalance >= 0 ? 'positive' : 'negative'}`;
     
     const currentBalanceItem = document.getElementById('currentBalanceItem');
     if (currentBalanceItem) {
-        currentBalanceItem.style.borderLeft = `4px solid ${yearBalance >= 0 ? '#28a745' : 'red'}`;
+        currentBalanceItem.style.borderLeft = `4px solid ${finalBalance >= 0 ? '#28a745' : 'red'}`;
     }
     
-    if (yearBalance < 0) {
-        currentBalanceElement.textContent = `-R$${Math.abs(yearBalance).toFixed(2)}`;
+    if (finalBalance < 0) {
+        currentBalanceElement.innerHTML = `
+            <div style="font-size: 16px;">-R$${Math.abs(finalBalance).toFixed(2)}</div>
+            ${openingBalance !== 0 ? `<small style="font-size: 10px; color: #888;">(Abertura: R$${openingBalance.toFixed(2)})</small>` : ''}
+        `;
     }
-}
-
-        // ============================================
+}        // ============================================
         // LOAD DEFAULTES - MODIFICADO: buscar APENAS em debts
         // ============================================
         async function loadDefaulters() {
