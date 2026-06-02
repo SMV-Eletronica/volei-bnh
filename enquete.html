@@ -486,7 +486,7 @@ function getFileNameFromUrl(url) {
                 const userVote = voteSnapshot?.val();
                 const userCategory = currentUserPlayer?.category || 'CONVIDADO';
                 const canVote = userCategory === 'MENSAL' && poll.is_active;
-                const isSelected = poll.id === selectedPollId;
+                const isSelected = activeTab === 'active' ? true : (poll.id === selectedPollId);
 
                 let voteCountHtml = '';
                 let isApproved = false;
