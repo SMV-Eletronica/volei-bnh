@@ -338,6 +338,7 @@ body {
     border: none;
     cursor: pointer;
     font-size: 14px;
+    z-index: 1000;
 }
 
 .results-btn {
@@ -352,6 +353,7 @@ body {
 .close-poll-btn, .reopen-poll-btn {
     background-color: var(--warning);
     color: white;
+    z-index: 1000;
 }
 
 .close-poll-btn:hover, .reopen-poll-btn:hover {
@@ -371,6 +373,7 @@ body {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    z-index: 1000;
 }
 
 .vote-option-btn {
@@ -380,6 +383,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s;
+    z-index: 1000;
    
 }
 
@@ -393,6 +397,7 @@ body {
     font-weight: bold;
     min-width: 100px;
     min-height: 40px;
+    z-index: 1000;
    
     
     /* 1. Sombra suave e moderna (recomendada) */
@@ -412,6 +417,7 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     min-width: 100px;
     min-height: 40px;
+    z-index: 1000;
 }
 
 
@@ -429,6 +435,7 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     min-width: 100px;
     min-height: 40px;
+    z-index: 1000;
 }
 
 .vote-option-btn.selected {
