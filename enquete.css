@@ -445,6 +445,7 @@ body {
     cursor: pointer;
     font-size: 1.0rem;
     transition: all 0.2s;
+    z-index: 1000;
 }
 
 .vote-option-btn:hover:not(:disabled) {
