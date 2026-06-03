@@ -2,101 +2,648 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrantes-Vôlei BNH</title>
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- Cores da barra de status -->
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="msapplication-navbutton-color" content="#2c3e50">
+
+    <title>Vôlei BNH - Acesso Rápido</title>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=1.0">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --text: #2c3e50;
+            --text-muted: #7f8c8d;
+            --bg-body: #f5f5f5;
+            --bg-card: #ffffff;
+            --bg-sidebar: #2c3e50;
+            --border-color: #ddd;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text);
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Fundo com efeito de rede de vôlei (suave) */
+        .net-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+       /*     background-image: 
+                repeating-linear-gradient(90deg, 
+                    rgba(52, 152, 219, 0.05) 0px, 
+                    rgba(52, 152, 219, 0.05) 2px,
+                    transparent 2px,
+                    transparent 40px),
+                repeating-linear-gradient(0deg, 
+                    rgba(0, 0, 0, 0.03) 0px,
+                    rgba(0, 0, 0, 0.03) 1px,
+                    transparent 1px,
+                    transparent 30px);
+            pointer-events: none;*/
+        }
+
+        /* Círculos decorativos */
+        .circle-bg {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(52,152,219,0.08) 0%, rgba(52,152,219,0) 70%);
+            pointer-events: none;
+        }
+
+        .circle-1 {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            right: -100px;
+        }
+
+        .circle-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -200px;
+            left: -150px;
+            background: radial-gradient(circle, rgba(41,128,185,0.06) 0%, rgba(41,128,185,0) 70%);
+        }
+
+        .circle-3 {
+            width: 200px;
+            height: 200px;
+            top: 40%;
+            left: -80px;
+        }
+
+        /* Container principal */
+        .main-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+            position: relative;
+            z-index: 2;
+            animation: fadeSlideUp 0.6s ease-out;
+        }
+
+        /* Card superior com info do usuário */
+        .user-card {
+            background: var(--bg-card);
+            border-radius: 32px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            box-shadow: 0 8px 20px rgba(52,152,219,0.3);
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info h2 {
+            color: var(--text);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .user-info p {
+            color: var(--text-muted);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            color: var(--text);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* Nova linha de débito */
+        .debt-row {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .debt-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .debt-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--danger);
+        }
+
+        .debt-value.zero {
+            color: var(--success);
+        }
+
+        /* Seção de atalhos rápidos */
+        .section-title {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 12px;
+        }
+
+        /* Lista de atalhos */
+        .shortcuts-list {
+            background: var(--bg-card);
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .shortcut-item:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-item:hover {
+            background: rgba(52,152,219,0.05);
+        }
+
+        .shortcut-item:active {
+            background: rgba(52,152,219,0.1);
+            transform: scale(0.98);
+        }
+
+        .shortcut-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .shortcut-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(52,152,219,0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--primary);
+        }
+
+        .shortcut-info h4 {
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .shortcut-info p {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .shortcut-arrow {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Botão principal */
+        .access-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            padding: 18px;
+            border-radius: 28px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 30px -8px rgba(52,152,219,0.4);
+        }
+
+        .access-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -8px rgba(52,152,219,0.5);
+        }
+
+        .access-btn:active {
+            transform: translateY(1px);
+        }
+
+        .access-btn-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .access-btn-left i {
+            font-size: 20px;
+        }
+
+        /* Botão de logout */
+        .logout-btn {
+            width: 100%;
+            background: rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            border-radius: 28px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .logout-btn:hover {
+            background: rgba(231,76,60,0.1);
+            color: var(--danger);
+            border-color: rgba(231,76,60,0.3);
+        }
+
+        .version-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
+        /* Toast */
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(52,152,219,0.3);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Loading spinner */
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsividade */
+        @media (max-width: 450px) {
+            .main-container {
+                margin: 12px;
+            }
+            
+            .user-card {
+                padding: 18px;
+            }
+            
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            
+            .user-info h2 {
+                font-size: 18px;
+            }
+            
+            .shortcut-item {
+                padding: 12px 16px;
+            }
+            
+            .shortcut-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .shortcut-info h4 {
+                font-size: 14px;
+            }
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .admin-badge {
+            background: rgba(52,152,219,0.2);
+            color: var(--primary);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .category-badge {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-muted);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <center><h2><i class="fas fa-volleyball-ball" style="color:#3498db;"></i>
-        Vôlei-BNH Gestão</h2></center>
-        <div class="button-container">
-            <button onclick="window.location.href='dashboard.html'"><i class="fas fa-user-plus"></i> Cadastro</button>            
-            <button onclick="window.location.href='mensalidade.html'"><i class="fas fa-hand-holding-usd"></i> Contribuições</button>
-            <button onclick="window.location.href='financeiro8.html'"><i class="fas fa-file-invoice-dollar"></i> Despesas</button>
-            <button onclick="window.location.href='integrantes.html'"><i class="fas fa-users"></i> Integrantes</button>
-            <button onclick="window.location.href='lista.html'"><i class="fas fa-list"></i> Jogos</button>       
-            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
-        </div>
-    </div>
 
-    <div class="container">
-        <div id="userEmail"></div>
-        <br>
-        <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar integrante...">
-        </div>
-        
-        <div class="profile-container">
-            <div class="profile-header">
-                <button id="prevPlayer" class="nav-arrow">←</button>
-                <img id="profilePhoto" class="profile-photo" src="" alt="Foto do integrante">
-                <button id="nextPlayer" class="nav-arrow">→</button>
-            </div>
-            
-            <div class="profile-details">
-                <h2 id="profileName" class="profile-name">Carregando...</h2>
-                
-                <div class="profile-info">
-                    <div class="info-item">
-                        <div class="info-label">Posição</div>
-                        <div id="playerPosition" class="info-value">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Categoria</div>
-                        <div id="playerCategory" class="info-value">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Contato</div>
-                        <div id="playerContact" class="info-value">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Data de Nascimento</div>
-                        <div id="playerBirthdate" class="info-value">-</div>
-                    </div>
+    <div class="net-pattern"></div>
+    <div class="circle-bg circle-1"></div>
+    <div class="circle-bg circle-2"></div>
+    <div class="circle-bg circle-3"></div>
+
+    <div class="main-container">
+        <!-- Card do Usuário -->
+        <div class="user-card" id="userCard">
+            <div class="user-header">
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
                 </div>
-                
-                <div class="payment-status">
-                    <h3 class="status-title">Status das Contribuições</h3>
-                    <div id="paymentsList"></div>
-                </div>
-                
-                <div id="pendingStatus" class="pending-alert" style="display: none;">
-                    Este integrante possui pendências!
-                </div>
-                
-                <div id="noPendingStatus" class="no-pending" style="display: none;">
-                    Integrante em dia com as Contribuições!
+                <div class="user-info">
+                    <h2 id="userName">Carregando...  </h2>
+                    <p>
+                        <span class="status-badge"></span>
+                        <span id="userStatus">Online</span>
+                        <span id="adminBadge" class="admin-badge" style="display: none;">ADMIN</span>
+                        <span id="userCategory" class="category-badge"></span>
+                        <span id="userposition" class="category-badge"></span>
+                    </p>
                 </div>
             </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="gamesCount">-</div>
+                    <div class="stat-label">Jogos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="presenceCount">-</div>
+                    <div class="stat-label">Presenças</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="creditValue">R$ 0</div>
+                    <div class="stat-label">Créditos</div>
+                </div>
+            </div>
+            <!-- NOVA LINHA: Total Devido -->
+            <div class="debt-row">
+                <span class="debt-label">💰 Valor em pendência(s):</span>
+                <span id="debtValue" class="debt-value">R$ 0,00</span>
+            </div>
+        </div>
+
+        <!-- Seção de Atalhos -->
+        <div class="section-title">
+            <i class="fas fa-grip-lines"></i>
+            <span>ATALHOS RÁPIDOS</span>
+        </div>
+
+        <div class="shortcuts-list">
+            <div class="shortcut-item" data-target="lista.html">
+                <div class="shortcut-left">
+                    <div class="shortcut-icon">
+                        <i class="fas fa-list-ul"></i>
+                    </div>
+                    <div class="shortcut-info">
+                        <h4>Lista de Presença</h4>
+                        <p>Confirme sua presença no jogo</p>
+                    </div>
+                </div>
+                <div class="shortcut-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="shortcut-item" data-target="transparencia.html">
+                <div class="shortcut-left">
+                    <div class="shortcut-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="shortcut-info">
+                        <h4>Transparência</h4>
+                        <p>Financeiro e contribuições</p>
+                    </div>
+                </div>
+                <div class="shortcut-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="shortcut-item" data-target="enquete.html">
+                <div class="shortcut-left">
+                    <div class="shortcut-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="shortcut-info">
+                        <h4>Regras & Enquetes</h4>
+                        <p>Vote e veja as regras</p>
+                    </div>
+                </div>
+                <div class="shortcut-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="shortcut-item" data-target="galeria3.html">
+                <div class="shortcut-left">
+                    <div class="shortcut-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <div class="shortcut-info">
+                        <h4>Galeria</h4>
+                        <p>Fotos e momentos</p>
+                    </div>
+                </div>
+                <div class="shortcut-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="shortcut-item admin-only" data-target="dashboard.html" style="display: none;">
+                <div class="shortcut-left">
+                    <div class="shortcut-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="shortcut-info">
+                        <h4>Administração</h4>
+                        <p>Configurações do sistema</p>
+                    </div>
+                </div>
+                <div class="shortcut-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+
+        <button class="logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sair da conta</span>
+        </button>
+
+        <div class="version-footer">
+            Vôlei BNH v2.0 • Rede de Amigos
         </div>
     </div>
-
-    <footer class="footer">
-      © 2025 SMV Eletrônica- Todos os direitos reservados<br>
-      <div class="footer-links">
-        Powered by:
-        <a href="https://github.com/seu-usuario" target="_blank" class="github-link">
-          <i class="fab fa-github"></i> GitHub
-        </a>
-        <a href="https://firebase.google.com/" target="_blank" class="firebase-link">
-          <i class="fas fa-fire"></i> Firebase
-        </a>        
-        <a href="https://onesignal.com/" target="_blank" class="onesignal-link">
-        <img src="https://dashboard.onesignal.com/favicon/favicon-32x32.png" alt="OneSignal" style="height:12px; vertical-align:middle; margin-right:4px;">
-        OneSignal      
-    </a>
-      </div>
-    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-        
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyAWMgLaPMpNOdPW10S-bVVEiQW-r3QCkxg",
             authDomain: "volei-25301.firebaseapp.com",
@@ -104,262 +651,308 @@
             projectId: "volei-25301",
             storageBucket: "volei-25301.firebasestorage.app",
             messagingSenderId: "1007197261034",
-            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93",
-            measurementId: "G-CYMLX0SJJQ"
+            appId: "1:1007197261034:web:f2c7ab9cb2793a694cdb93"
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const database = getDatabase(app);
+        const auth = getAuth(app);
 
-        // Elementos DOM
-        const profilePhoto = document.getElementById('profilePhoto');
-        const profileName = document.getElementById('profileName');
-        const playerPosition = document.getElementById('playerPosition');
-        const playerCategory = document.getElementById('playerCategory');
-        const playerBirthdate = document.getElementById('playerBirthdate');
-        const playerContact = document.getElementById('playerContact');
-        const paymentsList = document.getElementById('paymentsList');
-        const prevPlayerBtn = document.getElementById('prevPlayer');
-        const nextPlayerBtn = document.getElementById('nextPlayer');
-        const searchInput = document.getElementById('searchInput');
-        const pendingStatus = document.getElementById('pendingStatus');
-        const noPendingStatus = document.getElementById('noPendingStatus');
-        const logoutBtn = document.getElementById('logoutBtn');
+        const PAGES = {
+            lista: 'lista.html',
+            transparencia: 'transparencia.html',
+            enquete: 'enquete.html',
+            galeria: 'galeria3.html',
+            dashboard: 'dashboard.html',
+            login: 'loginvl.html'
+        };
 
-        // Variáveis globais
-        let players = [];
-        let currentPlayerIndex = 0;
-        let filteredPlayers = [];
+        const ADMIN_EMAILS = ['mvvasques@msn.com', 'fabioluiztx@outlook.com', 'evandro2@msn.com'];
+        
+        let currentUser = null;
+        let currentPlayer = null;
+        let isAdmin = false;
 
-        // Verificar estado de autenticação
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = 'index.html';
-            } else {
-                document.getElementById('userEmail').textContent = `Logado como: ${user.email}`;
-                loadPlayers();
+        function showToast(message, icon = 'info') {
+            const existingToast = document.querySelector('.toast-message');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            const iconMap = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            toast.innerHTML = `${iconMap[icon] || 'ℹ️'} ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast && toast.parentNode) toast.remove();
+            }, 2500);
+        }
+
+        function navigateTo(url) {
+            if (!url) return;
+            const container = document.querySelector('.main-container');
+            container.style.animation = 'fadeSlideUp 0.2s reverse';
+            setTimeout(() => { window.location.href = url; }, 200);
+        }
+
+        function handleMenuClick(targetUrl) {
+            if (!currentUser) {
+                showToast('Faça login primeiro!', 'warning');
+                setTimeout(() => navigateTo(PAGES.login), 800);
+                return;
             }
-        });
+            if (targetUrl === PAGES.dashboard && !isAdmin) {
+                showToast('Acesso restrito à administração', 'error');
+                return;
+            }
+            showToast(`Abrindo...`, 'info');
+            setTimeout(() => navigateTo(targetUrl), 200);
+        }
 
-        // Botão de logout
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = 'index.html';
-            }).catch((error) => {
-                console.error('Error signing out:', error);
-            });
-        });
+        async function handleLogout() {
+            if (!currentUser) { navigateTo(PAGES.login); return; }
+            showToast('Saindo da conta...', 'info');
+            try {
+                await signOut(auth);
+            } catch(e) { console.warn(e); }
+            sessionStorage.removeItem('volei_bnh_user');
+            localStorage.removeItem('userLogado');
+            currentUser = null;
+            currentPlayer = null;
+            isAdmin = false;
+            showToast('Logout realizado!', 'success');
+            setTimeout(() => navigateTo(PAGES.login), 600);
+        }
 
-        // Carregar todos os jogadores
-        async function loadPlayers() {
+        function enterMainApp() {
+            if (!currentUser) {
+                showToast('Faça login para acessar', 'warning');
+                setTimeout(() => navigateTo(PAGES.login), 800);
+                return;
+            }
+            showToast(`Vamos jogar, ${currentPlayer?.name?.split(' ')[0] || 'Jogador'}! 🏐`, 'success');
+            setTimeout(() => navigateTo(PAGES.lista), 300);
+        }
+
+        // ==================== BUSCAR DADOS REAIS DO FIREBASE ====================
+        
+        async function findPlayerByEmail(email) {
             try {
                 const playersRef = ref(database, 'players');
                 const snapshot = await get(playersRef);
-                
                 if (snapshot.exists()) {
-                    players = Object.entries(snapshot.val()).map(([id, player]) => ({ id, ...player }));
-                    players.sort((a, b) => a.name.localeCompare(b.name));
-                    filteredPlayers = [...players];
-                    
-                    if (filteredPlayers.length > 0) {
-                        currentPlayerIndex = 0;
-                        showPlayer(currentPlayerIndex);
-                    } else {
-                        profileName.textContent = "Nenhum integrante cadastrado";
+                    const players = snapshot.val();
+                    for (const [id, player] of Object.entries(players)) {
+                        if (player.email === email) {
+                            return { id, ...player };
+                        }
                     }
-                } else {
-                    profileName.textContent = "Nenhum integrante cadastrado";
                 }
+                return null;
             } catch (error) {
-                console.error("Error loading players: ", error);
-                profileName.textContent = "Erro ao carregar dados";
+                console.error('Erro ao buscar jogador:', error);
+                return null;
             }
         }
 
-        // Mostrar jogador atual
-        function showPlayer(index) {
-            if (filteredPlayers.length === 0) return;
-            
-            if (index < 0) index = filteredPlayers.length - 1;
-            if (index >= filteredPlayers.length) index = 0;
-            
-            currentPlayerIndex = index;
-            const player = filteredPlayers[index];
-            
-            profileName.textContent = player.name || "-";
-            playerPosition.textContent = player.position || "-";
-            playerCategory.textContent = player.category || "-";
-            playerBirthdate.textContent = player.birthdate ? formatDate(player.birthdate) : "-";
-            playerContact.textContent = player.contact || "-";
-            
-            if (player.imageUrl) {
-                profilePhoto.src = player.imageUrl;
-                profilePhoto.style.display = "block";
-            } else {
-                profilePhoto.style.display = "none";
+        async function getPlayerGamesCount(playerId) {
+            try {
+                const historyRef = ref(database, `playerHistory/${playerId}`);
+                const snapshot = await get(historyRef);
+                if (snapshot.exists()) {
+                    const games = snapshot.val();
+                    const totalGames = Object.keys(games).length;
+                    const confirmedGames = Object.values(games).filter(g => g.status === 'confirmed').length;
+                    return { totalGames, confirmedGames };
+                }
+                return { totalGames: 0, confirmedGames: 0 };
+            } catch (error) {
+                console.error('Erro ao buscar histórico:', error);
+                return { totalGames: 0, confirmedGames: 0 };
             }
-            
-            loadPlayerPayments(player.id);
-            
-            prevPlayerBtn.disabled = filteredPlayers.length <= 1;
-            nextPlayerBtn.disabled = filteredPlayers.length <= 1;
         }
 
-        // Carregar pagamentos do jogador
-        async function loadPlayerPayments(playerId) {
+        async function getPlayerCredits(playerId) {
             try {
                 const paymentsRef = ref(database, 'payments');
-                const deletedPaymentsRef = ref(database, 'deletedPayments');
-                const [paymentsSnapshot, deletedPaymentsSnapshot] = await Promise.all([
-                    get(paymentsRef),
-                    get(deletedPaymentsRef)
-                ]);
-                let playerPayments = [];
-                const paymentsData = paymentsSnapshot.val() || {};
-                console.log('Processing payments for player:', playerId, paymentsData);
-                // Processar pagamentos na nova estrutura payments/ano/mês
-                for (const year in paymentsData) {
-                    for (const month in paymentsData[year]) {
-                        const payments = paymentsData[year][month];
-                        for (const paymentId in payments) {
-                            const payment = payments[paymentId];
-                            if (payment.playerId === playerId) {
-                                playerPayments.push({ id: paymentId, ...payment, isDeleted: false });
+                const snapshot = await get(paymentsRef);
+                let totalCredit = 0;
+                
+                if (snapshot.exists()) {
+                    const payments = snapshot.val();
+                    for (const year in payments) {
+                        for (const month in payments[year]) {
+                            for (const paymentId in payments[year][month]) {
+                                const payment = payments[year][month][paymentId];
+                                if (payment.playerId === playerId && 
+                                    payment.paymentType === 'Creditos' && 
+                                    payment.paymentStatus === 'pago' && 
+                                    !payment.usedAt) {
+                                    totalCredit += parseFloat(payment.value || 0);
+                                }
                             }
                         }
                     }
                 }
-                // Processar pagamentos excluídos
-                const deletedPayments = deletedPaymentsSnapshot.val() || {};
-                for (const deletedPaymentId in deletedPayments) {
-                    const payment = deletedPayments[deletedPaymentId];
-                    if (payment.playerId === playerId) {
-                        playerPayments.push({ id: deletedPaymentId, ...payment, isDeleted: true });
-                    }
-                }
-                playerPayments.sort((a, b) => b.month.localeCompare(a.month));
-                renderPayments(playerPayments);
-                const hasPending = playerPayments.some(p => !p.isDeleted && !p.date && p.value > 0);
-                if (hasPending) {
-                    pendingStatus.style.display = "block";
-                    noPendingStatus.style.display = "none";
-                } else {
-                    pendingStatus.style.display = "none";
-                    noPendingStatus.style.display = "block";
-                }
+                return totalCredit;
             } catch (error) {
-                console.error("Error loading payments:", error);
-                paymentsList.innerHTML = "<div>Erro ao carregar pagamentos</div>";
+                console.error('Erro ao buscar créditos:', error);
+                return 0;
             }
         }
 
-        // Renderizar lista de pagamentos
-        function renderPayments(payments) {
-            paymentsList.innerHTML = '';
-            
-            if (payments.length === 0) {
-                paymentsList.innerHTML = "<div>Nenhum pagamento registrado</div>";
-                return;
-            }
-            
-            payments.forEach(payment => {
-                const isPaid = payment.date && payment.value > 0 && !payment.isDeleted;
-                const isExcluded = payment.isDeleted;
-                const [year, month] = payment.month.split('-');
-                const monthName = getMonthName(month);
+        // ==================== NOVA FUNÇÃO: BUSCAR TOTAL DEVIDO (PENDÊNCIAS) ====================
+        async function getPlayerDebts(playerId) {
+            try {
+                const debtsRef = ref(database, `debts/${playerId}`);
+                const snapshot = await get(debtsRef);
+                let totalDebt = 0;
                 
-                const paymentEl = document.createElement('div');
-                paymentEl.className = `status-item ${isExcluded ? 'excluded' : ''}`;
-                paymentEl.innerHTML = `
-                    <div>
-                        <span class="status-label">Referente ao Caixa:</span>
-                        <span class="status-value">${monthName}/${year}</span>
-                    </div>
-                    <div>
-                        <span class="status-label">Tipo de Pagamento:</span>
-                        <span class="status-value">${payment.paymentType || '-'}</span>
-                    </div>                    
-                    <div>
-                        <span class="status-label">Descrição:</span>
-                        <span class="status-value">${payment.additionalInfo || '-'}</span>
-                    </div>
-                    <div>
-                        <span class="status-label">Data do Pagamento:</span>
-                        <span class="status-value">${payment.date ? formatDate(payment.date) : '-'}</span>
-                    </div>
-                    <div>
-                        <span class="status-label">Valor:</span>
-                        <span class="status-value ${isPaid ? 'paid' : isExcluded ? 'unpaid' : 'unpaid'}">
-                            ${isExcluded ? `R$ ${parseFloat(payment.value).toFixed(2)} (Excluído)` : 
-                            isPaid ? `R$ ${parseFloat(payment.value).toFixed(2)}` : 
-                            `R$ ${parseFloat(payment.value).toFixed(2)} (Pendente)`}
-                        </span>
-                    </div>
-                    ${isExcluded ? `
-                    <div>
-                        <span class="status-label">Motivo da Exclusão:</span>
-                        <span class="status-value">${payment.deleteReason || '-'}</span>
-                    </div>
-                    <div>
-                        <span class="status-label">Excluído por:</span>
-                        <span class="status-value">${payment.deletedBy || '-'}</span>
-                    </div>` : ''}
-                `;
-                paymentsList.appendChild(paymentEl);
+                if (snapshot.exists()) {
+                    const debts = snapshot.val();
+                    for (const debtId in debts) {
+                        totalDebt += parseFloat(debts[debtId].value || 0);
+                    }
+                }
+                return totalDebt;
+            } catch (error) {
+                console.error('Erro ao buscar débitos:', error);
+                return 0;
+            }
+        }
+
+        async function loadUserStats() {
+            if (!currentPlayer || !currentPlayer.id) return;
+            
+            // Mostrar loading
+            document.getElementById('gamesCount').innerHTML = '<div class="spinner-small"></div>';
+            document.getElementById('presenceCount').innerHTML = '<div class="spinner-small"></div>';
+            document.getElementById('creditValue').innerHTML = '<div class="spinner-small"></div>';
+            document.getElementById('debtValue').innerHTML = '<div class="spinner-small"></div>';
+            
+            try {
+                const [gamesStats, credits, debts] = await Promise.all([
+                    getPlayerGamesCount(currentPlayer.id),
+                    getPlayerCredits(currentPlayer.id),
+                    getPlayerDebts(currentPlayer.id)
+                ]);
+                
+                document.getElementById('gamesCount').textContent = gamesStats.totalGames;
+                document.getElementById('presenceCount').textContent = gamesStats.confirmedGames;
+                document.getElementById('creditValue').textContent = `R$ ${credits.toFixed(2)}`;
+                
+                const debtSpan = document.getElementById('debtValue');
+                if (debts > 0) {
+                    debtSpan.textContent = `R$ ${debts.toFixed(2)}`;
+                    debtSpan.classList.remove('zero');
+                    debtSpan.classList.add('debt-value'); // mantém cor vermelha
+                } else {
+                    debtSpan.textContent = `R$ 0,00 (Parabéns)`;
+                    debtSpan.classList.add('zero');
+                    debtSpan.classList.remove('debt-value');
+                    // ajusta classe para verde
+                    debtSpan.style.color = 'var(--success)';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+                document.getElementById('gamesCount').textContent = '0';
+                document.getElementById('presenceCount').textContent = '0';
+                document.getElementById('creditValue').textContent = 'R$ 0,00';
+                document.getElementById('debtValue').textContent = 'R$ 0,00';
+            }
+        }
+
+        async function loadUserPhoto(imageUrl) {
+            if (!imageUrl) return;
+            
+            const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2Fvisitante161.jpeg?alt=media&token=ed313e05-297e-4fe1-bdd6-699424719a7f';
+            const avatarDiv = document.getElementById('userAvatar');
+            
+            try {
+                const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/volei-25301.firebasestorage.app/o/players%2F';
+                const fullUrl = `${baseUrl}${encodeURIComponent(imageUrl)}?alt=media`;
+                
+                const img = document.createElement('img');
+                img.onload = () => {
+                    avatarDiv.innerHTML = '';
+                    avatarDiv.appendChild(img);
+                };
+                img.onerror = () => {
+                    avatarDiv.innerHTML = '<i class="fas fa-user"></i>';
+                };
+                img.src = fullUrl;
+            } catch (error) {
+                avatarDiv.innerHTML = '<i class="fas fa-user"></i>';
+            }
+        }
+
+        async function init() {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.displayName || user.email?.split('@')[0] || 'Jogador'
+                    };
+                    
+                    // Buscar dados do jogador no Firebase
+                    currentPlayer = await findPlayerByEmail(user.email);
+                    
+                    isAdmin = ADMIN_EMAILS.includes(user.email) || currentPlayer?.category === 'ADMIN';
+                    
+                    // Atualizar UI
+                    document.getElementById('userName').textContent = currentPlayer?.name || currentUser.name;
+                    document.getElementById('userCategory').textContent = currentPlayer?.category || 'MENSAL';
+                    document.getElementById('userposition').textContent = currentPlayer?.position || 'MENSAL';
+                    
+                    if (isAdmin) {
+                        document.getElementById('adminBadge').style.display = 'inline-block';
+                    }
+                    
+                    if (currentPlayer?.imageUrl) {
+                        await loadUserPhoto(currentPlayer.imageUrl);
+                    }
+                    
+                    await loadUserStats();
+                    updateAdminUI();
+                    
+                    showToast(`👋 Olá ${currentPlayer?.name?.split(' ')[0] || 'Jogador'}!`, 'success');
+                    
+                } else {
+                    showToast('Conecte-se para acessar o sistema', 'warning');
+                    setTimeout(() => navigateTo(PAGES.login), 1500);
+                }
             });
         }
 
-        // Navegação entre jogadores
-        prevPlayerBtn.addEventListener('click', () => {
-            showPlayer(currentPlayerIndex - 1);
-        });
-        
-        nextPlayerBtn.addEventListener('click', () => {
-            showPlayer(currentPlayerIndex + 1);
+        function updateAdminUI() {
+            const adminItems = document.querySelectorAll('.admin-only');
+            adminItems.forEach(item => {
+                item.style.display = (isAdmin && currentUser) ? 'flex' : 'none';
+            });
+        }
+
+        // Configurar eventos
+        document.addEventListener('DOMContentLoaded', () => {
+            const shortcuts = document.querySelectorAll('.shortcut-item');
+            shortcuts.forEach(item => {
+                const target = item.getAttribute('data-target');
+                if (target) {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        handleMenuClick(target);
+                    });
+                }
+            });
+            
+            const mainBtn = document.getElementById('mainAccessBtn');
+            if (mainBtn) mainBtn.addEventListener('click', enterMainApp);
+            
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
         });
 
-        // Pesquisa de jogadores
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            
-            if (searchTerm === '') {
-                filteredPlayers = [...players];
-            } else {
-                filteredPlayers = players.filter(player => 
-                    player.name.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            if (filteredPlayers.length > 0) {
-                currentPlayerIndex = 0;
-                showPlayer(currentPlayerIndex);
-            } else {
-                profileName.textContent = "Nenhum integrante encontrado";
-                paymentsList.innerHTML = "";
-                pendingStatus.style.display = "none";
-                noPendingStatus.style.display = "none";
-            }
-        });
-
-        // Helper functions
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            
-            const date = new Date(dateString);
-            const offset = date.getTimezoneOffset() * 60000;
-            const adjustedDate = new Date(date.getTime() + offset);
-            
-            return adjustedDate.toLocaleDateString('pt-BR');
-        }
-        
-        function getMonthName(monthNumber) {
-            const months = [
-                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-            ];
-            return months[parseInt(monthNumber) - 1];
-        }
+        init();
     </script>
 </body>
 </html>
