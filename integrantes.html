@@ -28,6 +28,16 @@
             box-sizing: border-box;
         }
 
+
+
+        .nova {
+            
+          width: 100%;
+    
+    display: flex;
+    justify-content: space-around;        
+        }
+
 .header {
     width: 100%;
     position:fixed;       /* Mude para fixed para fixar no topo */
@@ -386,17 +396,17 @@
 
         /* Botão de logout */
         .logout-btn {
-            width: 100%;
+            width: 20%;
             background: rgba(0,0,0,0.05);
             border: 1px solid var(--border-color);
-            padding: 14px;
+            padding: 5px;
             border-radius: 28px;
             color: var(--text-muted);
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
+           
             align-items: center;
             justify-content: center;
             gap: 10px;
@@ -538,9 +548,16 @@
     
 
      <div class="header">
-    
-       <center><h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2></center>
-  </div>
+    <div class="nova">
+      <h2><i class="fas fa-volleyball-ball"></i> Vôlei-BNH</h2>
+       
+        <button class="logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sair</span>
+
+        </button>
+        </div>
+      </div>
 
 
     <div class="main-container">
@@ -665,10 +682,7 @@
             </div>
         </div>
 
-        <button class="logout-btn" id="logoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Sair da conta</span>
-        </button>
+       
 
         <div class="version-footer">
             Vôlei BNH v2.0 • Rede de Amigos
