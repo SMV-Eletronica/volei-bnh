@@ -250,7 +250,7 @@
             padding-top: 12px;
             border-top: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-star;
             align-items: center;
         }
 
@@ -594,7 +594,7 @@
             </div>
             <!-- NOVA LINHA: Total Devido -->
             <div class="debt-row">
-                <span class="debt-label">💰 Valor em pendência(s):</span>
+                <span class="debt-label">⚠️ Pendência(s):&nbsp</span>
                 <span id="debtValue" class="debt-value">R$ 0,00</span>
             </div>
         </div>
@@ -897,7 +897,7 @@
                     debtSpan.classList.remove('zero');
                     debtSpan.classList.add('debt-value'); // mantém cor vermelha
                 } else {
-                    debtSpan.textContent = `R$ 0,00 (Parabéns)`;
+                    debtSpan.textContent = `(zero)`;
                     debtSpan.classList.add('zero');
                     debtSpan.classList.remove('debt-value');
                     // ajusta classe para verde
